@@ -1,4 +1,7 @@
 # Prism
 
 ### description
-Prism is a generic toolkit, providing functionality, that may become usefull in any kind of project
+
+Prism is a generic toolkit that reflects and adapts to different needs.
+It provides functionality, that may become usefull in any kind of project.
+generic toolkit, providing functionality, that may become usefull in any kind of project
