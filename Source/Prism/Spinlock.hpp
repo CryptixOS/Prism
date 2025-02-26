@@ -4,7 +4,6 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-
 #pragma once
 
 #include <Common.hpp>
