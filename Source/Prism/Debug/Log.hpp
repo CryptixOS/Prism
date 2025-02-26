@@ -14,13 +14,13 @@ namespace Prism
 {
     enum class LogLevel
     {
-        eNone,
-        eDebug,
-        eTrace,
-        eInfo,
-        eWarn,
-        eError,
-        eFatal,
+        eNone  = 0,
+        eDebug = 1,
+        eTrace = 2,
+        eInfo  = 3,
+        eWarn  = 4,
+        eError = 5,
+        eFatal = 6,
     };
 
     namespace Log
