@@ -36,10 +36,12 @@ namespace Prism
             other.m_FunctionName.remove_prefix(other.m_FunctionName.size());
         }
 
-        static consteval SourceLocation Current() PM_NOEXCEPT
+        static consteval SourceLocation
+        Current(u32 line = PM_LINE, u32 column = PM_COLUMN,
+                const char* fileName     = PM_FILENAME,
+                const char* functionName = PM_FUNCTION_NAME) PM_NOEXCEPT
         {
-            return SourceLocation(PM_LINE, PM_COLUMN, PM_FILENAME,
-                                  PM_FUNCTION_NAME);
+            return SourceLocation(line, column, fileName, functionName);
         }
 
         constexpr u32 Line() const PM_NOEXCEPT { return m_Line.value_or(0); }
