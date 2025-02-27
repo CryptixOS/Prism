@@ -9,6 +9,8 @@
 #include <Prism/Debug/Log.hpp>
 #include <Prism/SourceLocation.hpp>
 
+#include <format>
+
 #if PRISM_TARGET_CRYPTIX == false
 namespace Prism
 {
