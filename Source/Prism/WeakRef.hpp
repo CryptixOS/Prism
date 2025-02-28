@@ -14,7 +14,12 @@ namespace Prism
     class WeakRef
     {
       public:
-        WeakRef() = default;
+        constexpr WeakRef() = default;
+        WeakRef(const WeakRef& ref) PM_NOEXCEPT : m_Instance(ref.m_Instance) {}
+        WeakRef(WeakRef&& ref) PM_NOEXCEPT : m_Instance(ref.m_Instance)
+        {
+            ref.m_Instance = nullptr;
+        }
 
         WeakRef(Ref<T> ref) { m_Instance = ref.Raw(); }
         WeakRef(T* instance) { m_Instance = instance; }
@@ -37,3 +42,6 @@ namespace Prism
         T* m_Instance = nullptr;
     };
 }; // namespace Prism
+#ifdef PRISM_TARGET_CRYPTIX
+using Prism::WeakRef;
+#endif

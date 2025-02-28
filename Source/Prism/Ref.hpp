@@ -11,6 +11,7 @@
 #include <Prism/Types.hpp>
 
 #include <atomic>
+#include <utility>
 
 namespace Prism
 {
@@ -32,8 +33,14 @@ namespace Prism
     class Ref
     {
       public:
-        Ref()               = default;
-        Ref(std::nullptr_t) = default;
+        Ref()
+            : m_Instance(nullptr)
+        {
+        }
+        Ref(std::nullptr_t)
+            : m_Instance(nullptr)
+        {
+        }
         Ref(T* instance)
             : m_Instance(instance)
         {
@@ -137,12 +144,12 @@ namespace Prism
       private:
         T*   m_Instance = nullptr;
 
-        void IncRef() const
+        void IncRef()
         {
             if (!m_Instance) return;
             m_Instance->Ref();
         }
-        void DecRef() const
+        void DecRef()
         {
             if (!m_Instance) return;
             m_Instance->Unref();
@@ -154,4 +161,16 @@ namespace Prism
             }
         }
     };
+
+    template <typename T, typename... Args>
+    Ref<T> CreateRef(Args&&... args)
+    {
+        return Ref<T>(new T(std::forward<Args>(args)...));
+    }
 }; // namespace Prism
+
+#ifdef PRISM_TARGET_CRYPTIX
+using Prism::CreateRef;
+using Prism::Ref;
+using Prism::RefCounted;
+#endif

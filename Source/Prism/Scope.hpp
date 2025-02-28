@@ -12,16 +12,20 @@
 namespace Prism
 {
     template <typename T>
-    struct ScopeDeleter
-    {
-        void operator()(T* instance) { delete instance; }
-    };
-    template <typename T, typename Deleter = ScopeDeleter<T>>
+    using ScopeDeleter = std::default_delete<T>;
+
+    template <typename T, typename Deleter = ScopeDeleter<T>()>
     class Scope
     {
       public:
-        Scope()               = default;
-        Scope(std::nullptr_t) = default;
+        Scope()
+            : m_Instance(nullptr)
+        {
+        }
+        Scope(std::nullptr_t)
+            : m_Instance(nullptr)
+        {
+        }
         Scope(Scope&& other)
             : m_Instance(other.m_Instance)
         {
@@ -143,3 +147,7 @@ namespace Prism
         T* m_Instance = nullptr;
     };
 }; // namespace Prism
+
+#ifdef PRISM_TARGET_CRYPTIX
+using Prism::Scope;
+#endif

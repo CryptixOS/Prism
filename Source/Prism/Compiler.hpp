@@ -12,6 +12,8 @@
     #define PM_NOEXCEPT
 #endif
 
+#define ALWAYS_INLINE    [[gnu::always_inline]]
+
 #define PM_LINE          __builtin_LINE()
 #define PM_COLUMN        __builtin_COLUMN()
 #define PM_FILENAME      __builtin_FILE()
