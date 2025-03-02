@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include <Prism/Compiler.hpp>
-#include <Prism/Types.hpp>
+#include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Types.hpp>
 
 #include <ranges>
 
@@ -461,7 +461,7 @@ namespace Prism
                                           SizeType pos = 0) const PM_NOEXCEPT
         {
             for (; pos < m_Size; ++pos)
-                if (!Traits::Find(str.m_Dat, str.m_Size, m_Data[pos]))
+                if (!Traits::Find(str.m_Data, str.m_Size, m_Data[pos]))
                     return pos;
             return NPos;
         }

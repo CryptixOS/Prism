@@ -6,40 +6,32 @@
  */
 #pragma once
 
-#include <Prism/Compiler.hpp>
+#include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Types.hpp>
 #include <Prism/Math.hpp>
-#include <Prism/Types.hpp>
 
 namespace Prism
 {
     namespace StringUtils
     {
         template <typename T>
-        T ToNumber(const char* str, usize length)
+            requires(std::is_arithmetic_v<T>)
+        constexpr usize GetDigitCount(T value)
         {
-            T     integer      = 0;
-            bool  isNegative   = str[0] == '-';
+            usize result = 0;
+            for (usize i = 10; static_cast<usize>(value) < i; i *= 10) ++result;
 
-            usize index        = isNegative;
-            usize stringLength = length, power = stringLength - isNegative;
-
-            for (; index < stringLength; index++)
-                integer += (str[index] - 48) * Math::PowerOf<T>(10, --power);
-
-            return (isNegative) ? -integer : integer;
-        }
-        template <typename T>
-        T ToNumber(const char* str)
-        {
-            return ToNumber<T>(str, std::strlen(str));
+            return result;
         }
 
         template <typename T>
-        char* ToString(T value, char* str, i32 base)
+            requires(std::is_arithmetic_v<T>)
+        constexpr char* ToString(T value, char* dest, i32 base)
         {
-            T    i          = 0;
-            bool isNegative = false;
+            const bool isNegative = value < 0 && base == 10;
 
+            char*      str        = dest;
+            T          i          = 0;
             if (value == 0)
             {
                 str[i++] = '0';
@@ -47,11 +39,7 @@ namespace Prism
                 return str;
             }
 
-            if (value < 0 && base == 10)
-            {
-                isNegative = true;
-                value      = -value;
-            }
+            if (isNegative) value = -value;
 
             while (value != '\0')
             {
@@ -68,18 +56,51 @@ namespace Prism
             T end   = i - 1;
             while (start < end)
             {
-                char c         = *(str + start);
-                *(str + start) = *(str + end);
-                *(str + end)   = c;
-                start++;
-                end--;
+                std::swap(*(str + start), *(str + end));
+                --start;
+                --end;
             }
 
             return str;
         }
+        template <typename T>
+            requires(std::is_arithmetic_v<T>)
+        constexpr char* ToString(T value, i32 base)
+        {
+            const bool  isNegative = value < 0 && base == 10;
+            const usize size       = GetDigitCount(value) + isNegative + 1;
+
+            char*       dest       = new char[size];
+            return ToString(value, dest, base);
+        }
+
+        template <typename T>
+            requires(std::is_arithmetic_v<T>)
+        T ToNumber(const char* str, usize length)
+        {
+            T     integer      = 0;
+            bool  isNegative   = str[0] == '-';
+
+            usize index        = isNegative;
+            usize stringLength = length, power = stringLength - isNegative;
+
+            for (; index < stringLength; index++)
+                integer += (str[index] - 48) * Math::PowerOf<T>(10, --power);
+
+            return (isNegative) ? -integer : integer;
+        }
+        template <typename T>
+            requires(std::is_arithmetic_v<T>)
+        T ToNumber(const char* str)
+        {
+            return ToNumber<T>(str, std::strlen(str));
+        }
+
     }; // namespace StringUtils
 };     // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
+using Prism::StringUtils::GetDigitCount;
+using Prism::StringUtils::ToNumber;
 using Prism::StringUtils::ToString;
 #endif
