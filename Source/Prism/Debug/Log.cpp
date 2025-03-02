@@ -4,8 +4,8 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
-#include <Prism/Types.hpp>
 
 #include <Library/Logger.hpp>
 

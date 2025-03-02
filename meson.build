@@ -20,9 +20,12 @@ sources = files(
   'Source/Prism/Debug/Log.cpp',
   'Source/Prism/Debug/LogSink.cpp',
   'Source/Prism/Debug/Ubsan.cpp',
+  'Source/Prism/Debug/Stacktrace.cpp',
   'Source/Prism/Path.cpp',
   'Source/Prism/PathView.cpp',
 )
+
+subdir('Tests')
 
 # ==============================================================================
 ### Dependencies

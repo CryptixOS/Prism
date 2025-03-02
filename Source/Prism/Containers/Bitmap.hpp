@@ -6,8 +6,8 @@
  */
 #pragma once
 
+#include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Assertions.hpp>
-#include <Prism/Types.hpp>
 
 #include <cstring>
 

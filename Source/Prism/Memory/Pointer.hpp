@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Types.hpp>
+#include <Prism/Core/Types.hpp>
 #ifdef PRISM_TARGET_CRYPTIX
 namespace VirtualMemoryManager
 {
@@ -147,6 +147,9 @@ namespace Prism
         std::uintptr_t m_Pointer = 0;
     };
 }; // namespace Prism
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::Pointer;
+#endif
 
 template <>
 struct fmt::formatter<Prism::Pointer> : fmt::formatter<std::string>

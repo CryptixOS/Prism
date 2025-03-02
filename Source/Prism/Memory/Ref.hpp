@@ -6,9 +6,9 @@
  */
 #pragma once
 
-#include <Prism/Config.hpp>
+#include <Prism/Core/Config.hpp>
+#include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Assertions.hpp>
-#include <Prism/Types.hpp>
 
 #include <atomic>
 #include <utility>

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Prism/Debug/Log.hpp>
-#include <Prism/SourceLocation.hpp>
+#include <Prism/Debug/SourceLocation.hpp>
 
 #include <format>
 

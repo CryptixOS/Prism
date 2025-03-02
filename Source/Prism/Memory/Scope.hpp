@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include <Prism/Ref.hpp>
-#include <Prism/WeakRef.hpp>
+#include <Prism/Memory/Ref.hpp>
+#include <Prism/Memory/WeakRef.hpp>
 
 namespace Prism
 {

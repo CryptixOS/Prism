@@ -9,8 +9,8 @@
 #include <Memory/PMM.hpp>
 #include <Memory/VMM.hpp>
 
+#include <Prism/Debug/Stacktrace.hpp>
 #include <Prism/Math.hpp>
-#include <Prism/Stacktrace.hpp>
 
 #include <demangler/Demangle.h>
 #include <vector>

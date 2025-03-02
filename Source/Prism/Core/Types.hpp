@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Config.hpp>
+#include <Prism/Core/Config.hpp>
 
 #include <cerrno>
 #include <cstddef>

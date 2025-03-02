@@ -6,9 +6,9 @@
  */
 #pragma once
 
-#include <Prism/Compiler.hpp>
-#include <Prism/Config.hpp>
-#include <Prism/Types.hpp>
+#include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Config.hpp>
+#include <Prism/Core/Types.hpp>
 
 namespace Prism
 {

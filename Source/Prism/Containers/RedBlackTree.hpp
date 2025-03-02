@@ -6,10 +6,10 @@
  */
 #pragma once
 
+#include <Prism/Core/NonCopyable.hpp>
+#include <Prism/Core/NonMovable.hpp>
+#include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
-#include <Prism/NonCopyable.hpp>
-#include <Prism/NonMovable.hpp>
-#include <Prism/Types.hpp>
 
 #include <iterator>
 #include <magic_enum/magic_enum.hpp>

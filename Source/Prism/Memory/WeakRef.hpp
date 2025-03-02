@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Ref.hpp>
+#include <Prism/Memory/Ref.hpp>
 
 namespace Prism
 {
