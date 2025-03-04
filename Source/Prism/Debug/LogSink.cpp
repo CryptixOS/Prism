@@ -11,13 +11,6 @@
 
 namespace Prism
 {
-    constexpr u64 s_LevelForegroundColors[] = {
-        FOREGROUND_COLOR_WHITE,  FOREGROUND_COLOR_MAGENTA,
-        FOREGROUND_COLOR_GREEN,  FOREGROUND_COLOR_CYAN,
-        FOREGROUND_COLOR_YELLOW, FOREGROUND_COLOR_RED,
-        FOREGROUND_COLOR_WHITE,
-    };
-
     void LogSink::Log(LogLevel level, std::string_view message)
     {
         std::unique_lock guard(m_Lock);
@@ -50,14 +43,8 @@ namespace Prism
 
         if (level == LogLevel::eNone) return;
         PutChar('[');
-        PutChar(s_LevelForegroundColors[std::to_underlying(level)]);
-        if (level == LogLevel::eFatal) PutChar(BACKGROUND_COLOR_RED);
 
         WriteNoLock(magic_enum::enum_name(level).data() + 1);
-
-        PutChar(FOREGROUND_COLOR_WHITE);
-        PutChar(BACKGROUND_COLOR_BLACK);
-        PutChar(RESET_COLOR);
         WriteNoLock("]: ");
     }
 }; // namespace Prism

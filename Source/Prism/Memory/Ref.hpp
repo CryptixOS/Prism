@@ -169,7 +169,7 @@ namespace Prism
     }
 }; // namespace Prism
 
-#ifdef PRISM_TARGET_CRYPTIX
+#if PRISM_TARGET_CRYPTIX == 1
 using Prism::CreateRef;
 using Prism::Ref;
 using Prism::RefCounted;

@@ -4,11 +4,6 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Boot/BootInfo.hpp>
-
-#include <Memory/PMM.hpp>
-#include <Memory/VMM.hpp>
-
 #include <Prism/Debug/Stacktrace.hpp>
 #include <Prism/Math.hpp>
 
@@ -36,7 +31,7 @@ namespace Prism
             if (!rip) break;
             stackFrame = stackFrame->PreviousFrame;
 
-            m_Frames.push_back(stackFrame);
+            m_Frames.PushBack(stackFrame);
         }
     }
 
@@ -46,10 +41,10 @@ namespace Prism
             return nullptr;
         const Symbol* ret = &m_Symbols[0];
 
-        for (const auto& symbol : m_Symbols)
+        for (auto symbol : m_Symbols)
         {
             if ((&symbol + 1) == m_Symbols.end()) break;
-            if (address < (&symbol + 1)->Address)
+            if (address < (&symbol + 1)->Address.Raw())
             {
                 ret = &symbol;
                 break;
@@ -61,6 +56,6 @@ namespace Prism
 
     Stacktrace Stacktrace::GetCurrent()
     {
-        return Stacktrace(CTOS_GET_FRAME_ADDRESS(0));
+        return Stacktrace(PrismGetFrameAddress(0));
     }
 }; // namespace Prism

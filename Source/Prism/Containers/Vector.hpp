@@ -13,7 +13,7 @@
 #include <limits>
 #include <new>
 
-void operator delete(void* ptr, usize) noexcept;
+void operator delete(void* ptr, Prism::usize) noexcept;
 
 namespace Prism
 {
@@ -96,8 +96,7 @@ namespace Prism
             return ConstReverseIterator(m_Data);
         }
 
-        [[nodiscard]]
-        constexpr bool Empty() const noexcept
+        [[nodiscard]] constexpr bool Empty() const noexcept
         {
             return m_Size == 0;
         }

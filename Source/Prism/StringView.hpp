@@ -76,45 +76,37 @@ namespace Prism
         //--------------------------------------------------------------------------
         // Iterators
         //--------------------------------------------------------------------------
-        [[nodiscard]]
-        constexpr ConstIterator begin() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstIterator begin() const PM_NOEXCEPT
         {
             return m_Data;
         }
-        [[nodiscard]]
-        constexpr ConstIterator end() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstIterator end() const PM_NOEXCEPT
         {
             return m_Data + m_Size;
         }
-        [[nodiscard]]
-        constexpr ConstIterator cbegin() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstIterator cbegin() const PM_NOEXCEPT
         {
             return m_Data;
         }
 
-        [[nodiscard]]
-        constexpr ConstIterator cend() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstIterator cend() const PM_NOEXCEPT
         {
             return m_Data + m_Size;
         }
-        [[nodiscard]]
-        constexpr ConstReverseIterator rbegin() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstReverseIterator rbegin() const PM_NOEXCEPT
         {
             return ConstReverseIterator(end());
         }
-        [[nodiscard]]
-        constexpr ConstReverseIterator rend() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstReverseIterator rend() const PM_NOEXCEPT
         {
             return ConstReverseIterator(begin());
         }
 
-        [[nodiscard]]
-        constexpr ConstReverseIterator crbegin() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstReverseIterator crbegin() const PM_NOEXCEPT
         {
             return ConstReverseIterator(end());
         }
-        [[nodiscard]]
-        constexpr ConstReverseIterator crend() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstReverseIterator crend() const PM_NOEXCEPT
         {
             return ConstReverseIterator(begin());
         }
@@ -122,33 +114,29 @@ namespace Prism
         //--------------------------------------------------------------------------
         // Element Access
         //--------------------------------------------------------------------------
-        [[nodiscard]]
-        constexpr ConstReferenceType
+        [[nodiscard]] constexpr ConstReferenceType
         operator[](SizeType pos) const PM_NOEXCEPT
         {
             assert(pos < m_Size);
             return *(m_Data + pos);
         }
-        [[nodiscard]]
-        constexpr ConstReferenceType At(SizeType pos) const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstReferenceType
+        At(SizeType pos) const PM_NOEXCEPT
         {
             assert(pos < m_Size);
             return *(m_Data + pos);
         }
-        [[nodiscard]]
-        constexpr ConstReferenceType Front() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstReferenceType Front() const PM_NOEXCEPT
         {
             assert(m_Size > 0);
             return *m_Data;
         }
-        [[nodiscard]]
-        constexpr ConstReferenceType Back() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstReferenceType Back() const PM_NOEXCEPT
         {
             assert(m_Size > 0);
             return *(m_Data + m_Size - 1);
         }
-        [[nodiscard]]
-        constexpr ConstPointerType Raw() const PM_NOEXCEPT
+        [[nodiscard]] constexpr ConstPointerType Raw() const PM_NOEXCEPT
         {
             return m_Data;
         }
@@ -156,20 +144,17 @@ namespace Prism
         //--------------------------------------------------------------------------
         // Capacity
         //--------------------------------------------------------------------------
-        [[nodiscard]]
-        constexpr SizeType Size() const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType Size() const PM_NOEXCEPT
         {
             return m_Size;
         }
-        [[nodiscard]]
-        constexpr SizeType MaxSize() const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType MaxSize() const PM_NOEXCEPT
         {
             return (NPos - sizeof(SizeType) - sizeof(void*))
                  / sizeof(ValueType);
         }
 
-        [[nodiscard]]
-        constexpr bool Empty() const PM_NOEXCEPT
+        [[nodiscard]] constexpr bool Empty() const PM_NOEXCEPT
         {
             return m_Size == 0;
         }
@@ -205,72 +190,65 @@ namespace Prism
             TraitsType::copy(str, m_Data + pos, count);
             return count;
         }
-        [[nodiscard]]
-        constexpr BasicStringView Substr(SizeType pos   = 0,
-                                         SizeType count = NPos) const
-            PM_NOEXCEPT(false)
+        [[nodiscard]] constexpr BasicStringView
+        Substr(SizeType pos = 0, SizeType count = NPos) const PM_NOEXCEPT(false)
         {
             assert(pos < m_Size);
             count = std::min(count, m_Size - pos);
             return BasicStringView(m_Data + pos, count);
         }
-        [[nodiscard]]
-        constexpr i32 Compare(BasicStringView str) const PM_NOEXCEPT
+        [[nodiscard]] constexpr i32
+        Compare(BasicStringView str) const PM_NOEXCEPT
         {
             const SizeType count = std::min(m_Size, str.m_Size);
             i32            ret = TraitsType::Compare(m_Data, str.m_Data, count);
 
             return ret;
         }
-        [[nodiscard]]
-        constexpr i32 Compare(SizeType pos, SizeType count,
-                              BasicStringView str) const
+        [[nodiscard]] constexpr i32 Compare(SizeType pos, SizeType count,
+                                            BasicStringView str) const
         {
             return Substr(pos, count).Compare(str);
         }
-        [[nodiscard]]
-        constexpr i32 Compare(SizeType pos1, SizeType count1,
-                              BasicStringView str, SizeType pos2,
-                              SizeType count2) const
+        [[nodiscard]] constexpr i32 Compare(SizeType pos1, SizeType count1,
+                                            BasicStringView str, SizeType pos2,
+                                            SizeType count2) const
         {
             return Substr(pos1, count1).Compare(str.Substr(pos2, count2));
         }
-        [[nodiscard]]
-        constexpr i32 Compare(const C* str) const PM_NOEXCEPT
+        [[nodiscard]] constexpr i32 Compare(const C* str) const PM_NOEXCEPT
         {
             return Compare(BasicStringView(str));
         }
-        [[nodiscard]]
-        constexpr i32 Compare(SizeType pos, SizeType count, const C* str) const
+        [[nodiscard]] constexpr i32 Compare(SizeType pos, SizeType count,
+                                            const C* str) const
 
         {
             return Substr(pos, count).Compare(BasicStringView(str));
         }
-        [[nodiscard]]
-        constexpr i32 Compare(SizeType pos, SizeType count1, const C* str,
-                              SizeType count2) const PM_NOEXCEPT(false)
+        [[nodiscard]] constexpr i32 Compare(SizeType pos, SizeType count1,
+                                            const C* str, SizeType count2) const
+            PM_NOEXCEPT(false)
         {
             return Substr(pos, count1).Compare(BasicStringView(str, count2));
         }
-        [[nodiscard]]
-        constexpr bool StartsWith(BasicStringView str) const PM_NOEXCEPT
+        [[nodiscard]] constexpr bool
+        StartsWith(BasicStringView str) const PM_NOEXCEPT
         {
             return m_Size >= str.m_Size
                 && TraitsType::compare(m_Data, str.m_Data, str.m_Size) == 0;
         }
-        [[nodiscard]]
-        constexpr bool StartsWith(C* c) const PM_NOEXCEPT
+        [[nodiscard]] constexpr bool StartsWith(C* c) const PM_NOEXCEPT
         {
             return !Empty() && TraitsType::eq(Front(), c);
         }
-        [[nodiscard]]
-        constexpr bool StartsWith(const C* str) const PM_NOEXCEPT
+        [[nodiscard]] constexpr bool StartsWith(const C* str) const PM_NOEXCEPT
         {
             return StartsWith(BasicStringView(str));
         }
 
-        [[nodiscard]]
-        constexpr bool EndsWith(BasicStringView str) const PM_NOEXCEPT
+        [[nodiscard]] constexpr bool
+        EndsWith(BasicStringView str) const PM_NOEXCEPT
         {
             const SizeType size      = Size();
             const auto     otherSize = str.Size();
@@ -279,36 +257,32 @@ namespace Prism
                 && TraitsType::compare(end() - otherSize, str.m_Data, otherSize)
                        == 0;
         }
-        [[nodiscard]]
-        constexpr bool EndsWith(C* c) const PM_NOEXCEPT
+        [[nodiscard]] constexpr bool EndsWith(C* c) const PM_NOEXCEPT
         {
             return !Empty() && TraitsType::eq(Back(), c);
         }
-        [[nodiscard]]
-        constexpr bool EndsWith(const C* str) const PM_NOEXCEPT
+        [[nodiscard]] constexpr bool EndsWith(const C* str) const PM_NOEXCEPT
         {
             return EndsWith(BasicStringView(str));
         }
 
-        [[nodiscard]]
-        constexpr bool Contains(BasicStringView str) const PM_NOEXCEPT
+        [[nodiscard]] constexpr bool
+        Contains(BasicStringView str) const PM_NOEXCEPT
         {
             return Find(str) != NPos;
         }
-        [[nodiscard]]
-        constexpr bool contains(C ch) const PM_NOEXCEPT
+        [[nodiscard]] constexpr bool contains(C ch) const PM_NOEXCEPT
         {
             return Find(ch) != NPos;
         }
-        [[nodiscard, gnu::nonnull]]
-        constexpr bool Contains(const C* ch) const PM_NOEXCEPT
+        [[nodiscard, gnu::nonnull]] constexpr bool
+        Contains(const C* ch) const PM_NOEXCEPT
         {
             return Find(ch) != NPos;
         }
 
-        [[nodiscard]]
-        constexpr SizeType Find(BasicStringView str,
-                                SizeType        pos = 0) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        Find(BasicStringView str, SizeType pos = 0) const PM_NOEXCEPT
         {
 
             if (str.m_Size == 0) return pos <= m_Size ? pos : NPos;
@@ -330,55 +304,48 @@ namespace Prism
             }
             return NPos;
         }
-        [[nodiscard]]
-        constexpr SizeType Find(const C* str, SizeType pos,
-                                SizeType count) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType Find(const C* str, SizeType pos,
+                                              SizeType count) const PM_NOEXCEPT
         {
             return Find(BasicStringView(str, count), pos);
         }
-        [[nodiscard]]
-        constexpr SizeType Find(const C* str,
-                                SizeType pos = 0) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        Find(const C* str, SizeType pos = 0) const PM_NOEXCEPT
         {
             return Find(str, pos, TraitsType::length(str));
         }
-        [[nodiscard]]
-        constexpr SizeType Find(ValueType ch,
-                                SizeType  pos = 0) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        Find(ValueType ch, SizeType pos = 0) const PM_NOEXCEPT
         {
             return Find(BasicStringView(std::addressof(ch)), 1);
         }
         template <typename StringViewLike>
-        [[nodiscard]]
-        constexpr SizeType Find(const StringViewLike& str,
-                                SizeType              pos = 0) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        Find(const StringViewLike& str, SizeType pos = 0) const PM_NOEXCEPT
         {
             return Find(str.m_Data, pos, str.m_Size);
         }
         //[[nodiscard]]
         // constexpr SizeType RFind(const BasicString& str,
         //                         SizeType pos = NPos) const PM_NOEXCEPT;
-        [[nodiscard]]
-        constexpr SizeType RFind(const C* str, SizeType pos,
-                                 SizeType count) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType RFind(const C* str, SizeType pos,
+                                               SizeType count) const PM_NOEXCEPT
         {
             return RFind(BasicStringView(str, count), pos);
         }
-        [[nodiscard]]
-        constexpr SizeType RFind(const C* str,
-                                 SizeType pos = NPos) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        RFind(const C* str, SizeType pos = NPos) const PM_NOEXCEPT
         {
             return RFind(str, pos, TraitsType::length(str));
         }
-        [[nodiscard]]
-        constexpr SizeType RFind(C ch, SizeType pos = NPos) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType RFind(C ch, SizeType pos
+                                                     = NPos) const PM_NOEXCEPT
         {
             return RFind(BasicStringView(std::addressof(ch), 1), pos);
         }
         template <typename StringViewLike>
-        [[nodiscard]]
-        constexpr SizeType RFind(const StringViewLike& str,
-                                 SizeType pos = 0) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        RFind(const StringViewLike& str, SizeType pos = 0) const PM_NOEXCEPT
         {
 
             if (str.m_Size <= m_Size)
@@ -393,9 +360,8 @@ namespace Prism
             return NPos;
         }
 
-        [[nodiscard]]
-        constexpr usize FindFirstOf(BasicStringView str,
-                                    usize           pos = 0) const PM_NOEXCEPT
+        [[nodiscard]] constexpr usize
+        FindFirstOf(BasicStringView str, usize pos = 0) const PM_NOEXCEPT
         {
             for (; str.m_Size && pos < m_Size; ++pos)
             {
@@ -405,26 +371,24 @@ namespace Prism
             }
             return NPos;
         }
-        [[nodiscard]]
-        constexpr usize FindFirstOf(C ch, usize pos = 0) const PM_NOEXCEPT
+        [[nodiscard]] constexpr usize FindFirstOf(C ch, usize pos
+                                                        = 0) const PM_NOEXCEPT
         {
             return Find(ch, pos);
         }
-        [[nodiscard]]
-        constexpr SizeType FindFirstOf(const C* str, SizeType pos,
-                                       SizeType count) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        FindFirstOf(const C* str, SizeType pos,
+                    SizeType count) const PM_NOEXCEPT
         {
             return FindFirstOf(BasicString(str, count), pos);
         }
-        [[nodiscard, gnu::nonnull]]
-        constexpr SizeType FindFirstOf(const C* str,
-                                       SizeType pos = 0) const PM_NOEXCEPT
+        [[nodiscard, gnu::nonnull]] constexpr SizeType
+        FindFirstOf(const C* str, SizeType pos = 0) const PM_NOEXCEPT
         {
             return FindFirstOf(str, pos, Traits::length(str));
         }
-        [[nodiscard]]
-        constexpr SizeType FindLastOf(BasicStringView str,
-                                      SizeType pos = NPos) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        FindLastOf(BasicStringView str, SizeType pos = NPos) const PM_NOEXCEPT
         {
             SizeType len = Size();
             if (len && str.m_Size)
@@ -437,57 +401,51 @@ namespace Prism
             }
             return NPos;
         }
-        [[nodiscard]]
-        constexpr SizeType FindLastOf(C        c,
-                                      SizeType pos = NPos) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        FindLastOf(C c, SizeType pos = NPos) const PM_NOEXCEPT
         {
             return RFind(c, pos);
         }
-        [[nodiscard]]
-        constexpr SizeType FindLastOf(const C* str, SizeType pos,
-                                      SizeType count) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        FindLastOf(const C* str, SizeType pos, SizeType count) const PM_NOEXCEPT
         {
             return FindLastOf(BasicStringView(str, count), pos);
         }
-        [[nodiscard, gnu::nonnull]]
-        constexpr SizeType FindLastOf(const C* str,
-                                      SizeType pos = NPos) const PM_NOEXCEPT
+        [[nodiscard, gnu::nonnull]] constexpr SizeType
+        FindLastOf(const C* str, SizeType pos = NPos) const PM_NOEXCEPT
         {
             return FindLastOf(str, pos, Traits::length(str));
         }
 
-        [[nodiscard]]
-        constexpr SizeType FindFirstNotOf(BasicStringView str,
-                                          SizeType pos = 0) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        FindFirstNotOf(BasicStringView str, SizeType pos = 0) const PM_NOEXCEPT
         {
             for (; pos < m_Size; ++pos)
                 if (!Traits::Find(str.m_Data, str.m_Size, m_Data[pos]))
                     return pos;
             return NPos;
         }
-        [[nodiscard]]
-        constexpr SizeType FindFirstNotOf(C        ch,
-                                          SizeType pos = 0) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        FindFirstNotOf(C ch, SizeType pos = 0) const PM_NOEXCEPT
         {
             return FindFirstNotOf(BasicStringView(std::addressof(ch), 1), pos);
         }
 
-        [[nodiscard]]
-        constexpr SizeType FindFirstNotOf(const C* str, SizeType pos,
-                                          SizeType count) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        FindFirstNotOf(const C* str, SizeType pos,
+                       SizeType count) const PM_NOEXCEPT
         {
             return FindFirstNotOf(BasicStringView(str, count), pos);
         }
 
-        [[nodiscard, gnu::nonnull]]
-        constexpr SizeType FindFirstNotOf(const C* str,
-                                          SizeType pos = 0) const PM_NOEXCEPT
+        [[nodiscard, gnu::nonnull]] constexpr SizeType
+        FindFirstNotOf(const C* str, SizeType pos = 0) const PM_NOEXCEPT
         {
             return FindFirstNotOf(str, pos, Traits::length(str));
         }
-        [[nodiscard]]
-        constexpr SizeType FindLastNotOf(BasicStringView str,
-                                         SizeType pos = NPos) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType FindLastNotOf(BasicStringView str,
+                                                       SizeType        pos
+                                                       = NPos) const PM_NOEXCEPT
         {
 
             SizeType len = m_Size;
@@ -503,23 +461,21 @@ namespace Prism
             return FindLastNotOf(str.m_Data, pos, str.m_Size);
         }
 
-        [[nodiscard]]
-        constexpr SizeType FindLastNotOF(C        ch,
-                                         SizeType pos = NPos) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        FindLastNotOF(C ch, SizeType pos = NPos) const PM_NOEXCEPT
         {
             return FindLastNotOf(BasicStringView(std::addressof(ch), 1), pos);
         }
 
-        [[nodiscard]]
-        constexpr SizeType FindLastNotOF(const C* str, SizeType pos,
-                                         SizeType count) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType
+        FindLastNotOF(const C* str, SizeType pos,
+                      SizeType count) const PM_NOEXCEPT
         {
             return FindLastNotOf(BasicStringView(str, count), pos);
         }
 
-        [[nodiscard, gnu::nonnull]]
-        constexpr SizeType FindLastNotOf(const C* str,
-                                         SizeType pos = NPos) const PM_NOEXCEPT
+        [[nodiscard, gnu::nonnull]] constexpr SizeType
+        FindLastNotOf(const C* str, SizeType pos = NPos) const PM_NOEXCEPT
         {
             return FindLastNotOf(str, pos, Traits::length(str));
         }
@@ -536,8 +492,7 @@ namespace Prism
     using U32StringView = BasicStringView<char32_t>;
 
     template <typename C, typename Traits>
-    [[nodiscard]]
-    constexpr bool
+    [[nodiscard]] constexpr bool
     operator==(BasicStringView<C, Traits>                       lhs,
                std::type_identity_t<BasicStringView<C, Traits>> rhs) PM_NOEXCEPT
     {
@@ -545,11 +500,9 @@ namespace Prism
     }
 
     template <typename C, typename Traits>
-    [[nodiscard]]
-    constexpr auto
-    operator<=>(BasicStringView<C, Traits>                       lhs,
-                std::type_identity_t<BasicStringView<C, Traits>> rhs)
-        PM_NOEXCEPT
+    [[nodiscard]] constexpr auto operator<=>(
+        BasicStringView<C, Traits>                       lhs,
+        std::type_identity_t<BasicStringView<C, Traits>> rhs) PM_NOEXCEPT
     {
         return Traits::compare(lhs.Compare(rhs));
     }
@@ -586,10 +539,9 @@ namespace Prism
 
 template <>
 struct std::hash<Prism::StringView>
-    : public std::__hash_base<usize, Prism::StringView>
+    : public std::__hash_base<Prism::usize, Prism::StringView>
 {
-    [[nodiscard]]
-    usize
+    [[nodiscard]] Prism::usize
     operator()(const Prism::StringView& str) const noexcept
     {
         return std::_Hash_impl::hash(str.Raw(), str.Size());
@@ -601,10 +553,9 @@ struct std::__is_fast_hash<std::hash<Prism::StringView>> : std::false_type
 };
 template <>
 struct std::hash<Prism::WStringView>
-    : public std::__hash_base<usize, Prism::WStringView>
+    : public std::__hash_base<Prism::usize, Prism::WStringView>
 {
-    [[nodiscard]]
-    usize
+    [[nodiscard]] Prism::usize
     operator()(const Prism::WStringView& str) const noexcept
     {
         return std::_Hash_impl::hash(str.Raw(), str.Size() * sizeof(wchar_t));
@@ -618,10 +569,9 @@ struct std::__is_fast_hash<std::hash<Prism::WStringView>> : std::false_type
 
 template <>
 struct std::hash<Prism::U8StringView>
-    : public std::__hash_base<usize, Prism::U8StringView>
+    : public std::__hash_base<Prism::usize, Prism::U8StringView>
 {
-    [[nodiscard]]
-    usize
+    [[nodiscard]] Prism::usize
     operator()(const Prism::U8StringView& str) const noexcept
     {
         return std::_Hash_impl::hash(str.Raw(), str.Size());
@@ -634,10 +584,9 @@ struct std::__is_fast_hash<std::hash<Prism::U8StringView>> : std::false_type
 
 template <>
 struct std::hash<Prism::U16StringView>
-    : public std::__hash_base<usize, Prism::U16StringView>
+    : public std::__hash_base<Prism::usize, Prism::U16StringView>
 {
-    [[nodiscard]]
-    usize
+    [[nodiscard]] Prism::usize
     operator()(const Prism::U16StringView& str) const noexcept
     {
         return std::_Hash_impl::hash(str.Raw(), str.Size() * sizeof(char16_t));
@@ -651,10 +600,9 @@ struct std::__is_fast_hash<std::hash<Prism::U16StringView>> : std::false_type
 
 template <>
 struct std::hash<Prism::U32StringView>
-    : public std::__hash_base<usize, Prism::U32StringView>
+    : public std::__hash_base<Prism::usize, Prism::U32StringView>
 {
-    [[nodiscard]]
-    size_t
+    [[nodiscard]] Prism::size_t
     operator()(const Prism::U32StringView& str) const noexcept
     {
         return std::_Hash_impl::hash(str.Raw(), str.Size() * sizeof(char32_t));

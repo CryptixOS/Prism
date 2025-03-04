@@ -7,7 +7,9 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
 
-#include <Library/Logger.hpp>
+#if PRISM_TARGET_CRYPTIX == 1
+    #include <Library/Logger.hpp>
+#endif
 
 #include <cstdio>
 #include <utility>
@@ -37,8 +39,10 @@ namespace Prism::Log
 
     void Print(LogLevel logLevel, std::string_view str)
     {
+#if PRISM_TARGET_CRYPTIX == 1
         Logger::Log(logLevel, str);
         return;
+#endif
         PrintLevel(logLevel);
         std::printf("%s", str.data());
 

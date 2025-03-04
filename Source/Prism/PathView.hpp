@@ -67,3 +67,6 @@ namespace Prism
         return lhs.Compare(rhs) <=> 0;
     }
 }; // namespace Prism
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::PathView;
+#endif

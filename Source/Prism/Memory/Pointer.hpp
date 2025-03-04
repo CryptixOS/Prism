@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Types.hpp>
-#ifdef PRISM_TARGET_CRYPTIX
+#if PRISM_TARGET_CRYPTIX == 1
 namespace VirtualMemoryManager
 {
     extern usize GetHigherHalfOffset();
@@ -137,7 +137,6 @@ namespace Prism
             return *this;
         }
         constexpr auto operator<=>(const Pointer& other) const = default;
-
         constexpr      operator std::string() const
         {
             return std::to_string(m_Pointer);

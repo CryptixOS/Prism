@@ -6,11 +6,11 @@
  */
 #pragma once
 
+#include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Types.hpp>
 #include <Prism/Memory/Pointer.hpp>
 
 #include <compare>
-#include <vector>
 
 namespace Prism
 {
@@ -41,11 +41,13 @@ namespace Prism
         Stacktrace(Pointer frameAddress, usize skipFrames = 0,
                    usize maxDepth = 32);
 
-        ErrorOr<void> LoadSymbols(std::vector<Symbol>&& symbols,
-                                  PhysAddr lowestSymbolAddres   = 0x0000'0000,
+        ErrorOr<void> LoadSymbols(Vector<Symbol>&& symbols,
+                                  PhysAddr lowestSymbolAddress  = 0x0000'0000,
                                   PhysAddr highestSymbolAddress = 0xffff'ffff)
         {
-            m_Symbols = std::move(symbols);
+            m_Symbols              = std::move(symbols);
+            m_LowestSymbolAddress  = lowestSymbolAddress;
+            m_HighestSymbolAddress = highestSymbolAddress;
 
             return {};
         }
@@ -57,10 +59,10 @@ namespace Prism
         static Stacktrace      GetCurrent();
 
       private:
-        std::vector<StackFrame*> m_Frames;
+        Vector<StackFrame*> m_Frames;
 
-        std::vector<Symbol>      m_Symbols;
-        PhysAddr                 m_LowestSymbolAddress  = 0x0000'0000;
-        PhysAddr                 m_HighestSymbolAddress = 0xffff'ffff;
+        Vector<Symbol>      m_Symbols;
+        PhysAddr            m_LowestSymbolAddress  = 0x0000'0000;
+        PhysAddr            m_HighestSymbolAddress = 0xffff'ffff;
     }; // namespace Stacktrace
 };     // namespace Prism

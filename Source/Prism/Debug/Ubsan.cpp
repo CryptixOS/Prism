@@ -4,9 +4,10 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/Debug/Log.hpp>
 #include <Prism/Core/Types.hpp>
+#include <Prism/Debug/Log.hpp>
 
+#if PRISM_TARGET_CRYPTIX == 1
 namespace
 {
     struct SourceLocation
@@ -233,3 +234,4 @@ extern "C"
         Warn("alignment assumption", data->Location);
     }
 };
+#endif

@@ -6,7 +6,6 @@
  */
 #pragma once
 
-#include <API/Limits.hpp>
 #include <Prism/PathView.hpp>
 
 #include <vector>
@@ -66,3 +65,7 @@ namespace Prism
         return lhs.Compare(rhs) <=> 0;
     }
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::Path;
+#endif

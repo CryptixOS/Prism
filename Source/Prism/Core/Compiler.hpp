@@ -12,9 +12,11 @@
     #define PM_NOEXCEPT
 #endif
 
-#define ALWAYS_INLINE    [[gnu::always_inline]]
+#define ALWAYS_INLINE           [[gnu::always_inline]]
 
-#define PM_LINE          __builtin_LINE()
-#define PM_COLUMN        __builtin_COLUMN()
-#define PM_FILENAME      __builtin_FILE()
-#define PM_FUNCTION_NAME __builtin_FUNCTION()
+#define PM_LINE                 __builtin_LINE()
+#define PM_COLUMN               __builtin_COLUMN()
+#define PM_FILENAME             __builtin_FILE()
+#define PM_FUNCTION_NAME        __builtin_FUNCTION()
+
+#define PrismGetFrameAddress(n) __builtin_frame_address(n)

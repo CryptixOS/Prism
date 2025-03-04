@@ -4,8 +4,14 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <API/Limits.hpp>
 #include <Prism/PathView.hpp>
+
+#if PRISM_TARGET_CRYPTIX == 1
+    #include <API/Limits.hpp>
+    #define PRISM_MAX_PATH Limits::MAX_PATH_LENGTH
+#else
+    #define PRISM_MAX_PATH 255
+#endif
 
 namespace Prism
 {
@@ -15,7 +21,7 @@ namespace Prism
         usize pathLen = 0;
         while (m_Path[pathLen])
         {
-            if (pathLen >= Limits::MAX_PATH_LENGTH) return false;
+            if (pathLen >= PRISM_MAX_PATH) return false;
             ++pathLen;
         }
 

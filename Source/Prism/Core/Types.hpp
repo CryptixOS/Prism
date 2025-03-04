@@ -15,10 +15,14 @@
 #include <fmt/format.h>
 #include <type_traits>
 
-#ifndef PRISM_TARGET_CRYPTIX
+#if PRISM_TARGET_CRYPTIX == 1
+    #define PRISM_ERRNO_T std::errno_t;
+#else
+    #define PRISM_ERRNO_T error_t
+#endif
+
 namespace Prism
 {
-#endif
     using PhysAddr  = std::uintptr_t;
 
     using usize     = std::size_t;
@@ -35,13 +39,36 @@ namespace Prism
     using i64       = std::int64_t;
 
     using symbol    = void*[];
-    using ErrorCode = std::errno_t;
+    using ErrorCode = PRISM_ERRNO_T;
     using Error     = std::unexpected<ErrorCode>;
 
     template <typename R>
     using ErrorOr = std::expected<R, ErrorCode>;
 
     constexpr u64 Bit(u64 n) { return (1ull << n); }
-#ifndef PRISM_TARGET_CRYPTIX
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::PhysAddr;
+
+using Prism::isize;
+using Prism::usize;
+
+using Prism::u16;
+using Prism::u32;
+using Prism::u64;
+using Prism::u8;
+
+using Prism::i16;
+using Prism::i32;
+using Prism::i64;
+using Prism::i8;
+
+using Prism::Error;
+using Prism::ErrorCode;
+using Prism::symbol;
+
+using Prism::ErrorOr;
+
+using Prism::Bit;
 #endif
