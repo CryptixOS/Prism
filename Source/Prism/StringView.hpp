@@ -43,7 +43,7 @@ namespace Prism
         constexpr BasicStringView(const BasicStringView&) PM_NOEXCEPT = default;
 
         constexpr BasicStringView(const C* str) PM_NOEXCEPT
-            : m_Data(str),
+            : m_Data(const_cast<C*>(str)),
               m_Size(TraitsType::length(str))
         {
         }
@@ -295,10 +295,10 @@ namespace Prism
 
             while (len >= str.m_Size)
             {
-                begin = Traits::Find(begin, len - str.m_Size + 1, first);
+                begin = Traits::find(begin, len - str.m_Size + 1, first);
                 if (*begin == '\0') return NPos;
 
-                if (Traits::Compare(begin, str.m_Data, str.m_Size) == 0)
+                if (Traits::compare(begin, str.m_Data, str.m_Size) == 0)
                     return begin - m_Data;
                 len = end - ++begin;
             }
@@ -602,7 +602,7 @@ template <>
 struct std::hash<Prism::U32StringView>
     : public std::__hash_base<Prism::usize, Prism::U32StringView>
 {
-    [[nodiscard]] Prism::size_t
+    [[nodiscard]] Prism::usize
     operator()(const Prism::U32StringView& str) const noexcept
     {
         return std::_Hash_impl::hash(str.Raw(), str.Size() * sizeof(char32_t));
@@ -636,3 +636,7 @@ struct fmt::formatter<Prism::StringView> : fmt::formatter<std::string>
                                                    ctx);
     }
 };
+
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::StringView;
+#endif

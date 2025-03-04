@@ -89,6 +89,10 @@ namespace Prism
             TraitsType::copy(Raw(), s, count);
             Raw()[newSize - 1] = 0;
         }
+        constexpr BasicString(BasicStringView<C, Traits> str)
+            : BasicString(const_cast<C*>(str.Raw()), str.Size())
+        {
+        }
 
         C& At(usize pos)
         {
@@ -734,8 +738,7 @@ namespace Prism
                   typename String = BasicString<C, std::char_traits<C>>>
         struct StringHashBase
         {
-            [[nodiscard]]
-            constexpr usize
+            [[nodiscard]] constexpr usize
             operator()(const String& str) const PM_NOEXCEPT
             {
                 return MarmurHash2_64A(str.Raw(), str.Size() * sizeof(C),
