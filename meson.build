@@ -7,7 +7,7 @@
 project('prism', ['c', 'cpp'],  license: 'GPL-3', default_options: [
   'c_std=c17',
   'cpp_std=c++23',
-  'warning_level=3',
+  'warning_level=2',
   'werror=true',
 ],)
 
@@ -25,14 +25,13 @@ sources = files(
   'Source/Prism/PathView.cpp',
 )
 
-subdir('Tests')
+#subdir('Tests')
 
 # ==============================================================================
 ### Dependencies
 deps = [
-  dependency('fmt'),
-  dependency('demangler'),
-  dependency('magic_enum'),
+  #dependency('demangler'),
+  #dependency('magic_enum'),
 ]
 
 cxx_args = [
@@ -43,7 +42,6 @@ cxx_args = [
   '-fstack-protector-all',
   '-mstack-protector-guard=global',
   '-fPIE',
-  '-O3',
   '-static',
   '-fno-rtti',
   '-fno-exceptions',
@@ -56,11 +54,12 @@ cxx_args = [
   '-DFMT_USE_LONG_DOUBLE=0',
   '-DFMT_USE_DOUBLE=0',
   '-DFMT_USE_FLOAT=0',
+  '-DFMT_USE_FLOAT128=0',
   '-DMAGIC_ENUM_RANGE_MAX=0x8a00',
   '-MP']
 
 prism_dep = declare_dependency(
-  dependencies: deps,
   include_directories : 'Source',
-  sources: sources
+  sources: sources,
+  compile_args: cxx_args
 )

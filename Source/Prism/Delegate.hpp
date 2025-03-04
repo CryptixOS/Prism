@@ -28,7 +28,7 @@ namespace Prism
     class Delegate;
 
     template <typename Ret, typename... Args>
-    class Delegate<Ret(Args...)> : public NonCopyable<Delegate<Ret(Args...)>>
+    class Delegate<Ret(Args...)>
     {
       public:
         using ObjectType   = void*;
@@ -72,50 +72,60 @@ namespace Prism
         };
 
         constexpr Delegate() PM_NOEXCEPT {}
-        inline Delegate(std::nullptr_t) PM_NOEXCEPT
+        constexpr Delegate(std::nullptr_t) PM_NOEXCEPT
             : m_Functor(nullptr, nullptr)
         {
         }
-        inline ~Delegate() { Reset(); }
+        ~Delegate() { Reset(); }
 
         Delegate(const Delegate& other) { m_Functor = other.m_Functor; }
-        Delegate(Delegate&& other) PM_NOEXCEPT
-        {
-            m_Functor       = other.m_Functor;
-            other.m_Functor = nullptr;
-        }
-        template <typename F>
-        Delegate(F&& f)
-            : Delegate(Delegate(std::move(f)))
-        {
-        }
-
+        /*
+            Delegate(Delegate&& other) PM_NOEXCEPT
+            {
+                m_Functor       = other.m_Functor;
+                other.m_Functor = nullptr;
+            }
+            template <typename F>
+            Delegate(F&& f)
+                : Delegate(Delegate(std::move(f)))
+            {
+            }
+    */
         Delegate& operator=(const Delegate& other)
         {
             m_Functor = other.m_Functor;
             return *this;
         }
-        Delegate& operator=(Delegate&& other)
-        {
-            m_Functor       = other.m_Functor;
-            other.m_Functor = nullptr;
+        /*
+            Delegate& operator=(Delegate&& other)
+            {
+                m_Functor       = other.m_Functor;
+                other.m_Functor = nullptr;
 
-            return *this;
-        }
-        Delegate& operator=(std::nullptr_t) PM_NOEXCEPT { m_Functor = nullptr; }
-        template <typename F>
-        Delegate& operator=(F&& f)
+                return *this;
+            }
+            Delegate& operator=(std::nullptr_t) PM_NOEXCEPT { m_Functor =
+           nullptr; } template <typename F> Delegate& operator=(F&& f)
+            {
+                Delegate(std::forward<F&&>(f)).Swap(*this);
+                return *this;
+            }
+            template <typename F>
+            Delegate& operator=(std::reference_wrapper<F> f) PM_NOEXCEPT
+            {
+                return Delegate(f).Swap(*this);
+            }*/
+
+        bool operator==(const Delegate& other) const
         {
-            Delegate(std::forward<F&&>(f)).Swap(*this);
-            return *this;
+            return m_Functor == other.m_Functor;
         }
-        template <typename F>
-        Delegate& operator=(std::reference_wrapper<F> f) PM_NOEXCEPT
+        bool operator!=(const Delegate& other) const
         {
-            return Delegate(f).Swap(*this);
+            return m_Functor != other.m_Functor;
         }
 
-        void Swap(Delegate& other) PM_NOEXCEPT
+        inline void Swap(Delegate& other) PM_NOEXCEPT
         {
             std::swap(m_Functor.Object, other.m_Functor.Object);
             std::swap(m_Functor.Stub, other.m_Functor.Stub);
@@ -163,7 +173,7 @@ namespace Prism
         }
         inline ReturnValue operator()(Args... args)
         {
-            return Invoke(std::forward<Args...>((args)...));
+            return Invoke(std::forward<Args>(args)...);
         }
 
         void Reset() { m_Functor = Functor(); }
