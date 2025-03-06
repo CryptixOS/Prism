@@ -29,12 +29,12 @@ sources = files(
 
 # ==============================================================================
 ### Dependencies
-deps = [
+prism_deps = [
   #dependency('demangler'),
   #dependency('magic_enum'),
 ]
 
-cxx_args = [
+prism_cxx_args = [
   '-fno-omit-frame-pointer',
   '-fno-lto',
   '-fsanitize=undefined',
@@ -61,5 +61,5 @@ cxx_args = [
 prism_dep = declare_dependency(
   include_directories : 'Source',
   sources: sources,
-  compile_args: cxx_args
+ # compile_args: cxx_args
 )
