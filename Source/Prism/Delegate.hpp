@@ -96,6 +96,7 @@ namespace Prism
         {
         }
         Delegate(const Delegate& other) { m_Functor = other.m_Functor; }
+        // Delegate(const Delegate& other) { CopyFrom(other); }
 
         Delegate(Delegate&& other) noexcept { MoveFrom(std::move(other)); }
         Delegate(FunctionType f) { Bind<f>(); }
@@ -104,11 +105,13 @@ namespace Prism
 
         Delegate& operator=(std::nullptr_t) PM_NOEXCEPT { Reset(); }
 
-        Delegate& operator=(Delegate&& other)
+        Delegate& operator=(const Delegate& other)
         {
-            m_Functor       = other.m_Functor;
-            other.m_Functor = nullptr;
-
+            if (this != &other)
+            {
+                Reset();
+                CopyFrom(other);
+            }
             return *this;
         }
         Delegate& operator=(const Delegate&& other)
@@ -222,6 +225,30 @@ namespace Prism
             m_Functor = Functor(object, stub, destroy);
         }
 
+        void CopyFrom(const Delegate& other)
+        {
+            m_Functor.Stub    = other.m_Functor.Stub;
+            m_Functor.Destroy = other.m_Functor.Destroy;
+
+            if (other.m_Functor.Object == other.m_Storage)
+            {
+                // Copy lambda stored in SBO
+                std::memcpy(m_Storage, other.m_Storage, SBO_SIZE);
+                m_Functor.Object = m_Storage;
+            }
+            else if (other.m_Functor.Object)
+            {
+                // Copy heap-allocated lambda
+                m_Functor.Object = other.m_Functor.Destroy
+                                     ? other.m_Functor.Destroy(
+                                         other.m_Functor.Object, CopyMode{})
+                                     : other.m_Functor.Object;
+            }
+        }
+
+        struct CopyMode
+        {
+        }; // Marker type to indicate copy mode
         void MoveFrom(Delegate&& other)
         {
             m_Functor = other.m_Functor;
@@ -260,6 +287,13 @@ namespace Prism
         {
             Lambda* p = static_cast<Lambda*>(thisObject);
             return (p->operator())(std::forward<Args>(args)...);
+        }
+
+        template <typename Lambda>
+        static void* DestroyLambda(void* object, CopyMode)
+        {
+            return new Lambda(
+                *static_cast<Lambda*>(object)); // Copy-construct a new lambda
         }
 
         template <typename Lambda>
