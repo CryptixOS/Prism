@@ -41,20 +41,38 @@ namespace Prism
             Functor(std::nullptr_t)
                 : Object(nullptr)
                 , Stub(nullptr)
+                , Destroy(nullptr)
             {
             }
-            Functor(ObjectType thisObject, FunctionType stub)
+            Functor(ObjectType thisObject, FunctionType stub,
+                    void (*destroy)(void*) = nullptr)
                 : Object(thisObject)
                 , Stub(stub)
+                , Destroy(destroy)
             {
+            }
+            ~Functor()
+            {
+                if (Destroy) Destroy(Object);
             }
 
             Functor& operator=(std::nullptr_t)
             {
-                Object = nullptr;
-                Stub   = nullptr;
+                if (Destroy) Destroy(Object);
+
+                Object  = nullptr;
+                Stub    = nullptr;
+                Destroy = nullptr;
 
                 return *this;
+            }
+
+            void Reset()
+            {
+                if (Destroy) Destroy(Object);
+                Object  = nullptr;
+                Stub    = nullptr;
+                Destroy = nullptr;
             }
 
             operator bool() const { return Object != nullptr; }
@@ -67,49 +85,48 @@ namespace Prism
                 return Object != other.Object || Stub != other.Stub;
             }
 
-            ObjectType   Object = nullptr;
-            FunctionType Stub   = nullptr;
+            ObjectType   Object            = nullptr;
+            FunctionType Stub              = nullptr;
+            void         (*Destroy)(void*) = nullptr;
         };
 
         constexpr Delegate() PM_NOEXCEPT {}
         constexpr Delegate(std::nullptr_t) PM_NOEXCEPT
-            : m_Functor(nullptr, nullptr)
+            : m_Functor(nullptr, nullptr, nullptr)
         {
         }
+        Delegate(const Delegate& other) { m_Functor = other.m_Functor; }
+
+        Delegate(Delegate&& other) noexcept { MoveFrom(std::move(other)); }
+        Delegate(FunctionType f) { Bind<f>(); }
+
         ~Delegate() { Reset(); }
 
-        Delegate(const Delegate& other) { m_Functor = other.m_Functor; }
-        /*
-            Delegate(Delegate&& other) PM_NOEXCEPT
-            {
-                m_Functor       = other.m_Functor;
-                other.m_Functor = nullptr;
-            }
-            template <typename F>
-            Delegate(F&& f)
-                : Delegate(Delegate(std::move(f)))
-            {
-            }
-    */
-        Delegate& operator=(const Delegate& other)
+        Delegate& operator=(std::nullptr_t) PM_NOEXCEPT { Reset(); }
+
+        Delegate& operator=(Delegate&& other)
         {
-            m_Functor = other.m_Functor;
+            m_Functor       = other.m_Functor;
+            other.m_Functor = nullptr;
+
+            return *this;
+        }
+        Delegate& operator=(const Delegate&& other)
+        {
+            if (this != &other)
+            {
+                Reset();
+                MoveFrom(std::move(other));
+            }
+            return *this;
+        }
+        template <typename F>
+        Delegate& operator=(F&& f)
+        {
+            Delegate(std::move(f));
             return *this;
         }
         /*
-            Delegate& operator=(Delegate&& other)
-            {
-                m_Functor       = other.m_Functor;
-                other.m_Functor = nullptr;
-
-                return *this;
-            }
-            Delegate& operator=(std::nullptr_t) PM_NOEXCEPT { m_Functor =
-           nullptr; } template <typename F> Delegate& operator=(F&& f)
-            {
-                Delegate(std::forward<F&&>(f)).Swap(*this);
-                return *this;
-            }
             template <typename F>
             Delegate& operator=(std::reference_wrapper<F> f) PM_NOEXCEPT
             {
@@ -138,9 +155,20 @@ namespace Prism
         }
 
         template <typename Lambda>
-        void BindLambda(const Lambda& lambda)
+        void BindLambda(Lambda&& lambda)
         {
-            Assign((ObjectType)(&lambda), LambdaStub<Lambda>);
+            using Decayed = std::decay_t<Lambda>;
+
+            if constexpr (sizeof(Decayed) <= SBO_SIZE)
+            {
+                new (m_Storage) Decayed(std::forward<Lambda>(lambda));
+                Assign(m_Storage, LambdaStub<Decayed>, &DestroyLambda<Decayed>);
+                return;
+            }
+
+            Decayed* heapAllocated = new Decayed(std::forward<Lambda>(lambda));
+            Assign(heapAllocated, LambdaStub<Decayed>,
+                   &DestroyLambdaHeap<Decayed>);
         }
 
         template <auto Function, typename Class>
@@ -167,7 +195,7 @@ namespace Prism
 
         ReturnValue Invoke(Args... args) const
         {
-            assert(!IsBound() && "Trying to invoke unbound delegate.");
+            assert(IsBound() && "Trying to invoke unbound delegate.");
             return std::invoke(m_Functor.Stub, m_Functor.Object,
                                std::forward<Args>(args)...);
         }
@@ -176,16 +204,35 @@ namespace Prism
             return Invoke(std::forward<Args>(args)...);
         }
 
-        void Reset() { m_Functor = Functor(); }
+        void Reset()
+        {
+            m_Functor.Reset();
+            std::memset(m_Storage, 0, SBO_SIZE);
+        }
 
       private:
-        Functor m_Functor = nullptr;
+        static constexpr usize SBO_SIZE  = 32;
 
-        void    Assign(ObjectType object, FunctionType stub)
+        Functor                m_Functor = nullptr;
+        alignas(void*) std::byte m_Storage[SBO_SIZE];
+
+        void Assign(ObjectType object, FunctionType stub,
+                    void (*destroy)(void*) = nullptr)
         {
-            m_Functor.Object = object;
-            m_Functor.Stub   = stub;
+            m_Functor = Functor(object, stub, destroy);
         }
+
+        void MoveFrom(Delegate&& other)
+        {
+            m_Functor = other.m_Functor;
+            if (other.m_Functor.Object == other.m_Storage)
+            {
+                std::memcpy(m_Storage, other.m_Storage, SBO_SIZE);
+                m_Functor.Object = m_Storage;
+            }
+            other.m_Functor = Functor();
+        }
+
         template <typename Class, ReturnValue (Class::*Function)(Args...)>
         static ReturnValue MemberFunctionStub(ObjectType thisObject,
                                               Args... args)
@@ -213,6 +260,18 @@ namespace Prism
         {
             Lambda* p = static_cast<Lambda*>(thisObject);
             return (p->operator())(std::forward<Args>(args)...);
+        }
+
+        template <typename Lambda>
+        static void DestroyLambda(void* object)
+        {
+            reinterpret_cast<Lambda*>(object)->~Lambda();
+        }
+
+        template <typename Lambda>
+        static void DestroyLambdaHeap(void* object)
+        {
+            delete static_cast<Lambda*>(object);
         }
     };
 }; // namespace Prism
