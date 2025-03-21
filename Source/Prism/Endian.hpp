@@ -42,7 +42,8 @@ namespace Prism
     {
         inline constexpr EndianStorage() = default;
         inline constexpr EndianStorage(T value)
-            : Value(ConvertEndian<E, Endian::eNative>(static_cast<T>(value)))
+            : Value(value)
+        //: Value(ConvertEndian<E, Endian::eNative>(static_cast<T>(value)))
         {
         }
 

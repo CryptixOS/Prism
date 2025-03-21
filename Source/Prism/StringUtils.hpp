@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
-#include <Prism/Math.hpp>
+#include <Prism/Utility/Math.hpp>
 
 namespace Prism
 {

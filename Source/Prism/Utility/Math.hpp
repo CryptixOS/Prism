@@ -10,21 +10,28 @@
 
 namespace Prism::Math
 {
-    inline constexpr usize AlignDown(usize value, usize alignment)
+    constexpr usize AlignDown(usize value, usize alignment)
     {
         return value & ~(alignment - 1);
     }
-    inline constexpr usize AlignUp(usize value, usize alignment)
+    constexpr usize AlignUp(usize value, usize alignment)
     {
         return AlignDown(value + alignment - 1, alignment);
     }
-    inline constexpr auto DivRoundUp(auto value, auto alignment)
+    constexpr auto DivRoundUp(auto value, auto alignment)
     {
         return AlignDown(value + alignment - 1, alignment) / alignment;
     }
-    inline constexpr bool IsPowerOfTwo(usize value)
+    constexpr bool IsPowerOfTwo(usize value)
     {
         return value != 0 && !(value & (value - 1));
+    }
+
+    template <typename T, typename U>
+    constexpr auto RoundUpToPowerOfTwo(T value, U exponent)
+        requires(std::is_integral_v<T> && std::is_integral_v<U>)
+    {
+        return ((value - 1) & ~(exponent - 1)) + exponent;
     }
 
     template <typename T>
@@ -42,4 +49,6 @@ namespace Prism::Math
     }
 } // namespace Prism::Math
 
-CryptixNameSpace
+#if PRISM_TARGET_CRYPTIX == 1
+namespace Math = Prism::Math;
+#endif

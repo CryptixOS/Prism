@@ -29,3 +29,7 @@ namespace Prism
         Singleton& operator=(Singleton const&) = default;
     };
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::Singleton;
+#endif

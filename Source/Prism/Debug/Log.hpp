@@ -72,6 +72,10 @@ namespace Prism
     }; // namespace Log
 };     // namespace Prism
 
+#if PRISM_TARGET_CRYPTIX
+namespace Log = Prism::Log;
+#endif
+
 #ifdef PRISM_BUILD_DEBUG
     #define PrismDebug(...)        Log::Debug(__VA_ARGS__)
     #define PrismDebugNoAlloc(...) Log::Printf(LogLevel::eDebug, __VA_ARGS__)

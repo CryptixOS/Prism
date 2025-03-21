@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: GPL-3
  */
 #include <Prism/Debug/Stacktrace.hpp>
-#include <Prism/Math.hpp>
+#include <Prism/Utility/Math.hpp>
 
 #include <demangler/Demangle.h>
 #include <vector>

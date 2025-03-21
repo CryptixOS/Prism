@@ -137,15 +137,61 @@ namespace Prism
             return *this;
         }
         constexpr auto operator<=>(const Pointer& other) const = default;
-        constexpr      operator std::string() const
+        constexpr auto operator<=>(const usize& other) const
+        {
+            return m_Pointer <=> other;
+        }
+
+        constexpr operator std::string() const
         {
             return std::to_string(m_Pointer);
+        }
+
+        friend Pointer& operator>>(Pointer& lhs, Pointer rhs)
+        {
+            lhs.m_Pointer >>= rhs.m_Pointer;
+
+            return lhs;
+        }
+        friend Pointer& operator-(Pointer& lhs, usize rhs)
+        {
+            lhs.m_Pointer -= rhs;
+
+            return lhs;
+        }
+        friend usize operator%(Pointer& lhs, usize rhs)
+        {
+            return lhs.m_Pointer % rhs;
+        }
+        friend Pointer operator&(Pointer& lhs, const Pointer rhs)
+        {
+            return lhs.m_Pointer & rhs.m_Pointer;
+        }
+
+        Pointer& operator++()
+        {
+            ++m_Pointer;
+            return *this;
+        }
+
+        Pointer operator++(int)
+        {
+            Pointer ret = *this;
+            ++m_Pointer;
+            return ret;
         }
 
       private:
         std::uintptr_t m_Pointer = 0;
     };
+
 }; // namespace Prism
+
+constexpr Prism::Pointer operator""_p(unsigned long long address)
+{
+    return address;
+}
+
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::Pointer;
 #endif
