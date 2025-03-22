@@ -27,6 +27,30 @@ namespace Prism::Time
         return days[month];
     }
 
+    class Timestep
+    {
+      public:
+        inline Timestep() = default;
+        inline Timestep(u64 ns)
+            : m_NanoSeconds(ns)
+        {
+        }
+
+        inline      operator u64() const { return m_NanoSeconds; }
+
+        inline u64  Seconds() const { return Milliseconds() / 1000; }
+        inline u64  Milliseconds() const { return Microseconds() / 1000; }
+        inline u64  Microseconds() const { return Nanoseconds() / 1000; }
+        inline u64  Nanoseconds() const { return m_NanoSeconds; }
+
+        inline void Set(u64 ns) { m_NanoSeconds = ns; }
+
+        inline auto operator<=>(const Timestep& other) const = default;
+
+      private:
+        u64 m_NanoSeconds = 0;
+    };
+
     struct DateTime
     {
         usize Year;
@@ -64,6 +88,25 @@ namespace Prism::Time
             }
 
             Day = daysSinceEpoch + 1;
+        }
+
+        constexpr usize DaysSinceEpoch() const
+        {
+            usize days = 0;
+            for (u16 year = 1970; year < Year; year++)
+                days += 365 + IsLeapYear(year);
+            return days;
+        }
+        constexpr isize ToEpoch() const
+        {
+            usize days = DaysSinceEpoch();
+
+            for (u8 month = 1; month < Month; month++)
+                days += DaysInMonth(month, Year);
+
+            days += Day - 1;
+            return (days * 86400) + ((Hour - 1) * 3600) + (Minute * 60)
+                 + Second;
         }
     };
 }; // namespace Prism::Time
