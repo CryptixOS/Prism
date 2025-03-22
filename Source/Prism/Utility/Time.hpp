@@ -47,6 +47,13 @@ namespace Prism::Time
 
         constexpr auto operator<=>(const Timestep& other) const = default;
 
+        constexpr Timestep& operator+=(const Timestep& rhs)
+        {
+            m_NanoSeconds += rhs.m_NanoSeconds;
+
+            return *this;
+        }
+
       private:
         u64 m_NanoSeconds = 0;
     };
