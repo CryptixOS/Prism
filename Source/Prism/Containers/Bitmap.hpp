@@ -8,6 +8,7 @@
 
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Assertions.hpp>
+#include <Prism/Utility/Math.hpp>
 
 #include <cstring>
 
@@ -27,6 +28,12 @@ namespace Prism
             m_Data = data;
             m_Size = size;
             SetAll(value);
+        }
+        inline void Allocate(usize size)
+        {
+            usize bytes = Math::DivRoundUp(size, 8);
+            m_Data      = new u8[bytes];
+            m_Size      = size;
         }
 
         constexpr usize GetSize() const { return m_Size; }
@@ -57,3 +64,7 @@ namespace Prism
         usize m_Size;
     };
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::Bitmap;
+#endif
