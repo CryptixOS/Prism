@@ -30,22 +30,22 @@ namespace Prism::Time
     class Timestep
     {
       public:
-        inline Timestep() = default;
-        inline Timestep(u64 ns)
+        constexpr Timestep() = default;
+        constexpr Timestep(u64 ns)
             : m_NanoSeconds(ns)
         {
         }
 
-        inline      operator u64() const { return m_NanoSeconds; }
+        constexpr      operator u64() const { return m_NanoSeconds; }
 
-        inline u64  Seconds() const { return Milliseconds() / 1000; }
-        inline u64  Milliseconds() const { return Microseconds() / 1000; }
-        inline u64  Microseconds() const { return Nanoseconds() / 1000; }
-        inline u64  Nanoseconds() const { return m_NanoSeconds; }
+        constexpr u64  Seconds() const { return Milliseconds() / 1000; }
+        constexpr u64  Milliseconds() const { return Microseconds() / 1000; }
+        constexpr u64  Microseconds() const { return Nanoseconds() / 1000; }
+        constexpr u64  Nanoseconds() const { return m_NanoSeconds; }
 
-        inline void Set(u64 ns) { m_NanoSeconds = ns; }
+        constexpr void Set(u64 ns) { m_NanoSeconds = ns; }
 
-        inline auto operator<=>(const Timestep& other) const = default;
+        constexpr auto operator<=>(const Timestep& other) const = default;
 
       private:
         u64 m_NanoSeconds = 0;
@@ -129,4 +129,5 @@ struct fmt::formatter<Prism::Time::DateTime> : fmt::formatter<std::string>
 using Prism::Time::DateTime;
 using Prism::Time::DaysInMonth;
 using Prism::Time::IsLeapYear;
+using Prism::Time::Timestep;
 #endif
