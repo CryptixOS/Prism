@@ -155,6 +155,12 @@ namespace Prism
             m_Data[m_Size] = value;
             ++m_Size;
         }
+        void PushBack(const T& value)
+        {
+            if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
+            m_Data[m_Size] = value;
+            ++m_Size;
+        }
         void PushBack(T&& value)
         {
             if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
@@ -190,3 +196,6 @@ namespace Prism
         SizeType    m_Capacity = 0;
     };
 } // namespace Prism
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::Vector;
+#endif
