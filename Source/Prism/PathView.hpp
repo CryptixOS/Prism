@@ -15,6 +15,7 @@ namespace Prism
     class PathView
     {
       public:
+        constexpr PathView() = default;
         constexpr PathView(std::string path)
             : m_Path(path)
         {
