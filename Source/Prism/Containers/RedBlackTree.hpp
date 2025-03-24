@@ -136,5 +136,8 @@ namespace Prism
         void  RecursiveDelete(Node* node);
     };
 }; // namespace Prism
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::RedBlackTree;
+#endif
 
 #include <Prism/Containers/RedBlackTree.inl>
