@@ -35,7 +35,14 @@ namespace Prism
             m_Data      = new u8[bytes];
             m_Size      = size;
         }
+        inline void Free()
+        {
+            delete[] m_Data;
+            m_Data = nullptr;
+            m_Size = 0;
+        }
 
+        constexpr u8*   Raw() const { return m_Data; }
         constexpr usize GetSize() const { return m_Size; }
 
         inline void     SetAll(const u8 value)
