@@ -201,7 +201,7 @@ namespace Prism
         Compare(BasicStringView str) const PM_NOEXCEPT
         {
             const SizeType count = std::min(m_Size, str.m_Size);
-            i32            ret = TraitsType::Compare(m_Data, str.m_Data, count);
+            i32            ret = TraitsType::compare(m_Data, str.m_Data, count);
 
             return ret;
         }
@@ -298,7 +298,7 @@ namespace Prism
                 begin = Traits::find(begin, len - str.m_Size + 1, first);
                 if (*begin == '\0') return NPos;
 
-                if (Traits::compare(begin, str.m_Data, str.m_Size) == 0)
+                if (Traits::Compare(begin, str.m_Data, str.m_Size) == 0)
                     return begin - m_Data;
                 len = end - ++begin;
             }
@@ -496,7 +496,7 @@ namespace Prism
     operator==(BasicStringView<C, Traits>                       lhs,
                std::type_identity_t<BasicStringView<C, Traits>> rhs) PM_NOEXCEPT
     {
-        return lhs.Size() == rhs.Size() && lhs.compare(rhs) == 0;
+        return lhs.Size() == rhs.Size() && lhs.Compare(rhs) == 0;
     }
 
     template <typename C, typename Traits>
@@ -504,7 +504,7 @@ namespace Prism
         BasicStringView<C, Traits>                       lhs,
         std::type_identity_t<BasicStringView<C, Traits>> rhs) PM_NOEXCEPT
     {
-        return Traits::compare(lhs.Compare(rhs));
+        return Traits::Compare(lhs.Compare(rhs));
     }
 
     inline namespace StringViewLiterals
