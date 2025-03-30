@@ -33,7 +33,8 @@ namespace Prism
         using ReverseIterator      = std::reverse_iterator<Iterator>;
         using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
 
-        Vector() { Reserve(2); }
+        constexpr Vector() { Reserve(2); }
+        constexpr Vector(usize capacity) { Resize(capacity); }
         Vector(std::initializer_list<T> init)
         {
             Reserve(2);
