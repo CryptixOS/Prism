@@ -9,6 +9,8 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Endian.hpp>
 
+#include <Prism/Memory/Buffer.hpp>
+
 #include <concepts>
 
 namespace Prism
@@ -21,6 +23,11 @@ namespace Prism
         ByteStream(u8* data, usize size)
             : m_Data(data)
             , m_Size(size)
+        {
+        }
+        ByteStream(Buffer& buffer)
+            : m_Data(buffer.Raw())
+            , m_Size(buffer.Size())
         {
         }
 
@@ -66,6 +73,13 @@ namespace Prism
             m_Offset += size;
         }
 
+        void Write(ByteStream<E>& inStream, usize size)
+        {
+            assert(m_Offset + size <= m_Size);
+
+            inStream.Read(m_Data + m_Offset, size);
+            m_Offset += size;
+        }
         template <typename T>
         void Write(T* data, usize size)
         {
@@ -75,7 +89,7 @@ namespace Prism
             m_Offset += size;
         }
         template <typename T, usize Size>
-        void operator<<(T (&dest)[Size])
+        void operator>>(T (&dest)[Size])
         {
             assert(m_Offset + Size <= m_Size);
 
@@ -84,7 +98,7 @@ namespace Prism
         }
 
         template <typename T>
-        void operator<<(T& dest)
+        void operator>>(T& dest)
             requires(sizeof(T) > 8)
         {
             assert(m_Offset + sizeof(T) <= m_Size);
@@ -93,7 +107,7 @@ namespace Prism
             m_Offset += sizeof(T);
         }
         template <typename T>
-        void operator<<(T& dest)
+        void operator>>(T& dest)
             requires(sizeof(T) <= 8)
         {
             assert(m_Offset + sizeof(T) <= m_Size);
