@@ -31,6 +31,7 @@ namespace Prism
         constexpr usize Size() const { return m_Size; }
         constexpr usize Offset() const { return m_Offset; }
         constexpr       operator bool() const { return m_Offset < m_Size; }
+        constexpr bool  IsEndOfStream() const { return m_Offset >= m_Size; }
 
         void            Load(u8* data, usize size)
         {
