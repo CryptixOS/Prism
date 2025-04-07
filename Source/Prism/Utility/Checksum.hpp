@@ -23,7 +23,7 @@ namespace Prism
             return crc;
         }
 
-        constexpr u32 DoChecksum(const u8* data, usize length)
+        inline u32 DoChecksum(const u8* data, usize length)
         {
             static Array<u32, 256> table       = {};
             static bool            initialized = false;
