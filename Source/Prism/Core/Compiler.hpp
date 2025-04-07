@@ -12,7 +12,9 @@
     #define PM_NOEXCEPT
 #endif
 
-#define ALWAYS_INLINE           [[gnu::always_inline]]
+#define PM_ALWAYS_INLINE           [[gnu::always_inline]]
+#define PM_USED [[gnu::used]]
+#define PM_PACKED [[gnu::packed]]
 
 #define PM_LINE                 __builtin_LINE()
 #define PM_COLUMN               __builtin_COLUMN()
