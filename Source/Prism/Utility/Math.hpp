@@ -10,6 +10,11 @@
 
 namespace Prism::Math
 {
+    constexpr usize Abs(isize value)
+    {
+        if (value < 0) return -value;
+        return value;
+    }
     constexpr usize AlignDown(usize value, usize alignment)
     {
         return value & ~(alignment - 1);
@@ -46,6 +51,27 @@ namespace Prism::Math
         for (T x = 0; x < exponent; x++) powMult *= base;
 
         return (invert) ? 1 / powMult : powMult;
+    }
+    constexpr isize Sqrt(isize n)
+    {
+        if (n < 0) return -1;
+        i64 result = 0;
+        i64 bit    = 1 << 30;
+        while (bit > n) bit >>= 2;
+
+        while (bit != 0)
+        {
+            if (n >= result + bit)
+            {
+                n -= result + bit;
+                result = (result >> 1) + bit;
+            }
+            else result >>= 1;
+
+            bit >>= 2;
+        }
+
+        return result;
     }
 } // namespace Prism::Math
 
