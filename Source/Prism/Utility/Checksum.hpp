@@ -41,7 +41,23 @@ namespace Prism
             return ~crc;
         }
     }; // namespace CRC32
+    namespace Adler32
+    {
+        constexpr u32 MOD_ADLER = 65521;
+
+        constexpr u32 DoChecksum(const u8* data, usize len)
+        {
+            u32 a = 1, b = 0;
+            for (usize i = 0; i < len; ++i)
+            {
+                a = (a + data[i]) % MOD_ADLER;
+                b = (b + a) % MOD_ADLER;
+            }
+            return (b << 16) | a;
+        }
+    }; // namespace Adler32
 }; // namespace Prism
 #if PRISM_TARGET_CRYPTIX == 1
-namespace CRC32 = Prism::CRC32;
+namespace CRC32   = Prism::CRC32;
+namespace Adler32 = Prism::Adler32;
 #endif
