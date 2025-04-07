@@ -16,9 +16,10 @@ namespace Prism
         eBig    = __ORDER_BIG_ENDIAN__,
         eNative = __BYTE_ORDER__,
     };
+    constexpr static Endian g_HostEndianness = Endian::eNative;
 
     template <Endian New, Endian Old = Endian::eNative, std::integral T>
-    inline constexpr T ConvertEndian(T num)
+    inline constexpr T ConvertEndian(T num) requires (sizeof(T) <= 8 && std::has_unique_object_representations_v<T>)
     {
         if constexpr (New == Old) return num;
 
@@ -38,16 +39,15 @@ namespace Prism
     }
 
     template <typename T, Endian E>
-    struct EndianStorage
+    struct [[gnu::packed]] EndianStorage
     {
         inline constexpr EndianStorage() = default;
         inline constexpr EndianStorage(T value)
             : Value(value)
-        //: Value(ConvertEndian<E, Endian::eNative>(static_cast<T>(value)))
         {
         }
 
-        inline constexpr T Load()
+        inline constexpr T Load() const
         {
             return ConvertEndian<Endian::eNative, E>(Value);
         }
@@ -57,7 +57,10 @@ namespace Prism
             Value = ConvertEndian<E, Endian::eNative>(value);
         }
 
-        inline constexpr bool operator==(T rhs) { return Value == rhs; }
+        constexpr auto operator<=>(const usize other) const  
+        {
+            return ConvertEndian<E, Endian::eNative>(Value) <=> other;
+        }
         inline constexpr      operator T() { return Value; }
 
         T                     Value;
@@ -67,7 +70,19 @@ namespace Prism
     using LittleEndian = EndianStorage<T, Endian::eLittle>;
     template <typename T>
     using BigEndian = EndianStorage<T, Endian::eBig>;
+    template <typename T>
+    using NetworkOrdered = BigEndian<T>;
 }; // namespace Prism
+
+template <typename T, Prism::Endian E>
+struct fmt::formatter<Prism::EndianStorage<T, E>> : fmt::formatter<std::string>
+{
+    template <typename FormatContext>
+    auto format(const Prism::EndianStorage<T, E>& value, FormatContext& ctx) const
+    {
+        return fmt::formatter<std::string>::format(fmt::format("{}", value.Load()), ctx);
+    }
+};
 
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::BigEndian;
