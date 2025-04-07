@@ -4,8 +4,12 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
+
 #include <Prism/Debug/Log.hpp>
+
+#include <Prism/Spinlock.hpp>
 
 #if PRISM_TARGET_CRYPTIX == 1
 namespace
@@ -111,62 +115,83 @@ namespace
     };
 } // namespace
 
-static void Warn(const char* message, SourceLocation source)
+Spinlock s_Lock;
+struct Guard
 {
+    inline Guard()
+    {
+        if (!s_Lock.Test())
+            Panic("Ubsan: Detected recursion in ubsan handler code!");
+        s_Lock.Acquire();
+    }
+    ~Guard() { s_Lock.Release(); }
+};
+
+PM_ALWAYS_INLINE static void Warn(const char* message, SourceLocation source)
+{
+    Guard guard;
     Prism::Log::Warn("Ubsan: {} ->\n{}[{}:{}]", message, source.File,
                      source.Line, source.Column);
-    // Stacktrace::Print(4);
 }
 
 extern "C"
 {
-    void __ubsan_handle_add_overflow(OverflowData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_add_overflow(OverflowData* data)
     {
         Warn("addition overflow", data->Location);
     }
 
-    void __ubsan_handle_sub_overflow(OverflowData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_sub_overflow(OverflowData* data)
     {
         Warn("subtraction overflow", data->Location);
     }
 
-    void __ubsan_handle_mul_overflow(OverflowData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_mul_overflow(OverflowData* data)
     {
         Warn("multiplication overflow", data->Location);
     }
 
-    void __ubsan_handle_divrem_overflow(OverflowData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_divrem_overflow(OverflowData* data)
     {
         Warn("division overflow", data->Location);
     }
 
-    void __ubsan_handle_negate_overflow(OverflowData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_negate_overflow(OverflowData* data)
     {
         Warn("negation overflow", data->Location);
     }
 
-    void __ubsan_handle_pointer_overflow(OverflowData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_pointer_overflow(OverflowData* data)
     {
         Warn("pointer overflow", data->Location);
     }
 
-    void __ubsan_handle_shift_out_of_bounds(ShiftOutOfBoundsData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_shift_out_of_bounds(ShiftOutOfBoundsData* data)
     {
         Warn("shift out of bounds", data->Location);
     }
 
-    void __ubsan_handle_load_invalid_value(InvalidValueData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_load_invalid_value(InvalidValueData* data)
     {
         Warn("invalid load value", data->Location);
     }
 
-    void __ubsan_handle_out_of_bounds(ArrayOutOfBoundsData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_out_of_bounds(ArrayOutOfBoundsData* data)
     {
         Warn("array out of bounds", data->Location);
     }
 
-    void __ubsan_handle_type_mismatch_v1(TypeMismatchV1Data* data,
-                                         uintptr_t           ptr)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_type_mismatch_v1(TypeMismatchV1Data* data, uintptr_t ptr)
     {
         if (ptr == 0) Warn("use of nullptr", data->Location);
         else if (ptr & ((1 << data->LogAlignment) - 1))
@@ -174,14 +199,15 @@ extern "C"
         else Warn("no space for object", data->Location);
     }
 
-    void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchV1Data* data,
-                                               uintptr_t                   ptr)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_function_type_mismatch(FunctionTypeMismatchV1Data* data,
+                                          uintptr_t                   ptr)
     {
         Warn("call to a function through pointer to incorrect function",
              data->Location);
     }
 
-    void __ubsan_handle_function_type_mismatch_v1(
+    PM_ALWAYS_INLINE PM_USED void __ubsan_handle_function_type_mismatch_v1(
         FunctionTypeMismatchV1Data* data, uintptr_t ptr, uintptr_t calleeRTTI,
         uintptr_t fnRTTI)
     {
@@ -189,47 +215,56 @@ extern "C"
              data->Location);
     }
 
-    void __ubsan_handle_vla_bound_not_positive(NegativeVlaData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_vla_bound_not_positive(NegativeVlaData* data)
     {
         Warn("variable-length argument is negative", data->Location);
     }
 
-    void __ubsan_handle_nonnull_return(NonNullReturnData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_nonnull_return(NonNullReturnData* data)
     {
         Warn("non-null return is null", data->Location);
     }
 
-    void __ubsan_handle_nonnull_return_v1(NonNullReturnData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_nonnull_return_v1(NonNullReturnData* data)
     {
         Warn("non-null return is null", data->Location);
     }
 
-    void __ubsan_handle_nonnull_arg(NonNullArgdata* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_nonnull_arg(NonNullArgdata* data)
     {
         Warn("non-null argument is null", data->Location);
     }
 
-    void __ubsan_handle_builtin_unreachable(UnreachableData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_builtin_unreachable(UnreachableData* data)
     {
         Warn("unreachable code reached", data->Location);
     }
 
-    void __ubsan_handle_invalid_builtin(InvalidBuiltinData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_invalid_builtin(InvalidBuiltinData* data)
     {
         Warn("invalid builtin", data->Location);
     }
 
-    void __ubsan_handle_float_cast_overflow(FloatCastOverflowData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_float_cast_overflow(FloatCastOverflowData* data)
     {
         Warn("float cast overflow", data->Location);
     }
 
-    void __ubsan_handle_missing_return(MissingReturnData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_missing_return(MissingReturnData* data)
     {
         Warn("missing return", data->Location);
     }
 
-    void __ubsan_handle_alignment_assumption(AlignmentAssumptionData* data)
+    PM_ALWAYS_INLINE PM_USED void
+    __ubsan_handle_alignment_assumption(AlignmentAssumptionData* data)
     {
         Warn("alignment assumption", data->Location);
     }
