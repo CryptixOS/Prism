@@ -33,7 +33,9 @@ namespace Prism
         using ReverseIterator      = std::reverse_iterator<Iterator>;
         using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
 
-        constexpr Vector() { Reserve(2); }
+        constexpr Vector()
+        { /*Reserve(2);*/
+        }
         constexpr Vector(usize capacity) { Resize(capacity); }
         Vector(std::initializer_list<T> init)
         {
@@ -169,13 +171,32 @@ namespace Prism
             m_Data[m_Size] = std::move(value);
             ++m_Size;
         }
+        template <typename... Args>
+        T& EmplaceBack(Args&&... args)
+        {
+            if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
+            
+            T* element = new (&m_Data[m_Size])T(std::forward<Args>(args)...);
+            ++m_Size;
+            return *element;
+        }
         constexpr void PopBack()
         {
             if (m_Size == 0) return;
 
             m_Data[m_Size - 1].~ValueType();
-            m_Size--;
+            --m_Size;
         }
+        constexpr T PopBackElement()
+        {
+            assert(m_Size > 0);
+            
+            T value = std::move(m_Data[m_Size - 1]);
+            --m_Size;
+            
+            return value;
+        }
+    
         constexpr void Resize(SizeType count)
         {
             Reserve(count);
