@@ -14,11 +14,11 @@
 namespace Prism
 {
     template <Endian E = Endian::eNative>
-    class DataStream
+    class ByteStream
     {
       public:
-        DataStream() = default;
-        DataStream(u8* data, usize size)
+        ByteStream() = default;
+        ByteStream(u8* data, usize size)
             : m_Data(data)
             , m_Size(size)
         {
@@ -111,5 +111,5 @@ namespace Prism
     };
 }; // namespace Prism
 #if PRISM_TARGET_CRYPTIX == 1
-using Prism::DataStream;
+using Prism::ByteStream;
 #endif
