@@ -22,16 +22,35 @@ namespace Prism
             : m_Buffer(size)
         {
         }
+        constexpr Buffer(Buffer&& other)
+            : m_Buffer(std::move(other.m_Buffer))
+        {
+        }
 
-        void        Resize(usize size) { m_Buffer.Resize(size); }
-        void        Reserve(usize capacity) { m_Buffer.Reserve(capacity); }
+        inline Buffer& operator=(const Buffer& other)
+        {
+            m_Buffer = other.m_Buffer;
 
-        Byte*       Raw() { return m_Buffer.Raw(); }
-        const Byte* Raw() const { return m_Buffer.Raw(); }
-        usize       Size() const { return m_Buffer.Size(); }
-        usize       Capacity() const { return m_Buffer.Capacity(); }
+            return *this;
+        }
+        inline Buffer& operator=(Buffer&& other)
+        {
+            m_Buffer = std::move(other.m_Buffer);
 
-        Byte&       operator[](usize index)
+            return *this;
+        }
+
+        void           Resize(usize size) { m_Buffer.Resize(size); }
+        void           Reserve(usize capacity) { m_Buffer.Reserve(capacity); }
+
+        Byte*          Raw() { return m_Buffer.Raw(); }
+        const Byte*    Raw() const { return m_Buffer.Raw(); }
+
+        constexpr bool Empty() const { return m_Buffer.Empty(); }
+        usize          Size() const { return m_Buffer.Size(); }
+        usize          Capacity() const { return m_Buffer.Capacity(); }
+
+        Byte&          operator[](usize index)
         {
             assert(index < m_Buffer.Size());
             return m_Buffer[index];
