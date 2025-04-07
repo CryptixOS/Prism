@@ -15,8 +15,12 @@
 #include <fmt/format.h>
 #include <type_traits>
 
+#define PrismStringifyInner(x) #x
+#define PrismStringify(x)      PrismStringifyInner(x)
+
 #if PRISM_TARGET_CRYPTIX == 1
     #define PRISM_ERRNO_T std::errno_t;
+    #define Stringify(x)  PrismStringify(x)
 #else
     #define PRISM_ERRNO_T error_t
 #endif
