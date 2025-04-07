@@ -33,14 +33,49 @@ namespace Prism
         using ReverseIterator      = std::reverse_iterator<Iterator>;
         using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
 
-        constexpr Vector()
-        { /*Reserve(2);*/
+        constexpr Vector() { /*Reserve(2);*/ }
+
+        inline Vector(const Vector& other)
+        {
+            m_Capacity = other.m_Capacity;
+            m_Data     = new T[m_Capacity];
+            m_Size     = other.m_Size;
+
+            for (usize i = 0; const auto& v : other) m_Data[i++] = v;
+            return *this;
         }
+        constexpr Vector(Vector&& other)
+            : m_Data(other.m_Data)
+            , m_Size(other.m_Size)
+        {
+            other.m_Data = nullptr;
+            other.m_Size = 0;
+        }
+
         constexpr Vector(usize capacity) { Resize(capacity); }
         Vector(std::initializer_list<T> init)
         {
             Reserve(2);
             for (const auto& value : init) PushBack(value);
+        }
+
+        inline Vector& operator=(const Vector& other)
+        {
+            m_Capacity = other.m_Capacity;
+            m_Data     = new T[m_Capacity];
+            m_Size     = other.m_Size;
+
+            for (usize i = 0; const auto& v : other) m_Data[i++] = v;
+            return *this;
+        }
+        inline Vector& operator=(Vector&& other)
+        {
+            m_Data       = std::move(other.m_Data);
+            m_Size       = std::move(other.m_Size);
+
+            other.m_Data = nullptr;
+            other.m_Size = 0;
+            return *this;
         }
 
         constexpr ReferenceType At(SizeType pos)
@@ -175,8 +210,8 @@ namespace Prism
         T& EmplaceBack(Args&&... args)
         {
             if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
-            
-            T* element = new (&m_Data[m_Size])T(std::forward<Args>(args)...);
+
+            T* element = new (&m_Data[m_Size]) T(std::forward<Args>(args)...);
             ++m_Size;
             return *element;
         }
@@ -190,13 +225,13 @@ namespace Prism
         constexpr T PopBackElement()
         {
             assert(m_Size > 0);
-            
+
             T value = std::move(m_Data[m_Size - 1]);
             --m_Size;
-            
+
             return value;
         }
-    
+
         constexpr void Resize(SizeType count)
         {
             Reserve(count);
