@@ -10,6 +10,9 @@
 #include <Prism/Core/Config.hpp>
 #include <Prism/Core/Types.hpp>
 
+#include <optional>
+#include <string_view>
+
 namespace Prism
 {
     class SourceLocation
