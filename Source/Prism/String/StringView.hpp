@@ -9,7 +9,9 @@
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
+#include <cassert>
 #include <ranges>
+#include <utility>
 
 namespace Prism
 {
@@ -535,7 +537,7 @@ namespace Prism
             return BasicStringView<char32_t>(str, len);
         }
     }; // namespace StringViewLiterals
-};     // namespace Prism
+}; // namespace Prism
 
 template <>
 struct std::hash<Prism::StringView>
