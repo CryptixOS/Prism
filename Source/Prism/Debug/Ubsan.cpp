@@ -9,8 +9,6 @@
 
 #include <Prism/Debug/Log.hpp>
 
-#include <Prism/Spinlock.hpp>
-
 #if PRISM_TARGET_CRYPTIX == 1
 namespace
 {
@@ -115,21 +113,8 @@ namespace
     };
 } // namespace
 
-Spinlock s_Lock;
-struct Guard
-{
-    inline Guard()
-    {
-        if (!s_Lock.Test())
-            Panic("Ubsan: Detected recursion in ubsan handler code!");
-        s_Lock.Acquire();
-    }
-    ~Guard() { s_Lock.Release(); }
-};
-
 PM_ALWAYS_INLINE static void Warn(const char* message, SourceLocation source)
 {
-    Guard guard;
     Prism::Log::Warn("Ubsan: {} ->\n{}[{}:{}]", message, source.File,
                      source.Line, source.Column);
 }
