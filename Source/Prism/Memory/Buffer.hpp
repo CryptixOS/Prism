@@ -56,13 +56,19 @@ namespace Prism
             return m_Buffer[index];
         }
 
+        void Clear() { m_Buffer.Clear(); }
         void Read(usize offset, Byte* dest, usize bytes)
         {
-            assert(offset + bytes <= m_Buffer.Size());
+            while (offset + bytes <= m_Buffer.Size())
+                m_Buffer.Resize(m_Buffer.Size() << 1);
+
+            // assert(offset + bytes <= m_Buffer.Size());
             std::memcpy(dest, Raw() + offset, bytes);
         }
         void Write(usize offset, const Byte* src, usize bytes)
         {
+            while (offset + bytes <= m_Buffer.Size())
+                m_Buffer.Resize(m_Buffer.Size() << 1);
             assert(offset + bytes <= m_Buffer.Size());
             std::memcpy(Raw() + offset, src, bytes);
         }
