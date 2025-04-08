@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Types.hpp>
-#include <Prism/Endian.hpp>
+#include <Prism/Memory/Endian.hpp>
 #include <Prism/Memory/Pointer.hpp>
 
 namespace Prism
