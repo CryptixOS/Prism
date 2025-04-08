@@ -42,7 +42,6 @@ namespace Prism
             m_Size     = other.m_Size;
 
             for (usize i = 0; const auto& v : other) m_Data[i++] = v;
-            return *this;
         }
         constexpr Vector(Vector&& other)
             : m_Data(other.m_Data)
