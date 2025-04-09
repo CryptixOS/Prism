@@ -77,7 +77,7 @@ namespace Prism
         {
             return IsHigherHalf() ? reinterpret_cast<T>(m_Pointer)
                                   : reinterpret_cast<T>(
-                                      m_Pointer + VMM::GetHigherHalfOffset());
+                                        m_Pointer + VMM::GetHigherHalfOffset());
         }
         template <>
         constexpr Pointer ToHigherHalf() const
@@ -91,7 +91,7 @@ namespace Prism
         constexpr T FromHigherHalf() const
         {
             return IsHigherHalf() ? reinterpret_cast<T>(
-                       m_Pointer - VMM::GetHigherHalfOffset())
+                                        m_Pointer - VMM::GetHigherHalfOffset())
                                   : reinterpret_cast<T>(m_Pointer);
         }
         template <>
@@ -109,7 +109,7 @@ namespace Prism
         constexpr T FromHigherHalf() const
         {
             return IsHigherHalf() ? reinterpret_cast<T>(
-                       m_Pointer - VMM::GetHigherHalfOffset())
+                                        m_Pointer - VMM::GetHigherHalfOffset())
                                   : reinterpret_cast<T>(m_Pointer);
         }
 #endif
@@ -118,11 +118,6 @@ namespace Prism
         constexpr T Offset(std::uintptr_t offset) const
         {
             return reinterpret_cast<T>(m_Pointer + offset);
-        }
-        template <>
-        constexpr Pointer Offset(std::uintptr_t offset) const
-        {
-            return m_Pointer + offset;
         }
 
         Pointer& operator&(usize rhs)
@@ -185,6 +180,11 @@ namespace Prism
         std::uintptr_t m_Pointer = 0;
     };
 
+    template <>
+    constexpr Pointer Pointer::Offset<Pointer>(std::uintptr_t offset) const
+    {
+        return m_Pointer + offset;
+    }
 }; // namespace Prism
 
 constexpr Prism::Pointer operator""_p(unsigned long long address)
