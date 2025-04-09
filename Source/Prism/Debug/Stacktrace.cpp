@@ -39,19 +39,14 @@ namespace Prism
     {
         if (address < m_LowestSymbolAddress || address > m_HighestSymbolAddress)
             return nullptr;
-        const Symbol* ret = &m_Symbols[0];
 
-        for (auto symbol : m_Symbols)
+        for (auto& symbol : m_Symbols)
         {
             if ((&symbol + 1) == m_Symbols.end()) break;
-            if (address < (&symbol + 1)->Address.Raw())
-            {
-                ret = &symbol;
-                break;
-            }
+            if (address < (&symbol + 1)->Address.Raw()) return &symbol;
         }
 
-        return ret;
+        return &m_Symbols[0];
     }
 
     Stacktrace Stacktrace::GetCurrent()
