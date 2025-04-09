@@ -15,51 +15,61 @@ if not meson.get_compiler('cpp').has_argument('-std=gnu++23')
   error('C++23 support is needed. Please install clang 17 or higher.')
 endif
 
-
-sources = files(
-  'Source/Prism/Debug/Log.cpp',
-  'Source/Prism/Debug/LogSink.cpp',
-  'Source/Prism/Debug/Ubsan.cpp',
-  'Source/Prism/Debug/Stacktrace.cpp',
-  'Source/Prism/Path.cpp',
-  'Source/Prism/PathView.cpp',
-)
-
-#subdir('Tests')
-
-# ==============================================================================
-### Dependencies
-prism_deps = [
-  #dependency('demangler'),
-  #dependency('magic_enum'),
-]
-
-prism_cxx_args = [
-  '-fno-omit-frame-pointer',
+debug_args = [
   '-fno-lto',
-  '-fsanitize=undefined',
-  #'-fsanitize=address',
-  '-fstack-protector-all',
-  '-mstack-protector-guard=global',
-  '-fPIE',
-  '-static',
-  '-fno-rtti',
-  '-fno-exceptions',
   '-fsized-deallocation',
+  #'-fsanitize=undefined',
+  #'-fsanitize=address',
+]
+warning_args = [
   '-Wno-unused-parameter',
   '-Wno-frame-address',
-  '-D__cplusplus=202302L',
-  '-D__cpp_concepts=202207L',
+]
+macros = [
   '-DFMT_STATIC_THOUSANDS_SEPARATOR=1',
   '-DFMT_USE_LONG_DOUBLE=0',
   '-DFMT_USE_DOUBLE=0',
   '-DFMT_USE_FLOAT=0',
   '-DFMT_USE_FLOAT128=0',
   '-DMAGIC_ENUM_RANGE_MAX=0x8a00',
-  '-MP']
+]
 
+cxx_args = [
+  debug_args,
+  warning_args,
+  macros,
+  '-fno-omit-frame-pointer',
+  '-fPIE',
+  '-fPIC',
+  '-static',
+  '-fno-rtti',
+  '-fno-exceptions',
+  '-Wno-frame-address',
+  '-MP'
+]
+
+incs = [ include_directories('Source') ]
+
+subdir('Source')
+#subdir('Tests')
+
+# ==============================================================================
+### Dependencies
+deps = [
+  dependency('demangler'),
+  dependency('magic_enum', default_options: [
+    'test=false',
+  ]),
+]
+
+prism = library('prism',
+  srcs, cpp_args: cxx_args,
+  include_directories: incs,
+  dependencies: deps,
+)
 prism_dep = declare_dependency(
-  include_directories : 'Source',
-  sources: sources,
- # compile_args: cxx_args
+  link_with: prism,
+  include_directories : incs,
+  compile_args: cxx_args,
+  dependencies: deps,
 )
