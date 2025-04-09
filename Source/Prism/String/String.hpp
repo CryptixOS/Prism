@@ -8,8 +8,8 @@
 
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
-#include <Prism/StringUtils.hpp>
-#include <Prism/StringView.hpp>
+#include <Prism/String/StringUtils.hpp>
+#include <Prism/String/StringView.hpp>
 
 #include <concepts>
 
@@ -538,6 +538,26 @@ namespace Prism
             return View().Copy(str, count, pos);
         }
 
+        inline constexpr BasicString<C, Traits>&
+        operator+=(BasicStringView<C, Traits> rhs)
+        {
+            auto pos = Size();
+            GrowTo(Size() + rhs.Size() + 1);
+
+            for (auto c : rhs) Raw()[pos++] = c;
+            Raw()[pos] = 0;
+
+            return *this;
+        }
+
+        template <typename C2, typename Traits2>
+        friend BasicString<C2, Traits2>
+        operator+(BasicStringView<C2, Traits2> lhs,
+                  BasicStringView<C2, Traits2> rhs);
+        template <typename C2, typename Traits2>
+        friend BasicString<C2, Traits2>
+        operator+(BasicStringView<C2, Traits2> lhs, const C* rhs);
+
       private:
         struct LongData
         {
@@ -591,10 +611,13 @@ namespace Prism
         }
         constexpr void ShortInit()
         {
-            if (auto& buffer = m_Storage.Long.Data; IsLong() && buffer)
+            if (IsLong() && m_Storage.Long.Data)
             {
-                delete buffer[m_Storage.Long.Capacity + 1];
-                buffer = nullptr;
+                delete[] m_Storage.Long.Data;
+                m_Storage.Long.Data     = nullptr;
+                m_Storage.Long.Size     = 0;
+                m_Storage.Long.Capacity = 0;
+                m_Storage.Long.IsLong   = false;
             }
 
             m_Storage.Short.IsLong = false;
@@ -667,7 +690,36 @@ namespace Prism
     using WString   = BasicString<wchar_t>;
 
     template <typename C, typename Traits>
-    constexpr void
+    inline BasicString<C, Traits> operator+(BasicStringView<C, Traits> lhs,
+                                            BasicStringView<C, Traits> rhs)
+    {
+        BasicString<C, Traits> string;
+        string.Resize(lhs.Size() + rhs.Size() + 1);
+        for (usize i = 0; auto c : lhs) string[i++] = c;
+        for (usize i = lhs.Size(); auto c : rhs) string[i++] = c;
+        string[lhs.Size() + rhs.Size()] = 0;
+
+        return std::move(string);
+    }
+    template <typename C, typename Traits>
+    BasicString<C, Traits> operator+(BasicStringView<C, Traits> lhs,
+                                     const C*                   rhs)
+    {
+        BasicString<C, Traits> string;
+        usize                  len = Traits::length(rhs);
+        string.Resize(lhs.Size() + len + 1);
+
+        for (usize i = 0; auto c : lhs) string[i++] = c;
+
+        C* src = const_cast<C*>(rhs);
+        for (usize i = lhs.Size(); *src++ != '\0';) string[i++] = *src;
+        string[lhs.Size() + len] = 0;
+
+        return std::move(string);
+    }
+
+    template <typename C, typename Traits>
+    inline constexpr void
     Swap(BasicString<C, Traits>& lhs,
          BasicString<C, Traits>& rhs) noexcept(noexcept(lhs.Swap(rhs)))
     {
@@ -675,7 +727,7 @@ namespace Prism
     }
 
     template <typename C, typename Traits>
-    constexpr std::strong_ordering
+    inline constexpr std::strong_ordering
     operator<=>(const BasicString<C, Traits>& lhs,
                 const BasicString<C, Traits>& rhs) noexcept
     {
@@ -683,7 +735,7 @@ namespace Prism
     }
 
     template <typename C, typename Traits>
-    constexpr std::strong_ordering
+    inline constexpr std::strong_ordering
     operator<=>(const BasicString<C, Traits>& lhs, const C* rhs)
     {
         return lhs.Compare(rhs) <=> 0;
@@ -691,7 +743,8 @@ namespace Prism
 
     namespace Detail
     {
-        constexpr u64 MurmurHash2_64A(const void* key, u64 size, u64 seed)
+        inline constexpr u64 MurmurHash2_64A(const void* key, u64 size,
+                                             u64 seed)
         {
             const u64  m    = 0xc6a4a7935bd1e995;
             const int  r    = 47;
@@ -747,7 +800,7 @@ namespace Prism
         };
     }; // namespace Detail
 
-    String ToString(i32 value)
+    inline String ToString(i32 value)
     {
         return String(StringUtils::ToString(value, 10),
                       StringUtils::GetDigitCount(value));

@@ -185,7 +185,6 @@ namespace Prism
         //--------------------------------------------------------------------------
         constexpr SizeType Copy(C* str, SizeType n, SizeType pos = 0) const
         {
-            assert(TraitsType::length(str) >= n);
             assert(pos < m_Size);
             const SizeType count = std::min(n, m_Size - pos);
 
@@ -629,13 +628,13 @@ inline constexpr bool
     = true;
 
 template <>
-struct fmt::formatter<Prism::StringView> : fmt::formatter<std::string>
+struct fmt::formatter<Prism::StringView> : fmt::formatter<std::string_view>
 {
     template <typename FormatContext>
     auto format(const Prism::StringView& src, FormatContext& ctx) const
     {
-        return fmt::formatter<std::string>::format(fmt::format("{}", src.Raw()),
-                                                   ctx);
+        return fmt::formatter<std::string_view>::format(
+            fmt::format("{}", src.Raw()), ctx);
     }
 };
 
