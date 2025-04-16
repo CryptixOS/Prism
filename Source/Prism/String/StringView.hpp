@@ -299,7 +299,7 @@ namespace Prism
                 begin = Traits::find(begin, len - str.m_Size + 1, first);
                 if (*begin == '\0') return NPos;
 
-                if (Traits::Compare(begin, str.m_Data, str.m_Size) == 0)
+                if (Traits::compare(begin, str.m_Data, str.m_Size) == 0)
                     return begin - m_Data;
                 len = end - ++begin;
             }
@@ -315,10 +315,11 @@ namespace Prism
         {
             return Find(str, pos, TraitsType::length(str));
         }
+
         [[nodiscard]] constexpr SizeType
         Find(ValueType ch, SizeType pos = 0) const PM_NOEXCEPT
         {
-            return Find(BasicStringView(std::addressof(ch)), 1);
+            return Find(BasicStringView(std::addressof(ch), 1), pos);
         }
         template <typename StringViewLike>
         [[nodiscard]] constexpr SizeType
@@ -353,7 +354,7 @@ namespace Prism
             {
                 pos = std::min(SizeType(m_Size - str.m_Size), pos);
                 do {
-                    if (Traits::Compare(m_Data + pos, str.m_Data, str.m_Str)
+                    if (Traits::compare(m_Data + pos, str.m_Data, str.m_Str)
                         == 0)
                         return pos;
                 } while (pos-- > 0);
@@ -502,10 +503,10 @@ namespace Prism
 
     template <typename C, typename Traits>
     [[nodiscard]] constexpr auto operator<=>(
-        BasicStringView<C, Traits>                       lhs,
-        std::type_identity_t<BasicStringView<C, Traits>> rhs) PM_NOEXCEPT
+        const BasicStringView<C, Traits>                       lhs,
+        std::type_identity_t<const BasicStringView<C, Traits>> rhs) PM_NOEXCEPT
     {
-        return Traits::Compare(lhs.Compare(rhs));
+        return lhs.Compare(rhs);
     }
 
     inline namespace StringViewLiterals
@@ -545,7 +546,7 @@ struct std::hash<Prism::StringView>
     [[nodiscard]] Prism::usize
     operator()(const Prism::StringView& str) const noexcept
     {
-        return std::_Hash_impl::hash(str.Raw(), str.Size());
+        return std::hash<std::string_view>{}({str.Raw(), str.Size()});
     }
 };
 template <>

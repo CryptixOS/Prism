@@ -10,6 +10,7 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/StringUtils.hpp>
 #include <Prism/String/StringView.hpp>
+#include <Prism/Utility/Hash.hpp>
 
 #include <concepts>
 
@@ -92,6 +93,29 @@ namespace Prism
         constexpr BasicString(BasicStringView<C, Traits> str)
             : BasicString(const_cast<C*>(str.Raw()), str.Size())
         {
+        }
+
+        constexpr BasicString<C, Traits>&
+        operator=(BasicStringView<C, Traits> str)
+        {
+            usize newSize = str.Size() + 1;
+            if (FitsInSso(newSize))
+            {
+                m_Storage.Short.Size   = newSize - 1;
+                m_Storage.Short.IsLong = false;
+            }
+            else
+            {
+                m_Storage.Long.Capacity = newSize;
+                m_Storage.Long.Size     = newSize - 1;
+                m_Storage.Short.IsLong  = true;
+                Reallocate(newSize, false);
+            }
+
+            Traits::copy(Raw(), str.Raw(), str.Size());
+            Raw()[newSize - 1] = 0;
+
+            return *this;
         }
 
         C& At(usize pos)
@@ -631,6 +655,7 @@ namespace Prism
 
         constexpr void Reallocate(usize newCapacity, bool copyOld)
         {
+            newCapacity = Math::AlignUp(newCapacity, sizeof(ValueType*));
             if (newCapacity == m_Storage.Long.Capacity) return;
 
             usize oldSize = m_Storage.Long.Size;
@@ -650,7 +675,6 @@ namespace Prism
             m_Storage.Long.Size     = newSize;
             m_Storage.Long.Data     = newData;
             m_Storage.Long.Capacity = newCapacity;
-            ;
         }
         constexpr void GrowTo(usize newCapacity)
         {
@@ -689,6 +713,58 @@ namespace Prism
     using U32String = BasicString<char32_t>;
     using WString   = BasicString<wchar_t>;
 
+    /*template <typename C, typename Traits>
+    [[nodiscard]] constexpr bool
+    operator==(BasicString<C, Traits>                       lhs,
+               std::type_identity_t<BasicString<C, Traits>> rhs) PM_NOEXCEPT
+    {
+        return lhs.Size() == rhs.Size() && lhs.Compare(rhs) == 0;
+    }*/
+
+    template <typename C, typename Traits>
+    constexpr bool operator==(const BasicString<C, Traits>& lhs,
+                              const BasicString<C, Traits>& rhs) PM_NOEXCEPT
+    {
+        return lhs.Compare(rhs) == 0;
+    }
+    template <typename C, typename Traits>
+    constexpr bool operator==(const BasicString<C, Traits>&     lhs,
+                              const BasicStringView<C, Traits>& rhs) PM_NOEXCEPT
+    {
+        return lhs.View().Compare(rhs) == 0;
+    }
+
+    template <typename C, typename Traits>
+    constexpr bool operator==(const BasicString<C, Traits>& lhs, const C* rhs)
+    {
+        return lhs.Compare(rhs) == 0;
+    }
+
+    template <typename C, typename Traits>
+    constexpr std::strong_ordering
+    operator<=>(const BasicString<C, Traits>& lhs,
+                BasicStringView<C, Traits>    rhs) PM_NOEXCEPT
+    {
+        return lhs.View().Compare(rhs) <=> 0;
+    }
+
+    /*
+        template <typename C, typename Traits>
+        [[nodiscard]] constexpr auto
+        operator<=>(const BasicString<C, Traits>&                lhs,
+                    std::type_identity_t<BasicString<C, Traits>> rhs)
+       PM_NOEXCEPT
+        {
+            return lhs.Compare(rhs);
+        }
+        template <typename C, typename Traits>
+        [[nodiscard]] constexpr auto
+        operator<=>(const BasicString<C, Traits>& lhs,
+                    BasicStringView<C, Traits>    rhs) PM_NOEXCEPT
+        {
+            return lhs.Compare(rhs);
+        }
+    */
     template <typename C, typename Traits>
     inline BasicString<C, Traits> operator+(BasicStringView<C, Traits> lhs,
                                             BasicStringView<C, Traits> rhs)
@@ -743,50 +819,6 @@ namespace Prism
 
     namespace Detail
     {
-        inline constexpr u64 MurmurHash2_64A(const void* key, u64 size,
-                                             u64 seed)
-        {
-            const u64  m    = 0xc6a4a7935bd1e995;
-            const int  r    = 47;
-
-            u64        h    = seed ^ (size * m);
-
-            const u64* data = static_cast<const uint64_t*>(key);
-            const u64* end  = data + (size / 8);
-
-            while (data != end)
-            {
-                u64 k = 0;
-                k     = *(data++);
-
-                k *= m;
-                k ^= k >> r;
-                k *= m;
-
-                h ^= k;
-                h *= m;
-            }
-
-            auto data2 = static_cast<const u8*>(static_cast<const void*>(data));
-
-            switch (size & 7)
-            {
-                case 7: h ^= static_cast<u64>(data2[6]) << 48; [[fallthrough]];
-                case 6: h ^= static_cast<u64>(data2[5]) << 40; [[fallthrough]];
-                case 5: h ^= static_cast<u64>(data2[4]) << 32; [[fallthrough]];
-                case 4: h ^= static_cast<u64>(data2[3]) << 24; [[fallthrough]];
-                case 3: h ^= static_cast<u64>(data2[2]) << 16; [[fallthrough]];
-                case 2: h ^= static_cast<u64>(data2[1]) << 8; [[fallthrough]];
-                case 1: h ^= static_cast<u64>(data2[0]); h *= m;
-            };
-
-            h ^= h >> r;
-            h *= m;
-            h ^= h >> r;
-
-            return h;
-        }
-
         template <typename C,
                   typename String = BasicString<C, std::char_traits<C>>>
         struct StringHashBase
@@ -794,8 +826,11 @@ namespace Prism
             [[nodiscard]] constexpr usize
             operator()(const String& str) const PM_NOEXCEPT
             {
-                return MarmurHash2_64A(str.Raw(), str.Size() * sizeof(C),
-                                       0xc70f6907ul);
+                const char* key    = str.Raw();
+                usize       length = str.Size() * sizeof(C);
+                const usize seed   = 0xc70f6907ul;
+
+                return Hash::MurmurHash2(key, length, seed);
             }
         };
     }; // namespace Detail
@@ -862,6 +897,22 @@ struct std::hash<Prism::BasicString<wchar_t, std::char_traits<wchar_t>>>
 {
 };
 
+template <>
+struct fmt::formatter<Prism::String> : fmt::formatter<std::string_view>
+{
+    template <typename FormatContext>
+    auto format(const Prism::String& src, FormatContext& ctx) const
+    {
+        return fmt::formatter<std::string_view>::format(
+            fmt::format("{}", src.Raw()), ctx);
+    }
+};
+
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::BasicString;
+using Prism::String;
+using Prism::U16String;
+using Prism::U32String;
+using Prism::U8String;
+using Prism::WString;
 #endif
