@@ -17,150 +17,160 @@ namespace VMM = VirtualMemoryManager;
 
 namespace Prism
 {
+    using VirtAddr = std::uintptr_t;
+
+    template <typename T>
+    concept PointerType = std::is_pointer_v<T>;
+    template <typename T>
+    concept PointerHolder = requires {
+        PointerType<T> || std::unsigned_integral<T>
+            || std::is_same_v<T, struct Pointer>;
+    };
+
     struct Pointer
     {
-        constexpr Pointer() = default;
-        Pointer(std::nullptr_t) { m_Pointer = 0; }
 
-        template <std::unsigned_integral T = std::uintptr_t>
-            requires(std::is_integral_v<T>)
-        constexpr Pointer(const T m_Pointer)
-            : m_Pointer(m_Pointer)
+        inline constexpr Pointer() = default;
+        inline constexpr Pointer(std::nullptr_t) { m_Pointer = 0; }
+
+        template <PointerHolder T = VirtAddr>
+        inline constexpr Pointer(const T pointer)
         {
+            if constexpr (std::is_pointer_v<T>)
+                m_Pointer = reinterpret_cast<VirtAddr>(pointer);
+            else m_Pointer = pointer;
         }
 
-        template <typename T = void*>
-            requires(std::is_pointer_v<T>)
-        Pointer(const T m_Pointer)
-            : m_Pointer(reinterpret_cast<std::uintptr_t>(m_Pointer))
+        template <PointerHolder T>
+        inline constexpr Pointer& operator=(T addr)
         {
-        }
+            if constexpr (std::is_pointer_v<T>)
+                m_Pointer = reinterpret_cast<VirtAddr>(addr);
+            else m_Pointer = addr;
 
-        constexpr operator std::uintptr_t() { return m_Pointer; }
-        operator void*() { return reinterpret_cast<void*>(m_Pointer); }
-        constexpr          operator bool() { return m_Pointer != 0; }
-        constexpr Pointer& operator=(std::uintptr_t addr)
-        {
-            m_Pointer = addr;
             return *this;
         }
-        Pointer& operator=(void* addr)
+
+        inline constexpr operator VirtAddr() const { return m_Pointer; }
+        template <PointerType T>
+        inline constexpr operator T() const
         {
-            m_Pointer = reinterpret_cast<std::uintptr_t>(addr);
-            return *this;
+            return reinterpret_cast<T>(m_Pointer);
         }
+        inline constexpr operator bool() const { return IsValid(); }
 
         template <typename T>
-        constexpr T* As() const
+        inline constexpr T* As() const
         {
             return reinterpret_cast<T*>(m_Pointer);
         }
-        template <typename T = std::uintptr_t>
-        constexpr T Raw() const
+        template <typename T = VirtAddr>
+        inline constexpr T Raw() const
         {
             return T(m_Pointer);
         }
 
-        constexpr auto& operator->() { return *As<u64>(); }
-        constexpr auto& operator*() { return *As<u64>(); }
+        inline constexpr auto& operator->() { return *As<u64>(); }
+        inline constexpr auto& operator*() { return *As<u64>(); }
+
+        inline constexpr bool  IsValid() const { return m_Pointer != 0; }
 
 #ifdef PRISM_TARGET_CRYPTIX
-        bool IsHigherHalf() const
+        inline constexpr VirtAddr HigherHalfOffset() const
         {
-            return m_Pointer >= VMM::GetHigherHalfOffset();
+            return VMM::GetHigherHalfOffset();
+        }
+        inline constexpr bool IsHigherHalf() const
+        {
+            return m_Pointer >= HigherHalfOffset();
         }
 
-        template <typename T = std::uintptr_t>
-            requires(std::is_pointer_v<T> || std::is_integral_v<T>
-                     || std::is_same_v<T, Pointer>)
-        constexpr T ToHigherHalf() const
+        template <PointerHolder T = VirtAddr>
+        inline constexpr T ToHigherHalf() const
         {
-            return IsHigherHalf() ? reinterpret_cast<T>(m_Pointer)
-                                  : reinterpret_cast<T>(
-                                        m_Pointer + VMM::GetHigherHalfOffset());
+            auto higherHalf
+                = IsHigherHalf() ? m_Pointer : m_Pointer + HigherHalfOffset();
+
+            if constexpr (std::is_pointer_v<T>)
+                return reinterpret_cast<T>(higherHalf);
+            else if constexpr (std::is_same_v<T, Pointer>) return higherHalf;
+            else return static_cast<T>(higherHalf);
+        }
+        inline constexpr Pointer ToHigherHalf() const
+        {
+            return ToHigherHalf<VirtAddr>();
+        }
+
+        template <PointerHolder T = VirtAddr>
+        inline constexpr T FromHigherHalf() const
+        {
+            auto lowerHalf
+                = IsHigherHalf() ? m_Pointer - HigherHalfOffset() : m_Pointer;
+
+            if constexpr (std::is_pointer_v<T>)
+                return reinterpret_cast<T>(lowerHalf);
+            else if (std::is_same_v<T, Pointer>) return lowerHalf;
+
+            return static_cast<T>(lowerHalf);
         }
         template <>
-        constexpr Pointer ToHigherHalf() const
+        inline constexpr Pointer FromHigherHalf() const
         {
-            return ToHigherHalf<std::uintptr_t>();
-        }
-
-        template <typename T = std::uintptr_t>
-            requires(std::is_pointer_v<T> || std::is_integral_v<T>
-                     || std::is_same_v<T, Pointer>)
-        constexpr T FromHigherHalf() const
-        {
-            return IsHigherHalf() ? reinterpret_cast<T>(
-                                        m_Pointer - VMM::GetHigherHalfOffset())
-                                  : reinterpret_cast<T>(m_Pointer);
-        }
-        template <>
-        constexpr Pointer FromHigherHalf() const
-        {
-            return FromHigherHalf<std::uintptr_t>();
-        }
-        constexpr Pointer FromHigherHalf() const
-        {
-            return IsHigherHalf() ? m_Pointer
-                                  : m_Pointer + VMM::GetHigherHalfOffset();
-        }
-
-        template <typename T>
-        constexpr T FromHigherHalf() const
-        {
-            return IsHigherHalf() ? reinterpret_cast<T>(
-                                        m_Pointer - VMM::GetHigherHalfOffset())
-                                  : reinterpret_cast<T>(m_Pointer);
+            return FromHigherHalf<VirtAddr>();
         }
 #endif
 
-        template <typename T = std::uintptr_t>
-        constexpr T Offset(std::uintptr_t offset) const
+        template <PointerHolder T = VirtAddr>
+        inline constexpr T Offset(usize offset) const
         {
-            return reinterpret_cast<T>(m_Pointer + offset);
+            auto addr = m_Pointer + offset;
+
+            if constexpr (std::is_pointer_v<T>)
+                return reinterpret_cast<T>(addr);
+            else return addr;
         }
 
-        Pointer& operator&(usize rhs)
+        inline constexpr auto operator<=>(const Pointer& other) const = default;
+        inline constexpr auto operator<=>(const usize& other) const
         {
-            m_Pointer &= rhs;
+            return m_Pointer <=> other;
+        }
+
+        inline constexpr Pointer& operator+=(usize bytes)
+        {
+            m_Pointer += bytes;
+
             return *this;
         }
-        constexpr Pointer& operator|=(Pointer rhs)
+        inline constexpr Pointer& operator-=(Pointer rhs)
+        {
+            m_Pointer -= rhs.Raw();
+            return *this;
+        }
+
+        inline constexpr Pointer& operator|=(Pointer rhs)
         {
             m_Pointer |= rhs.m_Pointer;
 
             return *this;
         }
-        constexpr auto operator<=>(const Pointer& other) const = default;
-        constexpr auto operator<=>(const usize& other) const
+        [[gnu::weak]] inline constexpr Pointer& operator&=(Pointer rhs)
         {
-            return m_Pointer <=> other;
-        }
+            m_Pointer &= rhs.m_Pointer;
 
-        constexpr operator std::string() const
-        {
-            return std::to_string(m_Pointer);
+            return *this;
         }
+        inline constexpr Pointer& operator<<=(Pointer rhs)
+        {
+            m_Pointer <<= rhs.m_Pointer;
 
-        friend Pointer& operator>>(Pointer& lhs, Pointer rhs)
+            return *this;
+        }
+        inline constexpr Pointer& operator>>=(Pointer rhs)
         {
-            lhs.m_Pointer >>= rhs.m_Pointer;
+            m_Pointer >>= rhs.m_Pointer;
 
-            return lhs;
-        }
-        friend Pointer& operator-(Pointer& lhs, usize rhs)
-        {
-            lhs.m_Pointer -= rhs;
-
-            return lhs;
-        }
-        friend usize operator%(Pointer& lhs, usize rhs)
-        {
-            return lhs.m_Pointer % rhs;
-        }
-        friend Pointer operator&(Pointer& lhs, const Pointer rhs)
-        {
-            return lhs.m_Pointer & rhs.m_Pointer;
+            return *this;
         }
 
         Pointer& operator++()
@@ -168,7 +178,6 @@ namespace Prism
             ++m_Pointer;
             return *this;
         }
-
         Pointer operator++(int)
         {
             Pointer ret = *this;
@@ -177,17 +186,54 @@ namespace Prism
         }
 
       private:
-        std::uintptr_t m_Pointer = 0;
+        VirtAddr m_Pointer = 0;
     };
 
     template <>
-    constexpr Pointer Pointer::Offset<Pointer>(std::uintptr_t offset) const
+    constexpr Pointer Pointer::Offset<Pointer>(usize offset) const
     {
         return m_Pointer + offset;
     }
+
+    inline constexpr Pointer operator+(Pointer lhs, Pointer rhs)
+    {
+        return lhs.Raw() + rhs.Raw();
+    }
+    inline constexpr Pointer operator-(Pointer lhs, Pointer rhs)
+    {
+        return lhs.Raw() - rhs.Raw();
+    }
+    inline constexpr Pointer operator%(Pointer& lhs, usize rhs)
+    {
+        return lhs.Raw() % rhs;
+    }
+    template <PointerHolder T>
+    inline constexpr Pointer operator|(Pointer& lhs, const T rhs)
+    {
+        if constexpr (std::is_same_v<T, Pointer>) return lhs.Raw() | rhs.Raw();
+
+        return lhs.Raw() | rhs.Raw();
+    }
+    inline constexpr Pointer operator&(Pointer lhs, const usize rhs)
+    {
+        return lhs.Raw() & rhs;
+    }
+    [[gnu::weak]] inline constexpr Pointer operator&(Pointer       lhs,
+                                                     const Pointer rhs)
+    {
+        return lhs.Raw() & rhs.Raw();
+    }
+    inline constexpr Pointer operator<<(Pointer& lhs, uintptr_t rhs)
+    {
+        return lhs.Raw() << rhs;
+    }
+    inline constexpr Pointer operator>>(Pointer& lhs, uintptr_t rhs)
+    {
+        return lhs.Raw() >> rhs;
+    }
 }; // namespace Prism
 
-constexpr Prism::Pointer operator""_p(unsigned long long address)
+constexpr Prism::Pointer operator""_virt(unsigned long long address)
 {
     return address;
 }
@@ -200,8 +246,9 @@ template <>
 struct fmt::formatter<Prism::Pointer> : fmt::formatter<std::string>
 {
     template <typename FormatContext>
-    auto format(const Prism::Pointer& addr, FormatContext& ctx) const
+    auto format(const Prism::Pointer addr, FormatContext& ctx) const
     {
-        return fmt::formatter<std::string>::format(fmt::format("{}", 0), ctx);
+        return fmt::formatter<std::string>::format(
+            fmt::format("{}", addr.Raw()), ctx);
     }
 };
