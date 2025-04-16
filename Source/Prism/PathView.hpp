@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Types.hpp>
+#include <Prism/String/StringView.hpp>
 
 #include <vector>
 
@@ -16,11 +17,16 @@ namespace Prism
     {
       public:
         constexpr PathView() = default;
-        constexpr PathView(std::string path)
+
+        constexpr PathView(const char* path)
             : m_Path(path)
         {
         }
-        constexpr PathView(const char* path)
+        constexpr PathView(StringView path)
+            : m_Path(path.Raw(), path.Size())
+        {
+        }
+        constexpr PathView(std::string path)
             : m_Path(path)
         {
         }
