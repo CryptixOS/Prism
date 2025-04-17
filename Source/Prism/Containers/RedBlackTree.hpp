@@ -97,7 +97,7 @@ namespace Prism
         constexpr usize GetSize() const { return m_Size; }
 
         void            Clear();
-        void            Insert(K& key, V& value);
+        void            Insert(K key, V& value);
         // Iterator        Erase(Iterator pos);
         Iterator        Erase(const Iterator pos);
         Iterator        Erase(const Iterator first, const Iterator end);
