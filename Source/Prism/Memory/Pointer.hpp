@@ -76,7 +76,7 @@ namespace Prism
         inline constexpr bool  IsValid() const { return m_Pointer != 0; }
 
 #ifdef PRISM_TARGET_CRYPTIX
-        inline constexpr VirtAddr HigherHalfOffset() const
+        inline VirtAddr HigherHalfOffset() const
         {
             return VMM::GetHigherHalfOffset();
         }
