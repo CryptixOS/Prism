@@ -11,7 +11,7 @@
 
 namespace Prism::Hash
 {
-    constexpr usize MurmurHash2(const char* key, u64 length, u64 seed)
+    inline usize MurmurHash2(const char* key, u64 length, u64 seed)
     {
         // Marmur Hash constants
         constexpr u64 MULTIPLIER   = 0xc6a4a7935bd1e995;
