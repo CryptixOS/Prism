@@ -62,8 +62,8 @@ namespace Prism
     }
 
 #define PrismEarlyPanic(fmt, ...)                                              \
-    earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
-#define PrismPanic(...) panic(std::format(__VA_ARGS__).data())
+    ::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
+#define PrismPanic(...) ::panic(std::format(__VA_ARGS__).data())
 
 #if PRISM_PREFIXLESS_MACROS == 1 || PRISM_TARGET_CRYPTIX
     #define Assert(expr)              PrismAssert(expr)
