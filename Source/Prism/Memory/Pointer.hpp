@@ -109,9 +109,8 @@ namespace Prism
 
             if constexpr (std::is_pointer_v<T>)
                 return reinterpret_cast<T>(lowerHalf);
-            else if (std::is_same_v<T, Pointer>) return lowerHalf;
-
-            return static_cast<T>(lowerHalf);
+            else if constexpr (std::is_same_v<T, Pointer>) return lowerHalf;
+            else return static_cast<T>(lowerHalf);
         }
         template <>
         inline constexpr Pointer FromHigherHalf() const
@@ -240,6 +239,9 @@ constexpr Prism::Pointer operator""_virt(unsigned long long address)
 
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::Pointer;
+using Prism::PointerHolder;
+using Prism::PointerType;
+using Prism::VirtAddr;
 #endif
 
 template <>
