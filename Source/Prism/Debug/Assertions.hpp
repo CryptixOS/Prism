@@ -11,7 +11,7 @@
 
 #include <format>
 
-#if PRISM_TARGET_CRYPTIX == false
+#ifndef PRISM_TARGET_CRYPTIX
 namespace Prism
 {
 #endif
@@ -20,7 +20,7 @@ namespace Prism
     [[noreturn]]
     extern void panic(std::string_view msg);
 
-#if PRISM_TARGET_CRYPTIX == false
+#ifndef PRISM_TARGET_CRYPTIX
 }; // namespace Prism
 #endif
 
