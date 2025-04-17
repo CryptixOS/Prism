@@ -97,9 +97,10 @@ namespace Prism
         }
 
     }; // namespace StringUtils
-};     // namespace Prism
+}; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
+namespace StringUtils = Prism::StringUtils;
 using Prism::StringUtils::GetDigitCount;
 using Prism::StringUtils::ToNumber;
 using Prism::StringUtils::ToString;
