@@ -8,6 +8,7 @@
 
 #include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Types.hpp>
+#include <Prism/Memory/Pointer.hpp>
 
 #include <span>
 
@@ -50,26 +51,24 @@ namespace Prism
         usize          Size() const { return m_Buffer.Size(); }
         usize          Capacity() const { return m_Buffer.Capacity(); }
 
-        Byte&          operator[](usize index)
-        {
-            assert(index < m_Buffer.Size());
-            return m_Buffer[index];
-        }
+        Byte&          operator[](usize index) { return m_Buffer[index]; }
 
-        void Clear() { m_Buffer.Clear(); }
-        void Read(usize offset, Byte* dest, usize bytes)
-        {
-            while (offset + bytes <= m_Buffer.Size())
-                m_Buffer.Resize(m_Buffer.Size() << 1);
+        void           Clear() { m_Buffer.Clear(); }
 
-            // assert(offset + bytes <= m_Buffer.Size());
-            std::memcpy(dest, Raw() + offset, bytes);
+        template <PointerHolder T>
+        void Read(usize offset, T dest, usize bytes)
+        {
+            assert(offset + bytes <= m_Buffer.Size());
+
+            if constexpr (std::is_same_v<T, Pointer>)
+                std::memcpy(dest.Raw(), Raw() + offset, bytes);
+            else std::memcpy(dest, Raw() + offset, bytes);
         }
         void Write(usize offset, const Byte* src, usize bytes)
         {
-            while (offset + bytes <= m_Buffer.Size())
-                m_Buffer.Resize(m_Buffer.Size() << 1);
-            assert(offset + bytes <= m_Buffer.Size());
+            // while (offset + bytes <= m_Buffer.Size())
+            //     m_Buffer.Resize(m_Buffer.Size() << 1);
+            assert((offset + bytes) <= m_Buffer.Size());
             std::memcpy(Raw() + offset, src, bytes);
         }
 
