@@ -15,5 +15,3 @@ namespace Prism
 #else
     #define CryptixNameSpace
 #endif
-
-namespace PM = Prism;
