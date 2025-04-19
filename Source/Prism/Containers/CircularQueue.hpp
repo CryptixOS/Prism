@@ -143,6 +143,17 @@ namespace Prism
             --m_Size;
             return value;
         }
+        inline T PopFront()
+        {
+            assert(!Empty());
+            m_Head = m_Head == 0 ? Capacity - 1 : (m_Head - 1) % Capacity;
+            auto& element = m_Storage[(m_Head + m_Size - 1) % Capacity];
+            T     value   = std::move(element);
+            element.~T();
+
+            --m_Size;
+            return value;
+        }
 
       private:
         u8    m_Storage[sizeof(T) * Capacity];
