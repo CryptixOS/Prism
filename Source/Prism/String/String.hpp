@@ -6,8 +6,10 @@
  */
 #pragma once
 
+#include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
+
 #include <Prism/String/StringUtils.hpp>
 #include <Prism/String/StringView.hpp>
 #include <Prism/Utility/Hash.hpp>
@@ -316,8 +318,7 @@ namespace Prism
         template <typename Type>
             requires(std::is_convertible_v<const Type&, ViewType>
                      && !std::is_convertible_v<const Type&, const C*>)
-        constexpr ViewType Find(const Type& t, ViewType pos = 0) const
-            noexcept(std::is_nothrow_convertible_v<const Type&, ViewType>)
+        constexpr ViewType Find(const Type& t, ViewType pos = 0) const noexcept
         {
             return View().Find(ViewType(t), pos);
         }
@@ -346,8 +347,8 @@ namespace Prism
         template <typename Type>
             requires(std::is_convertible_v<const Type&, ViewType>
                      && !std::is_convertible_v<const Type&, const C*>)
-        constexpr SizeType rfind(const Type& t, SizeType pos = NPos) const
-            noexcept(std::is_nothrow_convertible_v<const Type&, ViewType>)
+        constexpr SizeType RFind(const Type& t,
+                                 SizeType    pos = NPos) const noexcept
         {
             return View().RFind(ViewType(t), pos);
         }
@@ -375,8 +376,8 @@ namespace Prism
         template <typename Type>
             requires(std::is_convertible_v<const Type&, ViewType>
                      && !std::is_convertible_v<const Type&, const C*>)
-        constexpr SizeType FindFirstOf(const Type& t, SizeType pos = 0) const
-            noexcept(std::is_nothrow_convertible_v<const Type&, ViewType>)
+        constexpr SizeType FindFirstOf(const Type& t,
+                                       SizeType    pos = 0) const noexcept
         {
             return View().FindFirstOf(ViewType(t), pos);
         }
@@ -403,8 +404,8 @@ namespace Prism
         template <typename T>
             requires(std::is_convertible_v<const T&, ViewType>
                      && !std::is_convertible_v<const T&, const C*>)
-        constexpr SizeType FindFirstNotOf(const T& t, SizeType pos = 0) const
-            noexcept(std::is_nothrow_convertible_v<const T&, ViewType>)
+        constexpr SizeType FindFirstNotOf(const T& t,
+                                          SizeType pos = 0) const noexcept
         {
             return View().FindFirstNotOf(ViewType(t), pos);
         }
@@ -433,8 +434,8 @@ namespace Prism
         template <typename T>
             requires(std::is_convertible_v<const T&, ViewType>
                      && !std::is_convertible_v<const T&, const C*>)
-        constexpr SizeType FindLastOf(const T& t, SizeType pos = NPos) const
-            noexcept(std::is_nothrow_convertible_v<const T&, ViewType>)
+        constexpr SizeType FindLastOf(const T& t,
+                                      SizeType pos = NPos) const noexcept
         {
             return View().FindLastOf(ViewType(t), pos);
         }
@@ -462,8 +463,8 @@ namespace Prism
         template <typename T>
             requires(std::is_convertible_v<const T&, ViewType>
                      && !std::is_convertible_v<const T&, const C*>)
-        constexpr SizeType FindLastNotOf(const T& t, SizeType pos = NPos) const
-            PM_NOEXCEPT(std::is_nothrow_convertible_v<const T&, ViewType>)
+        constexpr SizeType FindLastNotOf(const T& t,
+                                         SizeType pos = NPos) const PM_NOEXCEPT
         {
             return View().FindLastNotOf(ViewType(t), pos);
         }
@@ -500,17 +501,15 @@ namespace Prism
         template <typename T>
             requires(std::is_convertible_v<const T&, ViewType>
                      && !std::is_convertible_v<const T&, const C*>)
-        constexpr i32 Compare(const T& str) const PM_NOEXCEPT(
-            PM_NOEXCEPT(std::is_nothrow_convertible_v<const T&, ViewType>))
+        constexpr i32 Compare(const T& str) const PM_NOEXCEPT
         {
             return View().Compare(ViewType(str));
         }
         template <typename T>
             requires(std::is_convertible_v<const T&, ViewType>
                      && !std::is_convertible_v<const T&, const C*>)
-        constexpr i32 Compare(SizeType pos, SizeType count, const T& str) const
-            PM_NOEXCEPT(
-                PM_NOEXCEPT(std::is_nothrow_convertible_v<const T&, ViewType>))
+        constexpr i32 Compare(SizeType pos, SizeType count,
+                              const T& str) const PM_NOEXCEPT
         {
             return View().Compare(pos, count, ViewType(str));
         }
