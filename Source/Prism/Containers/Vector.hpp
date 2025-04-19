@@ -147,7 +147,7 @@ namespace Prism
             if (newCapacity < m_Size) return;
 
             T* newData = new T[newCapacity];
-            for (SizeType i = 0; i < m_Size; i++) newData[i] = m_Data[i];
+            std::memcpy(newData, m_Data, m_Size * sizeof(T));
 
             m_Capacity = newCapacity;
             if (m_Size > 0) delete[] m_Data;
