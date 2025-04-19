@@ -82,12 +82,12 @@ prism_dep = declare_dependency(
 )
 pkg.generate(prism)
 install_headers(
-  'Source/Prism/Concepts.hpp',
+  #'Source/Prism/Concepts.hpp',
   'Source/Prism/Delegate.hpp',
   'Source/Prism/Path.hpp',
   'Source/Prism/PathView.hpp',
   'Source/Prism/Printf.hpp',
-  'Source/Prism/TypeTraits.hpp',
+  #'Source/Prism/TypeTraits.hpp',
   'Source/Prism/UUID.hpp',
   subdir: 'Prism'
 )
@@ -99,8 +99,8 @@ install_headers(
   'Source/Prism/Containers/RedBlackTree.hpp',
   'Source/Prism/Containers/RedBlackTree.inl',
   'Source/Prism/Containers/Span.hpp',
-  'Source/Prism/Containers/UnorderedMap.hpp',
-  'Source/Prism/Containers/UnorderedMap.inl',
+  #'Source/Prism/Containers/UnorderedMap.hpp',
+  #'Source/Prism/Containers/UnorderedMap.inl',
   'Source/Prism/Containers/Vector.hpp',
 
   subdir: 'Prism/Containers'
@@ -124,10 +124,10 @@ install_headers(
   'Source/Prism/Debug/Stacktrace.hpp',
   subdir: 'Prism/Debug'
 )
-install_headers(
-  'Source/Prism/Details/Concepts.inl',
-  subdir: 'Prism/Details'
-)
+#install_headers(
+  #'Source/Prism/Details/Concepts.inl',
+  #subdir: 'Prism/Details'
+#)
 install_headers(
   'Source/Prism/Memory/BitStream.hpp',
   'Source/Prism/Memory/Buffer.hpp',
@@ -141,7 +141,7 @@ install_headers(
   subdir: 'Prism/Memory'
 )
 install_headers(
-  'Source/Prism/String/FormatString.hpp',
+  #'Source/Prism/String/FormatString.hpp',
   'Source/Prism/String/String.hpp',
   'Source/Prism/String/StringUtils.hpp',
   'Source/Prism/String/StringView.hpp',
@@ -149,11 +149,11 @@ install_headers(
 )
 install_headers(
   'Source/Prism/Utility/Checksum.hpp',
-  'Source/Prism/Utility/Expected.hpp',
+  #'Source/Prism/Utility/Expected.hpp',
   'Source/Prism/Utility/Hash.hpp',
   'Source/Prism/Utility/Math.hpp',
-  'Source/Prism/Utility/Optional.hpp',
-  'Source/Prism/Utility/OptionParser.hpp',
+  #'Source/Prism/Utility/Optional.hpp',
+  #'Source/Prism/Utility/OptionParser.hpp',
   'Source/Prism/Utility/Time.hpp',
   subdir: 'Prism/Utility'
 )
