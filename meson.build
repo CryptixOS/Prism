@@ -9,6 +9,7 @@ project('prism', ['c', 'cpp'],  license: 'GPL-3', default_options: [
   'cpp_std=c++23',
   'warning_level=2',
   'werror=true',
+  'default_library=static',
 ],)
 
 if not meson.get_compiler('cpp').has_argument('-std=gnu++23')
@@ -31,6 +32,8 @@ macros = [
   '-DFMT_USE_DOUBLE=0',
   '-DFMT_USE_FLOAT=0',
   '-DFMT_USE_FLOAT128=0',
+  '-DFMT_USE_EXCEPTIONS=0',
+  '-DFMT_HEADER_ONLY=1',
   '-DMAGIC_ENUM_RANGE_MAX=0x8a00',
 ]
 
@@ -47,29 +50,117 @@ cxx_args = [
   '-Wno-frame-address',
   '-MP'
 ]
+add_global_arguments(cxx_args, language: 'cpp')
 
 incs = [ include_directories('Source') ]
 
 subdir('Source')
-#subdir('Tests')
+subdir('Tests')
 
 # ==============================================================================
 ### Dependencies
 deps = [
+  subproject('fmt-10.2.0').get_variable('fmt_dep'),
   dependency('demangler'),
   dependency('magic_enum', default_options: [
     'test=false',
   ]),
 ]
 
+pkg = import('pkgconfig')
 prism = library('prism',
   srcs, cpp_args: cxx_args,
   include_directories: incs,
   dependencies: deps,
+  install: true,
 )
+
 prism_dep = declare_dependency(
-  link_with: prism,
   include_directories : incs,
   compile_args: cxx_args,
-  dependencies: deps,
+  dependencies: deps, 
+)
+pkg.generate(prism)
+install_headers(
+  'Source/Prism/Concepts.hpp',
+  'Source/Prism/Delegate.hpp',
+  'Source/Prism/Path.hpp',
+  'Source/Prism/PathView.hpp',
+  'Source/Prism/Printf.hpp',
+  'Source/Prism/TypeTraits.hpp',
+  'Source/Prism/UUID.hpp',
+  subdir: 'Prism'
+)
+install_headers(
+  'Source/Prism/Containers/Array.hpp',
+  'Source/Prism/Containers/Bitmap.hpp',
+  'Source/Prism/Containers/CircularQueue.hpp',
+  'Source/Prism/Containers/DoublyLinkedList.hpp',
+  'Source/Prism/Containers/RedBlackTree.hpp',
+  'Source/Prism/Containers/RedBlackTree.inl',
+  'Source/Prism/Containers/Span.hpp',
+  'Source/Prism/Containers/UnorderedMap.hpp',
+  'Source/Prism/Containers/UnorderedMap.inl',
+  'Source/Prism/Containers/Vector.hpp',
+
+  subdir: 'Prism/Containers'
+)
+install_headers(
+  'Source/Prism/Core/Compiler.hpp',
+  'Source/Prism/Core/Config.hpp',
+  'Source/Prism/Core/NonCopyable.hpp',
+  'Source/Prism/Core/NonMovable.hpp',
+  'Source/Prism/Core/Platform.hpp',
+  'Source/Prism/Core/Singleton.hpp',
+  'Source/Prism/Core/Types.hpp',
+
+  subdir: 'Prism/Core'
+)
+install_headers(
+  'Source/Prism/Debug/Assertions.hpp',
+  'Source/Prism/Debug/Log.hpp',
+  'Source/Prism/Debug/LogSink.hpp',
+  'Source/Prism/Debug/SourceLocation.hpp',
+  'Source/Prism/Debug/Stacktrace.hpp',
+  subdir: 'Prism/Debug'
+)
+install_headers(
+  'Source/Prism/Details/Concepts.inl',
+  subdir: 'Prism/Details'
+)
+install_headers(
+  'Source/Prism/Memory/BitStream.hpp',
+  'Source/Prism/Memory/Buffer.hpp',
+  'Source/Prism/Memory/ByteStream.hpp',
+  'Source/Prism/Memory/Endian.hpp',
+  'Source/Prism/Memory/Pointer.hpp',
+  'Source/Prism/Memory/Ref.hpp',
+  'Source/Prism/Memory/Scope.hpp',
+  'Source/Prism/Memory/Span.hpp',
+  'Source/Prism/Memory/WeakRef.hpp',
+  subdir: 'Prism/Memory'
+)
+install_headers(
+  'Source/Prism/String/FormatString.hpp',
+  'Source/Prism/String/String.hpp',
+  'Source/Prism/String/StringUtils.hpp',
+  'Source/Prism/String/StringView.hpp',
+  subdir: 'Prism/String'
+)
+install_headers(
+  'Source/Prism/Utility/Checksum.hpp',
+  'Source/Prism/Utility/Expected.hpp',
+  'Source/Prism/Utility/Hash.hpp',
+  'Source/Prism/Utility/Math.hpp',
+  'Source/Prism/Utility/Optional.hpp',
+  'Source/Prism/Utility/OptionParser.hpp',
+  'Source/Prism/Utility/Time.hpp',
+  subdir: 'Prism/Utility'
+)
+
+dep = declare_dependency(
+  compile_args: cxx_args,
+  include_directories: incs,
+  dependencies: prism_dep,
+  link_with: prism
 )
