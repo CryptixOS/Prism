@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
@@ -15,6 +16,9 @@
 
 namespace Prism
 {
+    template <typename C, typename Traits>
+    class BasicString;
+
     template <typename C, typename Traits = std::char_traits<C>>
     class BasicStringView
     {
@@ -41,7 +45,7 @@ namespace Prism
         //--------------------------------------------------------------------------
         // Constructors
         //--------------------------------------------------------------------------
-        constexpr BasicStringView() PM_NOEXCEPT : m_Size(0), m_Data(nullptr) {}
+        constexpr BasicStringView() PM_NOEXCEPT : m_Data(nullptr), m_Size(0) {}
         constexpr BasicStringView(const BasicStringView&) PM_NOEXCEPT = default;
 
         constexpr BasicStringView(const C* str) PM_NOEXCEPT
@@ -58,10 +62,9 @@ namespace Prism
             requires std::same_as<std::iter_value_t<It>, C>
                       && (!std::convertible_to<End, SizeType>)
 
-        constexpr BasicStringView(It first, End last)
-            PM_NOEXCEPT(PM_NOEXCEPT(last - first))
-            : m_Data(std::to_address(first))
-            , m_Size(last - first)
+        constexpr BasicStringView(It first, End last) PM_NOEXCEPT
+            : m_Data(std::to_address(first)),
+              m_Size(last - first)
         {
         }
         template <typename T>
@@ -191,8 +194,27 @@ namespace Prism
             TraitsType::copy(str, m_Data + pos, count);
             return count;
         }
+
+        inline Vector<BasicString<C, Traits>> Split(C delimiter)
+        {
+            Vector<BasicString<C, Traits>> segments;
+            usize                          start = Raw()[0] == delimiter;
+            usize                          end   = start;
+
+            while ((end = FindFirstOf(delimiter, start)) != NPos)
+            {
+                BasicString<C, Traits> segment = Substr(start, end - start);
+                if (start != end) segments.PushBack(segment);
+
+                start = end + 1;
+            }
+
+            // handle last segment
+            if (start < Size()) segments.PushBack(Substr(start));
+            return segments;
+        }
         [[nodiscard]] constexpr BasicStringView
-        Substr(SizeType pos = 0, SizeType count = NPos) const PM_NOEXCEPT(false)
+        Substr(SizeType pos = 0, SizeType count = NPos) const PM_NOEXCEPT
         {
             assert(pos < m_Size);
             count = std::min(count, m_Size - pos);
@@ -228,8 +250,8 @@ namespace Prism
             return Substr(pos, count).Compare(BasicStringView(str));
         }
         [[nodiscard]] constexpr i32 Compare(SizeType pos, SizeType count1,
-                                            const C* str, SizeType count2) const
-            PM_NOEXCEPT(false)
+                                            const C* str,
+                                            SizeType count2) const PM_NOEXCEPT
         {
             return Substr(pos, count1).Compare(BasicStringView(str, count2));
         }
@@ -321,12 +343,6 @@ namespace Prism
         {
             return Find(BasicStringView(std::addressof(ch), 1), pos);
         }
-        template <typename StringViewLike>
-        [[nodiscard]] constexpr SizeType
-        Find(const StringViewLike& str, SizeType pos = 0) const PM_NOEXCEPT
-        {
-            return Find(str.m_Data, pos, str.m_Size);
-        }
         //[[nodiscard]]
         // constexpr SizeType RFind(const BasicString& str,
         //                         SizeType pos = NPos) const PM_NOEXCEPT;
@@ -368,7 +384,7 @@ namespace Prism
             for (; str.m_Size && pos < m_Size; ++pos)
             {
                 ConstPointerType p
-                    = Traits::Find(str.m_Data, str.m_Size, m_Data[pos]);
+                    = Traits::find(str.m_Data, str.m_Size, m_Data[pos]);
                 if (p) return pos;
             }
             return NPos;
