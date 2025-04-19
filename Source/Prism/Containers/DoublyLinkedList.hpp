@@ -10,6 +10,8 @@
 #include <Prism/Core/Config.hpp>
 #include <Prism/Core/Types.hpp>
 
+#include <cassert>
+
 namespace Prism
 {
     template <typename T>
@@ -18,14 +20,18 @@ namespace Prism
       public:
         struct Node
         {
-            explicit Node(T&& value)
+            explicit Node(const T& value)
                 : Value(value)
+            {
+            }
+            explicit Node(T&& value)
+                : Value(std::move(value))
             {
             }
 
             T     Value;
-            Node* m_Prev = nullptr;
-            Node* m_Next = nullptr;
+            Node* Prev = nullptr;
+            Node* Next = nullptr;
         };
 
         struct Iterator
@@ -40,17 +46,19 @@ namespace Prism
             }
             Iterator& operator++()
             {
-                m_Node = m_Node->m_Next;
+                m_Node = m_Node->Next;
                 return *this;
             }
             Iterator& operator--()
             {
-                m_Node = m_Node->m_Prev;
+                m_Node = m_Node->Prev;
                 return *this;
             }
 
-            T& operator*() { return m_Node->Value; }
-            T& operator->() { return &m_Node->Value; }
+            T&              operator*() { return m_Node->Value; }
+            T*              operator->() { return &m_Node->Value; }
+            inline bool     IsEnd() const { return !m_Node; }
+            static Iterator UniversalEnd() { return Iterator(nullptr); }
 
           private:
             Node* m_Node = nullptr;
@@ -67,39 +75,64 @@ namespace Prism
         DoublyLinkedList()        = default;
         ~DoublyLinkedList() { Clear(); }
 
-        T&             Front() { return m_Head; }
-        const T&       Front() const { return m_Head; }
+        inline T& operator[](usize index)
+        {
+            assert(index < m_Size);
 
-        T&             Back() { return m_Tail; }
-        const T&       Back() const { return m_Tail; }
+            Node* node = index < m_Size / 2 ? m_Head : m_Tail;
+            if (node == m_Head)
+                while (index--) node = node->Next;
+            else
+                for (usize i = m_Size - 1; i > index; --i) node = node->Prev;
+
+            return node->Value;
+        }
+
+        T&             Front() { return m_Head->Value; }
+        const T&       Front() const { return m_Head->Value; }
+
+        T&             Back() { return m_Tail->Value; }
+        const T&       Back() const { return m_Tail->Value; }
 
         Iterator       begin() { return Iterator(m_Head); }
         const Iterator begin() const { return Iterator(m_Head); }
         const Iterator cbegin() const PM_NOEXCEPT { return Iterator(m_Head); }
 
-        Iterator       end() { return Iterator(m_Tail); }
-        const Iterator end() const { return Iterator(m_Tail); }
-        const Iterator cend() const PM_NOEXCEPT { return Iterator(m_Tail); }
-
-        ReverseIteratorType       rbegin() { return m_Tail; }
-        const ReverseIteratorType rbegin() const { return m_Tail; }
-        const ReverseIteratorType crbegin() const PM_NOEXCEPT { return m_Tail; }
-
-        ReverseIteratorType       rend() { return m_Head; }
-        const ReverseIteratorType rend() const { return m_Head; }
-        const ReverseIteratorType crend() const PM_NOEXCEPT { return m_Head; }
-
-        bool                      IsEmpty() const { return m_Size == 0; }
-        usize                     Size() const PM_NOEXCEPT { return m_Size; }
-        usize                     MaxSize() const { return usize(-1); }
-
-        void                      Clear()
+        Iterator       end() { return Iterator::UniversalEnd(); }
+        const Iterator end() const { return Iterator::UniversalEnd(); }
+        const Iterator cend() const PM_NOEXCEPT
         {
-            Node* next    = m_Head->m_Next;
+            return Iterator::UniversalEnd();
+        }
+
+        ReverseIteratorType       rbegin() { return Iterator::UniversalEnd(); }
+        const ReverseIteratorType rbegin() const
+        {
+            return Iterator::UniversalEnd();
+        }
+        const ReverseIteratorType crbegin() const PM_NOEXCEPT
+        {
+            return Iterator::UniversalEnd();
+        }
+
+        ReverseIteratorType       rend() { return Iterator(m_Head); }
+        const ReverseIteratorType rend() const { return Iterator(m_Head); }
+        const ReverseIteratorType crend() const PM_NOEXCEPT
+        {
+            return Iterator(m_Head);
+        }
+
+        inline constexpr bool  Empty() const { return m_Size == 0; }
+        inline constexpr usize Size() const PM_NOEXCEPT { return m_Size; }
+        inline constexpr usize MaxSize() const { return usize(-1); }
+
+        void                   Clear()
+        {
             Node* current = m_Head;
+            Node* next    = nullptr;
             while (current)
             {
-                next = current->m_Next;
+                next = current->Next;
                 delete current;
                 current = next;
             }
@@ -109,31 +142,84 @@ namespace Prism
             m_Size = 0;
         }
 
-        void PushBack(const T& value)
+        template <typename... Args>
+        inline T& EmplaceBack(Args&&... args)
         {
-            Node* newNode   = new Node(value);
-            newNode->m_Next = nullptr;
-            newNode->m_Prev = m_Tail;
+            PushBack(T(std::forward<Args>(args)...));
 
-            if (!m_Head)
-            {
-                m_Head = newNode;
-                m_Tail = newNode;
-            }
-            if (m_Tail) m_Tail->m_Next = newNode;
+            return Back();
         }
-        void PushBack(T&& value)
+        inline void PushBack(const T& value)
         {
-            Node* newNode   = new Node(std::move(value));
-            newNode->m_Next = nullptr;
-            newNode->m_Prev = m_Tail;
+            Node* node = new Node(value);
+            node->Next = nullptr;
+            node->Prev = m_Tail;
 
-            if (!m_Head)
+            if (m_Tail) m_Tail->Next = node;
+            m_Tail = node;
+            ++m_Size;
+        }
+        inline void PushBack(T&& value)
+        {
+            Node* node = new Node(std::move(value));
+            node->Next = nullptr;
+            node->Prev = m_Tail;
+
+            if (m_Tail) m_Tail->Next = node;
+            m_Tail = node;
+            ++m_Size;
+        }
+
+        inline void PushFront(const T& value)
+        {
+            Node* newNode = new Node(value);
+            newNode->Next = m_Head;
+            newNode->Prev = nullptr;
+
+            if (m_Head) m_Head->Prev = newNode;
+            m_Head = newNode;
+            ++m_Size;
+        }
+        inline void PushFront(T&& value)
+        {
+            Node* newNode = new Node(std::move(value));
+            newNode->Next = m_Head;
+            newNode->Prev = nullptr;
+
+            if (m_Head) m_Head->Prev = newNode;
+            m_Head = newNode;
+            ++m_Size;
+        }
+
+        inline T PopFrontElement()
+        {
+            auto front = m_Head;
+            if (front)
             {
-                m_Head = newNode;
-                m_Tail = newNode;
+                m_Head = front->Next;
+                if (front->Next) front->Next->Prev = nullptr;
             }
-            if (m_Tail) m_Tail->m_Next = newNode;
+
+            auto value = front->Value;
+            delete front;
+
+            --m_Size;
+            return value;
+        }
+        inline T PopBackElement()
+        {
+            auto back = m_Tail;
+            if (back)
+            {
+                m_Tail = back->Prev;
+                if (back->Prev) back->Prev->Next = nullptr;
+            }
+
+            auto value = back->Value;
+            delete back;
+
+            --m_Size;
+            return value;
         }
 
       private:
@@ -142,3 +228,7 @@ namespace Prism
         usize m_Size = 0;
     };
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::DoublyLinkedList;
+#endif
