@@ -54,9 +54,6 @@ add_global_arguments(cxx_args, language: 'cpp')
 
 incs = [ include_directories('Source') ]
 
-subdir('Source')
-subdir('Tests')
-
 # ==============================================================================
 ### Dependencies
 deps = [
@@ -66,6 +63,9 @@ deps = [
     'test=false',
   ]),
 ]
+
+subdir('Source')
+subdir('Tests')
 
 pkg = import('pkgconfig')
 prism = library('prism',

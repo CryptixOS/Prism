@@ -9,6 +9,6 @@ incdirs = include_directories('../Source/')
 #st = executable('string_view', 'StringView/test.cpp', include_directories : incdirs)
 #test('StringViewTest', st)
 
-dll = executable('doubly_linked_list', 'DoublyLinkedList/test.cpp', include_directories : incdirs)
+dll = executable('doubly_linked_list', 'DoublyLinkedList/test.cpp', include_directories : incdirs, dependencies: deps)
 test('DoublyLinkedList', dll)
 
