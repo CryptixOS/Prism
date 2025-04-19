@@ -27,44 +27,89 @@ namespace Prism
             eRed,
             eBlack,
         };
+
+        struct KeyValuePair
+        {
+            K Key;
+            V Value;
+        };
         struct Node
         {
-            Node* Parent     = nullptr;
-            Node* LeftChild  = nullptr;
-            Node* RightChild = nullptr;
+            Node*        Parent     = nullptr;
+            Node*        LeftChild  = nullptr;
+            Node*        RightChild = nullptr;
 
-            Color Color      = Color::eRed;
-            K     Key;
-            V     Value;
+            enum Color   Color      = Color::eRed;
+            KeyValuePair Data;
 
             Node() = default;
+            Node(K& key)
+                : Data(key, V())
+            {
+            }
+            Node(K&& key)
+                : Data(std::move(key), V())
+            {
+            }
             Node(K& key, V& value)
-                : Key(key)
-                , Value(value)
+                : Data(key, value)
             {
             }
             Node(K&& key, V&& value)
-                : Key(std::move(key))
-                , Value(std::move(value))
+                : Data(std::move(key), std::move(value))
             {
             }
+
+            inline constexpr K&   Key() { return Data.Key; }
+            inline constexpr V&   Value() { return Data.Value; }
+
+            inline constexpr bool IsBlack() const
+            {
+                return Color == Color::eBlack;
+            }
+            inline constexpr bool IsRed() const { return Color == Color::eRed; }
+            inline constexpr void SetBlack() { Color = Color::eBlack; }
+            inline constexpr void SetRed() { Color = Color::eRed; }
         };
-        struct Iterator
+
+        template <typename ValueType>
+        struct BaseIterator
         {
-            Iterator() = default;
-            constexpr bool operator!=(const Iterator& other) const
+            BaseIterator() = default;
+            constexpr bool operator!=(const BaseIterator& other) const
             {
                 return m_Node != other.m_Node;
             }
 
-            Iterator& operator++();
-            Iterator& operator--();
+            inline BaseIterator& operator++()
+            {
+                if (!m_Node) return *this;
+                m_Prev = m_Node;
+                m_Node = static_cast<typename RedBlackTree::Node*>(
+                    RedBlackTree::GetSuccessor(m_Node));
 
-            inline V& operator*() { return m_Node->Value; }
-            inline V* operator->() { return &m_Node->Value; }
+                return *this;
+            }
+            inline BaseIterator& operator--()
+            {
+                if (!m_Prev) return *this;
+                m_Node = m_Prev;
+                m_Prev = static_cast<typename RedBlackTree::Node*>(
+                    RedBlackTree::GetPredecessor(m_Prev));
+
+                return *this;
+            }
+
+            inline KeyValuePair& operator*() { return m_Node->Data; }
+            inline KeyValuePair* operator->() { return &m_Node->Data; }
+
+            inline bool          IsFirst() const { return !m_Prev; }
+            inline bool          IsLast() const { return !m_Node; }
+
+            inline               operator Node*() const { return m_Node; }
 
           private:
-            explicit Iterator(Node* node, Node* prev = nullptr)
+            explicit BaseIterator(Node* node, Node* prev = nullptr)
                 : m_Node(node)
                 , m_Prev(prev)
             {
@@ -75,55 +120,56 @@ namespace Prism
             Node* m_Prev = nullptr;
         };
 
-        RedBlackTree() = default;
+        using Iterator      = BaseIterator<V>;
+        using ConstIterator = BaseIterator<const V>;
+
+        RedBlackTree()      = default;
         ~RedBlackTree();
 
-        V&                                          At(const K& key);
-        const V&                                    At(const K& key) const;
+        V&                                   At(const K& key);
+        const V&                             At(const K& key) const;
 
-        V&                                          operator[](const K& key);
-        V&                                          operator[](K&& key);
+        V&                                   operator[](const K& key);
+        V&                                   operator[](K&& key);
 
-        Iterator                                    begin();
-        const Iterator                              begin() const;
-        Iterator                                    end();
-        const Iterator                              end() const;
-        std::reverse_iterator<Iterator>             rbegin();
-        const std::reverse_iterator<const Iterator> rbegin() const;
-        std::reverse_iterator<Iterator>             rend();
-        const std::reverse_iterator<const Iterator> rend() const;
+        Iterator                             begin();
+        ConstIterator                        begin() const;
+        Iterator                             end();
+        ConstIterator                        end() const;
+        std::reverse_iterator<Iterator>      rbegin();
+        std::reverse_iterator<ConstIterator> rbegin() const;
+        std::reverse_iterator<Iterator>      rend();
+        std::reverse_iterator<ConstIterator> rend() const;
 
         constexpr bool  IsEmpty() const { return m_Size == 0; }
         constexpr usize GetSize() const { return m_Size; }
 
         void            Clear();
-        void            Insert(K key, V& value);
-        // Iterator        Erase(Iterator pos);
-        Iterator        Erase(const Iterator pos);
-        Iterator        Erase(const Iterator first, const Iterator end);
+        Iterator        Insert(K key, V& value);
+        Iterator        Insert(Node* node);
         bool            Erase(const K& key);
-        template <typename T>
-        usize Erase(T&& x);
-        bool  Find(const K& key, V& value) const;
+        bool            Erase(Node* node);
 
-        bool  Contains(const K& key) const;
-        template <typename T>
-        bool         Contains(const K& k) const;
+        Iterator        Find(const K& key);
+        ConstIterator   Find(const K& key) const;
 
-        inline void  PrintTree();
-        void         PrintNode(const std::string& prefix, const Node* node,
-                               bool isLeft = false);
+        bool            Contains(const K& key) const;
 
-        static Node* Find(Node* node, K key);
+        inline void     PrintTree();
+        void            PrintNode(const std::string& prefix, const Node* node,
+                                  bool isLeft = false);
 
-        static Node* GetSuccessor(Node* node);
-        static Node* GetPredecessor(Node* node);
+        static Node*    Find(Node* node, K key);
+
+        static Node*    GetSuccessor(Node* node);
+        static Node*    GetPredecessor(Node* node);
 
       private:
-        Node* m_Root  = nullptr;
-        usize m_Size  = 0;
+        Node* m_Root      = nullptr;
+        usize m_Size      = 0;
 
-        Node* m_Least = nullptr;
+        Node* m_Least     = nullptr;
+        Node* m_LeastNode = nullptr;
 
         void  InsertFix(Node* node);
         void  RemoveFix(Node* node, Node* parent);
@@ -131,7 +177,6 @@ namespace Prism
 
         void  RotateLeft(Node* node);
         void  RotateRight(Node* node);
-        void  RemoveNode(Node* node);
 
         void  RecursiveDelete(Node* node);
     };

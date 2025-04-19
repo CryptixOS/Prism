@@ -32,4 +32,6 @@ jobs:
         run: meson setup build --buildtype=${{ matrix.build-configuration }} 
           && (cd subprojects/fmt-10.2.0/ && patch -p 1 < ../../fmt-10.2.0.patch)
           && ninja -C build -j5
+      - name: Build Tests
+        run: ninja -C build test
     

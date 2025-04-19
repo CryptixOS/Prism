@@ -10,27 +10,6 @@ namespace Prism
 {
 
     template <typename K, typename V>
-    RedBlackTree<K, V>::Iterator& RedBlackTree<K, V>::Iterator::operator++()
-    {
-        if (!m_Node) return *this;
-        m_Prev = m_Node;
-        m_Node = static_cast<typename RedBlackTree::Node*>(
-            RedBlackTree::GetSuccessor(m_Node));
-
-        return *this;
-    }
-    template <typename K, typename V>
-    RedBlackTree<K, V>::Iterator& RedBlackTree<K, V>::Iterator::operator--()
-    {
-        if (!m_Prev) return *this;
-        m_Node = m_Prev;
-        m_Prev = static_cast<typename RedBlackTree::Node*>(
-            RedBlackTree::GetPredecessor(m_Prev));
-
-        return *this;
-    }
-
-    template <typename K, typename V>
     RedBlackTree<K, V>::~RedBlackTree()
     {
         Clear();
@@ -39,39 +18,46 @@ namespace Prism
     template <typename K, typename V>
     V& RedBlackTree<K, V>::At(const K& key)
     {
-        Node* current = m_Root;
-        while (m_Root && m_Root->Key != key)
-            current
-                = key < current->Key ? current->LeftChild : current->RightChild;
+        auto node = Find(m_Root, key);
+        assert(node);
 
-        return current;
+        return node->Value();
     }
     template <typename K, typename V>
     const V& RedBlackTree<K, V>::At(const K& key) const
     {
-        return At(key);
+        auto node = Find(m_Root, key);
+        assert(node);
+
+        return node;
     }
 
     template <typename K, typename V>
     V& RedBlackTree<K, V>::operator[](const K& key)
     {
-        return At(key);
+        Node* node = Find(key);
+        if (node) return node->Value();
+
+        return (*Insert(new Node(key))).Value;
     }
     template <typename K, typename V>
     V& RedBlackTree<K, V>::operator[](K&& key)
     {
-        return At(key);
+        Node* node = Find(key);
+        if (node) return node->Value();
+
+        return (*Insert(new Node(std::move(key)))).Value;
     }
 
     template <typename K, typename V>
     RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::begin()
     {
-        return Iterator(m_Least);
+        return Iterator(m_LeastNode);
     }
     template <typename K, typename V>
-    const RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::begin() const
+    RedBlackTree<K, V>::ConstIterator RedBlackTree<K, V>::begin() const
     {
-        return begin();
+        return ConstIterator(m_LeastNode);
     }
     template <typename K, typename V>
     RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::end()
@@ -79,7 +65,7 @@ namespace Prism
         return {};
     }
     template <typename K, typename V>
-    const RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::end() const
+    RedBlackTree<K, V>::ConstIterator RedBlackTree<K, V>::end() const
     {
         return {};
     }
@@ -90,7 +76,7 @@ namespace Prism
         return {};
     }
     template <typename K, typename V>
-    const std::reverse_iterator<const typename RedBlackTree<K, V>::Iterator>
+    std::reverse_iterator<typename RedBlackTree<K, V>::ConstIterator>
     RedBlackTree<K, V>::rbegin() const
     {
         return {};
@@ -99,13 +85,13 @@ namespace Prism
     std::reverse_iterator<typename RedBlackTree<K, V>::Iterator>
     RedBlackTree<K, V>::rend()
     {
-        return begin();
+        return Iterator(m_LeastNode);
     }
     template <typename K, typename V>
-    const std::reverse_iterator<const typename RedBlackTree<K, V>::Iterator>
+    std::reverse_iterator<typename RedBlackTree<K, V>::ConstIterator>
     RedBlackTree<K, V>::rend() const
     {
-        return begin();
+        return ConstIterator(m_LeastNode);
     }
 
     template <typename K, typename V>
@@ -118,63 +104,129 @@ namespace Prism
         m_Size  = 0;
     }
     template <typename K, typename V>
-    void RedBlackTree<K, V>::Insert(K key, V& value)
+    RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Insert(K key, V& value)
     {
-        auto* node = new Node(key, value);
-
-        if (!m_Root)
+        auto* node = Find(m_Root, key);
+        if (node)
         {
-            m_Root        = node;
-            m_Root->Color = Color::eBlack;
-            m_Size        = 1;
-            m_Least       = node;
-            return;
+            node->Data.Value = value;
+            return Iterator(node);
         }
 
-        Node* current = m_Root;
-        while (current->LeftChild || current->RightChild)
-        {
-            if (Compare(key, current->Key) == -1) current = current->LeftChild;
-            else current = current->RightChild;
-        }
-
-        node->Parent = current;
-        if (Compare(key, current->Key) == -1) current->LeftChild = node;
-        else current->RightChild = node;
-
-        InsertFix(node);
-
-        ++m_Size;
-        if (m_Least->LeftChild == node) m_Least = node;
+        return Insert(new Node(key, value));
     }
-
     template <typename K, typename V>
-    RedBlackTree<K, V>::Iterator
-    RedBlackTree<K, V>::Erase(const RedBlackTree<K, V>::Iterator pos)
+    RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Insert(Node* node)
     {
-        Node* node = pos->m_Node;
-        Node* ret  = (pos++)->m_Node;
+        Node* parent  = nullptr;
+        Node* current = m_Root;
+        while (current)
+        {
+            parent  = current;
+            current = (node->Key() < current->Key()) ? current->LeftChild
+                                                     : current->RightChild;
+        }
 
-        RemoveNode(node);
+        if (!parent)
+        {
+            node->SetBlack();
+            m_Root      = node;
+            m_Size      = 1;
+            m_LeastNode = node;
+            return Iterator(m_Root);
+        }
 
-        node->RightChild = nullptr;
-        node->LeftChild  = nullptr;
-        delete node;
+        if (node->Key() < parent->Key()) parent->LeftChild = node;
+        else parent->RightChild = node;
+        node->Parent = parent;
 
-        return ret;
+        if (node->Parent->Parent) InsertFix(node);
+        ++m_Size;
+
+        if (m_LeastNode->LeftChild == node) m_LeastNode = node;
+        return Iterator(node);
     }
+
     template <typename K, typename V>
     bool RedBlackTree<K, V>::Erase(const K& key)
     {
         Node* node = Find(m_Root, key);
         if (!node) return false;
 
-        RemoveNode(node);
+        bool removed = Erase(node);
 
-        node->RightChild = nullptr;
-        node->LeftChild  = nullptr;
         delete node;
+        return removed;
+    }
+    template <typename K, typename V>
+    bool RedBlackTree<K, V>::Erase(Node* node)
+    {
+        assert(node);
 
+        if (m_Size == 1)
+        {
+            m_Root      = nullptr;
+            m_LeastNode = nullptr;
+            m_Size      = 0;
+            return true;
+        }
+
+        if (m_LeastNode == node) m_LeastNode = GetSuccessor(node);
+        if (node->LeftChild && node->RightChild)
+        {
+            auto* successorNode     = GetSuccessor(node);
+            auto  neighborSwap      = successorNode->Parent == node;
+            node->LeftChild->Parent = successorNode;
+            if (!neighborSwap) node->RightChild->Parent = successorNode;
+            if (node->Parent)
+            {
+                if (node->Parent->LeftChild == node)
+                    node->Parent->LeftChild = successorNode;
+                else node->Parent->RightChild = successorNode;
+            }
+            else m_Root = successorNode;
+            if (successorNode->RightChild)
+                successorNode->RightChild->Parent = node;
+            if (neighborSwap)
+            {
+                successorNode->Parent = node->Parent;
+                node->Parent          = successorNode;
+            }
+            else
+            {
+                if (successorNode->Parent)
+                {
+                    if (successorNode->Parent->LeftChild == successorNode)
+                        successorNode->Parent->LeftChild = node;
+                    else successorNode->Parent->RightChild = node;
+                }
+                else m_Root = node;
+                std::swap(node->Parent, successorNode->Parent);
+            }
+            std::swap(node->LeftChild, successorNode->LeftChild);
+            if (neighborSwap)
+            {
+                node->RightChild          = successorNode->RightChild;
+                successorNode->RightChild = node;
+            }
+            else std::swap(node->RightChild, successorNode->RightChild);
+            std::swap(node->Color, successorNode->Color);
+        }
+
+        auto* child = node->LeftChild ?: node->RightChild;
+
+        if (child) child->Parent = node->Parent;
+        if (node->Parent)
+        {
+            if (node->Parent->LeftChild == node)
+                node->Parent->LeftChild = child;
+            else node->Parent->RightChild = child;
+        }
+        else m_Root = child;
+
+        if (!node->IsRed()) RemoveFix(child, node->Parent);
+
+        --m_Size;
         return true;
     }
 
@@ -200,7 +252,7 @@ namespace Prism
             PrismMessage("{}", isLeft ? "├──" : "└──");
 
             // print the value of the node
-            PrismMessage("{}{}\n", node->Key,
+            PrismMessage("{}{}\n", node->Key(),
                          node->Color == Color::eBlack ? "B" : "R",
                          node->Color == Color::eBlack ? "B" : "R");
 
@@ -213,11 +265,23 @@ namespace Prism
     }
 
     template <typename K, typename V>
+    typename RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Find(const K& key)
+    {
+        return Iterator(Find(m_Root, key));
+    }
+    template <typename K, typename V>
+    typename RedBlackTree<K, V>::ConstIterator
+    RedBlackTree<K, V>::Find(const K& key) const
+    {
+        return ConstIterator(Find(m_Root, key));
+    }
+
+    template <typename K, typename V>
     typename RedBlackTree<K, V>::Node* RedBlackTree<K, V>::Find(Node* node,
                                                                 K     key)
     {
-        while (node && node->Key == key)
-            node = key < node->Key ? node->LeftChild : node->RightChild;
+        while (node && node->Key() != key)
+            node = key < node->Key() ? node->LeftChild : node->RightChild;
 
         return node;
     }
@@ -239,17 +303,14 @@ namespace Prism
         {
             node = node->RightChild;
             while (node->LeftChild) node = node->LeftChild;
-
             return node;
         }
-
         auto temp = node->Parent;
         while (temp && node == temp->RightChild)
         {
             node = temp;
             temp = temp->Parent;
         }
-
         return temp;
     }
     template <typename K, typename V>
@@ -275,265 +336,181 @@ namespace Prism
     template <typename K, typename V>
     void RedBlackTree<K, V>::InsertFix(Node* node)
     {
-        assert(node);
+        assert(node && node->IsRed());
 
-        Node* current = node;
-        while (current->Parent && current->Parent->Color == Color::eRed)
+        while (node->Parent && node->Parent->Color == Color::eRed)
         {
-            Node* grandParent = current->Parent->Parent;
-            if (current->Parent == grandParent->LeftChild)
+            Node* grandParent = node->Parent->Parent;
+            if (grandParent->RightChild == node->Parent)
             {
-                Node* uncle = grandParent->RightChild;
-                if (uncle && uncle->Color == Color::eRed)
+                auto* uncle = grandParent->LeftChild;
+                if (uncle && uncle->IsRed())
                 {
-                    grandParent->Color             = Color::eRed;
-                    grandParent->LeftChild->Color  = Color::eBlack;
-                    grandParent->RightChild->Color = Color::eBlack;
-                    current                        = grandParent;
+                    node->Parent->SetBlack();
+                    uncle->SetBlack();
+                    grandParent->SetRed();
+                    node = grandParent;
+                    continue;
                 }
-                else
+
+                if (node->Parent->LeftChild == node)
                 {
-                    if (current == current->Parent->RightChild)
-                    {
-                        current = current->Parent;
-                        RotateLeft(current);
-                    }
-                    current->Parent->Color = Color::eBlack;
-                    grandParent->Color     = Color::eRed;
-                    RotateRight(grandParent);
+                    node = node->Parent;
+                    RotateRight(node);
                 }
+                node->Parent->SetBlack();
+                grandParent->SetRed();
+                RotateLeft(grandParent);
+                continue;
             }
-            else
+            auto* uncle = grandParent->RightChild;
+            if (uncle && uncle->IsRed())
             {
-                if (grandParent->LeftChild
-                    && grandParent->LeftChild->Color == Color::eRed)
-                {
-                    grandParent->LeftChild->Color  = Color::eBlack;
-                    grandParent->RightChild->Color = Color::eBlack;
-                    grandParent->Color             = Color::eRed;
-                    current                        = grandParent;
-                }
-                else
-                {
-                    if (current == current->Parent->LeftChild)
-                    {
-                        current = current->Parent;
-                        RotateRight(current);
-                    }
-                    current->Parent->Color = Color::eBlack;
-                    grandParent->Color     = Color::eRed;
-                    RotateLeft(grandParent);
-                }
+                node->Parent->SetBlack();
+                uncle->SetBlack();
+                grandParent->SetRed();
+                node = grandParent;
+                continue;
             }
+
+            if (node->Parent->RightChild == node)
+            {
+                node = node->Parent;
+                RotateLeft(node);
+            }
+            node->Parent->SetBlack();
+            grandParent->SetRed();
+            RotateRight(grandParent);
         }
 
-        m_Root->Color = Color::eBlack;
+        m_Root->SetBlack();
     }
     template <typename K, typename V>
     void RedBlackTree<K, V>::RemoveFix(Node* node, Node* parent)
     {
-        while (node != m_Root && (!node || node->Color == Color::eBlack))
+        for (; node != m_Root && (!node || node->IsBlack());
+             parent = node->Parent)
         {
             if (parent->LeftChild == node)
             {
-                Node* sibling = parent->RightChild;
-                if (sibling->Color == Color::eRed)
+                auto* sibling = parent->RightChild;
+                if (sibling->IsRed())
                 {
-                    sibling->Color = Color::eBlack;
-                    parent->Color  = Color::eRed;
+                    sibling->SetBlack();
+                    parent->SetRed();
                     RotateLeft(parent);
                     sibling = parent->RightChild;
                 }
-                if ((!sibling->LeftChild
-                     || sibling->LeftChild->Color == Color::eBlack)
-                    && (!sibling->RightChild
-                        || sibling->RightChild->Color == Color::eBlack))
+                if ((!sibling->LeftChild || sibling->LeftChild->IsBlack())
+                    && (!sibling->RightChild || sibling->RightChild->IsBlack()))
                 {
-                    sibling->Color = Color::eRed;
-                    node           = parent;
+                    sibling->SetRed();
+                    node = parent;
                 }
                 else
                 {
-                    if (!sibling->RightChild
-                        || sibling->RightChild->Color == Color::eBlack)
+                    if (!sibling->RightChild || sibling->RightChild->IsBlack())
                     {
-                        sibling->LeftChild->Color
-                            = Color::eBlack; // null check?
-                        sibling->Color = Color::eRed;
+                        sibling->LeftChild->SetBlack();
+                        sibling->SetRed();
                         RotateRight(sibling);
                         sibling = parent->RightChild;
                     }
-                    sibling->Color             = parent->Color;
-                    parent->Color              = Color::eBlack;
-                    sibling->RightChild->Color = Color::eBlack; // null check?
+                    sibling->Color = parent->Color;
+                    parent->SetBlack();
+                    sibling->RightChild->SetBlack();
                     RotateLeft(parent);
-                    node = m_Root; // fixed
+                    node = m_Root;
                 }
+
+                continue;
+            }
+            auto* sibling = parent->LeftChild;
+            if (sibling->IsRed())
+            {
+                sibling->SetBlack();
+                parent->SetRed();
+                RotateRight(parent);
+                sibling = parent->LeftChild;
+            }
+            if ((!sibling->LeftChild || sibling->LeftChild->IsBlack())
+                && (!sibling->RightChild || sibling->RightChild->IsBlack()))
+            {
+                sibling->SetRed();
+                node = parent;
             }
             else
             {
-                auto* sibling = parent->LeftChild;
-                if (sibling->Color == Color::eRed)
+                if (!sibling->LeftChild || sibling->LeftChild->IsBlack())
                 {
-                    sibling->Color = Color::eBlack;
-                    parent->Color  = Color::eRed;
-                    RotateRight(parent);
+                    sibling->RightChild->SetBlack();
+                    sibling->SetRed();
+                    RotateLeft(sibling);
                     sibling = parent->LeftChild;
                 }
-                if ((!sibling->LeftChild
-                     || sibling->LeftChild->Color == Color::eBlack)
-                    && (!sibling->RightChild
-                        || sibling->RightChild->Color == Color::eBlack))
-                {
-                    sibling->Color = Color::eRed;
-                    node           = parent;
-                }
-                else
-                {
-                    if (!sibling->LeftChild
-                        || sibling->LeftChild->Color == Color::eBlack)
-                    {
-                        sibling->RightChild->Color
-                            = Color::eBlack; // null check?
-                        sibling->Color = Color::eRed;
-                        RotateLeft(sibling);
-                        sibling = parent->LeftChild;
-                    }
-                    sibling->Color            = parent->Color;
-                    parent->Color             = Color::eBlack;
-                    sibling->LeftChild->Color = Color::eBlack; // null check?
-                    RotateRight(parent);
-                    node = m_Root; // fixed
-                }
+                sibling->Color = parent->Color;
+                parent->SetBlack();
+                sibling->LeftChild->SetBlack();
+                RotateRight(parent);
+                node = m_Root;
             }
-            parent = node->Parent;
         }
-        node->color = Color::eBlack; // by this point node can't be null
+
+        node->SetBlack();
     }
 
     template <typename K, typename V>
     i32 RedBlackTree<K, V>::Compare(const K& lhs, const K& rhs) const
     {
         if (lhs < rhs) return -1;
+        if (rhs < lhs) return 1;
 
-        return lhs == rhs;
+        return 0;
     }
 
     template <typename K, typename V>
     void RedBlackTree<K, V>::RotateLeft(Node* node)
     {
-        assert(node && node->RightChild);
-        Node* rightChild = node->RightChild;
+        assert(node);
+        auto* pivot = node->RightChild;
+        assert(pivot);
+        auto* parent     = node->Parent;
 
-        node->RightChild = rightChild->LeftChild;
-        if (rightChild->LeftChild) rightChild->LeftChild->Parent = node;
+        // stage 1 - node's right child is now pivot's left child
+        node->RightChild = pivot->LeftChild;
+        if (node->RightChild) node->RightChild->Parent = node;
 
-        rightChild->LeftChild = node;
-        rightChild->Parent    = node->Parent;
-        node->Parent          = rightChild;
+        // stage 2 - pivot's left child is now node
+        pivot->LeftChild = node;
+        node->Parent     = pivot;
 
-        if (m_Root == node)
-        {
-            m_Root = rightChild;
-            return;
-        }
-
-        if (rightChild->Parent->LeftChild == node)
-            rightChild->Parent->LeftChild = rightChild;
-        else rightChild->Parent->RightChild = rightChild;
+        // stage 3 - update pivot's parent
+        pivot->Parent    = parent;
+        if (!parent) m_Root = pivot;
+        else if (parent->LeftChild == node) parent->LeftChild = pivot;
+        else parent->RightChild = pivot;
     }
     template <typename K, typename V>
     void RedBlackTree<K, V>::RotateRight(Node* node)
     {
-        assert(node->LeftChild);
-        auto temp       = node->LeftChild;
-
-        // update the two nodes
-        node->LeftChild = temp->RightChild;
-        if (temp->RightChild) temp->RightChild->Parent = node;
-        temp->RightChild = node;
-        temp->Parent     = node->Parent;
-        node->Parent     = temp;
-
-        // update the parent
-        if (m_Root == node)
-        {
-            m_Root = temp;
-            return;
-        }
-        if (temp->Parent->LeftChild == node) temp->Parent->LeftChild = temp;
-        else temp->Parent->RightChild = temp;
-    }
-    template <typename K, typename V>
-    void RedBlackTree<K, V>::RemoveNode(Node* node)
-    {
         assert(node);
-        if (m_Size == 1)
-        {
-            m_Root  = nullptr;
-            m_Least = nullptr;
-            m_Size  = 0;
-            return;
-        }
+        auto* pivot = node->LeftChild;
+        assert(pivot);
+        auto* parent    = node->Parent;
 
-        if (m_Least == node) m_Least = Successor(node);
+        // stage 1 - node's left child is now pivot's right child
+        node->LeftChild = pivot->RightChild;
+        if (node->LeftChild) node->LeftChild->Parent = node;
 
-        Color nodeToEraseColor = node->Color;
-        if (node->LeftChild && node->RightChild)
-        {
-            Node* successor         = GetSuccessor(node);
-            bool  neighborSwap      = successor->Parent == node;
-            node->LeftChild->Parent = successor;
+        // stage 2 - pivot's right child is now node
+        pivot->RightChild = node;
+        node->Parent      = pivot;
 
-            if (!neighborSwap) node->RightChild->Parent = successor;
-            if (node->Parent)
-            {
-                if (node->Parent->LeftChild == node)
-                    node->Parent->LeftChild = successor;
-                else node->Parent->RightChild = successor;
-            }
-            else m_Root = successor;
-
-            if (successor->RightChild) successor->RightChild->Parent = node;
-            if (neighborSwap)
-            {
-                successor->Parent = node->Parent;
-                node->Parent      = successor;
-            }
-            else
-            {
-                if (successor->Parent)
-                {
-                    if (successor->Parent->LeftChild == successor)
-                        successor->Parent->LeftChild = node;
-                    else successor->Parent->RightChild = node;
-                }
-                else m_Root = node;
-                std::swap(node->Parent, successor->Parent);
-            }
-            std::swap(node->LeftChild, successor->LeftChild);
-            if (neighborSwap)
-            {
-                node->RightChild      = successor->RightChild;
-                successor->RightChild = node;
-            }
-            else std::swap(node->RightChild, successor->RightChild);
-            std::swap(node->Color, successor->Color);
-        }
-
-        Node* child = node->LeftChild ?: node->RightChild;
-
-        if (child) child->Parent = node->Parent;
-        if (node->Parent)
-        {
-            if (node->Parent->LeftChild == node)
-                node->Parent->LeftChild = child;
-            else node->Parent->RightChild = child;
-        }
-        else m_Root = child;
-
-        if (node->Color != Color::eRed) RemoveFix(child, node->Parent);
-        --m_Size;
+        // stage 3 - update pivot's parent
+        pivot->Parent     = parent;
+        if (!parent) m_Root = pivot;
+        else if (parent->LeftChild == node) parent->LeftChild = pivot;
+        else parent->RightChild = pivot;
     }
 
     template <typename K, typename V>
