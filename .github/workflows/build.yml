@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build-configuration: [release, debug, dist]
+        build-configuration: [debugoptimized, debug, release]
 
     steps:
       - name: Checkout code
