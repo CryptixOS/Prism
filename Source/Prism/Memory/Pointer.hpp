@@ -8,11 +8,10 @@
 
 #include <Prism/Core/Types.hpp>
 #if PRISM_TARGET_CRYPTIX == 1
-namespace VirtualMemoryManager
+namespace BootInfo
 {
-    extern usize GetHigherHalfOffset();
+    extern u64 GetHHDMOffset();
 };
-namespace VMM = VirtualMemoryManager;
 #endif
 
 namespace Prism
@@ -23,8 +22,8 @@ namespace Prism
     concept PointerType = std::is_pointer_v<T>;
     template <typename T>
     concept PointerHolder = requires {
-        PointerType<T> || std::unsigned_integral<T>
-            || std::is_same_v<T, struct Pointer>;
+        requires(PointerType<T>) || std::unsigned_integral<T>
+                    || std::is_same_v<T, struct Pointer>;
     };
 
     struct Pointer
@@ -78,7 +77,7 @@ namespace Prism
 #ifdef PRISM_TARGET_CRYPTIX
         inline VirtAddr HigherHalfOffset() const
         {
-            return VMM::GetHigherHalfOffset();
+            return BootInfo::GetHHDMOffset();
         }
         inline constexpr bool IsHigherHalf() const
         {
@@ -153,7 +152,7 @@ namespace Prism
 
             return *this;
         }
-        [[gnu::weak]] inline constexpr Pointer& operator&=(Pointer rhs)
+        inline constexpr Pointer& operator&=(Pointer rhs)
         {
             m_Pointer &= rhs.m_Pointer;
 
@@ -217,8 +216,7 @@ namespace Prism
     {
         return lhs.Raw() & rhs;
     }
-    [[gnu::weak]] inline constexpr Pointer operator&(Pointer       lhs,
-                                                     const Pointer rhs)
+    inline constexpr Pointer operator&(Pointer lhs, const Pointer rhs)
     {
         return lhs.Raw() & rhs.Raw();
     }
