@@ -86,7 +86,7 @@ install_headers(
   'Source/Prism/Delegate.hpp',
   'Source/Prism/Path.hpp',
   'Source/Prism/PathView.hpp',
-  'Source/Prism/Printf.hpp',
+  #'Source/Prism/Printf.hpp',
   #'Source/Prism/TypeTraits.hpp',
   'Source/Prism/UUID.hpp',
   subdir: 'Prism'
