@@ -25,25 +25,29 @@ namespace Prism
 
         inline void Initialize(u8* data, const usize size, const u8 value = 1)
         {
-            m_Data = data;
-            m_Size = size;
+            m_Data       = data;
+            m_Size       = size;
+
+            m_EntryCount = m_Size * 8;
             SetAll(value);
         }
-        inline void Allocate(usize size)
+        inline void Allocate(usize entryCount)
         {
-            usize bytes = Math::DivRoundUp(size, 8);
-            m_Data      = new u8[bytes];
-            m_Size      = size;
+            m_EntryCount = entryCount;
+
+            m_Size       = Math::DivRoundUp(entryCount, 8);
+            m_Data       = new u8[m_Size];
         }
         inline void Free()
         {
             delete[] m_Data;
-            m_Data = nullptr;
-            m_Size = 0;
+            m_Data       = nullptr;
+            m_EntryCount = 0;
+            m_Size       = 0;
         }
 
         constexpr u8*   Raw() const { return m_Data; }
-        constexpr usize GetSize() const { return m_Size; }
+        constexpr usize GetSize() const { return m_EntryCount; }
 
         inline void     SetAll(const u8 value)
         {
@@ -53,7 +57,7 @@ namespace Prism
         {
             const usize byte = index / 8;
             const usize bit  = index % 8;
-            PrismAssert(byte < m_Size);
+            assert(byte < m_Size);
 
             if (value) m_Data[byte] |= Bit(bit);
             else m_Data[byte] &= ~Bit(bit);
@@ -68,7 +72,8 @@ namespace Prism
 
       private:
         u8*   m_Data;
-        usize m_Size;
+        usize m_EntryCount = 0;
+        usize m_Size       = 0;
     };
 }; // namespace Prism
 
