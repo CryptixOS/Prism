@@ -24,18 +24,18 @@ namespace Prism
     concept IntegralOrEnum = IsIntegral<T> || IsEnum<T>;
 
     template <IntegralOrEnum T>
-    class ArithmethicEnum
+    class ArithmeticEnum
     {
       public:
         using ValueType = PromoteEnumType<T>;
         static_assert(sizeof(T) == sizeof(ValueType));
 
-        constexpr ArithmethicEnum() = default;
-        constexpr ArithmethicEnum(T value)
+        constexpr ArithmeticEnum() = default;
+        constexpr ArithmeticEnum(T value)
             : m_Value(static_cast<ValueType>(value))
         {
         }
-        constexpr ArithmethicEnum(ValueType value)
+        constexpr ArithmeticEnum(ValueType value)
             : m_Value(value)
         {
         }
@@ -50,14 +50,14 @@ namespace Prism
         {
             return m_Value <=> rhs;
         }
-        constexpr ArithmethicEnum& operator+=(ValueType v)
+        constexpr ArithmeticEnum& operator+=(ValueType v)
         {
             m_Value += v;
             return *this;
         }
-        constexpr ArithmethicEnum operator+(ValueType v) const
+        constexpr ArithmeticEnum operator+(ValueType v) const
         {
-            return ArithmethicEnum(m_Value + v);
+            return ArithmeticEnum(m_Value + v);
         }
 
       private:
@@ -65,12 +65,12 @@ namespace Prism
     };
 
     template <typename T>
-    constexpr bool operator==(ArithmethicEnum<T> lhs, T rhs)
+    constexpr bool operator==(ArithmeticEnum<T> lhs, T rhs)
     {
         return lhs == rhs;
     }
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
-using Prism::ArithmethicEnum;
+using Prism::ArithmeticEnum;
 #endif
