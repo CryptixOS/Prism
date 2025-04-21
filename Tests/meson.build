@@ -7,11 +7,14 @@
 
 incdirs = include_directories('../Source/')
 tests = ['DoublyLinkedList', 'RedBlackTree', 'String', 'StringUtils', 'Vector']
+cpp_args = [
+  '-Wno-unused-parameter'
+]
 
 foreach name : tests
   srcs = files(
     meson.project_source_root() / 'Source/Prism/Debug/Log.cpp',
     name / 'main.cpp')
-  test = executable(name, srcs, include_directories: incdirs, dependencies: deps)
+  test = executable(name, srcs, cpp_args: cpp_args, include_directories: incdirs, dependencies: deps)
   test(name, test)
 endforeach
