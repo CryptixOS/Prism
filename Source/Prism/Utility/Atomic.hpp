@@ -190,14 +190,14 @@ namespace Prism
                                 std::to_underlying(memoryOrder)));
     }
 
-    PM_ALWAYS_INLINE constexpr bool AtomicTestAndSet(void*       target,
-                                                     MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE inline bool AtomicTestAndSet(void*       target,
+                                                  MemoryOrder memoryOrder)
     {
         return __atomic_test_and_set(reinterpret_cast<volatile u32*>(target),
                                      std::to_underlying(memoryOrder));
     }
-    PM_ALWAYS_INLINE constexpr void AtomicClear(bool*       target,
-                                                MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE inline void AtomicClear(bool*       target,
+                                             MemoryOrder memoryOrder)
     {
         return __atomic_clear(reinterpret_cast<volatile u32*>(target),
                               std::to_underlying(memoryOrder));
