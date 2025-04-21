@@ -11,7 +11,7 @@ namespace Prism
 {
     template <typename C, typename Traits>
     Vector<BasicString<C, Traits>>
-    BasicStringView<C, Traits>::Split(C delimeter)
+    BasicStringView<C, Traits>::Split(C delimiter)
     {
         if (Empty()) return {};
 
@@ -19,15 +19,15 @@ namespace Prism
         usize                          start = At(0) == '/';
         usize                          end   = start;
 
-        auto findDelimeter = [this](usize startPos, C delimeter) -> usize
+        auto finddelimiter = [this](usize startPos, C delimiter) -> usize
         {
             usize pos = startPos;
-            while (pos < Size() && At(pos) != delimeter) ++pos;
+            while (pos < Size() && At(pos) != delimiter) ++pos;
 
             return pos == Size() ? NPos : pos;
         };
 
-        while ((end = findDelimeter(start, delimeter)) != NPos)
+        while ((end = finddelimiter(start, delimiter)) != NPos)
         {
             BasicString segment = Substr(start, end - start);
             if (start == end) break;
