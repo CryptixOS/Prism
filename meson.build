@@ -25,6 +25,7 @@ debug_args = [
 warning_args = [
   '-Wno-unused-parameter',
   '-Wno-frame-address',
+  '-Wno-unused-parameter',
 ]
 macros = [
   '-DFMT_STATIC_THOUSANDS_SEPARATOR=1',

@@ -30,8 +30,4 @@ void test_doubly_linked_list()
     assert(list.Empty());
 }
 
-int main()
-{
-    test_doubly_linked_list();
-    std::printf("HelloWorld");
-};
+int main() { test_doubly_linked_list(); };
