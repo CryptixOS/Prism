@@ -873,31 +873,31 @@ namespace Prism
 }; // namespace Prism
 // hash support
 template <>
-struct std::hash<Prism::BasicString<char, std::char_traits<char>>>
+struct std::hash<Prism::BasicString<char, Prism::CharTraits<char>>>
     : Prism::Detail::StringHashBase<char>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<char8_t, std::char_traits<char8_t>>>
+struct std::hash<Prism::BasicString<char8_t, Prism::CharTraits<char8_t>>>
     : Prism::Detail::StringHashBase<char8_t>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<char16_t, std::char_traits<char16_t>>>
+struct std::hash<Prism::BasicString<char16_t, Prism::CharTraits<char16_t>>>
     : Prism::Detail::StringHashBase<char16_t>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<char32_t, std::char_traits<char32_t>>>
+struct std::hash<Prism::BasicString<char32_t, Prism::CharTraits<char32_t>>>
     : Prism::Detail::StringHashBase<char32_t>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<wchar_t, std::char_traits<wchar_t>>>
+struct std::hash<Prism::BasicString<wchar_t, Prism::CharTraits<wchar_t>>>
     : Prism::Detail::StringHashBase<wchar_t>
 {
 };
