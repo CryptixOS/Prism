@@ -76,6 +76,10 @@ void Test_ToString_ToNumber()
     assert(ToString<i64>(-9223372036854775807LL - 1)
            == "-9223372036854775808"_sv);
     assert(ToString<i64>(9223372036854775807LL) == "9223372036854775807"_sv);
+
+    assert(ToNumber<u64>("177"_sv, 8) == 127);
+    assert(ToNumber<u64>("999"_sv, 8) == 511);
+    assert(ToNumber<u64>("242"_sv, 8) == 162);
 }
 int main()
 {
