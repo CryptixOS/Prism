@@ -44,7 +44,7 @@ namespace Prism
         {
             assert(count <= MaxSize());
 
-            if (count > Capacity()) Reallocate(count);
+            if (count > Capacity()) Reallocate(count, false);
 
             TraitsType::Assign(Raw(), count, ch);
         }
@@ -75,6 +75,12 @@ namespace Prism
         }
         constexpr BasicString(const ValueType* s, SizeType count = NPos)
         {
+            if (!s)
+            {
+                ShortInit();
+                return;
+            }
+
             if (count == NPos) count = Traits::Length(s);
             usize newSize = count + 1;
             if (FitsInSso(newSize))
@@ -177,21 +183,21 @@ namespace Prism
         constexpr const C* begin() const PM_NOEXCEPT { return &Front(); }
         constexpr const C* cbegin() const PM_NOEXCEPT { return &Front(); }
 
-        constexpr C*       end() PM_NOEXCEPT { return &Back(); }
-        constexpr const C* end() const PM_NOEXCEPT { return &Back(); }
-        constexpr const C* cend() const PM_NOEXCEPT { return &Back(); }
+        constexpr C*       end() PM_NOEXCEPT { return &Back() + 1; }
+        constexpr const C* end() const PM_NOEXCEPT { return &Back() + 1; }
+        constexpr const C* cend() const PM_NOEXCEPT { return &Back() + 1; }
 
         constexpr std::reverse_iterator<C*> rbegin() PM_NOEXCEPT
         {
-            return &Back();
+            return &Back() + 1;
         }
         constexpr std::reverse_iterator<const C*> rbegin() const PM_NOEXCEPT
         {
-            return &Back();
+            return &Back() + 1;
         }
         constexpr std::reverse_iterator<const C*> crbegin() const PM_NOEXCEPT
         {
-            return &Back();
+            return &Back() + 1;
         }
 
         constexpr std::reverse_iterator<C*> rend() PM_NOEXCEPT
@@ -559,7 +565,7 @@ namespace Prism
                                      SizeType count = NPos) const
         {
             assert(pos <= Size());
-            return BasicString(*this, pos, count);
+            return BasicString(BasicStringView{Raw() + pos, count});
         }
         constexpr SizeType Copy(ValueType* str, SizeType count,
                                 SizeType pos = 0) const
@@ -671,7 +677,7 @@ namespace Prism
             usize newSize = std::min(newCapacity, oldSize);
             C*    newData = new C[newCapacity + 1];
 
-            if (!oldData)
+            if (oldData)
             {
                 if (oldSize != 0 && copyOld)
                     Traits::Copy(newData, oldData, newSize);
@@ -867,31 +873,31 @@ namespace Prism
 }; // namespace Prism
 // hash support
 template <>
-struct std::hash<Prism::BasicString<char, CharTraits<char>>>
+struct std::hash<Prism::BasicString<char, std::char_traits<char>>>
     : Prism::Detail::StringHashBase<char>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<char8_t, CharTraits<char8_t>>>
+struct std::hash<Prism::BasicString<char8_t, std::char_traits<char8_t>>>
     : Prism::Detail::StringHashBase<char8_t>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<char16_t, CharTraits<char16_t>>>
+struct std::hash<Prism::BasicString<char16_t, std::char_traits<char16_t>>>
     : Prism::Detail::StringHashBase<char16_t>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<char32_t, CharTraits<char32_t>>>
+struct std::hash<Prism::BasicString<char32_t, std::char_traits<char32_t>>>
     : Prism::Detail::StringHashBase<char32_t>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<wchar_t, CharTraits<wchar_t>>>
+struct std::hash<Prism::BasicString<wchar_t, std::char_traits<wchar_t>>>
     : Prism::Detail::StringHashBase<wchar_t>
 {
 };
