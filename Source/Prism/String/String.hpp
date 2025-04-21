@@ -103,7 +103,7 @@ namespace Prism
             : BasicString(const_cast<C*>(str.Raw()), str.Size())
         {
         }
-        ~BasicString()
+        constexpr ~BasicString()
         {
             if (!IsLong()) return;
 
