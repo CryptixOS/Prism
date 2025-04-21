@@ -41,21 +41,31 @@ namespace Prism
             m_Data     = new T[m_Capacity];
             m_Size     = other.m_Size;
 
-            for (usize i = 0; const auto& v : other) m_Data[i++] = v;
+            for (usize i = 0; i < Size(); i++) Raw()[i] = other.Raw()[i];
         }
         constexpr Vector(Vector&& other)
-            : m_Data(other.m_Data)
-            , m_Size(other.m_Size)
+            : m_Data(std::move(other.m_Data))
+            , m_Size(std::move(other.m_Size))
+            , m_Capacity(std::move(other.m_Capacity))
         {
-            other.m_Data = nullptr;
-            other.m_Size = 0;
+            other.m_Data     = nullptr;
+            other.m_Size     = 0;
+            other.m_Capacity = 0;
         }
 
         constexpr Vector(usize capacity) { Resize(capacity); }
         Vector(std::initializer_list<T> init)
         {
-            Reserve(2);
+            Reserve(init.size());
             for (const auto& value : init) PushBack(value);
+        }
+        constexpr ~Vector()
+        {
+            if (Capacity() == 0) return;
+
+            delete[] m_Data;
+            m_Data = nullptr;
+            m_Size = 0;
         }
 
         inline Vector& operator=(const Vector& other)
@@ -64,16 +74,18 @@ namespace Prism
             m_Data     = new T[m_Capacity];
             m_Size     = other.m_Size;
 
-            for (usize i = 0; const auto& v : other) m_Data[i++] = v;
+            for (usize i = 0; i < Size(); i++) Raw()[i] = other[i];
             return *this;
         }
         inline Vector& operator=(Vector&& other)
         {
-            m_Data       = std::move(other.m_Data);
-            m_Size       = std::move(other.m_Size);
+            m_Data           = std::move(other.m_Data);
+            m_Size           = std::move(other.m_Size);
+            m_Capacity       = std::move(other.m_Capacity);
 
-            other.m_Data = nullptr;
-            other.m_Size = 0;
+            other.m_Data     = nullptr;
+            other.m_Size     = 0;
+            other.m_Capacity = 0;
             return *this;
         }
 
@@ -105,10 +117,13 @@ namespace Prism
         constexpr ConstIterator      begin() const noexcept { return m_Data; }
         constexpr ConstIterator      cbegin() const noexcept { return m_Data; }
         constexpr Iterator           end() noexcept { return m_Data + m_Size; }
-        constexpr ConstIterator      end() const noexcept { return m_Data; }
-        constexpr ConstIterator      cend() const noexcept { return m_Data; }
+        constexpr ConstIterator end() const noexcept { return m_Data + m_Size; }
+        constexpr ConstIterator cend() const noexcept
+        {
+            return m_Data + m_Size;
+        }
 
-        constexpr ReverseIterator    rbegin() noexcept
+        constexpr ReverseIterator rbegin() noexcept
         {
             return ReverseIterator(m_Data + m_Size);
         }
@@ -147,11 +162,11 @@ namespace Prism
             if (newCapacity < m_Size) return;
 
             T* newData = new T[newCapacity];
-            std::memcpy(newData, m_Data, m_Size * sizeof(T));
-
-            m_Capacity = newCapacity;
+            for (usize i = 0; const auto& c : *this) newData[i++] = c;
             if (m_Size > 0) delete[] m_Data;
-            m_Data = newData;
+
+            m_Data     = newData;
+            m_Capacity = newCapacity;
         }
         constexpr SizeType Capacity() const noexcept { return m_Capacity; }
         constexpr void     ShrinkToFit()
