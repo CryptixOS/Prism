@@ -15,26 +15,15 @@
 
 namespace Prism
 {
-    bool PathView::ValidateLength()
+    bool PathView::ValidateLength() { return m_Path.size() < PRISM_MAX_PATH; }
+
+    Vector<std::string> PathView::SplitPath()
     {
+        Vector<std::string> segments;
+        usize               start     = m_Path[0] == '/' ? 1 : 0;
+        usize               end       = start;
 
-        usize pathLen = 0;
-        while (m_Path[pathLen])
-        {
-            if (pathLen >= PRISM_MAX_PATH) return false;
-            ++pathLen;
-        }
-
-        return true;
-    }
-
-    std::vector<std::string> PathView::SplitPath()
-    {
-        std::vector<std::string> segments;
-        usize                    start     = m_Path[0] == '/' ? 1 : 0;
-        usize                    end       = start;
-
-        auto                     findSlash = [this](usize pos) -> usize
+        auto                findSlash = [this](usize pos) -> usize
         {
             usize current = pos;
             while (m_Path[current] != '/' && current < m_Path.size()) current++;
@@ -46,14 +35,14 @@ namespace Prism
         while ((end = findSlash(start)) != std::string::npos)
         {
             std::string segment = path.substr(start, end - start);
-            if (start != end) segments.push_back(segment);
+            if (start != end) segments.PushBack(segment);
 
             start = end + 1;
         }
 
         // handle last segment
-        if (start < path.length()) segments.push_back(path.substr(start));
-        return segments;
+        if (start < path.length()) segments.PushBack(path.substr(start));
+        return std::move(segments);
     }
 
     std::string_view PathView::GetLastComponent() const

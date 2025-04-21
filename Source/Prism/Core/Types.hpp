@@ -11,7 +11,6 @@
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
-#include <expected>
 #include <fmt/format.h>
 #include <type_traits>
 
@@ -19,10 +18,16 @@
 #define PrismStringify(x)      PrismStringifyInner(x)
 
 #if PRISM_TARGET_CRYPTIX == 1
-    #define PRISM_ERRNO_T std::errno_t;
-    #define Stringify(x)  PrismStringify(x)
+    #include <expected>
+    #define PRISM_ERRNO_T      std::errno_t;
+    #define Stringify(x)       PrismStringify(x)
+    #define PRISM_EXPECTED_T   std::expected
+    #define PRISM_UNEXPECTED_T std::unexpected
 #else
-    #define PRISM_ERRNO_T error_t
+    #include <Prism/Utility/Expected.hpp>
+    #define PRISM_ERRNO_T      i32
+    #define PRISM_EXPECTED_T   Expected
+    #define PRISM_UNEXPECTED_T Unexpected
 #endif
 
 namespace Prism
@@ -44,10 +49,10 @@ namespace Prism
 
     using symbol    = void*[];
     using ErrorCode = PRISM_ERRNO_T;
-    using Error     = std::unexpected<ErrorCode>;
+    using Error     = PRISM_UNEXPECTED_T<ErrorCode>;
 
     template <typename R>
-    using ErrorOr = std::expected<R, ErrorCode>;
+    using ErrorOr = PRISM_EXPECTED_T<R, ErrorCode>;
 
     constexpr u64 Bit(u64 n) { return (1ull << n); }
 }; // namespace Prism

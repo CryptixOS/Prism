@@ -6,10 +6,9 @@
  */
 #pragma once
 
+#include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/StringView.hpp>
-
-#include <vector>
 
 namespace Prism
 {
@@ -36,6 +35,11 @@ namespace Prism
         {
         }
 
+        constexpr operator StringView() const
+        {
+            return {m_Path.data(), m_Path.size()};
+        }
+
         bool           ValidateLength();
         constexpr bool IsEmpty() const { return m_Path.empty(); }
 
@@ -43,9 +47,9 @@ namespace Prism
         {
             return !IsEmpty() && m_Path[0] == '/';
         }
-        std::vector<std::string> SplitPath();
+        Vector<std::string> SplitPath();
 
-        constexpr operator std::string_view() const { return m_Path; }
+        constexpr           operator std::string_view() const { return m_Path; }
 
         constexpr const char& operator[](usize i) const { return m_Path[i]; }
 

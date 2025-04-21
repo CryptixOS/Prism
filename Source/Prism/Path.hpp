@@ -8,8 +8,6 @@
 
 #include <Prism/PathView.hpp>
 
-#include <vector>
-
 namespace Prism
 {
     class Path
@@ -20,26 +18,23 @@ namespace Prism
         {
         }
 
-        constexpr          operator PathView() const { return m_Path; }
+        constexpr          operator PathView() const { return m_Path.data(); }
 
-        constexpr PathView GetView() const { return m_Path; }
+        constexpr PathView View() const { return m_Path.data(); }
 
         constexpr bool     IsEmpty() const { return m_Path.size() == 0; }
         constexpr bool     IsAbsolute() const
         {
             return !IsEmpty() && m_Path[0] == '/';
         }
-        std::vector<std::string> SplitPath();
+        Vector<std::string> SplitPath();
 
-        constexpr int            Compare(const Path& str) const noexcept
+        constexpr int       Compare(const Path& str) const noexcept
         {
             return m_Path.compare(str.m_Path);
         }
 
-        inline bool ValidateLength() const
-        {
-            return GetView().ValidateLength();
-        }
+        inline bool ValidateLength() const { return View().ValidateLength(); }
 
       private:
         std::string m_Path;
@@ -69,3 +64,14 @@ namespace Prism
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::Path;
 #endif
+
+template <>
+struct fmt::formatter<Prism::PathView> : fmt::formatter<std::string_view>
+{
+    template <typename FormatContext>
+    auto format(const Prism::PathView& src, FormatContext& ctx) const
+    {
+        return fmt::formatter<std::string_view>::format(
+            fmt::format("{}", src.Raw()), ctx);
+    }
+};

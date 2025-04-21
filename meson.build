@@ -50,7 +50,6 @@ cxx_args = [
   '-Wno-frame-address',
   '-MP'
 ]
-add_global_arguments(cxx_args, language: 'cpp')
 
 incs = [ include_directories('Source') ]
 

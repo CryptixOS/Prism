@@ -43,11 +43,9 @@ namespace Prism::Math
     inline T PowerOf(T base, T exponent)
     {
         T invert  = 0;
-
         T powMult = 1;
 
         if ((invert = (exponent < 0))) exponent = -exponent;
-
         for (T x = 0; x < exponent; x++) powMult *= base;
 
         return (invert) ? 1 / powMult : powMult;

@@ -13,7 +13,7 @@ namespace Prism
 {
     void LogSink::Log(LogLevel level, std::string_view message)
     {
-        std::unique_lock guard(m_Lock);
+        // std::unique_lock guard(m_Lock);
 
         PrintLevel(level);
         WriteNoLock(message);
@@ -27,13 +27,13 @@ namespace Prism
     }
     bool LogSink::Enable()
     {
-        std::unique_lock guard(m_Lock);
+        // std::unique_lock guard(m_Lock);
 
         return std::exchange(m_Enabled, true);
     }
     bool LogSink::Disable()
     {
-        std::unique_lock guard(m_Lock);
+        // std::unique_lock guard(m_Lock);
 
         return std::exchange(m_Enabled, false);
     }

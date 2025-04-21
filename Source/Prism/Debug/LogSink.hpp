@@ -30,9 +30,9 @@ namespace Prism
         bool           Disable();
 
       protected:
-        std::mutex m_Lock;
-        bool       m_Enabled = true;
+        // std::mutex m_Lock;
+        bool m_Enabled = true;
 
-        void       PrintLevel(LogLevel level);
+        void PrintLevel(LogLevel level);
     };
 }; // namespace Prism
