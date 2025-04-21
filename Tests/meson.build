@@ -6,9 +6,12 @@
 #*/
 
 incdirs = include_directories('../Source/')
-#st = executable('string_view', 'StringView/test.cpp', include_directories : incdirs)
-#test('StringViewTest', st)
+tests = ['DoublyLinkedList', 'RedBlackTree', 'String', 'StringUtils', 'Vector']
 
-dll = executable('doubly_linked_list', 'DoublyLinkedList/test.cpp', include_directories : incdirs, dependencies: deps)
-test('DoublyLinkedList', dll)
-
+foreach name : tests
+  srcs = files(
+    meson.project_source_root() / 'Source/Prism/Debug/Log.cpp',
+    name / 'main.cpp')
+  test = executable(name, srcs, include_directories: incdirs, dependencies: deps)
+  test(name, test)
+endforeach
