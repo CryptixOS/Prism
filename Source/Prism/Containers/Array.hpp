@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Prism/Concepts.hpp>
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
@@ -111,16 +112,16 @@ namespace Prism
     namespace Detail
     {
         template <typename T, usize N, usize... I>
-        inline constexpr Array<std::remove_cv_t<T>, N>
-        ToArray(T (&arr)[N], std::index_sequence<I...>)
+        inline constexpr Array<RemoveCvType<T>, N> ToArray(T (&arr)[N],
+                                                           IndexSequence<I...>)
         {
-            return Array<std::remove_cv_t<T>, N>{{arr[I]...}};
+            return Array<RemoveCvType<T>, N>{{arr[I]...}};
         }
     }; // namespace Detail
     template <typename T, usize N>
-    inline constexpr Array<std::remove_cv_t<T>, N> ToArray(T (&&arr)[N])
+    inline constexpr Array<RemoveCvType<T>, N> ToArray(T (&&arr)[N])
     {
-        return Detail::ToArray(arr, std::make_index_sequence<N>{});
+        return Detail::ToArray(arr, MakeIndexSequenceV<N>{});
     }
 }; // namespace Prism
 #if PRISM_TARGET_CRYPTIX == 1

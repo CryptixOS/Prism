@@ -70,6 +70,8 @@ namespace Prism
 
         inline Vector& operator=(const Vector& other)
         {
+            if (m_Capacity > 0) delete[] m_Data;
+
             m_Capacity = other.m_Capacity;
             m_Data     = new T[m_Capacity];
             m_Size     = other.m_Size;
@@ -79,6 +81,8 @@ namespace Prism
         }
         inline Vector& operator=(Vector&& other)
         {
+            if (m_Capacity > 0) delete[] m_Data;
+
             m_Data           = std::move(other.m_Data);
             m_Size           = std::move(other.m_Size);
             m_Capacity       = std::move(other.m_Capacity);

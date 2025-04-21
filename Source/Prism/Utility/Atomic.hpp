@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include <Prism/Concepts.hpp>
+
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
@@ -19,198 +21,231 @@ namespace Prism
         eAtomicRelease = __ATOMIC_RELEASE,
         eAtomicAcqRel  = __ATOMIC_ACQ_REL,
         eAtomicSeqCst  = __ATOMIC_SEQ_CST,
-        // eAtomicLockEvisionStart = __ATOMIC_HLE_ACQUIRE,
-        // eAtomicLockEvisionEnd   = __ATOMIC_HLE_RELEASE,
     };
 
+    /**
+     * @brief Performs an atomic load and returns the current value of the
+     * atomic variable. Memory is affected according to the value of
+     * memoryOrder
+     * @param source - source of the operation
+     * @param memoryOrder - memory order constraints to enforce, valid values
+     * => [eAtomicRelaxed, eAtomicSeqCst, eAtomicRelease]
+     *
+     * @return The current value of the atomic variable.
+     */
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicLoad(T& source, MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicLoad(T& source, ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_load_n(reinterpret_cast<volatile u32*>(&source),
-                            std::to_underlying(memoryOrder)));
-    }
-    template <typename T>
-    PM_ALWAYS_INLINE constexpr void AtomicLoad(T& source, T& destination,
-                                               MemoryOrder memoryOrder)
-    {
-        __atomic_load(reinterpret_cast<volatile u32*>(&source),
-                      reinterpret_cast<u32*>(&destination),
-                      std::to_underlying(memoryOrder));
-    }
-    template <typename T>
-    PM_ALWAYS_INLINE constexpr void AtomicStore(T& destination, T value,
-                                                MemoryOrder memoryOrder)
-    {
-        __atomic_store_n(reinterpret_cast<volatile u32*>(&destination),
-                         std::to_underlying(value),
-                         std::to_underlying(memoryOrder));
-    }
-    template <typename T>
-    PM_ALWAYS_INLINE constexpr void AtomicStore(T& destination, T& source,
-                                                MemoryOrder memoryOrder)
-    {
-        __atomic_store(reinterpret_cast<volatile u32*>(&destination),
-                       reinterpret_cast<volatile u32*>(&source),
-                       std::to_underlying(memoryOrder));
-    }
-    template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicExchange(T* target, T newValue,
-                                                MemoryOrder memoryOrder)
-    {
-        return static_cast<T>(
-            __atomic_exchange_n(reinterpret_cast<volatile u32*>(target),
-                                newValue, std::to_underlying(memoryOrder)));
+        return __atomic_load_n(reinterpret_cast<volatile u32*>(&source),
+                               memoryOrder);
     }
     template <typename T>
     PM_ALWAYS_INLINE constexpr void
-    AtomicExchange(T* target, T newValue, T& oldValue, MemoryOrder memoryOrder)
+    AtomicLoad(T& source, T& destination,
+               ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        __atomic_exchange(reinterpret_cast<volatile u32*>(target), newValue,
-                          &oldValue, std::to_underlying(memoryOrder));
+        __atomic_load(reinterpret_cast<volatile u32*>(&source),
+                      reinterpret_cast<u32*>(&destination), memoryOrder);
     }
     template <typename T>
+    PM_ALWAYS_INLINE constexpr void
+    AtomicStore(T& destination, ArithmethicEnum<T> value,
+                ArithmethicEnum<MemoryOrder> memoryOrder)
+    {
+        __atomic_store_n(reinterpret_cast<volatile u32*>(&destination), value,
+                         memoryOrder);
+    }
+    template <typename T>
+    PM_ALWAYS_INLINE constexpr void
+    AtomicStore(T& destination, T& source,
+                ArithmethicEnum<MemoryOrder> memoryOrder)
+    {
+        __atomic_store(reinterpret_cast<volatile u32*>(&destination),
+                       reinterpret_cast<volatile u32*>(&source), memoryOrder);
+    }
+    template <typename T>
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicExchange(T* target, ArithmethicEnum<T> newValue,
+                   ArithmethicEnum<MemoryOrder> memoryOrder)
+    {
+        return __atomic_exchange_n(reinterpret_cast<volatile u32*>(target),
+                                   newValue, memoryOrder);
+    }
+    template <typename T>
+    PM_ALWAYS_INLINE constexpr void
+    AtomicExchange(T* target, ArithmethicEnum<T> newValue, T& oldValue,
+                   ArithmethicEnum<MemoryOrder> memoryOrder)
+    {
+        __atomic_exchange(reinterpret_cast<volatile u32*>(target), newValue,
+                          &oldValue, memoryOrder);
+    }
+    /*
+     * @brief Compares the conents of <*target> with the contents of
+     *  [*expected]. If equal, the operation is a read-modify-write operation
+     *  that writes desired into [*target]. If they are not equal, the operation
+     *  is a read and the current contents of <*target> are written into
+     *  [*expected]. weak  is true for weak compare_exchange, which may fail
+     *  spuriously, and false for the strong variation, which never fails
+     *  spuriously. Many targets only offer the strong variation and ignore the
+     *  parameter. When in doubt, use the strong variation.
+     *
+     *  if [desired] is written int [*target] then true is return and memory is
+     *  affected according to the memory order specified by
+     *[successMemoryOrder]. The are no restriction on what memory order can be
+     *used here.
+     *
+     *  Otherwise, false is returned and memoy is affected to
+     *  failureMemoryOrder. This memory order cannot be eAtomicRelease nor
+     *  eAtomicAcqRel. It also cannot be a stronger order than that specified by
+     *  [successMemoryOrder]
+     *
+     *
+     **/
+    template <typename T>
     PM_ALWAYS_INLINE constexpr bool
-    AtomicCompareExchange(T* target, T* expected, T desired, bool weak,
-                          MemoryOrder successMemoryOrder,
-                          MemoryOrder failureMemoryOrder)
+    AtomicCompareExchange(T* target, T* expected, ArithmethicEnum<T> desired,
+                          bool                         weak,
+                          ArithmethicEnum<MemoryOrder> successMemoryOrder,
+                          ArithmethicEnum<MemoryOrder> failureMemoryOrder)
     {
         return __atomic_compare_exchange_n(
             reinterpret_cast<volatile u32*>(target),
-            reinterpret_cast<u32*>(expected), std::to_underlying(desired), weak,
-            std::to_underlying(successMemoryOrder),
-            std::to_underlying(failureMemoryOrder));
+            reinterpret_cast<u32*>(expected), desired, weak, successMemoryOrder,
+            failureMemoryOrder);
     }
     template <typename T>
     PM_ALWAYS_INLINE constexpr bool
     AtomicCompareExchange(T* target, T* expected, T* desired, bool weak,
-                          MemoryOrder successMemoryOrder,
-                          MemoryOrder failureMemoryOrder)
+                          ArithmethicEnum<MemoryOrder> successMemoryOrder,
+                          ArithmethicEnum<MemoryOrder> failureMemoryOrder)
     {
         return __atomic_compare_exchange(
-            reinterpret_cast<volatile u32*>(target), expected, desired, weak,
-            std::to_underlying(successMemoryOrder),
-            std::to_underlying(failureMemoryOrder));
+            reinterpret_cast<volatile u32*>(target), expected,
+            reinterpret_cast<u32*>(desired), weak, successMemoryOrder,
+            failureMemoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicAddFetch(T* target, T value,
-                                                MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicAddFetch(T* target, ArithmethicEnum<T> value,
+                   ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_add_fetch(reinterpret_cast<volatile u32*>(target), value,
-                               std::to_underlying(memoryOrder)));
+        return __atomic_add_fetch(reinterpret_cast<volatile u32*>(target),
+                                  value, memoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicSubFetch(T* target, T value,
-                                                MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicSubFetch(T* target, ArithmethicEnum<T> value,
+                   ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_sub_fetch(reinterpret_cast<volatile u32*>(target), value,
-                               std::to_underlying(memoryOrder)));
+        return __atomic_sub_fetch(reinterpret_cast<volatile u32*>(target),
+                                  value, memoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicAndFetch(T* target, T value,
-                                                MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicAndFetch(T* target, ArithmethicEnum<T> value,
+                   ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_and_fetch(reinterpret_cast<volatile u32*>(target), value,
-                               std::to_underlying(memoryOrder)));
+        return __atomic_and_fetch(reinterpret_cast<volatile u32*>(target),
+                                  value, memoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicXorFetch(T* target, T value,
-                                                MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicXorFetch(T* target, ArithmethicEnum<T> value,
+                   ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_xor_fetch(reinterpret_cast<volatile u32*>(target), value,
-                               std::to_underlying(memoryOrder)));
+        return __atomic_xor_fetch(reinterpret_cast<volatile u32*>(target),
+                                  value, memoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicOrFetch(T* target, T value,
-                                               MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicOrFetch(T* target, ArithmethicEnum<T> value,
+                  ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_or_fetch(reinterpret_cast<volatile u32*>(target), value,
-                              std::to_underlying(memoryOrder)));
+        return __atomic_or_fetch(reinterpret_cast<volatile u32*>(target), value,
+                                 memoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicNandFetch(T* target, T value,
-                                                 MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicNandFetch(T* target, ArithmethicEnum<T> value,
+                    ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_nand_fetch(reinterpret_cast<volatile u32*>(target), value,
-                                std::to_underlying(memoryOrder)));
+        return __atomic_nand_fetch(reinterpret_cast<volatile u32*>(target),
+                                   value, memoryOrder);
     }
 
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicFetchAdd(T* target, T value,
-                                                MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicFetchAdd(T* target, ArithmethicEnum<T> value,
+                   ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_fetch_add(reinterpret_cast<volatile u32*>(target), value,
-                               std::to_underlying(memoryOrder)));
+        return __atomic_fetch_add(reinterpret_cast<volatile u32*>(target),
+                                  value, memoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicFetchSub(T* target, T value,
-                                                MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicFetchSub(T* target, ArithmethicEnum<T> value,
+                   ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_fetch_sub(reinterpret_cast<volatile u32*>(target), value,
-                               std::to_underlying(memoryOrder)));
+        return __atomic_fetch_sub(reinterpret_cast<volatile u32*>(target),
+                                  value, memoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicFetchAnd(T* target, T value,
-                                                MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicFetchAnd(T* target, ArithmethicEnum<T> value,
+                   ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_fetch_and(reinterpret_cast<volatile u32*>(target), value,
-                               std::to_underlying(memoryOrder)));
+        return __atomic_fetch_and(reinterpret_cast<volatile u32*>(target),
+                                  value, memoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicFetchXor(T* target, T value,
-                                                MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicFetchXor(T* target, ArithmethicEnum<T> value,
+                   ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_fetch_xor(reinterpret_cast<volatile u32*>(target), value,
-                               std::to_underlying(memoryOrder)));
+        return __atomic_fetch_xor(reinterpret_cast<volatile u32*>(target),
+                                  value, memoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicFetchOr(T* target, T value,
-                                               MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicFetchOr(T* target, ArithmethicEnum<T> value,
+                  ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_fetch_or(reinterpret_cast<volatile u32*>(target), value,
-                              std::to_underlying(memoryOrder)));
+        return __atomic_fetch_or(reinterpret_cast<volatile u32*>(target), value,
+                                 memoryOrder);
     }
     template <typename T>
-    PM_ALWAYS_INLINE constexpr T AtomicFetchNand(T* target, T value,
-                                                 MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr ArithmethicEnum<T>
+    AtomicFetchNand(T* target, ArithmethicEnum<T> value,
+                    ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return static_cast<T>(
-            __atomic_fetch_nand(reinterpret_cast<volatile u32*>(target), value,
-                                std::to_underlying(memoryOrder)));
+        return __atomic_fetch_nand(reinterpret_cast<volatile u32*>(target),
+                                   value, memoryOrder);
     }
 
-    PM_ALWAYS_INLINE inline bool AtomicTestAndSet(void*       target,
-                                                  MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE inline bool
+    AtomicTestAndSet(void* target, ArithmethicEnum<MemoryOrder> memoryOrder)
     {
         return __atomic_test_and_set(reinterpret_cast<volatile u32*>(target),
-                                     std::to_underlying(memoryOrder));
+                                     memoryOrder);
     }
-    PM_ALWAYS_INLINE inline void AtomicClear(bool*       target,
-                                             MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE inline void
+    AtomicClear(bool* target, ArithmethicEnum<MemoryOrder> memoryOrder)
     {
         return __atomic_clear(reinterpret_cast<volatile u32*>(target),
-                              std::to_underlying(memoryOrder));
+                              memoryOrder);
     }
 #if PRISM_TARGET_CRYPTIX != 1
-    PM_ALWAYS_INLINE constexpr void AtomicThreadFence(MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr void
+    AtomicThreadFence(ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return __atomic_thread_fence(std::to_underlying(memoryOrder));
+        return __atomic_thread_fence((memoryOrder);
     }
     __ATOMIC_HLE_ACQUIRE
-    PM_ALWAYS_INLINE constexpr void AtomicSignalFence(MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE constexpr void
+    AtomicSignalFence(ArithmethicEnum<MemoryOrder> memoryOrder)
     {
-        return __atomic_signal_fence(std::to_underlying(memoryOrder));
+        return __atomic_signal_fence((memoryOrder);
     }
 #endif
     PM_ALWAYS_INLINE constexpr bool AtomicAlwaysLockFree(usize size,

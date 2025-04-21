@@ -113,6 +113,12 @@ namespace Prism
         constexpr BasicString<C, Traits>&
         operator=(BasicStringView<C, Traits> str)
         {
+            if (IsLong() && Capacity() > 0)
+            {
+                delete[] Raw();
+                m_Storage.Short.IsLong = false;
+            }
+
             usize newSize = str.Size() + 1;
             if (FitsInSso(newSize))
             {
@@ -679,6 +685,7 @@ namespace Prism
                 delete[] oldData;
             }
 
+            m_Storage.Short.IsLong  = true;
             m_Storage.Long.Size     = oldSize;
             m_Storage.Long.Data     = newData;
             m_Storage.Long.Capacity = newCapacity;
