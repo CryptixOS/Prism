@@ -81,7 +81,7 @@ namespace Prism
                           &oldValue, memoryOrder);
     }
     /*
-     * @brief Compares the conents of <*target> with the contents of
+     * @brief Compares the contents of <*target> with the contents of
      *  [*expected]. If equal, the operation is a read-modify-write operation
      *  that writes desired into [*target]. If they are not equal, the operation
      *  is a read and the current contents of <*target> are written into

@@ -80,7 +80,7 @@ namespace Prism
         constexpr explicit Optional(const Optional<U>& other)
             : m_HasValue(other.m_HasValue)
         {
-            if (other.HasValue()) new (&m_Storge) T(other.Value());
+            if (other.HasValue()) new (&m_Storage) T(other.Value());
         }
 
         template <typename U>
