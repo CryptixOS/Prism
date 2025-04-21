@@ -10,22 +10,22 @@
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
-#include <Prism/String/StringUtils.hpp>
 #include <Prism/String/StringView.hpp>
 #include <Prism/Utility/Hash.hpp>
+#include <Prism/Utility/Math.hpp>
 
 #include <concepts>
 
 namespace Prism
 {
-    template <typename C, typename Traits = std::char_traits<C>>
+    template <typename C, typename Traits = CharTraits<C>>
     class BasicString
     {
 
       public:
         using ViewType                 = BasicStringView<C, Traits>;
         using TraitsType               = Traits;
-        using ValueType                = typename TraitsType::char_type;
+        using ValueType                = typename TraitsType::CharType;
         using SizeType                 = typename ViewType::SizeType;
         using DifferenceType           = std::ptrdiff_t;
         using ReferenceType            = ValueType&;
@@ -46,7 +46,7 @@ namespace Prism
 
             if (count > Capacity()) Reallocate(count);
 
-            TraitsType::assign(Raw(), count, ch);
+            TraitsType::Assign(Raw(), count, ch);
         }
         template <typename InputIt>
         constexpr BasicString(InputIt first, InputIt last)
@@ -73,8 +73,9 @@ namespace Prism
             for (auto it = first; it != last; it++, i++) Raw()[i] = *it;
             Raw()[newSize - 1] = 0;
         }
-        constexpr BasicString(const ValueType* s, SizeType count)
+        constexpr BasicString(const ValueType* s, SizeType count = NPos)
         {
+            if (count == NPos) count = Traits::Length(s);
             usize newSize = count + 1;
             if (FitsInSso(newSize))
             {
@@ -89,12 +90,18 @@ namespace Prism
                 Reallocate(newSize, false);
             }
 
-            TraitsType::copy(Raw(), s, count);
+            TraitsType::Copy(Raw(), s, count);
             Raw()[newSize - 1] = 0;
         }
         constexpr BasicString(BasicStringView<C, Traits> str)
             : BasicString(const_cast<C*>(str.Raw()), str.Size())
         {
+        }
+        ~BasicString()
+        {
+            if (!IsLong()) return;
+
+            delete[] m_Storage.Long.Data;
         }
 
         constexpr BasicString<C, Traits>&
@@ -114,7 +121,7 @@ namespace Prism
                 Reallocate(newSize, false);
             }
 
-            Traits::copy(Raw(), str.Raw(), str.Size());
+            Traits::Copy(Raw(), str.Raw(), str.Size());
             Raw()[newSize - 1] = 0;
 
             return *this;
@@ -219,7 +226,7 @@ namespace Prism
         constexpr BasicString& Insert(SizeType pos, const ValueType* str)
         {
             assert(pos <= Size());
-            usize len = Traits::length(str);
+            usize len = Traits::Length(str);
             assert(Size() + len <= MaxSize());
 
             if (Size() != 0)
@@ -229,12 +236,12 @@ namespace Prism
                 usize newSize  = size + len;
 
                 if (capacity < newSize) GrowTo(newSize);
-                Traits::move(Raw() + pos + size, Raw() + pos, size - pos);
-                Traits::copy(Raw() + pos, str, len);
+                Traits::Move(Raw() + pos + size, Raw() + pos, size - pos);
+                Traits::Copy(Raw() + pos, str, len);
 
                 if (IsLong()) m_Storage.Long.Size = newSize;
                 else m_Storage.Short.Size = newSize & 0x7f;
-                Traits::assign(Raw()[Size()], 0);
+                Traits::Assign(Raw()[Size()], 0);
             }
             InternalInsert(pos, str, len);
 
@@ -281,13 +288,13 @@ namespace Prism
             if (size < newSize)
             {
                 if (capacity < newSize) GrowTo(newSize);
-                TraitsType::assign(Raw() + size, count, ch);
+                TraitsType::Assign(Raw() + size, count, ch);
             }
 
             if (IsLong()) m_Storage.Long.Size = newSize;
             else m_Storage.Short.Size = newSize;
 
-            TraitsType::assign(Raw()[Size()], 0);
+            TraitsType::Assign(Raw()[Size()], 0);
         }
         constexpr void Resize(SizeType count) { Resize(count, 0); }
         constexpr void Swap(BasicString& str) PM_NOEXCEPT
@@ -667,7 +674,7 @@ namespace Prism
             if (!oldData)
             {
                 if (oldSize != 0 && copyOld)
-                    std::char_traits<C>::copy(newData, oldData, newSize);
+                    Traits::Copy(newData, oldData, newSize);
                 delete[] oldData;
             }
 
@@ -686,8 +693,8 @@ namespace Prism
             C*    newData = new C[newCapacity + 1];
             usize newSize = m_Storage.Short.Size;
 
-            std::char_traits<C>::copy(newData, m_Storage.Short.Data, newSize);
-            std::char_traits<C>::assign(newData[newSize], 0);
+            Traits::Copy(newData, m_Storage.Short.Data, newSize);
+            Traits::Assign(newData[newSize], 0);
 
             LongInit();
             m_Storage.Long.Data     = newData;
@@ -781,7 +788,7 @@ namespace Prism
                                      const C*                   rhs)
     {
         BasicString<C, Traits> string;
-        usize                  len = Traits::length(rhs);
+        usize                  len = Traits::Length(rhs);
         string.Resize(lhs.Size() + len + 1);
 
         for (usize i = 0; auto c : lhs) string[i++] = c;
@@ -818,8 +825,7 @@ namespace Prism
 
     namespace Detail
     {
-        template <typename C,
-                  typename String = BasicString<C, std::char_traits<C>>>
+        template <typename C, typename String = BasicString<C, CharTraits<C>>>
         struct StringHashBase
         {
             [[nodiscard]] constexpr usize
@@ -833,12 +839,6 @@ namespace Prism
             }
         };
     }; // namespace Detail
-
-    inline String ToString(i32 value)
-    {
-        return String(StringUtils::ToString(value, 10),
-                      StringUtils::GetDigitCount(value));
-    }
 
     namespace Literals
     {
@@ -867,31 +867,31 @@ namespace Prism
 }; // namespace Prism
 // hash support
 template <>
-struct std::hash<Prism::BasicString<char, std::char_traits<char>>>
+struct std::hash<Prism::BasicString<char, CharTraits<char>>>
     : Prism::Detail::StringHashBase<char>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<char8_t, std::char_traits<char8_t>>>
+struct std::hash<Prism::BasicString<char8_t, CharTraits<char8_t>>>
     : Prism::Detail::StringHashBase<char8_t>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<char16_t, std::char_traits<char16_t>>>
+struct std::hash<Prism::BasicString<char16_t, CharTraits<char16_t>>>
     : Prism::Detail::StringHashBase<char16_t>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<char32_t, std::char_traits<char32_t>>>
+struct std::hash<Prism::BasicString<char32_t, CharTraits<char32_t>>>
     : Prism::Detail::StringHashBase<char32_t>
 {
 };
 
 template <>
-struct std::hash<Prism::BasicString<wchar_t, std::char_traits<wchar_t>>>
+struct std::hash<Prism::BasicString<wchar_t, CharTraits<wchar_t>>>
     : Prism::Detail::StringHashBase<wchar_t>
 {
 };

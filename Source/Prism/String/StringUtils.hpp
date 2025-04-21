@@ -8,25 +8,29 @@
 
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
+
+#include <Prism/String/StringView.hpp>
 #include <Prism/Utility/Math.hpp>
 
 namespace Prism
 {
+    template <typename T>
+    concept ArithmeticType = std::is_arithmetic_v<T>;
+
     namespace StringUtils
     {
-        template <typename T>
-            requires(std::is_arithmetic_v<T>)
+        template <ArithmeticType T>
         constexpr usize GetDigitCount(T value)
         {
-            usize result = 0;
-            for (usize i = 10; static_cast<usize>(value) < i; i *= 10) ++result;
+            usize result = 1;
+            for (usize i = 10; static_cast<usize>(value) >= i; i *= 10)
+                ++result;
 
             return result;
         }
 
-        template <typename T>
-            requires(std::is_arithmetic_v<T>)
-        constexpr char* ToString(T value, char* dest, i32 base)
+        template <ArithmeticType T>
+        constexpr char* ToString(T value, char* dest, i32 base = 10)
         {
             const bool isNegative = value < 0 && base == 10;
 
@@ -63,9 +67,8 @@ namespace Prism
 
             return str;
         }
-        template <typename T>
-            requires(std::is_arithmetic_v<T>)
-        constexpr char* ToString(T value, i32 base)
+        template <ArithmeticType T>
+        constexpr char* ToString(T value, i32 base = 10)
         {
             const bool  isNegative = value < 0 && base == 10;
             const usize size       = GetDigitCount(value) + isNegative + 1;
@@ -74,26 +77,42 @@ namespace Prism
             return ToString(value, dest, base);
         }
 
-        template <typename T>
-            requires(std::is_arithmetic_v<T>)
-        T ToNumber(const char* str, usize length)
+        constexpr u64 ToLower(u64 c)
         {
-            T     integer      = 0;
-            bool  isNegative   = str[0] == '-';
-
-            usize index        = isNegative;
-            usize stringLength = length, power = stringLength - isNegative;
-
-            for (; index < stringLength; index++)
-                integer += (str[index] - 48) * Math::PowerOf<T>(10, --power);
-
-            return (isNegative) ? -integer : integer;
+            return c >= 'A' && c <= 'Z' ? c - 32 : c;
         }
-        template <typename T>
-            requires(std::is_arithmetic_v<T>)
-        T ToNumber(const char* str)
+        constexpr bool IsDigit(u64 c) { return c >= '0' && c <= '9'; }
+        constexpr bool IsHexDigit(u64 c)
         {
-            return ToNumber<T>(str, std::strlen(str));
+            c = ToLower(c);
+
+            return IsDigit(c) || (c >= 'a' && c <= 'f');
+        }
+        template <ArithmeticType T>
+        constexpr T ToDigit(u64 c)
+        {
+            if (IsHexDigit(c)) c = ToLower(c);
+            else if (!IsDigit(c)) return 0;
+
+            return c - (IsDigit(c) ? '0' : 'a');
+        }
+
+        template <ArithmeticType T>
+        constexpr T ToNumber(StringView string, usize base = 10)
+        {
+            bool isNegative = !string.Empty() && string[0] == '-';
+
+            T    number     = 0;
+            for (usize i = isNegative, exponent = string.Size();
+                 i < string.Size(); i++)
+            {
+                char c = string[i];
+                if (IsHexDigit(c) && base <= 10) break;
+
+                number += ToDigit<T>(c) * Math::PowerOf(base, --exponent);
+            }
+
+            return (isNegative && base == 10) ? number : -number;
         }
 
     }; // namespace StringUtils
