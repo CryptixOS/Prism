@@ -287,20 +287,15 @@ namespace Prism
         constexpr void Resize(SizeType count, ValueType ch)
         {
             assert(Size() + count <= MaxSize());
-            SizeType capacity = Capacity();
-            SizeType size     = Size();
-            SizeType newSize  = capacity + size;
+            SizeType newSize = count;
 
-            if (size < newSize)
-            {
-                if (capacity < newSize) GrowTo(newSize);
-                TraitsType::Assign(Raw() + size, count, ch);
-            }
+            if (IsLong()) m_Storage.Long.Size = count;
+            else m_Storage.Short.Size = count;
 
-            if (IsLong()) m_Storage.Long.Size = newSize;
-            else m_Storage.Short.Size = newSize;
+            if (Capacity() < newSize) Reallocate(newSize + 1, false);
 
-            TraitsType::Assign(Raw()[Size()], 0);
+            TraitsType::Assign(Raw(), count, ch);
+            Raw()[Size()] = 0;
         }
         constexpr void Resize(SizeType count) { Resize(count, 0); }
         constexpr void Swap(BasicString& str) PM_NOEXCEPT
@@ -684,7 +679,7 @@ namespace Prism
                 delete[] oldData;
             }
 
-            m_Storage.Long.Size     = newSize;
+            m_Storage.Long.Size     = oldSize;
             m_Storage.Long.Data     = newData;
             m_Storage.Long.Capacity = newCapacity;
         }
