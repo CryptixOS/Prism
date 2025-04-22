@@ -9,16 +9,16 @@
 #include <Prism/Debug/Log.hpp>
 #include <Prism/Debug/SourceLocation.hpp>
 
-#include <format>
+#include <Prism/String/StringView.hpp>
 
 #ifndef PRISM_TARGET_CRYPTIX
 namespace Prism
 {
 #endif
     [[noreturn]]
-    extern void earlyPanic(std::string_view msg);
+    extern void earlyPanic(StringView msg);
     [[noreturn]]
-    extern void panic(std::string_view msg);
+    extern void panic(StringView msg);
 
 #ifndef PRISM_TARGET_CRYPTIX
 }; // namespace Prism
@@ -56,14 +56,14 @@ namespace Prism
         Prism::SourceLocation source = Prism::SourceLocation::Current();       \
         /*PrismPanic("{}[{}:{}]: Assertion Failed =>\n{}: {}", */              \
         /*               source.FileName(), source.Line(), source.Column(), */ \
-        /*source.FunctionName(), std::format(__VA_ARGS__));           */       \
+        /*source.FunctionName(), fmt::format(__VA_ARGS__));           */       \
         PrismPanic("{}: ==>\nAssertion Failed: {}", source,                    \
-                   std::format(__VA_ARGS__));                                  \
+                   fmt::format(__VA_ARGS__));                                  \
     }
 
 #define PrismEarlyPanic(fmt, ...)                                              \
     ::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
-#define PrismPanic(...) ::panic(std::format(__VA_ARGS__).data())
+#define PrismPanic(...) ::panic(fmt::format(__VA_ARGS__).data())
 
 #if PRISM_PREFIXLESS_MACROS == 1 || PRISM_TARGET_CRYPTIX
     #define Assert(expr)              PrismAssert(expr)

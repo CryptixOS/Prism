@@ -7,8 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Types.hpp>
-
-#include <string_view>
+#include <Prism/String/StringView.hpp>
 
 namespace Prism
 {
@@ -25,13 +24,16 @@ namespace Prism
 
     namespace Log
     {
-        void Print(LogLevel logLevel, std::string_view str);
+        void Print(LogLevel logLevel, StringView str);
 
         template <typename... Args>
         inline void Print(LogLevel logLevel, fmt::format_string<Args...> format,
                           Args&&... args)
         {
-            Print(logLevel, fmt::format(format, std::forward<Args>(args)...));
+            auto formattedString
+                = fmt::format(format, std::forward<Args>(args)...);
+            Print(logLevel,
+                  StringView(formattedString.data(), formattedString.size()));
         }
 
         template <typename... Args>
@@ -70,7 +72,7 @@ namespace Prism
             Print(LogLevel::eFatal, format, std::forward<Args>(args)...);
         }
     }; // namespace Log
-};     // namespace Prism
+}; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX
 namespace Log = Prism::Log;

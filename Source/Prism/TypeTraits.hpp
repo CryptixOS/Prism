@@ -298,3 +298,8 @@ namespace Prism
     template <usize N>
     using MakeIndexSequenceV = MakeIntegerSequenceV<usize, N>;
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX == 1
+using Prism::Conditional;
+using Prism::IsSameV;
+#endif

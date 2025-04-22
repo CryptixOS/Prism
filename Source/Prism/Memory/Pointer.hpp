@@ -69,10 +69,18 @@ namespace Prism
             return T(m_Pointer);
         }
 
-        inline constexpr auto& operator->() { return *As<u64>(); }
-        inline constexpr auto& operator*() { return *As<u64>(); }
+        template <typename T>
+        inline constexpr auto& operator->()
+        {
+            return *As<T>();
+        }
+        template <typename T>
+        inline constexpr auto& operator*()
+        {
+            return *As<T>();
+        }
 
-        inline constexpr bool  IsValid() const { return m_Pointer != 0; }
+        inline constexpr bool IsValid() const { return m_Pointer != 0; }
 
 #ifdef PRISM_TARGET_CRYPTIX
         inline VirtAddr HigherHalfOffset() const

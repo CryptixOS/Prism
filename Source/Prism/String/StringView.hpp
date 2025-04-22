@@ -10,6 +10,7 @@
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/CharTraits.hpp>
+#include <Prism/TypeTraits.hpp>
 
 #include <cassert>
 #include <ranges>
@@ -25,7 +26,7 @@ namespace Prism
     {
         static_assert(!std::is_array_v<C>);
         static_assert(std::is_trivial_v<C> && std::is_standard_layout_v<C>);
-        static_assert(std::is_same_v<C, typename CharTraits<C>::CharType>);
+        static_assert(IsSameV<C, typename CharTraits<C>::CharType>);
 
       public:
         using TraitsType               = Traits;
@@ -49,8 +50,7 @@ namespace Prism
         constexpr BasicStringView(const BasicStringView&) PM_NOEXCEPT = default;
 
         constexpr BasicStringView(const C* str) PM_NOEXCEPT
-            : m_Data(const_cast<C*>(str)),
-              m_Size(TraitsType::Length(str))
+            : BasicStringView(str, str ? TraitsType::Length(str) : 0)
         {
         }
         constexpr BasicStringView(const C* str, SizeType size) PM_NOEXCEPT
@@ -60,18 +60,15 @@ namespace Prism
         }
         template <std::contiguous_iterator It, std::sized_sentinel_for<It> End>
             requires std::same_as<std::iter_value_t<It>, C>
-                      && (!std::convertible_to<End, SizeType>)
+                  && (!std::convertible_to<End, SizeType>)
 
         constexpr BasicStringView(It first, End last) PM_NOEXCEPT
-            : m_Data(std::to_address(first)),
-              m_Size(last - first)
+            : BasicStringView(first, last - first)
         {
         }
         constexpr explicit BasicStringView(BasicStringView&& str)
+            : BasicStringView(std::move(str.m_Data), std::move(str.m_Size))
         {
-            m_Data     = std::move(reinterpret_cast<C*>(str.m_Data));
-            m_Size     = std::move(str.m_Size);
-
             str.m_Data = nullptr;
             str.m_Size = 0;
         }
@@ -223,12 +220,14 @@ namespace Prism
             return BasicStringView(m_Data + pos, count);
         }
         [[nodiscard]] constexpr i32
-        Compare(BasicStringView str) const PM_NOEXCEPT
+        Compare(BasicStringView other) const PM_NOEXCEPT
         {
-            const SizeType count = std::min(m_Size, str.m_Size);
-            i32            ret = TraitsType::Compare(m_Data, str.m_Data, count);
+            const SizeType count = std::min(Size(), other.Size());
+            i32 result = TraitsType::Compare(m_Data, other.Raw(), count);
 
-            return ret;
+            if (result != 0) return result;
+            return static_cast<isize>(Size())
+                 - static_cast<isize>(other.Size());
         }
         [[nodiscard]] constexpr i32 Compare(SizeType pos, SizeType count,
                                             BasicStringView str) const
@@ -659,4 +658,5 @@ struct fmt::formatter<Prism::StringView> : fmt::formatter<std::string_view>
 
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::StringView;
+using Prism::StringViewLiterals::operator""_sv;
 #endif

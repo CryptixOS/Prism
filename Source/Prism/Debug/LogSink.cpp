@@ -11,7 +11,7 @@
 
 namespace Prism
 {
-    void LogSink::Log(LogLevel level, std::string_view message)
+    void LogSink::Log(LogLevel level, StringView message)
     {
         // std::unique_lock guard(m_Lock);
 

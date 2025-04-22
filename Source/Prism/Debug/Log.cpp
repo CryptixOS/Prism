@@ -37,14 +37,14 @@ namespace Prism::Log
         std::printf("]: ");
     }
 
-    void Print(LogLevel logLevel, std::string_view str)
+    void Print(LogLevel logLevel, StringView str)
     {
 #if PRISM_TARGET_CRYPTIX == 1
         Logger::Log(logLevel, str);
         return;
 #endif
         PrintLevel(logLevel);
-        std::printf("%s", str.data());
+        std::printf("%s", str.Raw());
 
         std::putchar('\n');
     }

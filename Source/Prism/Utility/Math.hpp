@@ -25,7 +25,7 @@ namespace Prism::Math
     }
     constexpr auto DivRoundUp(auto value, auto alignment)
     {
-        return AlignDown(value + alignment - 1, alignment) / alignment;
+        return (value + alignment - 1) / alignment;
     }
     constexpr bool IsPowerOfTwo(usize value)
     {

@@ -8,7 +8,7 @@
 
 #include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Types.hpp>
-#include <Prism/String/StringView.hpp>
+#include <Prism/String/String.hpp>
 
 namespace Prism
 {
@@ -22,6 +22,10 @@ namespace Prism
         {
         }
         constexpr PathView(StringView path)
+            : m_Path(path.Raw(), path.Size())
+        {
+        }
+        constexpr PathView(const String& path)
             : m_Path(path.Raw(), path.Size())
         {
         }

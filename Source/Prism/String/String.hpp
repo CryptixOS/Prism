@@ -934,4 +934,5 @@ using Prism::U16String;
 using Prism::U32String;
 using Prism::U8String;
 using Prism::WString;
+using Prism::Literals::operator""_s;
 #endif

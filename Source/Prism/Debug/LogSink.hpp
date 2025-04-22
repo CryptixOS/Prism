@@ -16,11 +16,11 @@ namespace Prism
     class LogSink
     {
       public:
-        void           Log(LogLevel level, std::string_view message);
+        void           Log(LogLevel level, StringView message);
 
         void           PutChar(u64 c);
 
-        virtual void   WriteNoLock(std::string_view str) = 0;
+        virtual void   WriteNoLock(StringView str) = 0;
 
         void           EndOfLine() { WriteNoLock("\n"); }
 
