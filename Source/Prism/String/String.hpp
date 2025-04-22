@@ -100,8 +100,20 @@ namespace Prism
             Raw()[newSize - 1] = 0;
         }
         constexpr BasicString(BasicStringView<C, Traits> str)
-            : BasicString(const_cast<C*>(str.Raw()), str.Size())
         {
+            if (FitsInSso(str.Size()))
+            {
+                ShortInit();
+                TraitsType::Copy(Raw(), str.Raw(), str.Size());
+                m_Storage.Short.Size = str.Size();
+                Raw()[Size()]        = 0;
+                return;
+            }
+
+            Reallocate(str.Size() + 1, false);
+            TraitsType::Copy(Raw(), str.Raw(), str.Size());
+            m_Storage.Long.Size = str.Size();
+            Raw()[Size()]       = 0;
         }
         constexpr ~BasicString()
         {
