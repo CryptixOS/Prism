@@ -43,10 +43,12 @@ namespace Prism
         constexpr BasicString(SizeType count, ValueType ch)
         {
             assert(count <= MaxSize());
-
-            if (count > Capacity()) Reallocate(count, false);
+            ShortInit();
+            if (!FitsInSso(count)) Reallocate(count + 1, false);
 
             TraitsType::Assign(Raw(), count, ch);
+            Raw()[count]   = 0;
+            m_Storage.Size = count;
         }
         template <typename InputIt>
         constexpr BasicString(InputIt first, InputIt last)
@@ -56,15 +58,15 @@ namespace Prism
 
             if (FitsInSso(newSize))
             {
-                m_Storage.Short.Size   = newSize;
-                m_Storage.Short.IsLong = false;
+                m_Storage.Size   = newSize;
+                m_Storage.IsLong = false;
             }
             else
             {
                 m_Storage.Long.Capacity = newSize;
 
-                m_Storage.Long.Size     = newSize;
-                m_Storage.Short.IsLong  = true;
+                m_Storage.Size          = newSize;
+                m_Storage.IsLong        = true;
 
                 Reallocate(newSize, false);
             }
@@ -85,14 +87,14 @@ namespace Prism
             usize newSize = count + 1;
             if (FitsInSso(newSize))
             {
-                m_Storage.Short.Size   = newSize - 1;
-                m_Storage.Short.IsLong = false;
+                m_Storage.Size   = newSize - 1;
+                m_Storage.IsLong = false;
             }
             else
             {
                 m_Storage.Long.Capacity = newSize;
-                m_Storage.Long.Size     = newSize - 1;
-                m_Storage.Short.IsLong  = true;
+                m_Storage.Size          = newSize - 1;
+                m_Storage.IsLong        = true;
                 Reallocate(newSize, false);
             }
 
@@ -105,15 +107,15 @@ namespace Prism
             {
                 ShortInit();
                 TraitsType::Copy(Raw(), str.Raw(), str.Size());
-                m_Storage.Short.Size = str.Size();
-                Raw()[Size()]        = 0;
+                m_Storage.Size = str.Size();
+                Raw()[Size()]  = 0;
                 return;
             }
 
             Reallocate(str.Size() + 1, false);
             TraitsType::Copy(Raw(), str.Raw(), str.Size());
-            m_Storage.Long.Size = str.Size();
-            Raw()[Size()]       = 0;
+            m_Storage.Size = str.Size();
+            Raw()[Size()]  = 0;
         }
         constexpr ~BasicString()
         {
@@ -128,20 +130,20 @@ namespace Prism
             if (IsLong() && Capacity() > 0)
             {
                 delete[] Raw();
-                m_Storage.Short.IsLong = false;
+                m_Storage.IsLong = false;
             }
 
             usize newSize = str.Size() + 1;
             if (FitsInSso(newSize))
             {
-                m_Storage.Short.Size   = newSize - 1;
-                m_Storage.Short.IsLong = false;
+                m_Storage.Size   = newSize - 1;
+                m_Storage.IsLong = false;
             }
             else
             {
                 m_Storage.Long.Capacity = newSize;
-                m_Storage.Long.Size     = newSize - 1;
-                m_Storage.Short.IsLong  = true;
+                m_Storage.Size          = newSize - 1;
+                m_Storage.IsLong        = true;
                 Reallocate(newSize, false);
             }
 
@@ -234,7 +236,7 @@ namespace Prism
         constexpr bool  Empty() const PM_NOEXCEPT { return Size() == 0; }
         constexpr usize Size() const PM_NOEXCEPT
         {
-            return IsLong() ? m_Storage.Long.Size : m_Storage.Short.Size;
+            return IsLong() ? m_Storage.Size : m_Storage.Size;
         }
         constexpr usize        MaxSize() const PM_NOEXCEPT { return usize(-1); }
 
@@ -263,8 +265,8 @@ namespace Prism
                 Traits::Move(Raw() + pos + size, Raw() + pos, size - pos);
                 Traits::Copy(Raw() + pos, str, len);
 
-                if (IsLong()) m_Storage.Long.Size = newSize;
-                else m_Storage.Short.Size = newSize & 0x7f;
+                if (IsLong()) m_Storage.Size = newSize;
+                else m_Storage.Size = newSize & 0x7f;
                 Traits::Assign(Raw()[Size()], 0);
             }
             InternalInsert(pos, str, len);
@@ -296,19 +298,19 @@ namespace Prism
         {
             if (IsLong())
             {
-                m_Storage.Long.Size = 0;
+                m_Storage.Size = 0;
                 return;
             }
 
-            m_Storage.Short.Size = 0;
+            m_Storage.Size = 0;
         }
         constexpr void Resize(SizeType count, ValueType ch)
         {
             assert(Size() + count <= MaxSize());
             SizeType newSize = count;
 
-            if (IsLong()) m_Storage.Long.Size = count;
-            else m_Storage.Short.Size = count;
+            if (IsLong()) m_Storage.Size = count;
+            else m_Storage.Size = count;
 
             if (Capacity() < newSize) Reallocate(newSize + 1, false);
 
@@ -610,13 +612,8 @@ namespace Prism
       private:
         struct LongData
         {
-            struct [[gnu::packed]]
-            {
-                usize IsLong : 1;
-                usize Capacity : sizeof(usize) * __CHAR_BIT__ - 1;
-            };
-            usize Size = 0;
-            C*    Data = nullptr;
+            usize Capacity = 0;
+            C*    Data     = nullptr;
         };
 
         static constexpr usize MIN_CAPACITY
@@ -625,19 +622,19 @@ namespace Prism
                 : 2;
         struct ShortData
         {
-            struct [[gnu::packed]]
-            {
-                unsigned char IsLong : 1;
-                unsigned char Size   : 7;
-            };
             char Padding[sizeof(C) - 1];
             C    Data[MIN_CAPACITY];
         };
 
-        union Storage
+        struct Storage
         {
-            LongData  Long;
-            ShortData Short{{false, 0}, {}, {}};
+            bool  IsLong = false;
+            usize Size   = 0;
+            union
+            {
+                LongData  Long;
+                ShortData Short{{}, {}};
+            };
         } m_Storage;
 
         constexpr static bool FitsInSso(usize size)
@@ -653,9 +650,9 @@ namespace Prism
 
         constexpr void LongInit()
         {
-            m_Storage.Long.IsLong   = true;
+            m_Storage.IsLong        = true;
             m_Storage.Long.Data     = nullptr;
-            m_Storage.Long.Size     = 0;
+            m_Storage.Size          = 0;
             m_Storage.Long.Capacity = 0;
         }
         constexpr void ShortInit()
@@ -664,26 +661,23 @@ namespace Prism
             {
                 delete[] m_Storage.Long.Data;
                 m_Storage.Long.Data     = nullptr;
-                m_Storage.Long.Size     = 0;
+                m_Storage.Size          = 0;
                 m_Storage.Long.Capacity = 0;
-                m_Storage.Long.IsLong   = false;
+                m_Storage.IsLong        = false;
             }
 
-            m_Storage.Short.IsLong = false;
-            m_Storage.Short.Size   = 0;
+            m_Storage.IsLong = false;
+            m_Storage.Size   = 0;
         }
 
-        constexpr bool IsLong() const PM_NOEXCEPT
-        {
-            return m_Storage.Short.IsLong;
-        }
+        constexpr bool IsLong() const PM_NOEXCEPT { return m_Storage.IsLong; }
 
         constexpr void Reallocate(usize newCapacity, bool copyOld)
         {
             newCapacity = Math::AlignUp(newCapacity, sizeof(ValueType*));
             if (newCapacity == m_Storage.Long.Capacity) return;
 
-            usize oldSize = m_Storage.Long.Size;
+            usize oldSize = m_Storage.Size;
             // usize oldCapacity = m_Storage.Long.Capacity;
             C*    oldData = m_Storage.Long.Data;
 
@@ -697,8 +691,8 @@ namespace Prism
                 delete[] oldData;
             }
 
-            m_Storage.Short.IsLong  = true;
-            m_Storage.Long.Size     = oldSize;
+            m_Storage.IsLong        = true;
+            m_Storage.Size          = oldSize;
             m_Storage.Long.Data     = newData;
             m_Storage.Long.Capacity = newCapacity;
         }
@@ -711,14 +705,14 @@ namespace Prism
             }
 
             C*    newData = new C[newCapacity + 1];
-            usize newSize = m_Storage.Short.Size;
+            usize newSize = m_Storage.Size;
 
             Traits::Copy(newData, m_Storage.Short.Data, newSize);
             Traits::Assign(newData[newSize], 0);
 
             LongInit();
             m_Storage.Long.Data     = newData;
-            m_Storage.Long.Size     = newSize;
+            m_Storage.Size          = newSize;
             m_Storage.Long.Capacity = newCapacity;
         }
 
@@ -728,7 +722,7 @@ namespace Prism
             {
                 if (IsLong()) ShortInit();
 
-                m_Storage.Short.Size = count;
+                m_Storage.Size = count;
             }
         }
     };
