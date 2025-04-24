@@ -27,11 +27,11 @@ namespace Prism
     };
     struct MemoryOrderType
     {
-        MemoryOrderType(MemoryOrder order)
+        constexpr MemoryOrderType(MemoryOrder order)
             : Order(order)
         {
         }
-        operator i32() { return std::to_underlying(Order); }
+        constexpr   operator i32() { return std::to_underlying(Order); }
 
         MemoryOrder Order;
     };
