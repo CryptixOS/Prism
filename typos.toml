@@ -2,8 +2,13 @@
 extend-ignore-identifiers-re = [
     # *sigh* this just isn't worth the cost of fixing
     "AttributeID.*Supress.*",
-    "abd", 
+    "abd", "RELA", "THM",
     "unexpect", 
+]
+
+[files]
+extend-exclude = [
+    "Source/Prism/elf.h",
 ]
 
 [default.extend-identifiers]
