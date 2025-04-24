@@ -75,6 +75,42 @@ namespace Prism
         DoublyLinkedList()        = default;
         ~DoublyLinkedList() { Clear(); }
 
+        constexpr DoublyLinkedList(const DoublyLinkedList& other)
+        {
+            for (const auto& element : other) EmplaceBack(element);
+        }
+
+        constexpr DoublyLinkedList(DoublyLinkedList&& other)
+        {
+            m_Head       = other.m_Head;
+            m_Tail       = other.m_Tail;
+            m_Size       = other.m_Size;
+
+            other.m_Head = nullptr;
+            other.m_Tail = nullptr;
+            other.m_Size = 0;
+        }
+
+        constexpr DoublyLinkedList& operator=(const DoublyLinkedList& other)
+        {
+            if (m_Head) Clear();
+            for (const auto& element : other) EmplaceBack(element);
+
+            return *this;
+        }
+        constexpr DoublyLinkedList& operator=(DoublyLinkedList&& other)
+        {
+            if (m_Head) Clear();
+            m_Head       = other.m_Head;
+            m_Tail       = other.m_Tail;
+            m_Size       = other.m_Size;
+
+            other.m_Head = nullptr;
+            other.m_Tail = nullptr;
+            other.m_Size = 0;
+            return *this;
+        }
+
         inline T& operator[](usize index)
         {
             assert(index < m_Size);
@@ -206,7 +242,7 @@ namespace Prism
             {
                 m_Head = front->Next;
                 if (m_Head) m_Head->Prev = nullptr;
-                else m_Tail = nullptr; // List
+                else m_Tail = nullptr; // List became empty
             }
 
             auto value = front->Value;
