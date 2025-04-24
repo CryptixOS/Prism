@@ -25,6 +25,8 @@ namespace Prism
         }
         constexpr ~StringBuilder() {}
 
+        constexpr bool Empty() const { return m_Length == 0; }
+
         constexpr void Append(C c)
         {
             Reinvalidate();

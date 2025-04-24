@@ -17,6 +17,10 @@ namespace Prism
             : m_Path(path.Raw())
         {
         }
+        constexpr Path(const String& path)
+            : m_Path(path.Raw())
+        {
+        }
         constexpr Path(const std::string& path)
             : m_Path(path)
         {
