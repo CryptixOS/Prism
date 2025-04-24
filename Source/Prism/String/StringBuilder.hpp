@@ -6,78 +6,103 @@
  */
 #pragma once
 
-#include <Prism/Containers/Vector.hpp>
+#include <Prism/Containers/DoublyLinkedList.hpp>
 #include <Prism/String/String.hpp>
 #include <Prism/String/StringUtils.hpp>
 
 namespace Prism
 {
-    template <typename C, typename Traits = CharTraits<C>>
+    template <typename C = char, typename Traits = CharTraits<C>>
     class StringBuilder
     {
       public:
-        StringBuilder(usize capacity = 64)
+        constexpr explicit StringBuilder(usize segmentCapacity = 100)
+            : m_Length(0)
         {
-            m_Segments.PushBack(BasicString<C, Traits>{capacity});
-        }
-
-        constexpr usize TotalLength() const
-        {
-            usize totalLength = 0;
-            for (const auto& segment : m_Segments)
-                totalLength += segment.Size();
-
-            return totalLength;
-        }
-
-        constexpr void Append(C ch)
-        {
-            Reinvalidate();
+            m_Segments.PushBack(String{""});
             auto& segment = m_Segments.Back();
-            segment += ch;
+            segment.Reserve(segmentCapacity);
         }
-        constexpr void Append(BasicStringView<C, Traits> other)
+        constexpr ~StringBuilder() {}
+
+        constexpr void Append(C c)
         {
             Reinvalidate();
-            auto& segment = Segment();
-            segment += other;
+            Segment() += c;
+            ++m_Length;
         }
-        constexpr void Append(const char* string)
-        {
-            if (!string) return;
-            Append({string, Traits::Length(string)});
-        }
-        constexpr void PutU64(u64 value)
+        constexpr void Append(const C* str, usize len)
         {
             Reinvalidate();
-            Segment() += StringUtils::ToString<u64>(value);
+            Segment() += BasicStringView<C, Traits>(str, len);
+            m_Length += len;
+        }
+        constexpr void Append(const char* str)
+        {
+            Append(str, Traits::Length(str));
+        }
+        constexpr void Append(const BasicString<char>& str)
+        {
+            Append(str.Raw(), str.Size());
+        }
+        constexpr void Append(u64 value)
+        {
+            Reinvalidate();
+
+            auto string = StringUtils::ToString<u64>(value);
+            m_Length += string.Size();
+            Segment() += string;
         }
 
-        constexpr operator BasicString<C, Traits>()
+        constexpr StringBuilder& operator<<(C ch)
         {
-            BasicString<C, Traits> string(TotalLength());
-            for (const auto& segment : m_Segments) string += segment;
+            Append(ch);
+            return *this;
+        }
+        constexpr StringBuilder& operator<<(BasicStringView<C, Traits> str)
+        {
+            Append(str.Raw(), str.Size());
+            return *this;
+        }
+        constexpr StringBuilder& operator<<(const BasicString<C, Traits>& rhs)
+        {
+            Append(rhs);
+            return *this;
+        }
+        constexpr StringBuilder& operator<<(u64 value)
+        {
+            Append(value);
+            return *this;
+        }
 
+        constexpr BasicString<C, Traits> ToString() const
+        {
+            BasicString<C, Traits> string;
+            string.Reserve(m_Length);
+
+            for (auto& segment : m_Segments) string += segment;
             return string;
         }
+        constexpr operator auto() { return ToString(); }
+
+        usize     TotalLength() const { return m_Length; }
+        using SegmentType = BasicString<C, Traits>;
 
       private:
-        using SegmentType                       = BasicString<C, Traits>;
-        constexpr static usize MAX_SEGMENT_SIZE = 64;
-        Vector<SegmentType>    m_Segments;
+        constexpr static usize MAX_SEGMENT_SIZE = 128;
 
         constexpr SegmentType& Segment() { return m_Segments.Back(); }
+        constexpr void         Reinvalidate()
+        {
+            auto& segment = Segment();
+            if (segment.Size() < MAX_SEGMENT_SIZE) return;
 
-        void                   Reinvalidate()
-        {
-            if (Segment().Size() > MAX_SEGMENT_SIZE)
-                m_Segments.PushBack(BasicString<C, Traits>{64});
+            auto& newSegment = m_Segments.EmplaceBack();
+            newSegment.Reserve(MAX_SEGMENT_SIZE);
         }
-        void EnsureCapacity(usize desired)
-        {
-            if (m_Segments.Back().Capacity() < desired)
-                m_Segments.Back().Reserve(desired);
-        }
+
+        DoublyLinkedList<SegmentType> m_Segments;
+        usize                         m_Length;
     };
 }; // namespace Prism
 

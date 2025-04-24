@@ -31,7 +31,7 @@ namespace Prism
         }
 
         template <ArithmeticType T>
-        constexpr char* ToString(T value, char* dest, i32 base = 10)
+        constexpr StringView ToString(T value, char* dest, i32 base = 10)
         {
             const bool isNegative = value < 0 && base == 10;
 
@@ -55,10 +55,11 @@ namespace Prism
             }
 
             if (isNegative) str[i++] = '-';
-            str[i]  = '\0';
+            str[i]       = '\0';
+            usize length = i;
 
-            T start = 0;
-            T end   = i - 1;
+            T     start  = 0;
+            T     end    = i - 1;
             while (start < end)
             {
                 std::swap(*(str + start), *(str + end));
@@ -66,7 +67,7 @@ namespace Prism
                 --end;
             }
 
-            return str;
+            return {str, length};
         }
         template <ArithmeticType T>
         constexpr String ToString(T value, i32 base = 10)
@@ -75,10 +76,9 @@ namespace Prism
             const usize size       = GetDigitCount(value) + isNegative + 1;
 
             String      string;
-            string.Resize(size);
+            string.Reserve(size);
 
-            ToString(value, string.Raw(), base);
-            return string;
+            return ToString(value, string.Raw(), base);
         }
 
         constexpr u64 ToLower(u64 c)

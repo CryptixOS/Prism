@@ -595,6 +595,18 @@ namespace Prism
 
             return *this;
         }
+        inline constexpr BasicString& operator+=(C ch)
+        {
+            auto pos = Size();
+
+            EnsureCapacity(pos + 1);
+            Raw()[pos] = ch;
+
+            SetSize(pos + 1);
+            Raw()[Size()] = 0;
+
+            return *this;
+        }
 
         template <typename C2, typename Traits2>
         friend BasicString<C2, Traits2>
