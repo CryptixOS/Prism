@@ -54,6 +54,12 @@ namespace Prism
             Segment() += string;
         }
 
+        constexpr void Insert(BasicStringView<C, Traits> other)
+        {
+            m_Segments.PushFront(other);
+            m_Length += other.Size();
+        }
+
         constexpr StringBuilder& operator<<(C ch)
         {
             Append(ch);
