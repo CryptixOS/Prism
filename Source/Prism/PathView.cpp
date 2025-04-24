@@ -15,39 +15,46 @@
 
 namespace Prism
 {
-    bool PathView::ValidateLength() { return m_Path.size() < PRISM_MAX_PATH; }
+    bool PathView::ValidateLength() { return m_Path.Size() < PRISM_MAX_PATH; }
 
     Vector<std::string> PathView::SplitPath()
     {
         Vector<std::string> segments;
-        usize               start     = m_Path[0] == '/' ? 1 : 0;
-        usize               end       = start;
+        if (m_Path.Empty())
+        {
+            segments.PushBack("");
+            return segments;
+        }
+        usize start     = m_Path[0] == '/' ? 1 : 0;
+        usize end       = start;
 
-        auto                findSlash = [this](usize pos) -> usize
+        auto  findSlash = [this](usize pos) -> usize
         {
             usize current = pos;
-            while (m_Path[current] != '/' && current < m_Path.size()) current++;
+            while (current < m_Path.Size() && m_Path[current] != '/') current++;
 
-            return current == m_Path.size() ? std::string::npos : current;
+            return current == m_Path.Size() ? String::NPos : current;
         };
 
-        std::string path = m_Path.data();
-        while ((end = findSlash(start)) != std::string::npos)
+        while ((end = findSlash(start)) < m_Path.Size()
+               && start < m_Path.Size())
         {
-            std::string segment = path.substr(start, end - start);
-            if (start != end) segments.PushBack(segment);
+            StringView segment = m_Path.Substr(start, end - start);
+            if (start != end)
+                segments.EmplaceBack(segment.Raw(), segment.Size());
 
             start = end + 1;
         }
 
         // handle last segment
-        if (start < path.length()) segments.PushBack(path.substr(start));
+        if (start < m_Path.Size())
+            segments.PushBack(m_Path.Substr(start).Raw());
         return std::move(segments);
     }
 
-    std::string_view PathView::GetLastComponent() const
+    StringView PathView::GetLastComponent() const
     {
-        auto forthSlash = m_Path.find_last_of('/');
-        return m_Path.substr(forthSlash, m_Path.size() - forthSlash);
+        auto forthSlash = std::string_view(m_Path.Raw()).find_last_of('/');
+        return m_Path.Substr(forthSlash, m_Path.Size() - forthSlash);
     }
 }; // namespace Prism

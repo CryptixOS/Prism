@@ -21,27 +21,49 @@ namespace Prism
     concept UnsignedIntegral = std::integral<T> && !std::signed_integral<T>;
 
     template <typename T>
-    concept IntegralOrEnum = IsIntegral<T> || IsEnum<T>;
+    concept IntegralOrEnum
+        = IsIntegral<T> || IsEnum<T> || std::is_unsigned_v<T>;
+    template <typename T>
+    concept PrimitiveOrEnum
+        = IsEnum<T> || std::is_arithmetic_v<T> || IsSameV<T, bool>
+       || std::is_signed_v<T> || std::is_integral_v<T>;
 
-    template <IntegralOrEnum T>
+    template <PrimitiveOrEnum T>
     class ArithmeticEnum
     {
       public:
-        using ValueType = PromoteEnumType<T>;
-        static_assert(sizeof(T) == sizeof(ValueType));
+        using ValueType            = PromoteEnumType<T>;
 
         constexpr ArithmeticEnum() = default;
-        constexpr ArithmeticEnum(T value)
-            : m_Value(static_cast<ValueType>(value))
-        {
-        }
-        constexpr ArithmeticEnum(ValueType value)
+
+        constexpr ArithmeticEnum(T&& value)
             : m_Value(value)
         {
         }
+        constexpr ArithmeticEnum(const T& value)
+            : m_Value(value)
+        {
+        }
+        constexpr ArithmeticEnum(ValueType&& value)
+            requires(std::is_enum_v<T>)
+            : m_Value(static_cast<T>(value))
+        {
+        }
+        constexpr ArithmeticEnum(const ValueType& value)
+            requires(!IsSameV<T, ValueType>)
+            : m_Value(static_cast<T>(value))
+        {
+        }
 
-        constexpr      operator ValueType() const { return m_Value; }
+        constexpr ArithmeticEnum& operator=(T&& value) { m_Value = value; }
+        constexpr ArithmeticEnum& operator=(const T& value) { m_Value = value; }
 
+        constexpr                 operator ValueType()
+            requires(!IsSameV<T, ValueType>)
+        {
+            return static_cast<ValueType>(m_Value);
+        }
+        constexpr      operator T() { return m_Value; }
         constexpr bool operator==(T rhs)
         {
             return m_Value == static_cast<ValueType>(rhs);
@@ -58,6 +80,35 @@ namespace Prism
         constexpr ArithmeticEnum operator+(ValueType v) const
         {
             return ArithmeticEnum(m_Value + v);
+        }
+
+      private:
+        T m_Value{};
+    };
+    template <typename T>
+    concept EnumType = std::is_enum_v<T>;
+
+    template <>
+    class ArithmeticEnum<bool>
+    {
+      public:
+        using ValueType            = bool;
+
+        constexpr ArithmeticEnum() = default;
+        constexpr ArithmeticEnum(bool value)
+            : m_Value(static_cast<ValueType>(value))
+        {
+        }
+
+        constexpr      operator ValueType() const { return m_Value; }
+
+        constexpr bool operator==(bool rhs)
+        {
+            return m_Value == static_cast<ValueType>(rhs);
+        }
+        constexpr std::strong_ordering operator<=>(bool rhs)
+        {
+            return m_Value <=> static_cast<ValueType>(rhs);
         }
 
       private:

@@ -75,6 +75,8 @@ void TestSubstringAndResize()
     assert(sub == "bcd"_s);
 
     s.Resize(3);
+    printf("s1: %s\n", s.Raw());
+    printf("s2: %s\n", "abc"_s.Raw());
     assert(s == "abc"_s);
 
     s.Resize(5, 'x');
@@ -101,7 +103,7 @@ int main()
     TestAccessors();
     TestFind();
     TestComparisons();
-    // TODO: TestSubstringAndResize();
+    TestSubstringAndResize();
     TestCopyAndSwap();
 
     return 0;

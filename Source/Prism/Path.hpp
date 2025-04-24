@@ -13,20 +13,26 @@ namespace Prism
     class Path
     {
       public:
-        Path(const char path[])
+        constexpr Path(StringView path)
+            : m_Path(path.Raw())
+        {
+        }
+        constexpr Path(const std::string& path)
+            : m_Path(path)
+        {
+        }
+        constexpr Path(const char path[])
             : m_Path(path)
         {
         }
 
+        constexpr          operator StringView() const { return m_Path.data(); }
         constexpr          operator PathView() const { return m_Path.data(); }
 
         constexpr PathView View() const { return m_Path.data(); }
 
-        constexpr bool     IsEmpty() const { return m_Path.size() == 0; }
-        constexpr bool     IsAbsolute() const
-        {
-            return !IsEmpty() && m_Path[0] == '/';
-        }
+        constexpr bool     Empty() const { return m_Path.size() == 0; }
+        constexpr bool Absolute() const { return !Empty() && m_Path[0] == '/'; }
         Vector<std::string> SplitPath();
 
         constexpr int       Compare(const Path& str) const noexcept
@@ -66,12 +72,12 @@ using Prism::Path;
 #endif
 
 template <>
-struct fmt::formatter<Prism::PathView> : fmt::formatter<std::string_view>
+struct fmt::formatter<Prism::Path> : fmt::formatter<std::string_view>
 {
     template <typename FormatContext>
-    auto format(const Prism::PathView& src, FormatContext& ctx) const
+    auto format(const Prism::Path& src, FormatContext& ctx) const
     {
         return fmt::formatter<std::string_view>::format(
-            fmt::format("{}", src.Raw()), ctx);
+            fmt::format("{}", src.View().Raw()), ctx);
     }
 };

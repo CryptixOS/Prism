@@ -29,46 +29,29 @@ namespace Prism
             : m_Path(path.Raw(), path.Size())
         {
         }
-        constexpr PathView(std::string path)
-            : m_Path(path)
-        {
-        }
 
-        constexpr PathView(std::string_view path)
-            : m_Path(path)
-        {
-        }
-
-        constexpr operator StringView() const
-        {
-            return {m_Path.data(), m_Path.size()};
-        }
+        constexpr      operator StringView() const { return m_Path; }
 
         bool           ValidateLength();
-        constexpr bool IsEmpty() const { return m_Path.empty(); }
+        constexpr bool Empty() const { return m_Path.Empty(); }
 
-        inline bool    IsAbsolute() const
-        {
-            return !IsEmpty() && m_Path[0] == '/';
-        }
-        Vector<std::string> SplitPath();
-
-        constexpr           operator std::string_view() const { return m_Path; }
+        inline bool    Absolute() const { return !Empty() && m_Path[0] == '/'; }
+        Vector<std::string>   SplitPath();
 
         constexpr const char& operator[](usize i) const { return m_Path[i]; }
 
-        constexpr int         Compare(const PathView& str) const noexcept
+        constexpr i32         Compare(const PathView& str) const noexcept
         {
-            return m_Path.compare(str.m_Path);
+            return m_Path.Compare(str.m_Path);
         }
 
-        constexpr usize       GetSize() const { return m_Path.size(); }
-        constexpr const char* Raw() const { return m_Path.data(); }
+        constexpr usize       Size() const { return m_Path.Size(); }
+        constexpr const char* Raw() const { return m_Path.Raw(); }
 
-        std::string_view      GetLastComponent() const;
+        StringView            GetLastComponent() const;
 
       private:
-        std::string_view m_Path;
+        StringView m_Path;
     };
 
     constexpr bool operator==(const PathView& lhs, const PathView& rhs) noexcept
@@ -85,3 +68,14 @@ namespace Prism
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::PathView;
 #endif
+
+template <>
+struct fmt::formatter<Prism::PathView> : fmt::formatter<std::string_view>
+{
+    template <typename FormatContext>
+    auto format(const Prism::PathView& src, FormatContext& ctx) const
+    {
+        return fmt::formatter<std::string_view>::format(
+            fmt::format("{}", src.Raw()), ctx);
+    }
+};

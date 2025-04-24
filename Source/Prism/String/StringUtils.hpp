@@ -9,6 +9,7 @@
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
+#include <Prism/String/String.hpp>
 #include <Prism/String/StringView.hpp>
 #include <Prism/Utility/Math.hpp>
 
@@ -68,13 +69,16 @@ namespace Prism
             return str;
         }
         template <ArithmeticType T>
-        constexpr char* ToString(T value, i32 base = 10)
+        constexpr String ToString(T value, i32 base = 10)
         {
             const bool  isNegative = value < 0 && base == 10;
             const usize size       = GetDigitCount(value) + isNegative + 1;
 
-            char*       dest       = new char[size];
-            return ToString(value, dest, base);
+            String      string;
+            string.Resize(size);
+
+            ToString(value, string.Raw(), base);
+            return string;
         }
 
         constexpr u64 ToLower(u64 c)

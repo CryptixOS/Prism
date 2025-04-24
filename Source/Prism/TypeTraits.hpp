@@ -143,10 +143,27 @@ namespace Prism
         requires(IsEnum<T>)
     using UnderlyingType = __underlying_type(T);
 
+    template <typename T, bool>
+    struct EnumUnderlying
+    {
+    };
+    template <typename T>
+    struct EnumUnderlying<T, true>
+    {
+        using Type = UnderlyingType<T>;
+    };
+    template <typename T>
+    struct EnumUnderlying<T, false>
+    {
+        using Type = T;
+    };
+
     template <typename T>
     struct PromoteEnum
     {
-        using Type = Conditional<IsEnum<T>, UnderlyingType<T>, T>;
+        using Type = std::conditional_t<
+            std::is_enum_v<T>,
+            typename EnumUnderlying<T, std::is_enum_v<T>>::Type, T>;
     };
     template <typename T>
     using PromoteEnumType = typename PromoteEnum<T>::Type;

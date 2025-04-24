@@ -11,6 +11,8 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/CharTraits.hpp>
 #include <Prism/TypeTraits.hpp>
+#include <Prism/Utility/Hash.hpp>
+#include <Prism/Utility/Math.hpp>
 
 #include <cassert>
 #include <ranges>
@@ -62,10 +64,6 @@ namespace Prism
             requires std::same_as<std::iter_value_t<It>, C>
                   && (!std::convertible_to<End, SizeType>)
 
-        constexpr BasicStringView(It first, End last) PM_NOEXCEPT
-            : BasicStringView(first, last - first)
-        {
-        }
         constexpr explicit BasicStringView(BasicStringView&& str)
             : BasicStringView(std::move(str.m_Data), std::move(str.m_Size))
         {
@@ -122,23 +120,23 @@ namespace Prism
         operator[](SizeType pos) const PM_NOEXCEPT
         {
             assert(pos < m_Size);
-            return *(m_Data + pos);
+            return Raw()[pos];
         }
         [[nodiscard]] constexpr ConstReferenceType
         At(SizeType pos) const PM_NOEXCEPT
         {
             assert(pos < m_Size);
-            return *(m_Data + pos);
+            return Raw()[pos];
         }
         [[nodiscard]] constexpr ConstReferenceType Front() const PM_NOEXCEPT
         {
             assert(m_Size > 0);
-            return *m_Data;
+            return m_Data[0];
         }
         [[nodiscard]] constexpr ConstReferenceType Back() const PM_NOEXCEPT
         {
             assert(m_Size > 0);
-            return *(m_Data + m_Size - 1);
+            return m_Data[Size() - 1];
         }
         [[nodiscard]] constexpr ConstPointerType Raw() const PM_NOEXCEPT
         {
@@ -185,12 +183,14 @@ namespace Prism
         //--------------------------------------------------------------------------
         // String Operations
         //--------------------------------------------------------------------------
-        constexpr SizeType Copy(C* str, SizeType n, SizeType pos = 0) const
+        constexpr SizeType Copy(C* str, SizeType count, SizeType pos = 0) const
         {
             assert(pos < m_Size);
-            const SizeType count = std::min(n, m_Size - pos);
+            usize copied = std::min(count, Size() - pos);
 
-            TraitsType::Copy(str, m_Data + pos, count);
+            TraitsType::Copy(str, Raw() + pos, copied);
+
+            if (copied < count) TraitsType::Assign(str + copied, 0, 1);
             return count;
         }
 
@@ -216,8 +216,8 @@ namespace Prism
         Substr(SizeType pos = 0, SizeType count = NPos) const PM_NOEXCEPT
         {
             assert(pos < m_Size);
-            count = std::min(count, m_Size - pos);
-            return BasicStringView(m_Data + pos, count);
+            count = std::min(count, Size() - pos);
+            return BasicStringView(Raw() + pos, count);
         }
         [[nodiscard]] constexpr i32
         Compare(BasicStringView other) const PM_NOEXCEPT
@@ -295,7 +295,7 @@ namespace Prism
         {
             return Find(str) != NPos;
         }
-        [[nodiscard]] constexpr bool contains(C ch) const PM_NOEXCEPT
+        [[nodiscard]] constexpr bool Contains(C ch) const PM_NOEXCEPT
         {
             return Find(ch) != NPos;
         }
@@ -512,16 +512,16 @@ namespace Prism
 
     template <typename C, typename Traits>
     [[nodiscard]] constexpr bool
-    operator==(BasicStringView<C, Traits>                       lhs,
-               std::type_identity_t<BasicStringView<C, Traits>> rhs) PM_NOEXCEPT
+    operator==(BasicStringView<C, Traits> lhs,
+               BasicStringView<C, Traits> rhs) PM_NOEXCEPT
     {
         return lhs.Size() == rhs.Size() && lhs.Compare(rhs) == 0;
     }
 
     template <typename C, typename Traits>
-    [[nodiscard]] constexpr auto operator<=>(
-        const BasicStringView<C, Traits>                       lhs,
-        std::type_identity_t<const BasicStringView<C, Traits>> rhs) PM_NOEXCEPT
+    [[nodiscard]] constexpr auto
+    operator<=>(const BasicStringView<C, Traits> lhs,
+                const BasicStringView<C, Traits> rhs) PM_NOEXCEPT
     {
         return lhs.Compare(rhs);
     }
@@ -554,82 +554,86 @@ namespace Prism
             return BasicStringView<char32_t>(str, len);
         }
     }; // namespace StringViewLiterals
+
+    namespace Detail
+    {
+        template <typename C, typename String = BasicString<C, CharTraits<C>>>
+        struct StringHashBase
+        {
+            [[nodiscard]] constexpr usize
+            operator()(const String& str) const PM_NOEXCEPT
+            {
+                const char* key    = str.Raw();
+                usize       length = str.Size() * sizeof(C);
+                const usize seed   = 0xc70f6907ul;
+
+                return Hash::MurmurHash2(key, length, seed);
+            }
+        };
+    }; // namespace Detail
 }; // namespace Prism
 
 template <>
-struct std::hash<Prism::StringView>
-    : public std::__hash_base<Prism::usize, Prism::StringView>
-{
-    [[nodiscard]] Prism::usize
-    operator()(const Prism::StringView& str) const noexcept
-    {
-        return std::hash<std::string_view>{}({str.Raw(), str.Size()});
-    }
-};
-template <>
-struct std::__is_fast_hash<std::hash<Prism::StringView>> : std::false_type
+struct std::hash<Prism::BasicStringView<char, Prism::CharTraits<char>>>
+    : public Prism::Detail::StringHashBase<char>
 {
 };
 template <>
-struct std::hash<Prism::WStringView>
-    : public std::__hash_base<Prism::usize, Prism::WStringView>
+struct std::__is_fast_hash<std::hash<Prism::StringView>> : Prism::FalseType
 {
-    [[nodiscard]] Prism::usize
-    operator()(const Prism::WStringView& str) const noexcept
-    {
-        return std::_Hash_impl::hash(str.Raw(), str.Size() * sizeof(wchar_t));
-    }
 };
-
 template <>
-struct std::__is_fast_hash<std::hash<Prism::WStringView>> : std::false_type
+struct std::hash<Prism::BasicStringView<wchar_t, Prism::CharTraits<wchar_t>>>
+    : public Prism::Detail::StringHashBase<wchar_t>
 {
 };
 
 template <>
-struct std::hash<Prism::U8StringView>
-    : public std::__hash_base<Prism::usize, Prism::U8StringView>
-{
-    [[nodiscard]] Prism::usize
-    operator()(const Prism::U8StringView& str) const noexcept
-    {
-        return std::_Hash_impl::hash(str.Raw(), str.Size());
-    }
-};
-template <>
-struct std::__is_fast_hash<std::hash<Prism::U8StringView>> : std::false_type
+struct std::__is_fast_hash<
+    std::hash<Prism::BasicStringView<wchar_t, Prism::CharTraits<wchar_t>>>>
+    : Prism::FalseType
 {
 };
 
 template <>
-struct std::hash<Prism::U16StringView>
-    : public std::__hash_base<Prism::usize, Prism::U16StringView>
+struct std::hash<Prism::BasicStringView<char8_t, Prism::CharTraits<char8_t>>>
+    : public Prism::Detail::StringHashBase<char8_t>
 {
-    [[nodiscard]] Prism::usize
-    operator()(const Prism::U16StringView& str) const noexcept
-    {
-        return std::_Hash_impl::hash(str.Raw(), str.Size() * sizeof(char16_t));
-    }
 };
-
 template <>
-struct std::__is_fast_hash<std::hash<Prism::U16StringView>> : std::false_type
+struct std::__is_fast_hash<
+    std::hash<Prism::BasicStringView<char8_t, Prism::CharTraits<char8_t>>>>
+    : Prism::FalseType
 {
 };
 
 template <>
-struct std::hash<Prism::U32StringView>
-    : public std::__hash_base<Prism::usize, Prism::U32StringView>
+struct std::hash<Prism::BasicStringView<char16_t, Prism::CharTraits<char16_t>>>
+    : public Prism::Detail::StringHashBase<
+          Prism::usize,
+          Prism::BasicStringView<char16_t, Prism::CharTraits<char16_t>>>
 {
-    [[nodiscard]] Prism::usize
-    operator()(const Prism::U32StringView& str) const noexcept
-    {
-        return std::_Hash_impl::hash(str.Raw(), str.Size() * sizeof(char32_t));
-    }
 };
 
 template <>
-struct std::__is_fast_hash<std::hash<Prism::U32StringView>> : std::false_type
+struct std::__is_fast_hash<
+    std::hash<Prism::BasicStringView<char16_t, Prism::CharTraits<char16_t>>>>
+    : Prism::FalseType
+{
+};
+
+template <>
+struct std::hash<Prism::BasicStringView<char32_t, Prism::CharTraits<char32_t>>>
+    : public Prism::Detail::StringHashBase<
+          Prism::usize,
+          Prism::BasicStringView<char32_t, Prism::CharTraits<char32_t>>>
+{
+};
+
+template <>
+struct std::__is_fast_hash<
+    std::hash<Prism::BasicStringView<char32_t, Prism::CharTraits<char32_t>>>>
+    : Prism::FalseType
 {
 };
 

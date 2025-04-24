@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
 namespace Prism
@@ -59,24 +60,23 @@ namespace Prism
                      || !std::is_destructible_v<T>)
         = delete;
 
-        ~Optional() = default;
-
         constexpr Optional(const Optional& other)
             requires(!std::is_trivially_copy_constructible_v<T>)
             : m_HasValue(other.m_HasValue)
         {
-            if (other.HasValue()) new (&m_Storaage) T(other.Value());
+            if (other.HasValue()) new (&m_Storage) T(other.Value());
         }
-        constexpr Optional(Optional&& other) m_HasValue(other.m_HasValue)
+        constexpr Optional(Optional&& other)
+            : m_HasValue(other.m_HasValue)
         {
-            if (other.HasValue()) new (&m_Storage) T(std::move(other.m_Value));
+            if (other.HasValue()) new (&m_Storage) T(std::move(other.Value()));
         }
 
         template <typename U>
-            requires(std::is_constructible_v<T, const U&>
-                     && !std::is_specialization_of<T, Optional>
-                     && !std::is_specializaation_of<U, Optional>
-                     && !std::is_lvalue_reference_v<U>)
+        // requires(std::is_constructible_v<T, const U&>
+        // && !std::is_specialization_of<T, Optional>
+        // && !std::is_specialization_of<U, Optional>
+        // && !std::is_lvalue_reference_v<U>)
         constexpr explicit Optional(const Optional<U>& other)
             : m_HasValue(other.m_HasValue)
         {
@@ -84,10 +84,10 @@ namespace Prism
         }
 
         template <typename U>
-            requires(std::is_constructible_v<T, U &&>
-                     && !std::is_specialization_of<T, Optional>
-                     && !std::is_specialization_of<U, Optional>
-                     && !std::is_lvalue_reference_v<U>)
+        /*   requires(std::is_constructible_v<T, U &&>
+                    && !std::is_specialization_of<T, Optional>
+                    && !std::is_specialization_of<U, Optional>
+                    && !std::is_lvalue_reference_v<U>)*/
         constexpr explicit Optional(Optional<U>&& other)
             : m_HasValue(other.m_HasValue)
         {
@@ -95,18 +95,18 @@ namespace Prism
         }
 
         template <typename U = T>
-            requires(!std::is_same<NullOpt, RemoveCVReference<U>>)
-        constexpr explicit(!std::is_convertible<U&&, T>) Optional(U&& value)
-            requires(!std::is_same<RemoveCVReference<U>, Optional<T>>
-                     && std::is_constructible<T, U &&>)
+            requires(!std::is_same<NullOpt, std::remove_cvref_t<U>>())
+        constexpr explicit(!std::is_convertible_v<U&&, T>) Optional(U&& value)
+            requires(!std::is_same<std::remove_cvref<U>, Optional<T>>()
+                     && std::is_constructible_v<T, U &&>)
             : m_HasValue(true)
         {
             new (&m_Storage) T(std::forward<U>(value));
         }
 
         constexpr Optional& operator=(Optional const& other)
-            requires(!std::is_trivially_copy_constructible<T>
-                     || !std::is_Trivially_destructible<T>)
+            requires(!std::is_trivially_copy_constructible_v<T>
+                     || !std::is_trivially_destructible_v<T>)
         {
             if (this != &other)
             {
@@ -124,7 +124,7 @@ namespace Prism
                 Reset();
                 m_HasValue = other.m_HasValue;
                 if (other.HasValue())
-                    new (&m_Storage) T(std::move(other.m_Value));
+                    new (&m_Storage) T(std::move(other.Value()));
             }
             return *this;
         }
@@ -143,7 +143,7 @@ namespace Prism
         }
 
         constexpr ~Optional()
-            requires(!std::is_trivially_destructible<T>)
+            requires(!std::is_trivially_destructible_v<T>)
         {
             Reset();
         }
@@ -164,8 +164,8 @@ namespace Prism
             new (&m_Storage) T(std::forward<Args>(args)...);
         }
 
-        constexpr bool                 HasValue() const { return m_HasValue; }
-        [[nodiscard]] ALWAYS_INLINE T& Value() &
+        constexpr bool HasValue() const { return m_HasValue; }
+        [[nodiscard]] PM_ALWAYS_INLINE T& Value() &
         {
             assert(m_HasValue);
             return *__builtin_launder(reinterpret_cast<T*>(&m_Storage));

@@ -156,16 +156,20 @@ namespace Prism
             node->Prev = m_Tail;
 
             if (m_Tail) m_Tail->Next = node;
+            else m_Head = node; // List was empty
+
             m_Tail = node;
             ++m_Size;
         }
         inline void PushBack(T&& value)
         {
-            Node* node = new Node(std::move(value));
+            Node* node = new Node(value);
             node->Next = nullptr;
             node->Prev = m_Tail;
 
             if (m_Tail) m_Tail->Next = node;
+            else m_Head = node; // List was empty
+
             m_Tail = node;
             ++m_Size;
         }
@@ -177,16 +181,20 @@ namespace Prism
             newNode->Prev = nullptr;
 
             if (m_Head) m_Head->Prev = newNode;
+            else m_Tail = newNode; // List was empty
+
             m_Head = newNode;
             ++m_Size;
         }
         inline void PushFront(T&& value)
         {
-            Node* newNode = new Node(std::move(value));
+            Node* newNode = new Node(value);
             newNode->Next = m_Head;
             newNode->Prev = nullptr;
 
             if (m_Head) m_Head->Prev = newNode;
+            else m_Tail = newNode; // List was empty
+
             m_Head = newNode;
             ++m_Size;
         }
@@ -197,7 +205,8 @@ namespace Prism
             if (front)
             {
                 m_Head = front->Next;
-                if (front->Next) front->Next->Prev = nullptr;
+                if (m_Head) m_Head->Prev = nullptr;
+                else m_Tail = nullptr; // List
             }
 
             auto value = front->Value;
@@ -212,7 +221,8 @@ namespace Prism
             if (back)
             {
                 m_Tail = back->Prev;
-                if (back->Prev) back->Prev->Next = nullptr;
+                if (m_Tail) m_Tail->Next = nullptr;
+                else m_Head = nullptr; // List became empty
             }
 
             auto value = back->Value;

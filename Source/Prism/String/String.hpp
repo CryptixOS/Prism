@@ -11,10 +11,6 @@
 #include <Prism/Core/Types.hpp>
 
 #include <Prism/String/StringView.hpp>
-#include <Prism/Utility/Hash.hpp>
-#include <Prism/Utility/Math.hpp>
-
-#include <concepts>
 
 namespace Prism
 {
@@ -43,36 +39,23 @@ namespace Prism
         constexpr BasicString(SizeType count, ValueType ch)
         {
             assert(count <= MaxSize());
+            EnsureCapacity(count);
+            Assign(count, ch);
+            SetSize(count);
 
-            if (count > Capacity()) Reallocate(count + 1, false);
-
-            TraitsType::Assign(Raw(), count, ch);
             Raw()[count] = 0;
         }
         template <typename InputIt>
         constexpr BasicString(InputIt first, InputIt last)
         {
-            SizeType newSize = 1;
+            SizeType newSize = 0;
             for (auto it = first; it != last; it++) ++newSize;
-
-            if (FitsInSso(newSize))
-            {
-                m_Storage.Short.Size   = newSize;
-                m_Storage.Short.IsLong = false;
-            }
-            else
-            {
-                m_Storage.Long.Capacity = newSize;
-
-                m_Storage.Long.Size     = newSize;
-                m_Storage.Short.IsLong  = true;
-
-                Reallocate(newSize, false);
-            }
+            EnsureCapacity(newSize);
+            SetSize(newSize);
 
             usize i = 0;
             for (auto it = first; it != last; it++, i++) Raw()[i] = *it;
-            Raw()[newSize - 1] = 0;
+            Raw()[Size()] = 0;
         }
         constexpr BasicString(const ValueType* s, SizeType count = NPos)
         {
@@ -82,40 +65,57 @@ namespace Prism
                 return;
             }
 
-            if (count == NPos) count = Traits::Length(s);
-            usize newSize = count + 1;
-            if (FitsInSso(newSize))
-            {
-                m_Storage.Short.Size   = newSize - 1;
-                m_Storage.Short.IsLong = false;
-            }
-            else
-            {
-                m_Storage.Long.Capacity = newSize;
-                m_Storage.Long.Size     = newSize - 1;
-                m_Storage.Short.IsLong  = true;
-                Reallocate(newSize, false);
-            }
-
+            if (count == NPos) count = TraitsType::Length(s);
+            EnsureCapacity(count);
+            SetSize(count);
             TraitsType::Copy(Raw(), s, count);
-            Raw()[newSize - 1] = 0;
+
+            Raw()[Size()] = 0;
         }
         constexpr BasicString(BasicStringView<C, Traits> str)
         {
-            if (FitsInSso(str.Size()))
+            EnsureCapacity(str.Size());
+            SetSize(str.Size());
+            TraitsType::Copy(Raw(), str.Raw(), Size());
+
+            Raw()[Size()] = 0;
+        }
+        constexpr BasicString(const BasicString& other)
+        {
+            usize newSize = other.Size();
+            EnsureCapacity(newSize);
+
+            SetSize(newSize);
+            TraitsType::Copy(Raw(), other.Raw(), newSize);
+            Raw()[Size()] = 0;
+        }
+        constexpr BasicString(BasicString&& other)
+        {
+            if (IsLong()) delete[] Raw();
+
+            if (other.IsLong())
             {
-                ShortInit();
-                TraitsType::Copy(Raw(), str.Raw(), str.Size());
-                m_Storage.Short.Size = str.Size();
-                Raw()[Size()]        = 0;
+                m_Storage.Short.IsLong = true;
+                Long().Data            = std::move(other.Raw());
+                Long().Size            = std::move(other.m_Storage.Long.Size);
+                Long().Capacity        = other.m_Storage.Long.Capacity;
+
+                other.m_Storage.Short.IsLong = false;
+                other.Long().Data            = nullptr;
+                other.Long().Size            = 0;
+                other.Long().Capacity        = 0;
+                TraitsType::Copy(Raw(), other.Raw(), Size() + 1);
                 return;
             }
 
-            Reallocate(str.Size() + 1, false);
-            TraitsType::Copy(Raw(), str.Raw(), str.Size());
-            m_Storage.Long.Size = str.Size();
-            Raw()[Size()]       = 0;
+            ShortInit();
+            SetSize(other.Size());
+
+            other.m_Storage.Short.Size = 0;
+            TraitsType::Copy(Raw(), other.Raw(), Size() + 1);
+            TraitsType::Assign(other.Raw(), 0, Size());
         }
+
         constexpr ~BasicString()
         {
             if (!IsLong()) return;
@@ -123,31 +123,27 @@ namespace Prism
             delete[] m_Storage.Long.Data;
         }
 
+        constexpr BasicString& operator=(const BasicString& other)
+        {
+            if (IsLong()) delete[] m_Storage.Long.Data;
+
+            usize newSize = other.Size();
+            EnsureCapacity(newSize);
+
+            SetSize(newSize);
+            TraitsType::Copy(Raw(), other.Raw(), newSize);
+            Raw()[Size()] = 0;
+
+            return *this;
+        }
         constexpr BasicString<C, Traits>&
         operator=(BasicStringView<C, Traits> str)
         {
-            if (IsLong() && Capacity() > 0)
-            {
-                delete[] Raw();
-                m_Storage.Short.IsLong = false;
-            }
+            EnsureCapacity(str.Size());
+            SetSize(str.Size());
 
-            usize newSize = str.Size() + 1;
-            if (FitsInSso(newSize))
-            {
-                m_Storage.Short.Size   = newSize - 1;
-                m_Storage.Short.IsLong = false;
-            }
-            else
-            {
-                m_Storage.Long.Capacity = newSize;
-                m_Storage.Long.Size     = newSize - 1;
-                m_Storage.Short.IsLong  = true;
-                Reallocate(newSize, false);
-            }
-
-            Traits::Copy(Raw(), str.Raw(), str.Size());
-            Raw()[newSize - 1] = 0;
+            TraitsType::Copy(Raw(), str.Raw(), Size());
+            Raw()[Size()] = 0;
 
             return *this;
         }
@@ -182,11 +178,11 @@ namespace Prism
 
         constexpr C*       Raw() PM_NOEXCEPT
         {
-            return IsLong() ? m_Storage.Long.Data : m_Storage.Short.Data;
+            return IsLong() ? Long().Data : Short();
         }
         constexpr const C* Raw() const PM_NOEXCEPT
         {
-            return IsLong() ? m_Storage.Long.Data : m_Storage.Short.Data;
+            return IsLong() ? Long().Data : Short();
         }
 
         constexpr BasicStringView<C> View() const PM_NOEXCEPT
@@ -235,7 +231,7 @@ namespace Prism
         constexpr bool  Empty() const PM_NOEXCEPT { return Size() == 0; }
         constexpr usize Size() const PM_NOEXCEPT
         {
-            return IsLong() ? m_Storage.Long.Size : m_Storage.Short.Size;
+            return IsLong() ? Long().Size : m_Storage.Short.Size;
         }
         constexpr usize        MaxSize() const PM_NOEXCEPT { return usize(-1); }
 
@@ -245,30 +241,29 @@ namespace Prism
             assert(Size() + count <= MaxSize());
             assert(pos <= Size());
 
-            Insert(std::next(cbegin(), pos), count, ch);
+            usize newSize = std::max(pos + count, Size());
+
+            EnsureCapacity(newSize);
+            TraitsType::Assign(Raw() + pos, ch, count);
+
+            SetSize(newSize);
+            Raw()[Size()] = 0;
+
             return *this;
         }
         constexpr BasicString& Insert(SizeType pos, const ValueType* str)
         {
             assert(pos <= Size());
-            usize len = Traits::Length(str);
+            assert(str);
+
+            usize len     = Traits::Length(str);
+            usize newSize = std::max(pos + len, Size());
+
             assert(Size() + len <= MaxSize());
 
-            if (Size() != 0)
-            {
-                usize capacity = Capacity();
-                usize size     = Size();
-                usize newSize  = size + len;
-
-                if (capacity < newSize) GrowTo(newSize);
-                Traits::Move(Raw() + pos + size, Raw() + pos, size - pos);
-                Traits::Copy(Raw() + pos, str, len);
-
-                if (IsLong()) m_Storage.Long.Size = newSize;
-                else m_Storage.Short.Size = newSize & 0x7f;
-                Traits::Assign(Raw()[Size()], 0);
-            }
-            InternalInsert(pos, str, len);
+            EnsureCapacity(newSize);
+            SetSize(newSize);
+            Raw()[newSize] = 0;
 
             return *this;
         }
@@ -276,12 +271,7 @@ namespace Prism
         constexpr void Reserve(usize newCapacity)
         {
             assert(newCapacity <= MaxSize());
-            if (newCapacity < Capacity()) return;
-
-            newCapacity = std::max(newCapacity, Size());
-            if (newCapacity == Capacity()) return;
-
-            GrowTo(newCapacity);
+            EnsureCapacity(newCapacity);
         }
         constexpr usize Capacity() const PM_NOEXCEPT
         {
@@ -306,17 +296,22 @@ namespace Prism
         constexpr void Resize(SizeType count, ValueType ch)
         {
             assert(Size() + count <= MaxSize());
-            SizeType newSize = count;
 
-            if (IsLong()) m_Storage.Long.Size = count;
-            else m_Storage.Short.Size = count;
+            usize oldSize = Size();
+            Resize(count);
 
-            if (Capacity() < newSize) Reallocate(newSize + 1, false);
-
-            TraitsType::Assign(Raw(), count, ch);
+            TraitsType::Assign(Raw() + oldSize, count - oldSize, ch);
             Raw()[Size()] = 0;
         }
-        constexpr void Resize(SizeType count) { Resize(count, 0); }
+        constexpr void Resize(SizeType count)
+        {
+            usize newSize = count;
+            if (IsLong() || !FitsInSso(count)) Reallocate(count, true);
+
+            for (usize i = Size(); i < count; i++) Raw()[i] = 0;
+            SetSize(newSize);
+            Raw()[newSize] = 0;
+        }
         constexpr void Swap(BasicString& str) PM_NOEXCEPT
         {
             std::swap(m_Storage, str.m_Storage);
@@ -578,7 +573,7 @@ namespace Prism
         constexpr BasicString Substr(SizeType pos   = 0,
                                      SizeType count = NPos) const
         {
-            assert(pos <= Size());
+            assert(pos < Size());
             return BasicString(BasicStringView{Raw() + pos, count});
         }
         constexpr SizeType Copy(ValueType* str, SizeType count,
@@ -592,10 +587,11 @@ namespace Prism
         operator+=(BasicStringView<C, Traits> rhs)
         {
             auto pos = Size();
-            GrowTo(Size() + rhs.Size() + 1);
+            EnsureCapacity(Size() + rhs.Size());
 
-            for (auto c : rhs) Raw()[pos++] = c;
-            Raw()[pos] = 0;
+            TraitsType::Copy(Raw() + pos, rhs.Raw(), rhs.Size());
+            SetSize(pos + rhs.Size());
+            Raw()[Size()] = 0;
 
             return *this;
         }
@@ -641,6 +637,16 @@ namespace Prism
             ShortData Short{{false, 0}, {}, {}};
         } m_Storage;
 
+        constexpr C*              Short() { return m_Storage.Short.Data; }
+        constexpr const C*        Short() const { return m_Storage.Short.Data; }
+        constexpr LongData&       Long() { return m_Storage.Long; }
+        constexpr const LongData& Long() const { return m_Storage.Long; }
+        constexpr void            SetSize(usize newSize)
+        {
+            if (IsLong()) m_Storage.Long.Size = newSize;
+            else m_Storage.Short.Size = newSize;
+        }
+
         constexpr static bool FitsInSso(usize size)
         {
             return size < MIN_CAPACITY;
@@ -684,53 +690,30 @@ namespace Prism
             newCapacity = Math::AlignUp(newCapacity, sizeof(ValueType*));
             if (newCapacity == m_Storage.Long.Capacity) return;
 
-            usize oldSize = m_Storage.Long.Size;
-            // usize oldCapacity = m_Storage.Long.Capacity;
-            C*    oldData = m_Storage.Long.Data;
+            usize newSize = Size();
+            if (newCapacity < Size()) newSize = newCapacity;
+            SetSize(newSize);
 
-            usize newSize = std::min(newCapacity, oldSize);
-            C*    newData = new C[newCapacity + 1];
+            C* newData = new C[newCapacity + 1];
+            if (copyOld) TraitsType::Copy(newData, Raw(), Size());
+            if (IsLong()) delete[] Long().Data;
+            Long().Data            = newData;
 
-            if (oldData)
-            {
-                if (oldSize != 0 && copyOld)
-                    Traits::Copy(newData, oldData, newSize);
-                delete[] oldData;
-            }
+            m_Storage.Short.IsLong = true;
+            Long().Capacity        = newCapacity;
+            Long().Size            = newSize;
 
-            m_Storage.Short.IsLong  = true;
-            m_Storage.Long.Size     = oldSize;
-            m_Storage.Long.Data     = newData;
-            m_Storage.Long.Capacity = newCapacity;
+            Raw()[Size()]          = 0;
         }
-        constexpr void GrowTo(usize newCapacity)
+        constexpr void EnsureCapacity(usize newCapacity)
         {
-            if (IsLong())
-            {
-                Reallocate(newCapacity, true);
-                return;
-            }
-
-            C*    newData = new C[newCapacity + 1];
-            usize newSize = m_Storage.Short.Size;
-
-            Traits::Copy(newData, m_Storage.Short.Data, newSize);
-            Traits::Assign(newData[newSize], 0);
-
-            LongInit();
-            m_Storage.Long.Data     = newData;
-            m_Storage.Long.Size     = newSize;
-            m_Storage.Long.Capacity = newCapacity;
+            if (Capacity() >= newCapacity) return;
+            Reallocate(newCapacity, true);
         }
 
         constexpr void Assign(SizeType count, ValueType ch)
         {
-            if (FitsInSso(count))
-            {
-                if (IsLong()) ShortInit();
-
-                m_Storage.Short.Size = count;
-            }
+            TraitsType::Assign(Raw(), count, ch);
         }
     };
 
@@ -796,11 +779,8 @@ namespace Prism
     inline BasicString<C, Traits> operator+(BasicStringView<C, Traits> lhs,
                                             BasicStringView<C, Traits> rhs)
     {
-        BasicString<C, Traits> string;
-        string.Resize(lhs.Size() + rhs.Size() + 1);
-        for (usize i = 0; auto c : lhs) string[i++] = c;
-        for (usize i = lhs.Size(); auto c : rhs) string[i++] = c;
-        string[lhs.Size() + rhs.Size()] = 0;
+        BasicString<C, Traits> string = lhs;
+        string += rhs;
 
         return std::move(string);
     }
@@ -808,15 +788,8 @@ namespace Prism
     BasicString<C, Traits> operator+(BasicStringView<C, Traits> lhs,
                                      const C*                   rhs)
     {
-        BasicString<C, Traits> string;
-        usize                  len = Traits::Length(rhs);
-        string.Resize(lhs.Size() + len + 1);
-
-        for (usize i = 0; auto c : lhs) string[i++] = c;
-
-        C* src = const_cast<C*>(rhs);
-        for (usize i = lhs.Size(); *src++ != '\0';) string[i++] = *src;
-        string[lhs.Size() + len] = 0;
+        BasicString string = lhs;
+        string += rhs;
 
         return std::move(string);
     }
@@ -843,23 +816,6 @@ namespace Prism
     {
         return lhs.Compare(rhs) <=> 0;
     }
-
-    namespace Detail
-    {
-        template <typename C, typename String = BasicString<C, CharTraits<C>>>
-        struct StringHashBase
-        {
-            [[nodiscard]] constexpr usize
-            operator()(const String& str) const PM_NOEXCEPT
-            {
-                const char* key    = str.Raw();
-                usize       length = str.Size() * sizeof(C);
-                const usize seed   = 0xc70f6907ul;
-
-                return Hash::MurmurHash2(key, length, seed);
-            }
-        };
-    }; // namespace Detail
 
     namespace Literals
     {
