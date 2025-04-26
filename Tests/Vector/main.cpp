@@ -10,14 +10,14 @@
 
 using namespace Prism;
 
-void TestDefaultConstructor()
+void Vector_TestDefaultConstructor()
 {
     Vector<int> v;
     assert(v.Size() == 0);
     assert(v.Empty());
 }
 
-void TestPushBackAndAt()
+void Vector_TestPushBackAndAt()
 {
     Vector<int> v;
     int         a = 10, b = 20;
@@ -28,7 +28,7 @@ void TestPushBackAndAt()
     assert(v.At(1) == 20);
 }
 
-void TestFrontBack()
+void Vector_TestFrontBack()
 {
     Vector<int> v;
     int         a = 5, b = 15;
@@ -38,7 +38,7 @@ void TestFrontBack()
     assert(v.Back() == 15);
 }
 
-void TestInitializerListConstructor()
+void Vector_TestInitializerListConstructor()
 {
     Vector<int> v{1, 2, 3};
     assert(v.Size() == 3);
@@ -47,7 +47,7 @@ void TestInitializerListConstructor()
     assert(v[2] == 3);
 }
 
-void TestCopyConstructor()
+void Vector_TestCopyConstructor()
 {
     Vector<int> a{1, 2, 3};
     Vector<int> b = a;
@@ -55,7 +55,7 @@ void TestCopyConstructor()
     assert(b[0] == 1 && b[1] == 2 && b[2] == 3);
 }
 
-void TestMoveConstructor()
+void Vector_TestMoveConstructor()
 {
     Vector<int> a{4, 5, 6};
     Vector<int> b = std::move(a);
@@ -64,7 +64,7 @@ void TestMoveConstructor()
     assert(a.Empty());
 }
 
-void TestResizeSmaller()
+void Vector_TestResizeSmaller()
 {
     Vector<int> v{1, 2, 3, 4};
     v.Resize(2);
@@ -73,7 +73,7 @@ void TestResizeSmaller()
     assert(v[1] == 2);
 }
 
-void TestResizeLarger()
+void Vector_TestResizeLarger()
 {
     Vector<int> v{1, 2};
     v.Resize(5, 42);
@@ -82,7 +82,7 @@ void TestResizeLarger()
     assert(v[4] == 42);
 }
 
-void TestPopBack()
+void Vector_TestPopBack()
 {
     Vector<int> v{7, 8, 9};
     v.PopBack();
@@ -90,7 +90,7 @@ void TestPopBack()
     assert(v.Back() == 8);
 }
 
-void TestClear()
+void Vector_TestClear()
 {
     Vector<int> v{1, 2, 3};
     v.Clear();
@@ -98,7 +98,7 @@ void TestClear()
     assert(v.Size() == 0);
 }
 
-void TestErase()
+void Vector_TestErase()
 {
     Vector<int> v{1, 2, 3};
     auto        it = v.begin() + 1;
@@ -108,7 +108,7 @@ void TestErase()
     assert(v[1] == 3);
 }
 
-void TestIterators()
+void Vector_TestIterators()
 {
     Vector<int> v{10, 20, 30};
     int         sum = 0;
@@ -121,7 +121,7 @@ void TestIterators()
     assert(*rit == 20);
 }
 
-void TestRawPointer()
+void Vector_TestRawPointer()
 {
     Vector<int> v{1, 2};
     int*        ptr = v.Raw();
@@ -129,7 +129,7 @@ void TestRawPointer()
     assert(ptr[1] == 2);
 }
 
-void TestEmplaceBack()
+void Vector_TestEmplaceBack()
 {
     Vector<std::string> v;
     v.EmplaceBack("hello");
@@ -139,7 +139,7 @@ void TestEmplaceBack()
     assert(v[1] == "aaaaa");
 }
 
-void TestCapacityAndReserve()
+void Vector_TestCapacityAndReserve()
 {
     Vector<int> v;
     v.Reserve(100);
@@ -148,20 +148,20 @@ void TestCapacityAndReserve()
 
 int main()
 {
-    TestDefaultConstructor();
-    TestPushBackAndAt();
-    TestFrontBack();
-    TestInitializerListConstructor();
-    TestCopyConstructor();
-    TestMoveConstructor();
-    TestResizeSmaller();
-    TestResizeLarger();
-    TestPopBack();
-    TestClear();
-    TestErase();
-    TestIterators();
-    TestRawPointer();
-    TestEmplaceBack();
-    TestCapacityAndReserve();
+    Vector_TestDefaultConstructor();
+    Vector_TestPushBackAndAt();
+    Vector_TestFrontBack();
+    Vector_TestInitializerListConstructor();
+    Vector_TestCopyConstructor();
+    Vector_TestMoveConstructor();
+    Vector_TestResizeSmaller();
+    Vector_TestResizeLarger();
+    Vector_TestPopBack();
+    Vector_TestClear();
+    Vector_TestErase();
+    Vector_TestIterators();
+    Vector_TestRawPointer();
+    Vector_TestEmplaceBack();
+    Vector_TestCapacityAndReserve();
     return 0;
 }

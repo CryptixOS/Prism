@@ -18,6 +18,10 @@
 #include <ranges>
 #include <utility>
 
+#if PRISM_TARGET_CRYPTIX == 1
+    #include <unordered_map>
+#endif
+
 namespace Prism
 {
     template <typename C, typename Traits>
@@ -194,23 +198,28 @@ namespace Prism
             return count;
         }
 
-        inline Vector<BasicString<C, Traits>> Split(C delimiter)
+        inline Vector<BasicString<C, Traits>> Split(C delimiter) const
         {
             Vector<BasicString<C, Traits>> segments;
-            usize                          start = Raw()[0] == delimiter;
-            usize                          end   = start;
+            if (Empty()) return {};
 
-            while ((end = FindFirstOf(delimiter, start)) != NPos)
+            usize start = Raw()[0] == delimiter;
+            usize end   = start;
+
+            while ((end = FindFirstOf(delimiter, start)) < Size()
+                   && start < Size())
             {
-                BasicString<C, Traits> segment = Substr(start, end - start);
-                if (start != end) segments.PushBack(segment);
+                usize                      segmentLength = end - start;
+                BasicStringView<C, Traits> segment
+                    = Substr(start, segmentLength);
+                if (segmentLength != 0) segments.PushBack(segment);
 
                 start = end + 1;
             }
 
             // handle last segment
             if (start < Size()) segments.PushBack(Substr(start));
-            return segments;
+            return std::move(segments);
         }
         [[nodiscard]] constexpr BasicStringView
         Substr(SizeType pos = 0, SizeType count = NPos) const PM_NOEXCEPT
@@ -320,7 +329,7 @@ namespace Prism
             while (len >= str.m_Size)
             {
                 begin = Traits::Find(begin, len - str.m_Size + 1, first);
-                if (*begin == '\0') return NPos;
+                if (!begin || *begin == '\0') return NPos;
 
                 if (Traits::Compare(begin, str.m_Data, str.m_Size) == 0)
                     return begin - m_Data;
@@ -399,7 +408,7 @@ namespace Prism
         FindFirstOf(const C* str, SizeType pos,
                     SizeType count) const PM_NOEXCEPT
         {
-            return FindFirstOf(BasicString(str, count), pos);
+            return FindFirstOf(BasicStringView(str, count), pos);
         }
         [[nodiscard, gnu::nonnull]] constexpr SizeType
         FindFirstOf(const C* str, SizeType pos = 0) const PM_NOEXCEPT
@@ -466,7 +475,6 @@ namespace Prism
                                                        SizeType        pos
                                                        = NPos) const PM_NOEXCEPT
         {
-
             SizeType len = m_Size;
             if (len)
             {
@@ -481,13 +489,13 @@ namespace Prism
         }
 
         [[nodiscard]] constexpr SizeType
-        FindLastNotOF(C ch, SizeType pos = NPos) const PM_NOEXCEPT
+        FindLastNotOf(C ch, SizeType pos = NPos) const PM_NOEXCEPT
         {
             return FindLastNotOf(BasicStringView(std::addressof(ch), 1), pos);
         }
 
         [[nodiscard]] constexpr SizeType
-        FindLastNotOF(const C* str, SizeType pos,
+        FindLastNotOf(const C* str, SizeType pos,
                       SizeType count) const PM_NOEXCEPT
         {
             return FindLastNotOf(BasicStringView(str, count), pos);
@@ -557,17 +565,40 @@ namespace Prism
 
     namespace Detail
     {
-        template <typename C, typename String = BasicString<C, CharTraits<C>>>
+        template <typename C,
+                  typename StringType = BasicString<C, CharTraits<C>>>
         struct StringHashBase
         {
             [[nodiscard]] constexpr usize
-            operator()(const String& str) const PM_NOEXCEPT
+            operator()(const StringType& str) const PM_NOEXCEPT
             {
+#if PRISM_TARGET_CRYPTIX == 1
+                return phmap::Hash<std::string_view>{}({str.Raw(), str.Size()});
+#else
                 const char* key    = str.Raw();
                 usize       length = str.Size() * sizeof(C);
                 const usize seed   = 0xc70f6907ul;
 
                 return Hash::MurmurHash2(key, length, seed);
+#endif
+            }
+        };
+        template <typename C,
+                  typename StringViewType = BasicStringView<C, CharTraits<C>>>
+        struct StringViewHashBase
+        {
+            [[nodiscard]] constexpr usize
+            operator()(const StringViewType& str) const PM_NOEXCEPT
+            {
+#if PRISM_TARGET_CRYPTIX == 1
+                return phmap::Hash<std::string_view>{}({str.Raw(), str.Size()});
+#else
+                const char* key    = str.Raw();
+                usize       length = str.Size() * sizeof(C);
+                const usize seed   = 0xc70f6907ul;
+
+                return Hash::MurmurHash2(key, length, seed);
+#endif
             }
         };
     }; // namespace Detail
@@ -650,13 +681,13 @@ inline constexpr bool
     = true;
 
 template <>
-struct fmt::formatter<Prism::StringView> : fmt::formatter<std::string_view>
+struct fmt::formatter<Prism::StringView> : fmt::formatter<fmt::string_view>
 {
     template <typename FormatContext>
     auto format(const Prism::StringView& src, FormatContext& ctx) const
     {
-        return fmt::formatter<std::string_view>::format(
-            fmt::format("{}", src.Raw()), ctx);
+        return fmt::formatter<fmt::string_view>::format(
+            fmt::format("{}", fmt::string_view(src.Raw(), src.Size())), ctx);
     }
 };
 

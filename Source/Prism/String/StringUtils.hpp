@@ -83,7 +83,11 @@ namespace Prism
 
         constexpr u64 ToLower(u64 c)
         {
-            return c >= 'A' && c <= 'Z' ? c - 32 : c;
+            return c >= 'A' && c <= 'Z' ? c + 32 : c;
+        }
+        constexpr u64 ToUpper(u64 c)
+        {
+            return c >= 'a' && c <= 'z' ? c - 32 : c;
         }
         constexpr bool IsDigit(u64 c) { return c >= '0' && c <= '9'; }
         constexpr bool IsHexDigit(u64 c)
@@ -95,37 +99,41 @@ namespace Prism
         template <ArithmeticType T>
         constexpr T ToDigit(u64 c)
         {
-            if (IsHexDigit(c)) c = ToLower(c);
-            else if (!IsDigit(c)) return 0;
+            if (IsDigit(c)) return c - '0';
 
-            return c - (IsDigit(c) ? '0' : 'a');
+            c = ToLower(c);
+            return IsHexDigit(c) ? 10 + c - 'a' : 0;
         }
 
         template <ArithmeticType T>
         constexpr T ToNumber(StringView string, usize base = 10)
         {
-            bool isNegative = !string.Empty() && string[0] == '-';
+            if (string.Empty()) return {};
+            bool isNegative = string[0] == '-';
 
             T    number     = 0;
-            for (usize i = isNegative, exponent = string.Size();
-                 i < string.Size(); i++)
+            for (usize i = isNegative; i < string.Size(); ++i)
             {
-                char c = string[i];
-                if (IsHexDigit(c) && base <= 10) break;
+                u8 c     = string[i];
+                T  digit = ToDigit<T>(c);
 
-                number += ToDigit<T>(c) * Math::PowerOf(base, --exponent);
+                if (static_cast<usize>(digit) >= base) break;
+                number = number * base + digit;
             }
 
-            return (isNegative && base == 10) ? number : -number;
+            return isNegative ? -number : number;
         }
-
     }; // namespace StringUtils
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
 namespace StringUtils = Prism::StringUtils;
+
 using Prism::StringUtils::GetDigitCount;
+using Prism::StringUtils::IsHexDigit;
 using Prism::StringUtils::ToDigit;
+using Prism::StringUtils::ToLower;
 using Prism::StringUtils::ToNumber;
 using Prism::StringUtils::ToString;
+using Prism::StringUtils::ToUpper;
 #endif

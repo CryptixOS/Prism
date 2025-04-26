@@ -59,7 +59,7 @@ namespace Prism
                         Assign(dest[count], src[count]);
                     } while (count > 0);
                 }
-                else copy(dest, src, count);
+                else Copy(dest, src, count);
                 return dest;
             }
 

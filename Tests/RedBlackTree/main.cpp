@@ -11,7 +11,7 @@
 
 using namespace Prism;
 
-void TestInsertAndFind()
+void RBTree_TestInsertFind()
 {
     RedBlackTree<int, std::string> tree;
 
@@ -34,7 +34,7 @@ void TestInsertAndFind()
     assert(tree.Contains(5) && tree.At(5) == "cherry");
 }
 
-void TestErase()
+void RBTree_TestErase()
 {
     RedBlackTree<int, std::string> tree;
     std::string                    v = "value";
@@ -52,7 +52,7 @@ void TestErase()
     assert(!tree.Erase(42)); // erase nonexistent
 }
 
-void TestClear()
+void RBTree_TestClear()
 {
     RedBlackTree<int, std::string> tree;
     std::string                    val = "v";
@@ -66,7 +66,7 @@ void TestClear()
     assert(tree.GetSize() == 0);
 }
 
-void TestIterator()
+void RBTree_TestIterator()
 {
     RedBlackTree<int, std::string> tree;
     std::string                    v1 = "a", v2 = "b", v3 = "c";
@@ -83,7 +83,7 @@ void TestIterator()
     assert(count == 3);
 }
 
-void TestInsertOverwrite()
+void RBTree_TestInsertOverwrite()
 {
     RedBlackTree<int, std::string> tree;
     std::string                    val1 = "first";
@@ -96,7 +96,7 @@ void TestInsertOverwrite()
     assert(tree.Contains(10) && tree.At(10) == "second");
 }
 
-void TestDeleteOnlyRoot()
+void RBTree_TestDeleteOnlyRoot()
 {
     RedBlackTree<int, std::string> tree;
     std::string                    val = "only";
@@ -107,7 +107,7 @@ void TestDeleteOnlyRoot()
     assert(tree.IsEmpty());
 }
 
-void TestSequentialInsert()
+void RBTree_TestSequentialInsert()
 {
     RedBlackTree<int, std::string> tree;
     std::string                    dummy = "x";
@@ -118,7 +118,7 @@ void TestSequentialInsert()
     for (int i = 1; i <= 1000; ++i) assert(tree.Contains(i));
 }
 
-void TestInsertDeleteConsistency()
+void RBTree_TestInsertDeleteConsistency()
 {
     RedBlackTree<int, std::string> tree;
     std::string                    val = "v";
@@ -135,7 +135,7 @@ void TestInsertDeleteConsistency()
     }
 }
 
-void TestNullptrBehavior()
+void RBTree_TestNullptrBehavior()
 {
     RedBlackTree<int, std::string> tree;
     std::string                    val = "value";
@@ -144,22 +144,22 @@ void TestNullptrBehavior()
     assert(!tree.Contains(2));
 }
 
-void RunAllTests()
+void RBTree_RunAllTests()
 {
-    TestInsertAndFind();
-    TestErase();
-    TestClear();
-    TestIterator();
-    TestInsertOverwrite();
-    TestDeleteOnlyRoot();
-    TestSequentialInsert();
-    TestInsertDeleteConsistency();
-    TestNullptrBehavior();
+    RBTree_TestInsertFind();
+    RBTree_TestErase();
+    RBTree_TestClear();
+    RBTree_TestIterator();
+    RBTree_TestInsertOverwrite();
+    RBTree_TestDeleteOnlyRoot();
+    RBTree_TestSequentialInsert();
+    RBTree_TestInsertDeleteConsistency();
+    RBTree_TestNullptrBehavior();
     printf("All tests passed.\n");
 }
 
 int main()
 {
-    RunAllTests();
+    RBTree_RunAllTests();
     return 0;
 }

@@ -13,7 +13,7 @@
 using namespace Prism;
 using namespace StringUtils;
 
-void TestGetDigitCount()
+void StringUtils_TestGetDigitCount()
 {
     for (usize i = 1, value = 1; i < 20; i++)
     {
@@ -23,7 +23,7 @@ void TestGetDigitCount()
         value *= 10;
     }
 }
-void Test_ToString_ToNumber()
+void StringUtils_Test_ToString_ToNumber()
 {
     // Signed decimal
     assert(ToNumber<i64>("0"_sv) == 0);
@@ -83,7 +83,7 @@ void Test_ToString_ToNumber()
 }
 int main()
 {
-    TestGetDigitCount();
+    StringUtils_TestGetDigitCount();
 
     return 0;
 }

@@ -11,7 +11,7 @@
 
 using namespace Prism;
 
-void test_doubly_linked_list()
+void DoublyLinkedList_TestPushPop()
 {
     DoublyLinkedList<int> list;
     assert(list.Empty());
@@ -30,4 +30,9 @@ void test_doubly_linked_list()
     assert(list.Empty());
 }
 
-int main() { test_doubly_linked_list(); };
+int main()
+{
+    DoublyLinkedList_TestPushPop();
+
+    return EXIT_SUCCESS;
+};

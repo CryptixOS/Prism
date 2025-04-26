@@ -47,15 +47,8 @@ namespace Prism
         }
         template <typename InputIt>
         constexpr BasicString(InputIt first, InputIt last)
+            : BasicString(first, std::distance(first, last))
         {
-            SizeType newSize = 0;
-            for (auto it = first; it != last; it++) ++newSize;
-            EnsureCapacity(newSize);
-            SetSize(newSize);
-
-            usize i = 0;
-            for (auto it = first; it != last; it++, i++) Raw()[i] = *it;
-            Raw()[Size()] = 0;
         }
         constexpr BasicString(const ValueType* s, SizeType count = NPos)
         {
@@ -65,55 +58,21 @@ namespace Prism
                 return;
             }
 
-            if (count == NPos) count = TraitsType::Length(s);
-            EnsureCapacity(count);
-            SetSize(count);
-            TraitsType::Copy(Raw(), s, count);
-
-            Raw()[Size()] = 0;
+            if (count == NPos) count = Traits::Length(s);
+            ResizeIfNeededOverwrite(s, count);
         }
         constexpr BasicString(BasicStringView<C, Traits> str)
+            : BasicString(str.Empty() ? nullptr : str.Raw(), str.Size())
         {
-            EnsureCapacity(str.Size());
-            SetSize(str.Size());
-            TraitsType::Copy(Raw(), str.Raw(), Size());
-
-            Raw()[Size()] = 0;
         }
         constexpr BasicString(const BasicString& other)
+            : BasicString(BasicStringView{other.Raw(), other.Size()})
         {
-            usize newSize = other.Size();
-            EnsureCapacity(newSize);
-
-            SetSize(newSize);
-            TraitsType::Copy(Raw(), other.Raw(), newSize);
-            Raw()[Size()] = 0;
         }
         constexpr BasicString(BasicString&& other)
         {
-            if (IsLong()) delete[] Raw();
-
-            if (other.IsLong())
-            {
-                m_Storage.Short.IsLong = true;
-                Long().Data            = std::move(other.Raw());
-                Long().Size            = std::move(other.m_Storage.Long.Size);
-                Long().Capacity        = other.m_Storage.Long.Capacity;
-
-                other.m_Storage.Short.IsLong = false;
-                other.Long().Data            = nullptr;
-                other.Long().Size            = 0;
-                other.Long().Capacity        = 0;
-                TraitsType::Copy(Raw(), other.Raw(), Size() + 1);
-                return;
-            }
-
-            ShortInit();
-            SetSize(other.Size());
-
-            other.m_Storage.Short.Size = 0;
-            TraitsType::Copy(Raw(), other.Raw(), Size() + 1);
-            TraitsType::Assign(other.Raw(), 0, Size());
+            m_Storage       = std::move(other.m_Storage);
+            other.m_Storage = {};
         }
 
         constexpr ~BasicString()
@@ -123,30 +82,53 @@ namespace Prism
             delete[] m_Storage.Long.Data;
         }
 
+        constexpr operator BasicStringView<C, Traits>()
+        {
+            return {Raw(), Size()};
+        }
+
         constexpr BasicString& operator=(const BasicString& other)
         {
-            if (IsLong()) delete[] m_Storage.Long.Data;
+            if (other.Empty()) return *this;
 
-            usize newSize = other.Size();
-            EnsureCapacity(newSize);
-
-            SetSize(newSize);
-            TraitsType::Copy(Raw(), other.Raw(), newSize);
-            Raw()[Size()] = 0;
-
+            if (other == *this) return *this;
+            ResizeIfNeededOverwrite(other.Raw(), other.Size());
             return *this;
         }
-        constexpr BasicString<C, Traits>&
-        operator=(BasicStringView<C, Traits> str)
+        constexpr BasicString& operator=(BasicString&& str)
         {
-            EnsureCapacity(str.Size());
-            SetSize(str.Size());
+            if (IsLong()) delete[] Long().Data;
+            m_Storage     = std::move(str.m_Storage);
+            str.m_Storage = {};
 
-            TraitsType::Copy(Raw(), str.Raw(), Size());
+            return *this;
+        }
+        constexpr BasicString& operator=(const C* str)
+        {
+            if (!str || str == Raw()) return *this;
+            ResizeIfNeededOverwrite(str, Traits::Length(str));
+
+            return *this;
+        }
+
+        template <typename View>
+            requires(std::is_convertible_v<const View&, ViewType>
+                     && !std::is_convertible_v<const View&, const C*>)
+        constexpr BasicString& operator=(const View& str)
+        {
+            ResizeIfNeededOverwrite(str.Raw(), str.Size());
+            return *this;
+        }
+        constexpr BasicString& operator=(ValueType ch)
+        {
+            ShortInit();
+            Raw()[0] = ch;
+            SetSize(1);
             Raw()[Size()] = 0;
 
             return *this;
         }
+        constexpr BasicString& operator=(std::nullptr_t) = delete;
 
         C& At(usize pos)
         {
@@ -158,7 +140,6 @@ namespace Prism
             assert(pos < Size());
             return Raw()[pos];
         }
-
         C& operator[](usize pos)
         {
             assert(pos < Size());
@@ -172,7 +153,6 @@ namespace Prism
 
         constexpr C&       Front() { return Raw()[0]; }
         constexpr const C& Front() const { return Raw()[0]; }
-
         constexpr C&       Back() { return Raw()[Size() - 1]; }
         constexpr const C& Back() const { return Raw()[Size() - 1]; }
 
@@ -275,7 +255,7 @@ namespace Prism
         }
         constexpr usize Capacity() const PM_NOEXCEPT
         {
-            return IsLong() ? m_Storage.Long.Capacity : MIN_CAPACITY;
+            return IsLong() ? m_Storage.Long.Capacity : MIN_CAPACITY - 1;
         }
         constexpr void ShrinkToFit()
         {
@@ -411,12 +391,12 @@ namespace Prism
         constexpr SizeType FindFirstNotOf(const ValueType* str, SizeType pos,
                                           SizeType count) const PM_NOEXCEPT
         {
-            return View().FindLastNotOf(str, pos, count);
+            return View().FindFirstNotOf(str, pos, count);
         }
         constexpr SizeType FindFirstNotOf(const ValueType* str,
                                           SizeType pos = 0) const PM_NOEXCEPT
         {
-            return View().FindLastNotOf(str, pos);
+            return View().FindFirstNotOf(str, pos);
         }
         constexpr SizeType FindFirstNotOf(ValueType ch,
                                           SizeType  pos = 0) const PM_NOEXCEPT
@@ -587,34 +567,57 @@ namespace Prism
         operator+=(BasicStringView<C, Traits> rhs)
         {
             auto pos = Size();
-            EnsureCapacity(Size() + rhs.Size());
+            if (rhs == *this)
+            {
+                usize size    = Size();
+                usize newSize = 2 * size;
+                EnsureCapacity(newSize);
+                Traits::Move(Raw() + pos, Raw(), size);
+                SetSize(newSize);
+                Raw()[Size()] = 0;
+                return *this;
+            }
 
-            TraitsType::Copy(Raw() + pos, rhs.Raw(), rhs.Size());
-            SetSize(pos + rhs.Size());
+            usize newSize = Size() + rhs.Size();
+            EnsureCapacity(newSize);
+            SetSize(newSize);
             Raw()[Size()] = 0;
 
+            TraitsType::Copy(Raw() + pos, rhs.Raw(), rhs.Size());
             return *this;
         }
         inline constexpr BasicString& operator+=(C ch)
         {
-            auto pos = Size();
+            auto  pos     = Size();
+            usize newSize = Size() + 1;
 
-            EnsureCapacity(pos + 1);
+            EnsureCapacity(newSize);
             Raw()[pos] = ch;
 
-            SetSize(pos + 1);
-            Raw()[Size()] = 0;
+            SetSize(newSize);
+            Raw()[newSize] = 0;
 
             return *this;
         }
 
-        template <typename C2, typename Traits2>
-        friend BasicString<C2, Traits2>
-        operator+(BasicStringView<C2, Traits2> lhs,
-                  BasicStringView<C2, Traits2> rhs);
-        template <typename C2, typename Traits2>
-        friend BasicString<C2, Traits2>
-        operator+(BasicStringView<C2, Traits2> lhs, const C* rhs);
+        friend constexpr BasicString operator+(const BasicString& lhs,
+                                               const BasicString& rhs)
+        {
+            BasicString string = "";
+            string.Reserve(lhs.Size() + rhs.Size());
+            string += lhs;
+            string += rhs;
+
+            return string;
+        }
+        friend constexpr BasicString operator+(const BasicString& lhs,
+                                               const C*           rhs)
+        {
+            BasicString string = lhs;
+            string += rhs;
+
+            return string;
+        }
 
       private:
         struct LongData
@@ -700,7 +703,7 @@ namespace Prism
         constexpr void Reallocate(usize newCapacity, bool copyOld)
         {
             newCapacity = Math::AlignUp(newCapacity, sizeof(ValueType*));
-            if (newCapacity == m_Storage.Long.Capacity) return;
+            if (newCapacity == Capacity()) return;
 
             usize newSize = Size();
             if (newCapacity < Size()) newSize = newCapacity;
@@ -722,6 +725,14 @@ namespace Prism
             if (Capacity() >= newCapacity) return;
             Reallocate(newCapacity, true);
         }
+        constexpr void ResizeIfNeededOverwrite(const C* string, usize length)
+        {
+            EnsureCapacity(length);
+            SetSize(length);
+
+            Traits::Copy(Raw(), string, length);
+            Raw()[Size()] = 0;
+        }
 
         constexpr void Assign(SizeType count, ValueType ch)
         {
@@ -734,14 +745,6 @@ namespace Prism
     using U16String = BasicString<char16_t>;
     using U32String = BasicString<char32_t>;
     using WString   = BasicString<wchar_t>;
-
-    /*template <typename C, typename Traits>
-    [[nodiscard]] constexpr bool
-    operator==(BasicString<C, Traits>                       lhs,
-               std::type_identity_t<BasicString<C, Traits>> rhs) PM_NOEXCEPT
-    {
-        return lhs.Size() == rhs.Size() && lhs.Compare(rhs) == 0;
-    }*/
 
     template <typename C, typename Traits>
     constexpr bool operator==(const BasicString<C, Traits>& lhs,
@@ -770,42 +773,6 @@ namespace Prism
         return lhs.View().Compare(rhs) <=> 0;
     }
 
-    /*
-        template <typename C, typename Traits>
-        [[nodiscard]] constexpr auto
-        operator<=>(const BasicString<C, Traits>&                lhs,
-                    std::type_identity_t<BasicString<C, Traits>> rhs)
-       PM_NOEXCEPT
-        {
-            return lhs.Compare(rhs);
-        }
-        template <typename C, typename Traits>
-        [[nodiscard]] constexpr auto
-        operator<=>(const BasicString<C, Traits>& lhs,
-                    BasicStringView<C, Traits>    rhs) PM_NOEXCEPT
-        {
-            return lhs.Compare(rhs);
-        }
-    */
-    template <typename C, typename Traits>
-    inline BasicString<C, Traits> operator+(BasicStringView<C, Traits> lhs,
-                                            BasicStringView<C, Traits> rhs)
-    {
-        BasicString<C, Traits> string = lhs;
-        string += rhs;
-
-        return std::move(string);
-    }
-    template <typename C, typename Traits>
-    BasicString<C, Traits> operator+(BasicStringView<C, Traits> lhs,
-                                     const C*                   rhs)
-    {
-        BasicString string = lhs;
-        string += rhs;
-
-        return std::move(string);
-    }
-
     template <typename C, typename Traits>
     inline constexpr void
     Swap(BasicString<C, Traits>& lhs,
@@ -813,7 +780,6 @@ namespace Prism
     {
         lhs.Swap(rhs);
     }
-
     template <typename C, typename Traits>
     inline constexpr std::strong_ordering
     operator<=>(const BasicString<C, Traits>& lhs,
@@ -821,12 +787,20 @@ namespace Prism
     {
         return lhs.Compare(rhs) <=> 0;
     }
-
     template <typename C, typename Traits>
     inline constexpr std::strong_ordering
     operator<=>(const BasicString<C, Traits>& lhs, const C* rhs)
     {
         return lhs.Compare(rhs) <=> 0;
+    }
+    template <typename C, typename Traits = CharTraits<C>>
+    constexpr BasicString<C, Traits>
+    operator+(const BasicStringView<C, Traits> lhs, const C* rhs)
+    {
+        BasicString string = lhs;
+        string += rhs;
+
+        return string;
     }
 
     namespace Literals
@@ -886,13 +860,13 @@ struct std::hash<Prism::BasicString<wchar_t, Prism::CharTraits<wchar_t>>>
 };
 
 template <>
-struct fmt::formatter<Prism::String> : fmt::formatter<std::string_view>
+struct fmt::formatter<Prism::String> : fmt::formatter<fmt::string_view>
 {
     template <typename FormatContext>
     auto format(const Prism::String& src, FormatContext& ctx) const
     {
-        return fmt::formatter<std::string_view>::format(
-            fmt::format("{}", src.Raw()), ctx);
+        return fmt::formatter<fmt::string_view>::format(
+            fmt::format("{}", fmt::string_view(src.Raw(), src.Size())), ctx);
     }
 };
 
