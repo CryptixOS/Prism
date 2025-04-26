@@ -92,13 +92,14 @@ namespace Prism
 }; // namespace Prism
 
 template <typename T, Prism::Endian E>
-struct fmt::formatter<Prism::EndianStorage<T, E>> : fmt::formatter<std::string>
+struct fmt::formatter<Prism::EndianStorage<T, E>>
+    : fmt::formatter<fmt::string_view>
 {
     template <typename FormatContext>
     auto format(const Prism::EndianStorage<T, E>& value,
                 FormatContext&                    ctx) const
     {
-        return fmt::formatter<std::string>::format(
+        return fmt::formatter<fmt::string_view>::format(
             fmt::format("{}", value.Load()), ctx);
     }
 };

@@ -14,6 +14,12 @@
 
 namespace Prism
 {
+    template <typename C>
+    struct CharTraits;
+    template <typename C, typename Traits>
+    class BasicString;
+    using String = BasicString<char, CharTraits<char>>;
+
     struct StackFrame
     {
         StackFrame* PreviousFrame      = nullptr;
@@ -29,7 +35,7 @@ namespace Prism
             char*                          Name;
             Pointer                        Address;
 
-            const std::string              Demangle() const;
+            const String                   Demangle() const;
 
             constexpr std::strong_ordering operator<=>(const Symbol& rhs) const
             {
@@ -65,4 +71,4 @@ namespace Prism
         PhysAddr            m_LowestSymbolAddress  = 0x0000'0000;
         PhysAddr            m_HighestSymbolAddress = 0xffff'ffff;
     }; // namespace Stacktrace
-};     // namespace Prism
+}; // namespace Prism

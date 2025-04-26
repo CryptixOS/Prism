@@ -251,12 +251,12 @@ using Prism::VirtAddr;
 #endif
 
 template <>
-struct fmt::formatter<Prism::Pointer> : fmt::formatter<std::string>
+struct fmt::formatter<Prism::Pointer> : fmt::formatter<fmt::string_view>
 {
     template <typename FormatContext>
     auto format(const Prism::Pointer addr, FormatContext& ctx) const
     {
-        return fmt::formatter<std::string>::format(
+        return fmt::formatter<fmt::string_view>::format(
             fmt::format("{}", addr.Raw()), ctx);
     }
 };

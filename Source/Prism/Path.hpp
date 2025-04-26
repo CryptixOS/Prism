@@ -13,41 +13,37 @@ namespace Prism
     class Path
     {
       public:
-        constexpr Path(StringView path)
-            : m_Path(path.Raw())
+        constexpr Path(const char path[])
+            : m_Path(path)
         {
         }
         constexpr Path(const String& path)
             : m_Path(path.Raw())
         {
         }
-        constexpr Path(const std::string& path)
-            : m_Path(path)
-        {
-        }
-        constexpr Path(const char path[])
-            : m_Path(path)
+        constexpr Path(StringView path)
+            : m_Path(path.Raw())
         {
         }
 
-        constexpr          operator StringView() const { return m_Path.data(); }
-        constexpr          operator PathView() const { return m_Path.data(); }
+        constexpr          operator StringView() const { return m_Path.View(); }
+        constexpr          operator PathView() const { return m_Path.View(); }
 
-        constexpr PathView View() const { return m_Path.data(); }
+        constexpr PathView View() const { return m_Path.View(); }
 
-        constexpr bool     Empty() const { return m_Path.size() == 0; }
+        constexpr bool     Empty() const { return m_Path.Empty(); }
         constexpr bool Absolute() const { return !Empty() && m_Path[0] == '/'; }
-        Vector<std::string> SplitPath();
+        Vector<String> SplitPath();
 
-        constexpr int       Compare(const Path& str) const noexcept
+        constexpr int  Compare(const Path& str) const noexcept
         {
-            return m_Path.compare(str.m_Path);
+            return m_Path.Compare(str.m_Path);
         }
 
         inline bool ValidateLength() const { return View().ValidateLength(); }
 
       private:
-        std::string m_Path;
+        String m_Path;
     };
 
     constexpr bool operator==(const Path& lhs, const Path& rhs) noexcept
@@ -76,12 +72,14 @@ using Prism::Path;
 #endif
 
 template <>
-struct fmt::formatter<Prism::Path> : fmt::formatter<std::string_view>
+struct fmt::formatter<Prism::Path> : fmt::formatter<fmt::string_view>
 {
     template <typename FormatContext>
     auto format(const Prism::Path& src, FormatContext& ctx) const
     {
-        return fmt::formatter<std::string_view>::format(
-            fmt::format("{}", src.View().Raw()), ctx);
+        return fmt::formatter<fmt::string_view>::format(
+            fmt::format("{}",
+                        fmt::string_view{src.View().Raw(), src.View().Size()}),
+            ctx);
     }
 };

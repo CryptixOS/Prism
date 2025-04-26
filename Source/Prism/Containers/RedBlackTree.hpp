@@ -156,13 +156,13 @@ namespace Prism
         bool            Contains(const K& key) const;
 
         inline void     PrintTree();
-        void            PrintNode(const std::string& prefix, const Node* node,
-                                  bool isLeft = false);
+        void         PrintNode(const fmt::string_view& prefix, const Node* node,
+                               bool isLeft = false);
 
-        static Node*    Find(Node* node, K key);
+        static Node* Find(Node* node, K key);
 
-        static Node*    GetSuccessor(Node* node);
-        static Node*    GetPredecessor(Node* node);
+        static Node* GetSuccessor(Node* node);
+        static Node* GetPredecessor(Node* node);
 
       private:
         Node* m_Root      = nullptr;

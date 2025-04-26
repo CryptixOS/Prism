@@ -242,7 +242,7 @@ namespace Prism
         PrismMessage("----------------\n");
     }
     template <typename K, typename V>
-    void RedBlackTree<K, V>::PrintNode(const std::string& prefix,
+    void RedBlackTree<K, V>::PrintNode(const fmt::string_view& prefix,
                                        const Node* node, bool isLeft)
     {
         if (node)
@@ -257,10 +257,10 @@ namespace Prism
                          node->Color == Color::eBlack ? "B" : "R");
 
             // enter the next tree level - left and right branch
-            PrintNode(prefix + (isLeft ? "│   " : "    "), node->LeftChild,
-                      true);
-            PrintNode(prefix + (isLeft ? "│   " : "    "), node->RightChild,
-                      false);
+            PrintNode(fmt::format("{}{}", prefix, isLeft ? "│   " : "    "),
+                      node->LeftChild, true);
+            PrintNode(fmt::format("{}{}", prefix, isLeft ? "│   " : "    "),
+                      node->RightChild, false);
         }
     }
 

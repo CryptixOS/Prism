@@ -8,5 +8,5 @@
 
 namespace Prism
 {
-    Vector<std::string> Path::SplitPath() { return View().SplitPath(); }
+    Vector<String> Path::SplitPath() { return View().SplitPath(); }
 }; // namespace Prism

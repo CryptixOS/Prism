@@ -10,8 +10,9 @@
 #include <Prism/Core/Config.hpp>
 #include <Prism/Core/Types.hpp>
 
+#include <Prism/String/StringView.hpp>
+
 #include <optional>
-#include <string_view>
 
 namespace Prism
 {
@@ -35,8 +36,8 @@ namespace Prism
 
             other.m_Line.reset();
             other.m_Column.reset();
-            other.m_FileName.remove_prefix(other.m_FileName.size());
-            other.m_FunctionName.remove_prefix(other.m_FunctionName.size());
+            other.m_FileName.RemovePrefix(other.m_FileName.Size());
+            other.m_FunctionName.RemovePrefix(other.m_FunctionName.Size());
         }
 
         static consteval SourceLocation
@@ -52,24 +53,20 @@ namespace Prism
         {
             return m_Column.value_or(0);
         }
-        constexpr std::string_view FileName() const PM_NOEXCEPT
+        constexpr StringView FileName() const PM_NOEXCEPT { return m_FileName; }
+        constexpr StringView FunctionName() const PM_NOEXCEPT
         {
-            return m_FileName;
-        }
-        constexpr std::string_view FunctionName() const PM_NOEXCEPT
-        {
-            return m_FunctionName.data();
+            return m_FunctionName;
         }
 
       private:
         std::optional<u32> m_Line         = 0;
         std::optional<u32> m_Column       = 0;
-        std::string_view   m_FileName     = "";
-        std::string_view   m_FunctionName = "";
+        StringView         m_FileName     = "";
+        StringView         m_FunctionName = "";
 
-        constexpr SourceLocation(u32 line, u32 column,
-                                 std::string_view fileName,
-                                 std::string_view functionName)
+        constexpr SourceLocation(u32 line, u32 column, StringView fileName,
+                                 StringView functionName)
             : m_Line(line)
             , m_Column(column)
             , m_FileName(fileName)
@@ -80,14 +77,19 @@ namespace Prism
 }; // namespace Prism
 
 template <>
-struct fmt::formatter<Prism::SourceLocation> : fmt::formatter<std::string>
+struct fmt::formatter<Prism::SourceLocation> : fmt::formatter<fmt::string_view>
 {
     template <typename FormatContext>
     auto format(const Prism::SourceLocation& src, FormatContext& ctx) const
     {
-        return fmt::formatter<std::string>::format(
-            fmt::format("{}[{}:{}]::{}", src.FileName(), src.Line(),
-                        src.Column(), src.FunctionName()),
+        fmt::string_view filename
+            = {src.FileName().Raw(), src.FileName().Size()};
+        fmt::string_view functionName
+            = {src.FunctionName().Raw(), src.FunctionName().Size()};
+
+        return fmt::formatter<fmt::string_view>::format(
+            fmt::format("{}[{}:{}]::{}", filename, src.Line(), src.Column(),
+                        functionName),
             ctx);
     }
 };

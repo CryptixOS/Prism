@@ -36,7 +36,7 @@ namespace Prism
         constexpr bool Empty() const { return m_Path.Empty(); }
 
         inline bool    Absolute() const { return !Empty() && m_Path[0] == '/'; }
-        Vector<std::string>   SplitPath();
+        inline Vector<String> SplitPath() const { return m_Path.Split('/'); }
 
         constexpr const char& operator[](usize i) const { return m_Path[i]; }
 
@@ -70,12 +70,12 @@ using Prism::PathView;
 #endif
 
 template <>
-struct fmt::formatter<Prism::PathView> : fmt::formatter<std::string_view>
+struct fmt::formatter<Prism::PathView> : fmt::formatter<fmt::string_view>
 {
     template <typename FormatContext>
     auto format(const Prism::PathView& src, FormatContext& ctx) const
     {
-        return fmt::formatter<std::string_view>::format(
-            fmt::format("{}", src.Raw()), ctx);
+        return fmt::formatter<fmt::string_view>::format(
+            fmt::format("{}", fmt::string_view{src.Raw(), src.Size()}), ctx);
     }
 };

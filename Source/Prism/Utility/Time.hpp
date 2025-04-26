@@ -119,12 +119,12 @@ namespace Prism::Time
 }; // namespace Prism::Time
 
 template <>
-struct fmt::formatter<Prism::Time::DateTime> : fmt::formatter<std::string>
+struct fmt::formatter<Prism::Time::DateTime> : fmt::formatter<fmt::string_view>
 {
     template <typename FormatContext>
     auto format(const Prism::Time::DateTime& date, FormatContext& ctx) const
     {
-        return fmt::formatter<std::string>::format(
+        return fmt::formatter<fmt::string_view>::format(
             fmt::format("{:02}:{:02}:{:04} {:02}:{:02}:{:02}", date.Day,
                         date.Month, date.Year, date.Hour, date.Minute,
                         date.Second),

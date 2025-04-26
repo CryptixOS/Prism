@@ -5,17 +5,17 @@
  * SPDX-License-Identifier: GPL-3
  */
 #include <Prism/Debug/Stacktrace.hpp>
+#include <Prism/String/String.hpp>
 #include <Prism/Utility/Math.hpp>
 
 #include <demangler/Demangle.h>
-#include <vector>
 
 namespace Prism
 {
 
-    const std::string Stacktrace::Symbol::Demangle() const
+    const String Stacktrace::Symbol::Demangle() const
     {
-        return llvm::demangle(Name);
+        return llvm::demangle(Name).data();
     }
 
     Stacktrace::Stacktrace(Pointer frameAddress, usize skipFrames,
