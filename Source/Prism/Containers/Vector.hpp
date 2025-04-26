@@ -265,6 +265,28 @@ namespace Prism
             m_Size = count;
         }
 
+        [[nodiscard]] friend constexpr bool operator==(const Vector<T>& lhs,
+                                                       const Vector<T>& rhs)
+        {
+            if (lhs.Size() != rhs.Size()) return false;
+
+            for (usize i = 0; i < lhs.Size(); i++)
+                if (lhs[i] != rhs[i]) return false;
+
+            return true;
+        }
+        [[nodiscard]] friend constexpr bool operator!=(const Vector<T>& lhs,
+                                                       const Vector<T>& rhs)
+        {
+            return !(operator==(lhs, rhs));
+        }
+
+        [[nodiscard]] friend constexpr auto operator<=>(const Vector<T>& lhs,
+                                                        const Vector<T>& rhs)
+        {
+            return lhs.m_Data <=> rhs.m_Data;
+        }
+
       private:
         PointerType m_Data     = nullptr;
         SizeType    m_Size     = 0;
