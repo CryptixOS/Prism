@@ -9,6 +9,7 @@ extend-ignore-identifiers-re = [
 [files]
 extend-exclude = [
     "Source/Prism/elf.h",
+    "Tests/*",
 ]
 
 [default.extend-identifiers]
