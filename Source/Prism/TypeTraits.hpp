@@ -60,59 +60,14 @@ namespace Prism
 
     template <bool Boolean>
     using BooleanConstant = IntegralConstant<bool, Boolean>;
+
+    template <typename T>
+    struct IsVoid;
+    template <typename T>
+    constexpr bool IsVoidV = IsVoid<T>::Value;
+
     template <typename T>
     inline constexpr bool IsEnum = __is_enum(T);
-
-    template <typename T>
-    struct RemoveConst
-    {
-        using Type = T;
-    };
-    template <typename T>
-    struct RemoveConst<const T>
-    {
-        using Type = T;
-    };
-    template <typename T>
-    struct RemoveVolatile
-    {
-        using Type = T;
-    };
-    template <typename T>
-    struct RemoveVolatile<T volatile>
-    {
-        using Type = T;
-    };
-    template <typename T>
-    using RemoveVolatileType = typename RemoveVolatile<T>::Type;
-
-    template <typename T>
-    struct RemoveCv
-    {
-        using Type = T;
-    };
-    template <typename T>
-    struct RemoveCv<const T>
-    {
-        using Type = T;
-    };
-    template <typename T>
-    struct RemoveCv<volatile T>
-    {
-        using Type = T;
-    };
-    template <typename T>
-    struct RemoveCv<const volatile T>
-    {
-        using Type = T;
-    };
-
-    template <typename T>
-    using RemoveConstType = typename RemoveConst<T>::Type;
-    template <typename T>
-    using RemoveVolatileType = typename RemoveVolatile<T>::Type;
-    template <typename T>
-    using RemoveCvType = typename RemoveCv<T>::Type;
 
     template <typename T, typename U>
     struct IsSame : FalseType
@@ -126,22 +81,17 @@ namespace Prism
     constexpr bool IsSameV = IsSame<T, U>::Value;
 
     template <typename T>
+    struct RemoveCv;
+    template <typename T>
+    using RemoveCvType = typename RemoveCv<T>::Type;
+    template <typename T>
     struct IsVoid : IsSame<void, RemoveCvType<T>>
     {
     };
-    template <typename T>
-    constexpr bool IsVoidV = IsVoid<T>::Value;
 
     template <typename T>
     inline constexpr bool IsIntegral
         = Details::IsIntegral<std::make_unsigned<RemoveCvType<T>>>;
-
-    template <bool Condition, typename TrueType, typename FalseType>
-    using Conditional =
-        typename Details::Conditional<Condition, TrueType, FalseType>::Type;
-    template <typename T>
-        requires(IsEnum<T>)
-    using UnderlyingType = __underlying_type(T);
 
     template <typename T, bool>
     struct EnumUnderlying
@@ -150,7 +100,7 @@ namespace Prism
     template <typename T>
     struct EnumUnderlying<T, true>
     {
-        using Type = UnderlyingType<T>;
+        // using Type = UnderlyingType<T>;
     };
     template <typename T>
     struct EnumUnderlying<T, false>
@@ -167,29 +117,6 @@ namespace Prism
     };
     template <typename T>
     using PromoteEnumType = typename PromoteEnum<T>::Type;
-    template <typename T>
-    struct IsPointer : FalseType
-    {
-    };
-    template <typename T>
-    struct IsPointer<T*> : TrueType
-    {
-    };
-    template <typename T>
-    struct IsPointer<T* const> : TrueType
-    {
-    };
-    template <typename T>
-    struct IsPointer<T* volatile> : TrueType
-    {
-    };
-    template <typename T>
-    struct IsPointer<T* const volatile> : TrueType
-    {
-    };
-    template <typename T>
-    constexpr bool IsPointerV = IsPointer<T>::value;
-
     template <typename T, T... Ts>
     struct IntegerSequence
     {
@@ -292,28 +219,536 @@ namespace Prism
     template <typename T>
     struct RemoveCvReference;
 
-    template <typename T>
-    struct Decay
-    {
-        using Type = RemoveCvReference<T>;
-    };
-    template <typename T>
-    struct Decay<T[]>
-    {
-        using Type = T*;
-    };
-    template <typename T, decltype(sizeof(T)) N>
-    struct Decay<T[N]>
-    {
-        using Type = T*;
-    };
-
     template <usize... Indices>
     using IndexSequence = IntegerSequence<usize, Indices...>;
     template <typename T, T N>
     using MakeIntegerSequenceV = decltype(MakeIntegerSequence<T, N>());
     template <usize N>
     using MakeIndexSequenceV = MakeIntegerSequenceV<usize, N>;
+
+    template <typename T>
+    struct IsArray : FalseType
+    {
+    };
+    template <typename T>
+    struct IsArray<T[]> : TrueType
+    {
+    };
+
+    template <typename T, usize N>
+    struct IsArray<T[N]> : TrueType
+    {
+    };
+    template <typename T>
+    constexpr bool IsArrayV = IsArray<T>::Value;
+    namespace Details
+    {
+        template <typename T>
+        IntegralConstant<bool, !std::is_union<T>::value> Test(i32 T::*);
+
+        template <typename>
+        FalseType Test(...);
+    } // namespace Details
+
+    template <typename T>
+    struct IsClass : decltype(Details::Test<T>(nullptr))
+    {
+    };
+
+    template <typename T>
+    struct IsReference;
+    template <typename T>
+    struct IsConst;
+    template <typename T>
+    struct IsFunction : IntegralConstant<bool, !IsConst<const T>::Value
+                                                   && !IsReference<T>::Value>
+    {
+    };
+    template <typename T>
+    constexpr bool IsFunctionV = IsFunction<T>::Value;
+    template <typename T>
+    struct IsPointer : FalseType
+    {
+    };
+    template <typename T>
+    struct IsPointer<T*> : TrueType
+    {
+    };
+    template <typename T>
+    struct IsPointer<T* const> : TrueType
+    {
+    };
+    template <typename T>
+    struct IsPointer<T* volatile> : TrueType
+    {
+    };
+    template <typename T>
+    struct IsPointer<T* const volatile> : TrueType
+    {
+    };
+    template <typename T>
+    constexpr bool IsPointerV = IsPointer<T>::Value;
+    template <typename T>
+    struct IsReference : FalseType
+    {
+    };
+    template <class T>
+    struct IsReference<T&> : TrueType
+    {
+    };
+    template <typename T>
+    struct IsReference<T&&> : TrueType
+    {
+    };
+    template <typename T>
+    constexpr bool IsReferenceV = IsReference<T>::Value;
+    template <typename T>
+    struct IsConst : FalseType
+    {
+    };
+    template <typename T>
+    struct IsConst<const T> : TrueType
+    {
+    };
+    template <typename T>
+    constexpr bool IsConstV = IsConst<T>::Value;
+    template <typename T>
+    struct IsVolatile : FalseType
+    {
+    };
+    template <typename T>
+    struct IsVolatile<volatile T> : TrueType
+    {
+    };
+    template <class T>
+    constexpr bool IsVolatileV = IsVolatile<T>::Value;
+    namespace Details
+    {
+        template <typename B>
+        TrueType TestPointerConversion(const volatile B*);
+        template <typename>
+        FalseType TestPointerConversion(const volatile void*);
+
+        template <typename B, typename D>
+        auto TestIsBaseOf(int)
+            -> decltype(TestPointerConversion<B>(static_cast<D*>(nullptr)));
+        template <typename, typename>
+        auto TestIsBaseOf(...) -> TrueType;
+    } // namespace Details
+    template <typename Base, typename Derived>
+    struct IsBaseOf
+        : IntegralConstant<
+              bool,
+              IsClass<Base>::Value
+                  && IsClass<Derived>::Value&& decltype(Details::TestIsBaseOf<
+                                                        Base, Derived>(
+                      0))::Value>
+    {
+    };
+    template <typename T>
+    struct RemoveCv
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveCv<const T>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveCv<volatile T>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveCv<const volatile T>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveConst
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveConst<const T>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveVolatile
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveVolatile<volatile T>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    using RemoveCvType = typename RemoveCv<T>::Type;
+    template <typename T>
+    using RemoveConstType = typename RemoveConst<T>::Type;
+    template <typename T>
+    using RemoveVolatileType = typename RemoveVolatile<T>::Type;
+    template <typename T>
+    struct AddCv
+    {
+        using Type = const volatile T;
+    };
+    template <typename T>
+    struct AddConst
+    {
+        using Type = const T;
+    };
+    template <typename T>
+    struct AddVolatile
+    {
+        using Type = volatile T;
+    };
+    template <typename T>
+    using AddCvType = typename AddCv<T>::Type;
+    template <typename T>
+    using AddConstType = typename AddConst<T>::Type;
+    template <typename T>
+    using AddVolatileType = typename AddVolatile<T>::Type;
+    template <typename T>
+    struct RemoveReference
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveReference<T&>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveReference<T&&>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    using RemoveReferenceType = typename RemoveReference<T>::Type;
+    template <typename T>
+    struct RemovePointer
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemovePointer<T*>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemovePointer<T* const>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemovePointer<T* volatile>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemovePointer<T* const volatile>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    using RemovePointerType = typename RemovePointer<T>::Type;
+    namespace Details
+    {
+        template <typename T>
+        struct TypeIdentity
+        {
+            using Type = T;
+        };
+
+        template <typename T>
+        auto TryAddPointer(int)
+            -> TypeIdentity<typename RemoveReference<T>::Type*>; // usual
+                                                                 // case
+
+        template <typename T>
+        auto TryAddPointer(...) -> TypeIdentity<T>;
+
+    } // namespace Details
+    template <typename T>
+    struct AddPointer : decltype(Details::TryAddPointer<T>(0))
+    {
+    };
+    template <typename T>
+    using AddPointerType = typename AddPointer<T>::Type;
+    template <typename T>
+    struct RemoveExtent
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveExtent<T[]>
+    {
+        using Type = T;
+    };
+    template <typename T, usize N>
+    struct RemoveExtent<T[N]>
+    {
+        using Type = T;
+    };
+    template <typename T>
+    using RemoveExtentType = typename RemoveExtent<T>::Type;
+    template <typename T>
+    struct Decay
+    {
+      private:
+        using U = typename RemoveReference<T>::Type;
+
+      public:
+        using Type = typename Details::Conditional<
+            IsArray<U>::Value,
+            typename AddPointer<typename RemoveExtent<U>::Type>::Type,
+            typename Details::Conditional<
+                IsFunction<U>::Value, typename AddPointer<U>::Type,
+                typename RemoveCv<U>::Type>::Type>::Type;
+    };
+    template <typename T>
+    using DecayType = typename Decay<T>::Type;
+    template <typename T>
+    struct RemoveCvRef
+    {
+        using Type = RemoveCvType<RemoveReferenceType<T>>;
+    };
+    template <typename T>
+    using RemoveCvRefType = RemoveCvRef<T>::Type;
+    template <bool B, typename T = void>
+    struct EnableIf
+    {
+    };
+    template <typename T>
+    struct EnableIf<true, T>
+    {
+        using Type = T;
+    };
+    template <bool B, typename T = void>
+    using EnableIfType = typename EnableIf<B, T>::Type;
+    template <bool B, typename T, typename F>
+    struct Conditional
+    {
+        using Type = T;
+    };
+    template <typename T, typename F>
+    struct Conditional<false, T, F>
+    {
+        using Type = F;
+    };
+    template <bool B, typename T, typename F>
+    using ConditionalType = typename Conditional<B, T, F>::Type;
+    template <typename T>
+    struct UnderlyingType
+    {
+        using Type = __underlying_type(T);
+    };
+    template <typename T>
+        requires(IsEnum<T>)
+    using UnderlyingTypeT = typename UnderlyingType<T>::Type;
+    template <typename T>
+    class ReferenceWrapper;
+    namespace Details
+    {
+        template <typename T>
+        struct IsReferenceWrapper : FalseType
+        {
+        };
+        template <typename U>
+        struct IsReferenceWrapper<ReferenceWrapper<U>> : TrueType
+        {
+        };
+
+        template <typename T>
+        struct InvokeImpl
+        {
+            template <typename F, typename... Args>
+            static auto Call(F&& f, Args&&... args)
+                -> decltype(std::forward<F>(f)(std::forward<Args>(args)...));
+        };
+
+        template <typename B, typename MT>
+        struct InvokeImpl<MT B::*>
+        {
+            template <typename T, typename Td = typename Decay<T>::Type,
+                      typename
+                      = typename EnableIf<IsBaseOf<B, Td>::Value>::Type>
+            static auto Get(T&& t) -> T&&;
+
+            template <typename T, typename Td = typename Decay<T>::Type,
+                      typename
+                      = typename EnableIf<IsReferenceWrapper<Td>::Value>::Type>
+            static auto Get(T&& t) -> decltype(t.Get());
+
+            template <typename T, typename Td = typename Decay<T>::Type,
+                      typename
+                      = typename EnableIf<!IsBaseOf<B, Td>::Value>::Type,
+                      typename
+                      = typename EnableIf<!IsReferenceWrapper<Td>::Value>::Type>
+            static auto Get(T&& t) -> decltype(*std::forward<T>(t));
+            template <typename T, typename... Args, typename MT1,
+                      typename
+                      = typename EnableIf<IsFunction<MT1>::Value>::Type>
+            static auto Call(MT1 B::* pmf, T&& t, Args&&... args)
+                -> decltype((InvokeImpl::Get(std::forward<T>(t))
+                             .*pmf)(std::forward<Args>(args)...));
+            template <typename T>
+            static auto Call(MT B::* pmd, T&& t)
+                -> decltype(InvokeImpl::Get(std::forward<T>(t)).*pmd);
+        };
+        template <typename F, typename... Args,
+                  typename Fd = typename Decay<F>::Type>
+        auto INVOKE(F&& f, Args&&... args)
+            -> decltype(InvokeImpl<Fd>::Call(std::forward<F>(f),
+                                             std::forward<Args>(args)...));
+        template <typename AlwaysVoid, typename, typename...>
+        struct InvokeResult
+        {
+        };
+        template <typename F, typename... Args>
+        struct InvokeResult<decltype(void(Details::INVOKE(
+                                std::declval<F>(), std::declval<Args>()...))),
+                            F, Args...>
+        {
+            using Type = decltype(Details::INVOKE(std::declval<F>(),
+                                                  std::declval<Args>()...));
+        };
+    } // namespace Details
+
+    template <typename>
+    struct ResultOf;
+    template <typename F, typename... ArgTypes>
+    struct ResultOf<F(ArgTypes...)>
+        : Details::InvokeResult<void, F, ArgTypes...>
+    {
+    };
+
+    template <typename F, typename... ArgTypes>
+    struct InvokeResult : Details::InvokeResult<void, F, ArgTypes...>
+    {
+    };
+    template <typename T>
+    using ResulfOfType = typename ResultOf<T>::Type;
+    template <typename F, typename... ArgTypes>
+    using InvokeResultType = typename InvokeResult<F, ArgTypes...>::Type;
+
+    template <typename...>
+    using VoidType = void;
+    template <typename T>
+    struct TypeIdentity
+    {
+        using Type = T;
+    };
+    template <typename T>
+    using TypeIdentityType = TypeIdentity<T>::Type;
+
+    namespace Details
+    {
+        template <typename T>
+        constexpr T& FUN(T& t) noexcept
+        {
+            return t;
+        }
+        template <typename T>
+        void FUN(T&&) = delete;
+    } // namespace Details
+    template <typename T>
+    class ReferenceWrapper
+    {
+      public:
+        using Type = T;
+
+        template <typename U,
+                  typename
+                  = decltype(Details::FUN<T>(std::declval<U>()),
+                             EnableIfType<!IsSameV<ReferenceWrapper,
+                                                   RemoveCvRefType<U>>>())>
+        constexpr ReferenceWrapper(U&& u) noexcept(
+            noexcept(Details::FUN<T>(std::forward<U>(u))))
+            : m_Pointer(std::addressof(Details::FUN<T>(std::forward<U>(u))))
+        {
+        }
+        ReferenceWrapper(const ReferenceWrapper&) noexcept = default;
+        ReferenceWrapper& operator=(const ReferenceWrapper& x) noexcept
+            = default;
+        constexpr    operator T&() const noexcept { return *m_Pointer; }
+        constexpr T& Get() const noexcept { return *m_Pointer; }
+
+        template <typename... ArgTypes>
+        constexpr InvokeResultType<T&, ArgTypes...>
+        operator()(ArgTypes&&... args) const
+            noexcept(std::is_nothrow_invocable_v<T&, ArgTypes...>)
+        {
+            return std::invoke(Get(), std::forward<ArgTypes>(args)...);
+        }
+
+      private:
+        T* m_Pointer;
+    };
+
+    template <typename T>
+    ReferenceWrapper(T&) -> ReferenceWrapper<T>;
+    template <typename T>
+    struct UnwrapReference
+    {
+        using Type = T;
+    };
+    template <typename U>
+    struct UnwrapReference<ReferenceWrapper<U>>
+    {
+        using Type = U&;
+    };
+    template <typename T>
+    struct UnwrapRefDecay : UnwrapReference<DecayType<T>>
+    {
+    };
+    template <typename T>
+    using UnwrapReferenceType = UnwrapReference<T>::Type;
+    template <typename T>
+    using UnwrapReferenceDecayType = UnwrapRefDecay<T>::Type;
+
+    template <typename... Args>
+    struct Conjunction : TrueType
+    {
+    };
+    template <typename B1>
+    struct Conjunction<B1> : B1
+    {
+    };
+    template <typename B1, typename... Bn>
+    struct Conjunction<B1, Bn...>
+        : ConditionalType<bool(B1::Value), Conjunction<Bn...>, B1>
+    {
+    };
+    template <typename... B>
+    constexpr bool ConjunctionV = Conjunction<B...>::Value;
+
+    template <typename... Args>
+    struct Disjunction : FalseType
+    {
+    };
+    template <typename B1>
+    struct Disjunction<B1> : B1
+    {
+    };
+    template <typename B1, typename... Bn>
+    struct Disjunction<B1, Bn...>
+        : ConditionalType<bool(B1::Value), B1, Disjunction<Bn...>>
+    {
+    };
+    template <typename... B>
+    constexpr bool DisjunctionV = Disjunction<B...>::Value;
+
+    template <typename B>
+    struct Negation : BooleanConstant<!bool(B::Value)>
+    {
+    };
+    template <typename B>
+    constexpr bool NegationV = Negation<B>::Value;
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
