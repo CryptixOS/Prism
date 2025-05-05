@@ -6,46 +6,54 @@
  */
 #pragma once
 
+#include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Types.hpp>
-#include <Prism/String/StringView.hpp>
+#include <Prism/String/CharTraits.hpp>
 
-namespace Prism::Algorithm
+namespace Prism
 {
-    template <typename C, typename Traits = CharTraits<C>>
-    constexpr void ComputeLPSArray(const BasicStringView<C, Traits>& pattern,
-                                   Vector<isize>&                    lpsArray)
+    template <typename C, typename Traits>
+    class BasicStringView;
+
+    namespace Algorithm
     {
-        usize size = pattern.Size();
-        lpsArray.Resize(size);
-        lpsArray[0]      = 0;
-
-        isize patternPos = 0;
-        for (usize i = 1; i < size; i++)
+        template <typename C, typename Traits = CharTraits<C>>
+        constexpr void
+        ComputeLPSArray(const BasicStringView<C, Traits>& pattern,
+                        Vector<isize>&                    lpsArray)
         {
-            while (patternPos > 0 && pattern[patternPos] != pattern[i])
-                patternPos = lpsArray[patternPos - 1];
-            if (pattern[patternPos] == pattern[i]) ++patternPos;
-            lpsArray[i] = patternPos;
-        }
-    }
-    template <typename C, typename Traits = CharTraits<C>>
-    constexpr usize FindStringKMP(const BasicStringView<C, Traits>& string,
-                                  const BasicStringView<C, Traits>& pattern)
-    {
-        Vector<isize> lpsArray;
-        ComputeLPSArray(pattern, lpsArray);
+            usize size = pattern.Size();
+            lpsArray.Resize(size);
+            lpsArray[0]      = 0;
 
-        isize matchedPos = 0;
-        for (usize i = 0; i < string.Size(); i++)
+            isize patternPos = 0;
+            for (usize i = 1; i < size; i++)
+            {
+                while (patternPos > 0 && pattern[patternPos] != pattern[i])
+                    patternPos = lpsArray[patternPos - 1];
+                if (pattern[patternPos] == pattern[i]) ++patternPos;
+                lpsArray[i] = patternPos;
+            }
+        }
+        template <typename C, typename Traits = CharTraits<C>>
+        constexpr usize FindStringKMP(const BasicStringView<C, Traits>& string,
+                                      const BasicStringView<C, Traits>& pattern)
         {
-            while (matchedPos > 0 && pattern[matchedPos] != string[i])
-                matchedPos = lpsArray[matchedPos - 1];
+            Vector<isize> lpsArray;
+            ComputeLPSArray(pattern, lpsArray);
 
-            if (pattern[matchedPos] == string[i]) ++matchedPos;
-            if (matchedPos == static_cast<isize>(pattern.Size()))
-                return i - matchedPos + 1;
+            isize matchedPos = 0;
+            for (usize i = 0; i < string.Size(); i++)
+            {
+                while (matchedPos > 0 && pattern[matchedPos] != string[i])
+                    matchedPos = lpsArray[matchedPos - 1];
+
+                if (pattern[matchedPos] == string[i]) ++matchedPos;
+                if (matchedPos == static_cast<isize>(pattern.Size()))
+                    return i - matchedPos + 1;
+            }
+
+            return -1;
         }
-
-        return -1;
-    }
-}; // namespace Prism::Algorithm
+    }; // namespace Algorithm
+}; // namespace Prism

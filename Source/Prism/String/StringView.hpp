@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Prism/Algorithm/SearchString.hpp>
 #include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
@@ -315,37 +316,24 @@ namespace Prism
         }
 
         [[nodiscard]] constexpr SizeType
-        Find(BasicStringView str, SizeType pos = 0) const PM_NOEXCEPT
+        Find(BasicStringView pattern, SizeType pos = 0) const PM_NOEXCEPT
         {
+            if (pos >= Size() || pattern.Empty()) return NPos;
 
-            if (str.m_Size == 0) return pos <= m_Size ? pos : NPos;
-            if (pos >= m_Size) return NPos;
+            auto  view   = Substr(pos);
+            usize result = Algorithm::FindStringKMP(view, pattern);
 
-            const ValueType  first = str.m_Data[0];
-            ConstPointerType begin = m_Data + pos;
-            ConstPointerType end   = m_Data + m_Size;
-            SizeType         len   = m_Size - pos;
-
-            while (len >= str.m_Size)
-            {
-                begin = Traits::Find(begin, len - str.m_Size + 1, first);
-                if (!begin || *begin == '\0') return NPos;
-
-                if (Traits::Compare(begin, str.m_Data, str.m_Size) == 0)
-                    return begin - m_Data;
-                len = end - ++begin;
-            }
-            return NPos;
+            return result == usize(-1) ? NPos : result + pos;
         }
-        [[nodiscard]] constexpr SizeType Find(const C* str, SizeType pos,
+        [[nodiscard]] constexpr SizeType Find(const C* pattern, SizeType pos,
                                               SizeType count) const PM_NOEXCEPT
         {
-            return Find(BasicStringView(str, count), pos);
+            return Find(BasicStringView(pattern, count), pos);
         }
         [[nodiscard]] constexpr SizeType
-        Find(const C* str, SizeType pos = 0) const PM_NOEXCEPT
+        Find(const C* pattern, SizeType pos = 0) const PM_NOEXCEPT
         {
-            return Find(str, pos, TraitsType::Length(str));
+            return Find(pattern, pos, TraitsType::Length(pattern));
         }
 
         [[nodiscard]] constexpr SizeType
@@ -353,18 +341,15 @@ namespace Prism
         {
             return Find(BasicStringView(std::addressof(ch), 1), pos);
         }
-        //[[nodiscard]]
-        // constexpr SizeType RFind(const BasicString& str,
-        //                         SizeType pos = NPos) const PM_NOEXCEPT;
-        [[nodiscard]] constexpr SizeType RFind(const C* str, SizeType pos,
+        [[nodiscard]] constexpr SizeType RFind(const C* pattern, SizeType pos,
                                                SizeType count) const PM_NOEXCEPT
         {
-            return RFind(BasicStringView(str, count), pos);
+            return RFind(BasicStringView(pattern, count), pos);
         }
         [[nodiscard]] constexpr SizeType
-        RFind(const C* str, SizeType pos = NPos) const PM_NOEXCEPT
+        RFind(const C* pattern, SizeType pos = NPos) const PM_NOEXCEPT
         {
-            return RFind(str, pos, TraitsType::Length(str));
+            return RFind(pattern, pos, TraitsType::Length(pattern));
         }
         [[nodiscard]] constexpr SizeType RFind(C ch, SizeType pos
                                                      = NPos) const PM_NOEXCEPT
@@ -373,15 +358,16 @@ namespace Prism
         }
         template <typename StringViewLike>
         [[nodiscard]] constexpr SizeType
-        RFind(const StringViewLike& str, SizeType pos = 0) const PM_NOEXCEPT
+        RFind(const StringViewLike& pattern, SizeType pos = 0) const PM_NOEXCEPT
         {
-            if (str.Size() > Size()) return NPos;
+            if (pattern.Size() > Size()) return NPos;
 
-            size_t limit = (pos >= Size() ? Size() : pos + 1);
-            size_t start = limit - str.Size();
+            usize limit = (pos >= Size() ? Size() : pos + 1);
+            usize start = limit - pattern.Size();
 
             do {
-                if (Traits::Compare(Raw() + start, str.Raw(), str.Size()) == 0)
+                auto substr = Substr(start);
+                if (Algorithm::FindStringKMP(substr, pattern) == 0)
                     return start;
             } while (start-- > 0);
 
@@ -389,12 +375,12 @@ namespace Prism
         }
 
         [[nodiscard]] constexpr usize
-        FindFirstOf(BasicStringView str, usize pos = 0) const PM_NOEXCEPT
+        FindFirstOf(BasicStringView chars, usize pos = 0) const PM_NOEXCEPT
         {
-            for (; str.m_Size && pos < m_Size; ++pos)
+            for (; chars.m_Size && pos < m_Size; ++pos)
             {
                 ConstPointerType p
-                    = Traits::Find(str.m_Data, str.m_Size, m_Data[pos]);
+                    = Traits::Find(chars.m_Data, chars.m_Size, m_Data[pos]);
                 if (p) return pos;
             }
             return NPos;
@@ -405,25 +391,25 @@ namespace Prism
             return Find(ch, pos);
         }
         [[nodiscard]] constexpr SizeType
-        FindFirstOf(const C* str, SizeType pos,
+        FindFirstOf(const C* chars, SizeType pos,
                     SizeType count) const PM_NOEXCEPT
         {
-            return FindFirstOf(BasicStringView(str, count), pos);
+            return FindFirstOf(BasicStringView(chars, count), pos);
         }
         [[nodiscard, gnu::nonnull]] constexpr SizeType
-        FindFirstOf(const C* str, SizeType pos = 0) const PM_NOEXCEPT
+        FindFirstOf(const C* chars, SizeType pos = 0) const PM_NOEXCEPT
         {
-            return FindFirstOf(str, pos, Traits::Length(str));
+            return FindFirstOf(chars, pos, Traits::Length(chars));
         }
         [[nodiscard]] constexpr SizeType
-        FindLastOf(BasicStringView str, SizeType pos = NPos) const PM_NOEXCEPT
+        FindLastOf(BasicStringView chars, SizeType pos = NPos) const PM_NOEXCEPT
         {
             SizeType len = Size();
-            if (len && str.m_Size)
+            if (len && chars.m_Size)
             {
                 if (--len > pos) len = pos;
                 do {
-                    if (Traits::Find(str.m_Data, str.m_Size, m_Data[len]))
+                    if (Traits::Find(chars.m_Data, chars.m_Size, m_Data[len]))
                         return len;
                 } while (len-- != 0);
             }
@@ -435,21 +421,23 @@ namespace Prism
             return RFind(c, pos);
         }
         [[nodiscard]] constexpr SizeType
-        FindLastOf(const C* str, SizeType pos, SizeType count) const PM_NOEXCEPT
+        FindLastOf(const C* chars, SizeType pos,
+                   SizeType count) const PM_NOEXCEPT
         {
-            return FindLastOf(BasicStringView(str, count), pos);
+            return FindLastOf(BasicStringView(chars, count), pos);
         }
         [[nodiscard, gnu::nonnull]] constexpr SizeType
-        FindLastOf(const C* str, SizeType pos = NPos) const PM_NOEXCEPT
+        FindLastOf(const C* chars, SizeType pos = NPos) const PM_NOEXCEPT
         {
-            return FindLastOf(str, pos, Traits::Length(str));
+            return FindLastOf(chars, pos, Traits::Length(chars));
         }
 
-        [[nodiscard]] constexpr SizeType
-        FindFirstNotOf(BasicStringView str, SizeType pos = 0) const PM_NOEXCEPT
+        [[nodiscard]] constexpr SizeType FindFirstNotOf(BasicStringView chars,
+                                                        SizeType        pos
+                                                        = 0) const PM_NOEXCEPT
         {
             for (; pos < m_Size; ++pos)
-                if (!Traits::Find(str.m_Data, str.m_Size, m_Data[pos]))
+                if (!Traits::Find(chars.m_Data, chars.m_Size, m_Data[pos]))
                     return pos;
             return NPos;
         }
@@ -460,18 +448,18 @@ namespace Prism
         }
 
         [[nodiscard]] constexpr SizeType
-        FindFirstNotOf(const C* str, SizeType pos,
+        FindFirstNotOf(const C* chars, SizeType pos,
                        SizeType count) const PM_NOEXCEPT
         {
-            return FindFirstNotOf(BasicStringView(str, count), pos);
+            return FindFirstNotOf(BasicStringView(chars, count), pos);
         }
 
         [[nodiscard, gnu::nonnull]] constexpr SizeType
-        FindFirstNotOf(const C* str, SizeType pos = 0) const PM_NOEXCEPT
+        FindFirstNotOf(const C* chars, SizeType pos = 0) const PM_NOEXCEPT
         {
-            return FindFirstNotOf(str, pos, Traits::Length(str));
+            return FindFirstNotOf(chars, pos, Traits::Length(chars));
         }
-        [[nodiscard]] constexpr SizeType FindLastNotOf(BasicStringView str,
+        [[nodiscard]] constexpr SizeType FindLastNotOf(BasicStringView chars,
                                                        SizeType        pos
                                                        = NPos) const PM_NOEXCEPT
         {
@@ -480,12 +468,12 @@ namespace Prism
             {
                 if (--len > pos) len = pos;
                 do {
-                    if (!Traits::Find(str.m_Data, str.m_Size, m_Data[len]))
+                    if (!Traits::Find(chars.m_Data, chars.m_Size, m_Data[len]))
                         return len;
                 } while (len--);
             }
             return NPos;
-            return FindLastNotOf(str.m_Data, pos, str.m_Size);
+            return FindLastNotOf(chars.m_Data, pos, chars.m_Size);
         }
 
         [[nodiscard]] constexpr SizeType
@@ -495,16 +483,16 @@ namespace Prism
         }
 
         [[nodiscard]] constexpr SizeType
-        FindLastNotOf(const C* str, SizeType pos,
+        FindLastNotOf(const C* chars, SizeType pos,
                       SizeType count) const PM_NOEXCEPT
         {
-            return FindLastNotOf(BasicStringView(str, count), pos);
+            return FindLastNotOf(BasicStringView(chars, count), pos);
         }
 
         [[nodiscard, gnu::nonnull]] constexpr SizeType
-        FindLastNotOf(const C* str, SizeType pos = NPos) const PM_NOEXCEPT
+        FindLastNotOf(const C* chars, SizeType pos = NPos) const PM_NOEXCEPT
         {
-            return FindLastNotOf(str, pos, Traits::Length(str));
+            return FindLastNotOf(chars, pos, Traits::Length(chars));
         }
 
       private:
