@@ -6,7 +6,10 @@
  */
 #pragma once
 
+#include <Prism/Core/Limits.hpp>
+#include <Prism/Core/TypeTraits.hpp>
 #include <Prism/Core/Types.hpp>
+
 #include <Prism/Memory/Endian.hpp>
 #include <Prism/Memory/Pointer.hpp>
 
@@ -89,8 +92,8 @@ namespace Prism
         {
             if (count > m_BitCount) FillBits();
 
-            constexpr auto MAX_VALUE = std::numeric_limits<T>::max();
-            constexpr auto DIGITS    = std::numeric_limits<T>::digits;
+            constexpr auto MAX_VALUE = NumericLimits<T>::Max();
+            constexpr auto DIGITS    = NumericLimits<T>::Digits;
             count                    = std::min(count, m_BitCount);
 
             return m_BitBuffer & (MAX_VALUE >> (DIGITS - count));

@@ -10,6 +10,133 @@
 
 namespace Prism
 {
+    enum class Alignment
+    {
+        eNone,
+        eLeft,
+        eRight,
+        eCenter,
+    };
+    struct FormatSpec
+    {
+        Alignment Align           = Alignment::eNone;
+        char      PaddingChar     = ' ';
+        usize     Width           = 0;
+        bool      PrintBasePrefix = false;
+        bool      UpperCase       = false;
+
+        enum Base
+        {
+            eBinary      = 2,
+            eOctal       = 8,
+            eDecimal     = 10,
+            eHexadecimal = 16,
+        } Base
+            = eDecimal;
+    };
+
+    struct FormatSpecParser
+    {
+        enum class State
+        {
+            eBegin,
+            eAlign,
+            eSign,
+            eHash,
+            eZero,
+            eWidth,
+            ePrecision,
+            eEnd,
+        };
+
+        inline constexpr Alignment ParseAlign(char c)
+        {
+            switch (c)
+            {
+                case '<': return Alignment::eLeft;
+                case '>': return Alignment::eRight;
+                case '^': return Alignment::eCenter;
+                default: break;
+            }
+
+            return Alignment::eNone;
+        }
+        inline constexpr usize ParseWidth(const char*& fmt)
+        {
+            usize width = 0;
+            while (StringUtils::IsDigit(*fmt))
+            {
+                width = width * 10 + (*fmt - '0');
+                ++fmt;
+            }
+
+            return width;
+        }
+        constexpr FormatSpec operator()(const char*& fmt)
+        {
+            struct
+            {
+                enum State     State = State::eBegin;
+
+                constexpr void operator()(enum State state)
+                {
+                    if (State >= state) assert("invalid format specifier");
+                    State = state;
+                }
+            } enterState;
+            FormatSpec spec;
+
+            for (;;)
+            {
+                switch (*fmt)
+                {
+                    case ':':
+                        enterState(State::eBegin);
+                        ++fmt;
+                        break;
+                    case '}': ++fmt; return spec;
+                    case '<':
+                    case '>':
+                    case '^':
+                        enterState(State::eAlign);
+                        spec.Align = ParseAlign(*fmt);
+                        ++fmt;
+                        break;
+                    case '0':
+                        enterState(State::eZero);
+                        spec.PaddingChar = '0';
+                        ++fmt;
+                        break;
+                    case '1' ... '9':
+                        enterState(State::eWidth);
+                        spec.Width = ParseWidth(fmt);
+                        break;
+                    case '#':
+                        enterState(State::eHash);
+                        spec.PrintBasePrefix = true;
+                        ++fmt;
+                        break;
+
+                    case 'b':
+                        enterState(State::eEnd);
+                        spec.Base = FormatSpec::eBinary;
+                        ++fmt;
+                        break;
+                    case 'X': spec.UpperCase = true; [[fallthrough]];
+                    case 'x':
+                        enterState(State::eEnd);
+                        spec.Base = FormatSpec::eHexadecimal;
+                        ++fmt;
+                        break;
+
+                    default: assert("Invalid format specifier");
+                }
+            }
+
+            return spec;
+        }
+    };
+
     template <typename Context>
     class Formatter
     {
@@ -32,23 +159,6 @@ namespace Prism
                 else m_Builder.Append(*fmt++);
             }
         }
-        struct FormatSpec
-        {
-            char  PaddingChar     = ' ';
-            usize Width           = 0;
-            bool  PrintBasePrefix = false;
-            bool  UpperCase       = false;
-
-            enum Base
-            {
-                eBinary      = 2,
-                eOctal       = 8,
-                eDecimal     = 10,
-                eHexadecimal = 16,
-            } Base
-                = eDecimal;
-        };
-
         template <typename T, typename... Rest>
         constexpr void Parse(const char* fmt, T&& value, Rest&&... rest)
         {
@@ -112,6 +222,10 @@ namespace Prism
 
         constexpr const char* ParseFormatSpec(const char* fmt, FormatSpec& spec)
         {
+            FormatSpecParser parser;
+            spec = parser(fmt);
+            return fmt;
+
             if (*fmt != ':') return ++fmt; // "{}"
             ++fmt;                         // skip ':'
 

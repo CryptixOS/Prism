@@ -8,23 +8,20 @@
 
 #include <Prism/Core/Config.hpp>
 
-#include <cerrno>
-#include <cstddef>
-#include <cstdint>
 #include <fmt/format.h>
-#include <type_traits>
 
 #define PrismStringifyInner(x) #x
 #define PrismStringify(x)      PrismStringifyInner(x)
 
 #if PRISM_TARGET_CRYPTIX == 1
+    #include <cerrno>
     #include <expected>
     #define PRISM_ERRNO_T      std::errno_t;
     #define Stringify(x)       PrismStringify(x)
     #define PRISM_EXPECTED_T   std::expected
     #define PRISM_UNEXPECTED_T std::unexpected
 #else
-    #include <Prism/Utility/Expected.hpp>
+    // #include <Prism/Utility/Expected.hpp>
     #define PRISM_ERRNO_T      i32
     #define PRISM_EXPECTED_T   Expected
     #define PRISM_UNEXPECTED_T Unexpected
@@ -32,27 +29,92 @@
 
 namespace Prism
 {
-    using PhysAddr  = std::uintptr_t;
+    template <typename T>
+    struct MakeSigned
+    {
+        using Type = void;
+    };
+    template <>
+    struct MakeSigned<signed char>
+    {
+        using Type = signed char;
+    };
+    template <>
+    struct MakeSigned<short>
+    {
+        using Type = short;
+    };
+    template <>
+    struct MakeSigned<int>
+    {
+        using Type = int;
+    };
+    template <>
+    struct MakeSigned<long>
+    {
+        using Type = long;
+    };
+    template <>
+    struct MakeSigned<long long>
+    {
+        using Type = long long;
+    };
+    template <>
+    struct MakeSigned<unsigned char>
+    {
+        using Type = char;
+    };
+    template <>
+    struct MakeSigned<unsigned short>
+    {
+        using Type = short;
+    };
+    template <>
+    struct MakeSigned<unsigned int>
+    {
+        using Type = int;
+    };
+    template <>
+    struct MakeSigned<unsigned long>
+    {
+        using Type = long;
+    };
+    template <>
+    struct MakeSigned<unsigned long long>
+    {
+        using Type = long long;
+    };
+    template <>
+    struct MakeSigned<char>
+    {
+        using Type = char;
+    };
+    template <typename T>
+    using MakeSignedType = typename MakeSigned<T>::Type;
 
-    using usize     = std::size_t;
-    using isize     = std::make_signed_t<usize>;
+    using PhysAddr       = __UINTPTR_TYPE__;
 
-    using u8        = std::uint8_t;
-    using u16       = std::uint16_t;
-    using u32       = std::uint32_t;
-    using u64       = std::uint64_t;
+    using usize          = __SIZE_TYPE__;
+    using isize          = MakeSignedType<usize>;
 
-    using i8        = std::int8_t;
-    using i16       = std::int16_t;
-    using i32       = std::int32_t;
-    using i64       = std::int64_t;
+    using u8             = __UINT8_TYPE__;
+    using u16            = __UINT16_TYPE__;
+    using u32            = __UINT32_TYPE__;
+    using u64            = __UINT64_TYPE__;
 
-    using symbol    = void*[];
+    using i8             = __INT8_TYPE__;
+    using i16            = __INT16_TYPE__;
+    using i32            = __INT32_TYPE__;
+    using i64            = __INT64_TYPE__;
+
+    using symbol         = void*[];
+#if PRISM_TARGET_CRYPTIX == 1
     using ErrorCode = PRISM_ERRNO_T;
     using Error     = PRISM_UNEXPECTED_T<ErrorCode>;
 
     template <typename R>
     using ErrorOr = PRISM_EXPECTED_T<R, ErrorCode>;
+#endif
 
     constexpr u64 Bit(u64 n) { return (1ull << n); }
 }; // namespace Prism

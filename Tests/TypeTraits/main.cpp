@@ -4,7 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/TypeTraits.hpp>
+#include <Prism/Core/TypeTraits.hpp>
 
 using namespace Prism;
 void TypeTraits_TestIsSame()

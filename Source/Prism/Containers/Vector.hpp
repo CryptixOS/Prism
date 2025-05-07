@@ -7,10 +7,10 @@
 #pragma once
 
 #include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Limits.hpp>
 #include <Prism/Core/Types.hpp>
 
 #include <cassert>
-#include <limits>
 #include <new>
 
 void operator delete(void* ptr, Prism::usize) noexcept;
@@ -159,7 +159,7 @@ namespace Prism
         constexpr SizeType Size() const noexcept { return m_Size; }
         constexpr SizeType MaxSize() const noexcept
         {
-            return std::numeric_limits<DifferenceType>::max();
+            return NumericLimits<DifferenceType>::Max();
         }
         constexpr void Reserve(SizeType newCapacity)
         {

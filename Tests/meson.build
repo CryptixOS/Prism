@@ -6,7 +6,13 @@
 #*/
 
 incdirs = include_directories('../Source/')
-tests = ['DoublyLinkedList', 'RedBlackTree', 'String', 'StringUtils', 'Vector']
+tests = [
+  'Algorithm', 'IntrusiveList', 'DoublyLinkedList',
+  'RedBlackTree', 'String', 'StringBuilder',
+  'StringUtils', 'Tuple', 'TypeTraits', 
+  #'UnorderedMap', 
+  'Vector',
+]
 cpp_args = [
   '-Wno-unused-parameter'
 ]
@@ -14,6 +20,7 @@ cpp_args = [
 foreach name : tests
   srcs = files(
     meson.project_source_root() / 'Source/Prism/Debug/Log.cpp',
+    meson.project_source_root() / 'Source/Prism/PathView.cpp',
     name / 'main.cpp')
   test = executable(name, srcs, cpp_args: cpp_args, include_directories: incdirs, dependencies: deps)
   test(name, test)

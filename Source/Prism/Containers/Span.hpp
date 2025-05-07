@@ -8,10 +8,11 @@
 
 #include <Prism/Containers/Array.hpp>
 #include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Limits.hpp>
 
 namespace Prism
 {
-    inline constexpr usize DynamicExtent = std::numeric_limits<usize>::max();
+    inline constexpr usize DynamicExtent = NumericLimits<usize>::Max();
     template <typename T, usize Extent = DynamicExtent>
     class Span
     {

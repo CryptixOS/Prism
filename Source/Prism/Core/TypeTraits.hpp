@@ -8,6 +8,9 @@
 
 #include <Prism/Core/Types.hpp>
 
+#include <functional>
+#include <utility>
+
 namespace Prism
 {
     namespace Details
@@ -61,14 +64,6 @@ namespace Prism
     template <bool Boolean>
     using BooleanConstant = IntegralConstant<bool, Boolean>;
 
-    template <typename T>
-    struct IsVoid;
-    template <typename T>
-    constexpr bool IsVoidV = IsVoid<T>::Value;
-
-    template <typename T>
-    inline constexpr bool IsEnum = __is_enum(T);
-
     template <typename T, typename U>
     struct IsSame : FalseType
     {
@@ -84,14 +79,6 @@ namespace Prism
     struct RemoveCv;
     template <typename T>
     using RemoveCvType = typename RemoveCv<T>::Type;
-    template <typename T>
-    struct IsVoid : IsSame<void, RemoveCvType<T>>
-    {
-    };
-
-    template <typename T>
-    inline constexpr bool IsIntegral
-        = Details::IsIntegral<std::make_unsigned<RemoveCvType<T>>>;
 
     template <typename T, bool>
     struct EnumUnderlying
@@ -227,6 +214,36 @@ namespace Prism
     using MakeIndexSequenceV = MakeIntegerSequenceV<usize, N>;
 
     template <typename T>
+    struct IsVoid;
+    template <typename T>
+    struct IsVoid : IsSame<void, RemoveCvType<T>>
+    {
+    };
+    template <typename T>
+    constexpr bool IsVoidV = IsVoid<T>::Value;
+    template <typename T>
+    struct IsNullPointer : IsSame<std::nullptr_t, RemoveCvType<T>>
+    {
+    };
+    template <typename T>
+    constexpr bool IsNullPointerV = IsNullPointer<T>::Value;
+    template <typename T>
+        struct IsIntegral
+        : BooleanConstant
+          < requires(T t, T* p,
+                     void (*f)(T)) // T* parameter excludes reference types
+    {
+        reinterpret_cast<T>(t); // Exclude class types
+        f(0);                   // Exclude enumeration types
+        p + t; // Exclude everything not yet excluded but integral types
+    }>{};
+    template <typename T>
+    constexpr bool IsIntegralV = IsIntegral<T>::Value;
+    template <typename T>
+    struct IsFloatingPoint : FalseType
+    {
+    };
+    template <typename T>
     struct IsArray : FalseType
     {
     };
@@ -241,20 +258,30 @@ namespace Prism
     };
     template <typename T>
     constexpr bool IsArrayV = IsArray<T>::Value;
+    template <typename T>
+    struct IsEnum : public BooleanConstant<__is_enum(T)>
+    {
+    };
+    template <typename T>
+    inline constexpr bool IsEnumV = IsEnum<T>::Value;
+    template <typename T>
+    struct IsUnion : public BooleanConstant<__is_union(T)>
+    {
+    };
+    template <typename T>
+    inline constexpr bool IsUnionV = IsUnion<T>::Value;
     namespace Details
     {
         template <typename T>
-        IntegralConstant<bool, !std::is_union<T>::value> Test(i32 T::*);
+        IntegralConstant<bool, !IsUnion<T>::Value> Test(i32 T::*);
 
         template <typename>
         FalseType Test(...);
     } // namespace Details
-
     template <typename T>
     struct IsClass : decltype(Details::Test<T>(nullptr))
     {
     };
-
     template <typename T>
     struct IsReference;
     template <typename T>
@@ -289,6 +316,73 @@ namespace Prism
     template <typename T>
     constexpr bool IsPointerV = IsPointer<T>::Value;
     template <typename T>
+    struct IsLValueReference : FalseType
+    {
+    };
+    template <typename T>
+    struct IsLValueReference<T&> : TrueType
+    {
+    };
+    template <typename T>
+    constexpr bool IsLValueReferenceV = IsLValueReference<T>::Value;
+    template <typename T>
+    struct IsRValueReference : FalseType
+    {
+    };
+    template <typename T>
+    struct IsRValueReference<T&&> : TrueType
+    {
+    };
+    template <typename T>
+    constexpr bool IsRValueReferenceV = IsRValueReference<T>::Value;
+    template <typename T>
+    struct IsMemberPointer;
+    template <typename T>
+    struct IsMemberFunctionPointer;
+    template <typename T>
+    struct IsMemberObjectPointer
+        : IntegralConstant<bool, IsMemberPointer<T>::Value
+                                     && !IsMemberFunctionPointer<T>::Value>
+    {
+    };
+    template <typename T>
+    constexpr bool IsMemberObjectPointerV = IsMemberObjectPointer<T>::Value;
+    template <typename T>
+    struct IsMemberFunctionPointerHelper : FalseType
+    {
+    };
+    template <typename T, typename U>
+    struct IsMemberFunctionPointerHelper<T U::*> : IsFunction<T>
+    {
+    };
+    template <typename T>
+    struct IsMemberFunctionPointer
+        : IsMemberFunctionPointerHelper<typename RemoveCv<T>::Type>
+    {
+    };
+    template <typename T>
+    constexpr bool IsMemberFunctionPointerV = IsMemberFunctionPointer<T>::Value;
+    template <typename T>
+    struct IsArithmetic;
+    template <typename T>
+    struct IsFundamental
+        : IntegralConstant<
+              bool,
+              IsArithmetic<T>::Value || IsVoid<T>::Value
+                  || IsSame<std::nullptr_t, typename RemoveCv<T>::Type>::Value>
+    {
+    };
+    template <typename T>
+    constexpr bool IsFundamentalV = IsFundamental<T>::Value;
+    template <typename T>
+    struct IsArithmetic
+        : IntegralConstant<bool,
+                           IsIntegral<T>::Value || IsFloatingPoint<T>::Value>
+    {
+    };
+    template <typename T>
+    constexpr bool IsArithmeticV = IsArithmetic<T>::Value;
+    template <typename T>
     struct IsReference : FalseType
     {
     };
@@ -302,6 +396,20 @@ namespace Prism
     };
     template <typename T>
     constexpr bool IsReferenceV = IsReference<T>::Value;
+    template <typename T>
+    struct IsMemberPointerHelper : FalseType
+    {
+    };
+    template <typename T, typename U>
+    struct IsMemberPointerHelper<T U::*> : TrueType
+    {
+    };
+    template <typename T>
+    struct IsMemberPointer : IsMemberPointerHelper<typename RemoveCv<T>::Type>
+    {
+    };
+    template <typename T>
+    constexpr bool IsMemberPointerV = IsMemberPointer<T>::Value;
     template <typename T>
     struct IsConst : FalseType
     {
@@ -322,6 +430,27 @@ namespace Prism
     };
     template <class T>
     constexpr bool IsVolatileV = IsVolatile<T>::Value;
+
+    namespace Details
+    {
+        template <typename T, bool = IsArithmeticV<T>>
+        struct IsSigned : IntegralConstant<bool, T(-1) < T(0)>
+        {
+        };
+
+        template <typename T>
+        struct IsSigned<T, false> : FalseType
+        {
+        };
+    } // namespace Details
+
+    template <typename T>
+    struct IsSigned : Details::IsSigned<T>::Type
+    {
+    };
+    template <typename T>
+    constexpr bool IsSignedV = IsSigned<T>::Value;
+
     namespace Details
     {
         template <typename B>
@@ -466,12 +595,9 @@ namespace Prism
 
         template <typename T>
         auto TryAddPointer(int)
-            -> TypeIdentity<typename RemoveReference<T>::Type*>; // usual
-                                                                 // case
-
+            -> TypeIdentity<typename RemoveReference<T>::Type*>;
         template <typename T>
         auto TryAddPointer(...) -> TypeIdentity<T>;
-
     } // namespace Details
     template <typename T>
     struct AddPointer : decltype(Details::TryAddPointer<T>(0))
@@ -548,7 +674,7 @@ namespace Prism
         using Type = __underlying_type(T);
     };
     template <typename T>
-        requires(IsEnum<T>)
+        requires(IsEnumV<T>)
     using UnderlyingTypeT = typename UnderlyingType<T>::Type;
     template <typename T>
     class ReferenceWrapper;

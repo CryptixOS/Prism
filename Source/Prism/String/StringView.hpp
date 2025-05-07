@@ -9,9 +9,9 @@
 #include <Prism/Algorithm/SearchString.hpp>
 #include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/TypeTraits.hpp>
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/CharTraits.hpp>
-#include <Prism/TypeTraits.hpp>
 #include <Prism/Utility/Hash.hpp>
 #include <Prism/Utility/Math.hpp>
 
@@ -473,7 +473,6 @@ namespace Prism
                 } while (len--);
             }
             return NPos;
-            return FindLastNotOf(chars.m_Data, pos, chars.m_Size);
         }
 
         [[nodiscard]] constexpr SizeType

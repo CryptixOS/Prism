@@ -8,6 +8,8 @@
 
 #include <Prism/Core/Types.hpp>
 
+#include <cassert>
+
 namespace Prism
 {
     template <typename T, typename HookType>

@@ -127,40 +127,40 @@ namespace Prism
         }
         constexpr T FetchAnd(T rhs, MemoryOrder order
                                     = MemoryOrder::eAtomicSeqCst) PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return AtomicFetchAnd<T, T>(m_Value, rhs, order);
         }
         constexpr T FetchAnd(T           rhs,
                              MemoryOrder order
                              = MemoryOrder::eAtomicSeqCst) volatile PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return AtomicFetchAnd<T, T>(m_Value, rhs, order);
         }
         constexpr T FetchOr(T rhs, MemoryOrder order
                                    = MemoryOrder::eAtomicSeqCst) PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return AtomicFetchOr<T, T>(m_Value, rhs, order);
         }
         constexpr T FetchOr(T           rhs,
                             MemoryOrder order
                             = MemoryOrder::eAtomicSeqCst) volatile PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return AtomicFetchOr<T, T>(m_Value, rhs, order);
         }
         constexpr T FetchXor(T rhs, MemoryOrder order
                                     = MemoryOrder::eAtomicSeqCst) PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return AtomicFetchXor<T, T>(m_Value, rhs, order);
         }
         constexpr T FetchXor(T           rhs,
                              MemoryOrder order
                              = MemoryOrder::eAtomicSeqCst) volatile PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return AtomicFetchXor<T, T>(m_Value, rhs, order);
         }
@@ -203,32 +203,32 @@ namespace Prism
 
         constexpr T operator&=(T rhs) PM_NOEXCEPT
 
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return FetchAnd(rhs);
         }
         constexpr T operator&=(T rhs) volatile PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return FetchAnd(rhs);
         }
         constexpr T operator|=(T rhs) PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return FetchOr(rhs);
         }
         constexpr T operator|=(T rhs) volatile PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return FetchOr(rhs);
         }
         constexpr T operator^=(T rhs) PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return FetchXor(rhs);
         }
         constexpr T operator^=(T rhs) volatile PM_NOEXCEPT
-            requires(IsIntegral<T>)
+            requires(IsIntegralV<T>)
         {
             return FetchXor(rhs);
         }
