@@ -7,7 +7,8 @@
 
 incdirs = include_directories('../Source/')
 tests = [
-  'Algorithm', 'IntrusiveList', 'DoublyLinkedList',
+  'Algorithm', 'IntrusiveList', 'Deque',
+  'DoublyLinkedList',
   'RedBlackTree', 'String', 'StringBuilder',
   'StringUtils', #'Tuple',
   'TypeTraits', 
