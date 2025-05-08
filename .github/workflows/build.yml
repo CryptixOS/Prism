@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         build-configuration: [debugoptimized, debug, release]
+        architecture: [x86_64, aarch64]
 
     steps:
       - name: Checkout code
@@ -29,7 +30,7 @@ jobs:
           && sudo apt install texinfo libisl-dev gperf gettext autopoint libreadline-dev help2man groff zsh xorriso
           && pipx install xbstrap 
       - name: Configure Project
-        run: meson setup build --buildtype=${{ matrix.build-configuration }} 
+        run: meson setup build --buildtype=${{ matrix.build-configuration }} --cross-file="CrossFiles/kernel-target-clang-${{ matrix.architecture }}.cross-file"
           && (cd subprojects/fmt-10.2.0/ && patch -p 1 < ../../fmt-10.2.0.patch)
           && ninja -C build -j5
       - name: Build Tests
