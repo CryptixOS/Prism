@@ -9,14 +9,15 @@ incdirs = include_directories('../Source/')
 tests = [
   'Algorithm', 'IntrusiveList', 'Deque',
   'DoublyLinkedList',
-  'RedBlackTree', 'String', 'StringBuilder',
+  'RedBlackTree', 'SimdIntrinsics', 'String', 'StringBuilder',
   'StringUtils', #'Tuple',
   'TypeTraits', 
   #'UnorderedMap', 
   'Vector',
 ]
 cpp_args = [
-  '-Wno-unused-parameter'
+  '-Wno-unused-parameter',
+  '-Wno-self-assign-overloaded',
 ]
 
 foreach name : tests
