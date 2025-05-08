@@ -7,26 +7,25 @@
 #pragma once
 
 #include <Prism/Core/Types.hpp>
-#include <Prism/TypeTraits.hpp>
+#include <Prism/Core/TypeTraits.hpp>
 
 namespace Prism
 {
 #include <Prism/Details/Concepts.inl>
 
     template <typename T>
-    concept Integral = std::is_integral_v<T>;
+    concept Integral = IsIntegralV<T>;
     template <typename T>
-    concept SignedIntegral = std::integral<T> && std::is_signed_v<T>;
+    concept SignedIntegral = Integral<T> && std::is_signed_v<T>;
     template <typename T>
     concept UnsignedIntegral = std::integral<T> && !std::signed_integral<T>;
 
     template <typename T>
     concept IntegralOrEnum
-        = IsIntegral<T> || IsEnum<T> || std::is_unsigned_v<T>;
+        = IsIntegralV<T> || IsEnumV<T> || std::is_unsigned_v<T>;
     template <typename T>
-    concept PrimitiveOrEnum
-        = IsEnum<T> || std::is_arithmetic_v<T> || IsSameV<T, bool>
-       || std::is_signed_v<T> || std::is_integral_v<T>;
+    concept PrimitiveOrEnum = IsEnumV<T> || IsArithmeticV<T> || IsSameV<T, bool>
+                           || std::is_signed_v<T> || IsIntegralV<T>;
 
     template <PrimitiveOrEnum T>
     class ArithmeticEnum
@@ -86,7 +85,7 @@ namespace Prism
         T m_Value{};
     };
     template <typename T>
-    concept EnumType = std::is_enum_v<T>;
+    concept EnumType = IsEnumV<T>;
 
     template <>
     class ArithmeticEnum<bool>
