@@ -71,7 +71,7 @@ namespace Prism
         }
         constexpr BasicString(BasicString&& other)
         {
-            m_Storage       = std::move(other.m_Storage);
+            m_Storage       = Move(other.m_Storage);
             other.m_Storage = {};
         }
 

@@ -85,9 +85,9 @@ namespace Prism
                 return Object != other.Object || Stub != other.Stub;
             }
 
-            ObjectType   Object            = nullptr;
-            FunctionType Stub              = nullptr;
-            void         (*Destroy)(void*) = nullptr;
+            ObjectType   Object    = nullptr;
+            FunctionType Stub      = nullptr;
+            void (*Destroy)(void*) = nullptr;
         };
 
         constexpr Delegate() PM_NOEXCEPT {}
@@ -98,7 +98,7 @@ namespace Prism
         Delegate(const Delegate& other) { m_Functor = other.m_Functor; }
         // Delegate(const Delegate& other) { CopyFrom(other); }
 
-        Delegate(Delegate&& other) noexcept { MoveFrom(std::move(other)); }
+        Delegate(Delegate&& other) noexcept { MoveFrom(Move(other)); }
         Delegate(FunctionType f) { Bind<f>(); }
 
         ~Delegate() { Reset(); }
@@ -119,14 +119,14 @@ namespace Prism
             if (this != &other)
             {
                 Reset();
-                MoveFrom(std::move(other));
+                MoveFrom(Move(other));
             }
             return *this;
         }
         template <typename F>
         Delegate& operator=(F&& f)
         {
-            Delegate(std::move(f));
+            Delegate(Move(f));
             return *this;
         }
         /*
@@ -177,7 +177,7 @@ namespace Prism
         template <auto Function, typename Class>
         void Bind(Class* object)
         {
-            using MemberFunction      = ReturnValue      (Class::*)(Args...);
+            using MemberFunction      = ReturnValue (Class::*)(Args...);
             using MemberFunctionConst = ReturnValue (Class::*)(Args...) const;
 
             if constexpr (std::is_same_v<decltype(Function),
@@ -241,7 +241,7 @@ namespace Prism
                 // Copy heap-allocated lambda
                 m_Functor.Object = other.m_Functor.Destroy
                                      ? other.m_Functor.Destroy(
-                                         other.m_Functor.Object, CopyMode{})
+                                           other.m_Functor.Object, CopyMode{})
                                      : other.m_Functor.Object;
             }
         }

@@ -383,6 +383,56 @@ namespace Prism
     template <typename T>
     constexpr bool IsArithmeticV = IsArithmetic<T>::Value;
     template <typename T>
+    struct IsScalar
+        : IntegralConstant<bool, IsArithmetic<T>::Value || IsEnum<T>::Value
+                                     || IsPointer<T>::Value
+                                     || IsMemberPointer<T>::Value
+                                     || IsNullPointer<T>::Value>
+    {
+    };
+    template <typename T>
+    constexpr bool IsScalarV = IsScalar<T>::Value;
+    template <typename T>
+    struct IsObject
+        : IntegralConstant<bool, IsScalar<T>::Value || IsArray<T>::Value
+                                     || IsUnion<T>::Value || IsClass<T>::Value>
+    {
+    };
+    template <typename T>
+    constexpr bool IsObjectV = IsObject<T>::Value;
+    template <typename T>
+    struct IsCompound : IntegralConstant<bool, !IsFundamental<T>::Value>
+    {
+    };
+    template <typename T>
+    constexpr bool IsCompoundV = IsCompound<T>::Value;
+
+    template <typename T>
+    struct IsTriviallyCopyable
+        : public BooleanConstant<__is_trivially_copyable(T)>
+    {
+    };
+    template <typename T>
+    constexpr bool IsTriviallyCopyableV = IsTriviallyCopyable<T>::Value;
+    template <typename T>
+    struct IsStandardLayout : public BooleanConstant<__is_standard_layout(T)>
+    {
+    };
+    template <typename T>
+    constexpr bool IsStandardLayoutV = IsStandardLayout<T>::Value;
+
+    /*
+    template <typename T>
+    struct HasUniqueObjectRepresentation
+        : BooleanConstant<__has_unique_object_representations(
+              RemoveCvType<RemoveAllExtentsType<T>>)>
+    {
+    };
+    template <typename T>
+    constexpr bool HasUniqueObjectRepresentationV
+        = HasUniqueObjectRepresentation<T>::Value;*/
+
+    template <typename T>
     struct IsReference : FalseType
     {
     };
@@ -752,6 +802,23 @@ namespace Prism
         : Details::InvokeResult<void, F, ArgTypes...>
     {
     };
+    template <typename T>
+    struct RemoveAllExtents
+    {
+        using Type = T;
+    };
+    template <typename T>
+    struct RemoveAllExtents<T[]>
+    {
+        using Type = typename RemoveAllExtents<T>::Type;
+    };
+    template <typename T, usize N>
+    struct RemoveAllExtents<T[N]>
+    {
+        using Type = typename RemoveAllExtents<T>::Type;
+    };
+    template <typename T>
+    using RemoveAllExtentsType = typename RemoveAllExtents<T>::Type;
 
     template <typename F, typename... ArgTypes>
     struct InvokeResult : Details::InvokeResult<void, F, ArgTypes...>
@@ -875,9 +942,30 @@ namespace Prism
     };
     template <typename B>
     constexpr bool NegationV = Negation<B>::Value;
+
+    template <typename T>
+    constexpr RemoveReferenceType<T>&& Move(T&& object) noexcept
+    {
+        return static_cast<RemoveReferenceType<T>&&>(object);
+    }
+    template <typename T>
+    constexpr T&& Forward(RemoveReferenceType<T>& value) noexcept
+    {
+        return static_cast<T&&>(value);
+    }
+    template <typename T>
+    constexpr T&& Forward(RemoveReferenceType<T>&& value) noexcept
+    {
+        static_assert(!IsLValueReferenceV<T>,
+                      "Don't forward an rvalue as an lvalue");
+        return static_cast<T&&>(value);
+    }
+
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::Conditional;
+using Prism::Forward;
 using Prism::IsSameV;
+using Prism::Move;
 #endif
