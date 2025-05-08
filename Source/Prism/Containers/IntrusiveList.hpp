@@ -31,7 +31,7 @@ namespace Prism
     class IntrusiveList
     {
       public:
-        friend class IntrusiveListHook<T>;
+        friend struct IntrusiveListHook<T>;
         constexpr IntrusiveList() = default;
 
         constexpr bool     Empty() const { return !m_Head; }
