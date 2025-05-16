@@ -15,6 +15,16 @@
 #define PM_ALWAYS_INLINE [[gnu::always_inline]]
 #define PM_USED          [[gnu::used]]
 #define PM_PACKED        [[gnu::packed]]
+#if defined __has_include
+    #define PrismHasInclude(...) __has_include(__VA_ARGS__)
+#else
+    #define PrismHasInclude(...)
+#endif
+#if defined __has_include_next
+    #define PrismHasIncludeNext(...) __has_include_next(__VA_ARGS__)
+#else
+    #define PrismHasIncludeNext(...)
+#endif
 
 #if defined(__has_builtin)
     #if __has_builtin(__builtin_LINE)
