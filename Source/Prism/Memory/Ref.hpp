@@ -20,7 +20,7 @@ namespace Prism
       public:
         virtual ~RefCounted() { PrismAssert(m_RefCount == 0); }
 
-        usize GetRefCount() const { return m_RefCount.load(); }
+        usize RefCount() const { return m_RefCount.load(); }
 
         void  Ref() { ++m_RefCount; }
         void  Unref() { --m_RefCount; }
@@ -78,7 +78,7 @@ namespace Prism
         Ref& operator=(const Ref<T>& other)
         {
             if (this == &other) return *this;
-            other.IncRef();
+            const_cast<Ref<T>&>(other).IncRef();
             DecRef();
 
             m_Instance = other.m_Instance;
@@ -105,16 +105,17 @@ namespace Prism
 
         operator bool() const { return m_Instance != nullptr; }
 
-        T*       operator->() { return m_Instance; }
-        const T* operator->() const { return m_Instance; }
+        T*              operator->() { return m_Instance; }
+        const T*        operator->() const { return m_Instance; }
 
-        T&       operator*() { return *m_Instance; }
-        const T& operator*() const { return *m_Instance; }
+        T&              operator*() { return *m_Instance; }
+        const T&        operator*() const { return *m_Instance; }
 
-        T*       Raw() { return m_Instance; }
-        const T* Raw() const { return m_Instance; }
+        T*              Raw() { return m_Instance; }
+        const T*        Raw() const { return m_Instance; }
 
-        void     Reset(T* instance = nullptr)
+        constexpr usize RefCount() const { return m_Instance->RefCount(); }
+        void            Reset(T* instance = nullptr)
         {
             DecRef();
             m_Instance = instance;
@@ -154,7 +155,7 @@ namespace Prism
             if (!m_Instance) return;
             m_Instance->Unref();
 
-            if (m_Instance->GetRefCount() == 0)
+            if (m_Instance->RefCount() == 0)
             {
                 delete m_Instance;
                 m_Instance = nullptr;
