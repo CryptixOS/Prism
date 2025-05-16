@@ -239,10 +239,69 @@ namespace Prism
     }>{};
     template <typename T>
     constexpr bool IsIntegralV = IsIntegral<T>::Value;
-    template <typename T>
-    struct IsFloatingPoint : FalseType
+    template <typename>
+    struct IsFloatingPointHelper : public FalseType
     {
     };
+    template <>
+    struct IsFloatingPointHelper<float> : public TrueType
+    {
+    };
+    template <>
+    struct IsFloatingPointHelper<double> : public TrueType
+    {
+    };
+    template <>
+    struct IsFloatingPointHelper<long double> : public TrueType
+    {
+    };
+#ifdef __STDCPP_FLOAT16_T__
+    template <>
+    struct IsFloatingPointHelper<_Float16> : public TrueType
+    {
+    };
+#endif
+#ifdef __STDCPP_FLOAT32_T__
+    template <>
+    struct IsFloatingPointHelper<_Float32> : public TrueType
+    {
+    };
+#endif
+
+#ifdef __STDCPP_FLOAT64_T__
+    template <>
+    struct IsFloatingPointHelper<_Float64> : public TrueType
+    {
+    };
+#endif
+
+#ifdef __STDCPP_FLOAT128_T__
+    template <>
+    struct IsFloatingPointHelper<_Float128> : public TrueType
+    {
+    };
+#endif
+
+#ifdef __STDCPP_BFLOAT16_T__
+    template <>
+    struct IsFloatingPointHelper<__gnu_cxx::__bfloat16_t> : public TrueType
+    {
+    };
+#endif
+
+#if !defined(__STRICT_ANSI__) && defined(_GLIBCXX_USE_FLOAT128)
+    template <>
+    struct IsFloatingPointHelper<__float128> : public TrueType
+    {
+    };
+#endif
+
+    template <typename T>
+    struct IsFloatingPoint : public IsFloatingPointHelper<RemoveCvType<T>>::Type
+    {
+    };
+    template <typename T>
+    constexpr bool IsFloatingPointV = IsFloatingPoint<T>::Value;
     template <typename T>
     struct IsArray : FalseType
     {
