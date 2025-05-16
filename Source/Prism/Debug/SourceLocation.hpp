@@ -41,7 +41,7 @@ namespace Prism
         }
 
         static consteval SourceLocation
-        Current(u32 line = PM_LINE, u32 column = PM_COLUMN,
+        Current(i32 line = PM_LINE, i32 column = PM_COLUMN,
                 const char* fileName     = PM_FILENAME,
                 const char* functionName = PM_FUNCTION_NAME) PM_NOEXCEPT
         {
