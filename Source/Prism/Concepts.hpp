@@ -6,12 +6,20 @@
  */
 #pragma once
 
-#include <Prism/Core/Types.hpp>
 #include <Prism/Core/TypeTraits.hpp>
+#include <Prism/Core/Types.hpp>
 
 namespace Prism
 {
 #include <Prism/Details/Concepts.inl>
+    namespace Details
+    {
+        template <typename T, typename U>
+        concept SameHelper = IsSameV<T, U>;
+    }
+
+    template <typename T, typename U>
+    concept SameAs = Details::SameHelper<T, U> && Details::SameHelper<U, T>;
 
     template <typename T>
     concept Integral = IsIntegralV<T>;
