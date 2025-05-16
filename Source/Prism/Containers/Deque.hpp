@@ -6,146 +6,375 @@
  */
 #pragma once
 
-#include <Prism/Core/Types.hpp>
+#include <Prism/Containers/Vector.hpp>
+#include <Prism/Core/Iterator.hpp>
 
-#include <cassert>
+#include <Prism/Debug/Assertions.hpp>
+#include <Prism/Memory/Ref.hpp>
 
 namespace Prism
 {
     template <typename T>
-    class Deque
+    class Block : public RefCounted
     {
       public:
-        Deque()
-        {
-            m_MapSize    = 8;
-            m_Map        = new BlockPointer[m_MapSize];
+        static constexpr usize BlockSize = 64;
 
-            usize mid    = m_MapSize / 2;
-            m_StartBlock = m_EndBlock = mid;
-            m_StartOffset = m_EndOffset = 0;
-            m_Map[mid]                  = new T[BLOCK_SIZE];
-        }
-        ~Deque()
-        {
-            for (usize i = m_StartBlock; i <= m_EndBlock; ++i)
-                delete[] m_Map[i];
-            delete[] m_Map;
-        }
+        Block()                          = default;
 
-        constexpr usize Size() const { return m_Size; }
-        constexpr bool  Empty() const { return Size() == 0; }
-
-        constexpr T&    operator[](usize index)
-        {
-            assert(index < Size());
-            usize logical = m_StartBlock * BLOCK_SIZE + m_StartOffset + index;
-            usize block   = logical / BLOCK_SIZE;
-            usize offset  = logical % BLOCK_SIZE;
-
-            return m_Map[block][offset];
-        }
-        constexpr const T& operator[](usize index) const
-        {
-            assert(index < Size());
-            usize logical = m_StartBlock * BLOCK_SIZE + m_StartOffset + index;
-            usize block   = logical / BLOCK_SIZE;
-            usize offset  = logical % BLOCK_SIZE;
-
-            return m_Map[block][offset];
-        }
-
-        void PushBack(const T& value)
-        {
-            if (m_EndOffset == BLOCK_SIZE)
-            {
-                ++m_EndBlock;
-                m_EndOffset = 0;
-                EnsureCapacityBack();
-
-                assert(m_EndBlock < m_MapSize);
-                m_Map[m_EndBlock] = new T[BLOCK_SIZE];
-            }
-
-            m_Map[m_EndBlock][m_EndOffset++] = value;
-            ++m_Size;
-        }
-        void PushFront(const T& value)
-        {
-            if (m_StartOffset == 0)
-            {
-                EnsureCapacityFront();
-                --m_StartBlock;
-                m_StartOffset       = BLOCK_SIZE;
-
-                m_Map[m_StartBlock] = new T[BLOCK_SIZE];
-            }
-
-            m_Map[m_StartBlock][--m_StartOffset] = value;
-            ++m_Size;
-        }
-        void PopBack()
-        {
-            assert(!Empty());
-            if (m_EndOffset == 0)
-            {
-                delete[] m_Map[m_EndBlock];
-                --m_EndBlock;
-                m_EndOffset = BLOCK_SIZE;
-            }
-
-            --m_EndOffset;
-            --m_Size;
-        }
-        void PopFront()
-        {
-            assert(!Empty());
-            ++m_StartOffset;
-            --m_Size;
-
-            if (m_StartOffset == BLOCK_SIZE)
-            {
-                delete[] m_Map[m_StartBlock];
-                ++m_StartBlock;
-                m_StartOffset = 0;
-            }
-        }
+        T&       operator[](usize i) { return m_Data[i]; }
+        const T& operator[](usize i) const { return m_Data[i]; }
 
       private:
-        constexpr static usize BLOCK_SIZE = 64;
-        using Block                       = T[BLOCK_SIZE];
-        using BlockPointer                = T*;
+        T m_Data[BlockSize];
+    };
 
-        BlockPointer* m_Map               = nullptr;
-        usize         m_MapSize           = 0;
+    template <typename T>
+    class Deque
+    {
+        using BlockType                  = Block<T>;
+        using BlockRef                   = Ref<BlockType>;
 
-        usize         m_StartBlock        = 0;
-        usize         m_StartOffset       = 0;
-        usize         m_EndBlock          = 0;
-        usize         m_EndOffset         = 0;
-        usize         m_Size              = 0;
+        static constexpr usize BlockSize = BlockType::BlockSize;
 
-        void          EnsureCapacityBack()
+        Vector<BlockRef>       m_Blocks;
+        usize                  m_FrontIndex  = 0;
+        usize                  m_BackIndex   = 0;
+
+        // Offsets for front and back (relative to their block)
+        usize                  m_FrontOffset = BlockSize / 2;
+        usize                  m_BackOffset  = BlockSize / 2;
+
+      public:
+        constexpr Deque()
         {
-            if (m_EndBlock + 1 >= m_MapSize) GrowMap();
+            m_Blocks.PushBack(BlockRef::Create());
+            m_FrontIndex = 0;
+            m_BackIndex  = 0;
         }
-        void EnsureCapacityFront()
-        {
-            if (m_StartBlock == 0) GrowMap();
-        }
-        void GrowMap()
-        {
-            usize         newSize = m_MapSize * 2;
-            BlockPointer* newMap  = new BlockPointer[newSize]{};
 
-            usize         offset  = (newSize - m_MapSize) / 2;
-            for (usize i = 0; i < m_MapSize; ++i) newMap[i + offset] = m_Map[i];
+        template <bool IsConst = false>
+        class Iterator
+        {
+          public:
+            using BlockType    = Block<T>;
+            using BlockRefType = ConditionalType<IsConst, const Ref<BlockType>,
+                                                 Ref<BlockType>>;
+            using ValueType    = ConditionalType<IsConst, const T, T>;
+            using Pointer      = ValueType*;
+            using Reference    = ValueType&;
+            using IteratorCategory = RandomAccessIteratorTag;
+            using DifferenceType   = ptrdiff;
 
-            delete[] m_Map;
-            m_Map = newMap;
-            m_StartBlock += offset;
-            m_EndBlock += offset;
-            m_MapSize = newSize;
+            constexpr Iterator(Vector<BlockRefType>* blocks, usize block,
+                               usize offset)
+                : m_Blocks(blocks)
+                , m_BlockIndex(block)
+                , m_Offset(offset)
+            {
+            }
+
+            constexpr Reference operator*() const
+            {
+                return (*(*m_Blocks)[m_BlockIndex])[m_Offset];
+            }
+
+            constexpr Pointer operator->() const
+            {
+                return &(*(*m_Blocks)[m_BlockIndex])[m_Offset];
+            }
+
+            constexpr Reference operator[](DifferenceType n) const
+            {
+                return *(*this + n);
+            }
+
+            constexpr Iterator& operator++()
+            {
+                if (++m_Offset == Block<T>::BlockSize)
+                {
+                    m_Offset = 0;
+                    ++m_BlockIndex;
+                }
+                return *this;
+            }
+            constexpr Iterator operator++(int)
+            {
+                Iterator tmp = *this;
+                ++(*this);
+                return tmp;
+            }
+
+            constexpr Iterator& operator--()
+            {
+                if (m_Offset == 0)
+                {
+                    --m_BlockIndex;
+                    m_Offset = Block<T>::BlockSize - 1;
+                }
+                else { --m_Offset; }
+                return *this;
+            }
+            constexpr Iterator operator--(int)
+            {
+                Iterator tmp = *this;
+                --(*this);
+                return tmp;
+            }
+
+            constexpr Iterator operator+(DifferenceType n) const
+            {
+                Iterator result = *this;
+                result += n;
+                return result;
+            }
+
+            constexpr Iterator& operator+=(DifferenceType n)
+            {
+                DifferenceType flatIndex
+                    = static_cast<DifferenceType>(m_BlockIndex)
+                        * Block<T>::BlockSize
+                    + static_cast<DifferenceType>(m_Offset) + n;
+                m_BlockIndex = flatIndex / Block<T>::BlockSize;
+                m_Offset     = flatIndex % Block<T>::BlockSize;
+                return *this;
+            }
+
+            constexpr Iterator operator-(DifferenceType n) const
+            {
+                return *this + (-n);
+            }
+
+            constexpr Iterator& operator-=(DifferenceType n)
+            {
+                return *this += -n;
+            }
+
+            constexpr DifferenceType operator-(const Iterator& other) const
+            {
+                return static_cast<DifferenceType>(
+                    (m_BlockIndex - other.m_BlockIndex) * Block<T>::BlockSize
+                    + (m_Offset - other.m_Offset));
+            }
+
+            constexpr bool operator==(const Iterator& other) const = default;
+
+            constexpr auto operator<=>(const Iterator& other) const
+            {
+                if (m_BlockIndex != other.m_BlockIndex)
+                    return m_BlockIndex <=> other.m_BlockIndex;
+                return m_Offset <=> other.m_Offset;
+            }
+
+          private:
+            Vector<BlockRefType>* m_Blocks;
+            usize                 m_BlockIndex;
+            usize                 m_Offset;
+
+            template <typename, bool>
+            friend class DequeIterator;
+            template <typename>
+            friend class ReverseIterator;
+            friend class Deque<T>;
+        };
+
+        using ConstIterator        = Iterator<true>;
+        using ReverseIterator      = ::Prism::ReverseIterator<Iterator<false>>;
+        using ConstReverseIterator = ::Prism::ReverseIterator<Iterator<true>>;
+
+        constexpr T& operator[](usize index)
+        {
+            usize flatIndex  = m_FrontOffset + index;
+            usize blockIndex = flatIndex / BlockSize;
+            usize offset     = flatIndex % BlockSize;
+            return (*m_Blocks[m_FrontIndex + blockIndex])[offset];
         }
+
+        constexpr const T& operator[](usize index) const
+        {
+            usize flatIndex  = m_FrontOffset + index;
+            usize blockIndex = flatIndex / BlockSize;
+            usize offset     = flatIndex % BlockSize;
+            return (*m_Blocks[m_FrontIndex + blockIndex])[offset];
+        }
+
+        constexpr void PushBack(const T& value)
+        {
+            if (m_BackOffset == BlockSize)
+            {
+                if (m_BackIndex + 1 >= m_Blocks.Size())
+                    m_Blocks.PushBack(BlockRef::Create());
+                ++m_BackIndex;
+                m_BackOffset = 0;
+            }
+
+            (*m_Blocks[m_BackIndex])[m_BackOffset++] = value;
+        }
+        template <typename... Args>
+        constexpr void EmplaceBack(Args&&... args)
+        {
+            T value(Forward<Args>(args)...);
+            if (m_BackOffset == BlockSize)
+            {
+                if (m_BackIndex + 1 >= m_Blocks.Size())
+                    m_Blocks.PushBack(BlockRef::Create());
+                ++m_BackIndex;
+                m_BackOffset = 0;
+            }
+
+            (*m_Blocks[m_BackIndex])[m_BackOffset++] = value;
+        }
+
+        constexpr void PushFront(const T& value)
+        {
+            if (m_FrontOffset == 0)
+            {
+                if (m_FrontIndex == 0)
+                {
+                    m_Blocks.Insert(m_Blocks.begin(), BlockRef::Create());
+                    ++m_BackIndex;
+                }
+                else { --m_FrontIndex; }
+                m_FrontOffset = BlockSize;
+            }
+
+            (*m_Blocks[m_FrontIndex])[--m_FrontOffset] = value;
+        }
+        template <typename... Args>
+        constexpr void EmplaceFront(Args&&... args)
+        {
+            T value(Forward<Args>(args)...);
+            if (m_FrontOffset == 0)
+            {
+                if (m_FrontIndex == 0)
+                {
+                    m_Blocks.Insert(m_Blocks.begin(), BlockRef::Create());
+                    ++m_BackIndex;
+                }
+                else { --m_FrontIndex; }
+                m_FrontOffset = BlockSize;
+            }
+
+            (*m_Blocks[m_FrontIndex])[--m_FrontOffset] = value;
+        }
+
+        constexpr T PopBackElement()
+        {
+            if (m_BackOffset == 0)
+            {
+                --m_BackIndex;
+                m_BackOffset = BlockSize;
+            }
+            return (*m_Blocks[m_BackIndex])[--m_BackOffset];
+        }
+        constexpr void PopBack()
+        {
+            if (m_BackOffset == 0)
+            {
+                --m_BackIndex;
+                m_BackOffset = BlockSize;
+            }
+            --m_BackOffset;
+        }
+
+        constexpr T PopFrontElement()
+        {
+            T value = (*m_Blocks[m_FrontIndex])[m_FrontOffset++];
+            if (m_FrontOffset == BlockSize)
+            {
+                ++m_FrontIndex;
+                m_FrontOffset = 0;
+            }
+            return value;
+        }
+        constexpr void PopFront()
+        {
+            ++m_FrontOffset;
+            if (m_FrontOffset == BlockSize)
+            {
+                ++m_FrontIndex;
+                m_FrontOffset = 0;
+            }
+        }
+
+        constexpr T& Front()
+        {
+            return (*m_Blocks[m_FrontIndex])[m_FrontOffset];
+        }
+        constexpr const T& Front() const
+        {
+            return (*m_Blocks[m_FrontIndex])[m_FrontOffset];
+        }
+
+        constexpr T& Back()
+        {
+            return (*m_Blocks[m_BackIndex])[m_BackOffset - 1];
+        }
+        constexpr const T& Back() const
+        {
+            return (*m_Blocks[m_BackIndex])[m_BackOffset - 1];
+        }
+
+        constexpr Iterator<> begin()
+        {
+            return Iterator<>(&m_Blocks, m_FrontIndex, m_FrontOffset);
+        }
+        constexpr Iterator<> end()
+        {
+            return Iterator<>(&m_Blocks, m_BackIndex, m_BackOffset);
+        }
+
+        constexpr ConstIterator begin() const
+        {
+            return ConstIterator(&m_Blocks, m_FrontIndex, m_FrontOffset);
+        }
+        constexpr ConstIterator end() const
+        {
+            return ConstIterator(&m_Blocks, m_BackIndex, m_BackOffset);
+        }
+
+        constexpr ReverseIterator rbegin() { return ReverseIterator(end()); }
+        constexpr ReverseIterator rend() { return ReverseIterator(begin()); }
+
+        constexpr ConstReverseIterator rbegin() const
+        {
+            return ConstReverseIterator(end());
+        }
+        constexpr ConstReverseIterator rend() const
+        {
+            return ConstReverseIterator(begin());
+        }
+
+        constexpr Iterator<> Erase(Iterator<> pos)
+        {
+            Vector<T> temp;
+            for (auto it = begin(); it != end(); ++it)
+                if (it != pos) temp.PushBack(*it);
+
+            Clear();
+            for (const auto& e : temp) PushBack(e);
+            return begin() + (pos - begin());
+        }
+
+        constexpr void Clear()
+        {
+            m_Blocks.Clear();
+            m_Blocks.PushBack(BlockRef::Create());
+            m_FrontIndex  = 0;
+            m_BackIndex   = 0;
+            m_FrontOffset = BlockSize / 2;
+            m_BackOffset  = BlockSize / 2;
+        }
+        constexpr usize Size() const
+        {
+            return (m_BackIndex - m_FrontIndex) * BlockSize
+                 + (m_BackOffset - m_FrontOffset);
+        }
+
+        constexpr bool Empty() const { return Size() == 0; }
     };
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::Deque;
+#endif
