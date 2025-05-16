@@ -10,8 +10,6 @@ namespace Prism
 {
 };
 
-#ifdef PRISM_TARGET_CRYPTIX
-    #define CryptixNameSpace using namespace Prism;
-#else
-    #define CryptixNameSpace
+#ifndef PRISM_TARGET_CRYPTIX
+    #define PRISM_TARGET_CRYPTIX 0
 #endif
