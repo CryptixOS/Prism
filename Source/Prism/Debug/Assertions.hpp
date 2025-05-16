@@ -28,12 +28,10 @@ namespace Prism
     #define PrismEarlyPanic(fmt, ...)                                          \
         Prism::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
     #define PrismPanic(...) Prism::panic(fmt::format(__VA_ARGS__).data())
-
 #else
     #define PrismEarlyPanic(fmt, ...)                                          \
-        earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
-    #define PrismPanic(...) panic(fmt::format(__VA_ARGS__).data())
-
+        ::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define PrismPanic(...) ::panic(fmt::format(__VA_ARGS__).data())
 #endif
 
 #define PrismAssert(expr) PrismAssertMsg(expr, #expr)
