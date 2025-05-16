@@ -6,22 +6,34 @@
  */
 #pragma once
 
+#include <Prism/Core/Config.hpp>
+
 #include <Prism/Debug/Log.hpp>
 #include <Prism/Debug/SourceLocation.hpp>
 
 #include <Prism/String/StringView.hpp>
 
-#ifndef PRISM_TARGET_CRYPTIX
+#if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
 namespace Prism
 {
 #endif
+    extern void earlyPanic(Prism::StringView msg);
     [[noreturn]]
-    extern void earlyPanic(StringView msg);
-    [[noreturn]]
-    extern void panic(StringView msg);
-
-#ifndef PRISM_TARGET_CRYPTIX
+    extern void panic(Prism::StringView msg);
+#if PRISM_TARGET_CRYPTIX == 0
 }; // namespace Prism
+#endif
+
+#if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
+    #define PrismEarlyPanic(fmt, ...)                                          \
+        Prism::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define PrismPanic(...) Prism::panic(fmt::format(__VA_ARGS__).data())
+
+#else
+    #define PrismEarlyPanic(fmt, ...)                                          \
+        earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define PrismPanic(...) panic(fmt::format(__VA_ARGS__).data())
+
 #endif
 
 #define PrismAssert(expr) PrismAssertMsg(expr, #expr)
@@ -54,18 +66,11 @@ namespace Prism
 #define PrismAssertionFailed(...)                                              \
     {                                                                          \
         Prism::SourceLocation source = Prism::SourceLocation::Current();       \
-        /*PrismPanic("{}[{}:{}]: Assertion Failed =>\n{}: {}", */              \
-        /*               source.FileName(), source.Line(), source.Column(), */ \
-        /*source.FunctionName(), fmt::format(__VA_ARGS__));           */       \
         PrismPanic("{}: ==>\nAssertion Failed: {}", source,                    \
                    fmt::format(__VA_ARGS__));                                  \
     }
 
-#define PrismEarlyPanic(fmt, ...)                                              \
-    ::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
-#define PrismPanic(...) ::panic(fmt::format(__VA_ARGS__).data())
-
-#if PRISM_PREFIXLESS_MACROS == 1 || PRISM_TARGET_CRYPTIX
+#if PRISM_PREFIXLESS_MACROS != 0 || PRISM_TARGET_CRYPTIX != 0
     #define Assert(expr)              PrismAssert(expr)
     #define AssertMsg(expr, msg)      PrismAssertMsg(expr, msg)
     #define AssertFmt(expr, fmt, ...) PrismAssertFmt(expr, fmt, __VA_ARGS__)
