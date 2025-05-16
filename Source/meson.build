@@ -1,4 +1,5 @@
 srcs = files(
+  'Prism/Debug/Assertions.cpp',
   'Prism/Debug/Log.cpp',
   'Prism/Debug/LogSink.cpp',
   'Prism/Debug/Ubsan.cpp',
