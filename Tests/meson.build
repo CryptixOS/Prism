@@ -8,7 +8,7 @@
 incdirs = include_directories('../Source/')
 tests = [
   'Algorithm', 'IntrusiveList', 'Deque',
-  'DoublyLinkedList',
+  'DoublyLinkedList', 'Ref',
   'RedBlackTree', 'SimdIntrinsics', 'String', 'StringBuilder',
   'StringUtils', #'Tuple',
   'TypeTraits', 
@@ -22,6 +22,7 @@ cpp_args = [
 
 foreach name : tests
   srcs = files(
+    meson.project_source_root() / 'Source/Prism/Debug/Assertions.cpp',
     meson.project_source_root() / 'Source/Prism/Debug/Log.cpp',
     meson.project_source_root() / 'Source/Prism/PathView.cpp',
     name / 'main.cpp')

@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: GPL-3
  */
 #include <Prism/Algorithm/SearchString.hpp>
+#include <Prism/Debug/Assertions.hpp>
 #include <Prism/String/String.hpp>
 
 #include <iomanip>

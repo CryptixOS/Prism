@@ -87,7 +87,6 @@ install_headers(
   'Source/Prism/Path.hpp',
   'Source/Prism/PathView.hpp',
   #'Source/Prism/Printf.hpp',
-  #'Source/Prism/TypeTraits.hpp',
   'Source/Prism/UUID.hpp',
   subdir: 'Prism'
 )
@@ -113,6 +112,7 @@ install_headers(
   'Source/Prism/Core/Platform.hpp',
   'Source/Prism/Core/Singleton.hpp',
   'Source/Prism/Core/Types.hpp',
+  'Source/Prism/Core/TypeTraits.hpp',
 
   subdir: 'Prism/Core'
 )

@@ -8,39 +8,159 @@
 
 using namespace Prism;
 
-void test_push_pop()
+#include <cassert>
+#include <string>
+#include <utility>
+
+void TestBasicOperations()
 {
-    Deque<int> d;
-    d.PushBack(1);
-    d.PushBack(2);
-    d.PushBack(3);
-    d.PushFront(0);
-    d.PushFront(-1);
+    Deque<int> dq;
+    assert(dq.Empty());
 
-    assert(d.Size() == 5);
-    assert(d[0] == -1);
-    assert(d[1] == 0);
-    assert(d[2] == 1);
-    assert(d[3] == 2);
-    assert(d[4] == 3);
+    dq.PushBack(1);
+    dq.PushBack(2);
+    dq.PushFront(0);
 
-    d.PopFront();
-    assert(d[0] == 0);
-    d.PopBack();
-    assert(d[d.Size() - 1] == 2);
+    assert(dq.Size() == 3);
+    assert(dq[0] == 0);
+    assert(dq[1] == 1);
+    assert(dq[2] == 2);
+
+    assert(dq.Front() == 0);
+    assert(dq.Back() == 2);
+
+    dq.PopFront();
+    dq.PopBack();
+    assert(dq.Size() == 1);
+    assert(dq[0] == 1);
 }
 
-void test_grow()
+void TestPopElement()
 {
-    Deque<int> d;
-    for (int i = 0; i < 500; ++i) d.PushBack(i);
-    for (int i = 0; i < 500; ++i) assert(d[i] == i);
+    Deque<std::string> dq;
+    dq.PushBack("a");
+    dq.PushBack("b");
+    dq.PushBack("c");
+
+    assert(dq.PopFrontElement() == "a");
+    assert(dq.PopBackElement() == "c");
+    assert(dq.Size() == 1);
+    assert(dq[0] == "b");
+}
+
+void TestIndexing()
+{
+    Deque<int> dq;
+    for (int i = 0; i < 100; ++i) dq.PushBack(i);
+    for (int i = 0; i < 100; ++i) assert(dq[i] == i);
+}
+
+void TestIterators()
+{
+    Deque<int> dq;
+    for (int i = 0; i < 10; ++i) dq.PushBack(i);
+
+    int val = 0;
+    for (auto it = dq.begin(); it != dq.end(); ++it, ++val) assert(*it == val);
+
+    val = 9;
+    for (auto it = dq.rbegin(); it != dq.rend(); ++it, --val)
+        assert(*it == val);
+
+    auto it = dq.begin();
+    it += 5;
+    assert(*it == 5);
+    assert(it[2] == 7);
+    assert((it - dq.begin()) == 5);
+}
+
+void TestClear()
+{
+    Deque<int> dq;
+    for (int i = 0; i < 50; ++i) dq.PushBack(i);
+    dq.Clear();
+    assert(dq.Empty());
+    dq.PushBack(1);
+    assert(dq.Size() == 1);
+    assert(dq[0] == 1);
+}
+
+void TestMove()
+{
+    Deque<int> dq1;
+    dq1.PushBack(42);
+    dq1.PushBack(84);
+
+    Deque<int> dq2 = std::move(dq1);
+    assert(dq2.Size() == 2);
+    assert(dq2[0] == 42);
+    assert(dq2[1] == 84);
+
+    dq1 = std::move(dq2);
+    assert(dq1.Size() == 2);
+    assert(dq1[0] == 42);
+    assert(dq1[1] == 84);
+}
+
+void TestStressPushPop()
+{
+    Deque<int> dq;
+    for (int i = 0; i < 10000; ++i) dq.PushBack(i);
+    for (int i = 0; i < 10000; ++i) assert(dq[i] == i);
+
+    for (int i = 0; i < 10000; ++i) dq.PopFront();
+    assert(dq.Empty());
+}
+
+void TestInterleavedPushPop()
+{
+    Deque<int> dq;
+    for (int i = 0; i < 1000; ++i)
+    {
+        dq.PushFront(i);
+        dq.PushBack(i);
+    }
+    assert(dq.Size() == 2000);
+
+    for (int i = 0; i < 1000; ++i)
+    {
+        dq.PopFront();
+        dq.PopBack();
+    }
+    assert(dq.Empty());
+}
+void TestErase()
+{
+    Deque<int> dq;
+    for (int i = 0; i < 5; ++i) dq.PushBack(i); // [0, 1, 2, 3, 4]
+
+    auto it = dq.Erase(dq.begin()); // erase front
+    assert(dq.Size() == 4);
+    assert(*it == 1);
+
+    it = dq.Erase(dq.begin() + 1); // erase "2"
+    assert(dq.Size() == 3);
+    assert(*it == 3);
+
+    it = dq.Erase(dq.end() - 1); // erase "4"
+    assert(dq.Size() == 2);
+    assert(it == dq.end());
+
+    int expected[] = {1, 3};
+    int i          = 0;
+    for (int val : dq) assert(val == expected[i++]);
 }
 
 int main()
 {
-    test_push_pop();
-    test_grow();
-
+    TestBasicOperations();
+    TestPopElement();
+    TestIndexing();
+    TestIterators();
+    TestClear();
+    TestMove();
+    TestStressPushPop();
+    TestInterleavedPushPop();
+    TestErase();
     return 0;
 }
