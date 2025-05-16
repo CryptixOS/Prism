@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include <Prism/Containers/InitializerList.hpp>
+
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Limits.hpp>
 #include <Prism/Core/Types.hpp>
@@ -205,6 +207,62 @@ namespace Prism
             for (SizeType i = 0; i < m_Size; i++) m_Data[i].~ValueType();
             m_Size = 0;
         }
+        constexpr Iterator Insert(ConstIterator pos, const T& value)
+        {
+            return Insert(pos, 1, value);
+        }
+        constexpr Iterator Insert(ConstIterator pos, T&& value)
+        {
+            SizeType index = pos - m_Data;
+            if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
+
+            for (SizeType i = m_Size; i > index; --i)
+                m_Data[i] = Move(m_Data[i - 1]);
+
+            m_Data[index] = Move(value);
+            ++m_Size;
+            return m_Data + index;
+        }
+        constexpr Iterator Insert(ConstIterator pos, SizeType count,
+                                  const T& value)
+        {
+            if (count == 0) return const_cast<Iterator>(pos);
+
+            SizeType index = pos - m_Data;
+            Reserve(m_Size + count);
+
+            for (SizeType i = m_Size + count - 1; i >= index + count; --i)
+                m_Data[i] = Move(m_Data[i - count]);
+
+            for (SizeType i = 0; i < count; ++i) m_Data[index + i] = value;
+
+            m_Size += count;
+            return m_Data + index;
+        }
+        template <typename InputIt>
+        constexpr Iterator Insert(ConstIterator pos, InputIt first,
+                                  InputIt last)
+        {
+            SizeType index = pos - m_Data;
+            SizeType count = std::distance(first, last);
+            if (count == 0) return m_Data + index;
+
+            Reserve(m_Size + count);
+
+            for (SizeType i = m_Size + count - 1; i >= index + count; --i)
+                m_Data[i] = Move(m_Data[i - count]);
+
+            SizeType i = 0;
+            for (auto it = first; it != last; ++it) m_Data[index + i++] = *it;
+
+            m_Size += count;
+            return m_Data + index;
+        }
+        constexpr Iterator Insert(ConstIterator pos, InitializerList<T> ilist)
+        {
+            return Insert(pos, ilist.begin(), ilist.end());
+        }
+
         void PushBack(T& value)
         {
             if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
