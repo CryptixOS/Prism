@@ -97,17 +97,25 @@ namespace Prism
     using usize          = __SIZE_TYPE__;
     using isize          = MakeSignedType<usize>;
 
-    using u8             = __UINT8_TYPE__;
-    using u16            = __UINT16_TYPE__;
-    using u32            = __UINT32_TYPE__;
-    using u64            = __UINT64_TYPE__;
+#if PRISM_TARGET_CRYPTIX == 0
+    using f32 = float;
+    using f64 = double;
+#endif
 
-    using i8             = __INT8_TYPE__;
-    using i16            = __INT16_TYPE__;
-    using i32            = __INT32_TYPE__;
-    using i64            = __INT64_TYPE__;
+    using u8      = __UINT8_TYPE__;
+    using u16     = __UINT16_TYPE__;
+    using u32     = __UINT32_TYPE__;
+    using u64     = __UINT64_TYPE__;
 
-    using symbol         = void*[];
+    using i8      = __INT8_TYPE__;
+    using i16     = __INT16_TYPE__;
+    using i32     = __INT32_TYPE__;
+    using i64     = __INT64_TYPE__;
+
+    using pointer = __UINTPTR_TYPE__;
+    using ptrdiff = __PTRDIFF_TYPE__;
+
+    using symbol  = void*[];
 #if PRISM_TARGET_CRYPTIX == 1
     using ErrorCode = PRISM_ERRNO_T;
     using Error     = PRISM_UNEXPECTED_T<ErrorCode>;
