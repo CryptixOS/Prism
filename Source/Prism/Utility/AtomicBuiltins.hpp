@@ -35,7 +35,7 @@ namespace Prism
 
         MemoryOrder Order;
     };
-    template <typename T, typename U = u32>
+    template <typename T, typename U = T>
     struct EnumCast
     {
         EnumCast(T value)
@@ -43,7 +43,7 @@ namespace Prism
         {
         }
         EnumCast(U value)
-            requires(!IsSameV<T, U>)
+            requires(!IsSameV<T, U> && IsEnumV<T>)
             : Value(static_cast<T>(value))
         {
         }
