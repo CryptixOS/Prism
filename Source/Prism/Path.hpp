@@ -25,6 +25,14 @@ namespace Prism
             : m_Path(path.Raw())
         {
         }
+        constexpr Path(const char* path, usize length)
+            : m_Path(path, length)
+        {
+        }
+
+        constexpr const char* Raw() const { return m_Path.Raw(); }
+        constexpr StringView  StrView() const { return m_Path; }
+        constexpr usize       Size() const { return m_Path.Size(); }
 
         constexpr          operator StringView() const { return m_Path.View(); }
         constexpr          operator PathView() const { return m_Path.View(); }
