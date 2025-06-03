@@ -8,16 +8,14 @@
 
 #include <Prism/Algorithm/SearchString.hpp>
 #include <Prism/Containers/Vector.hpp>
-#include <Prism/Core/Compiler.hpp>
-#include <Prism/Core/TypeTraits.hpp>
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/Concepts.hpp>
+#include <Prism/Core/Core.hpp>
 #include <Prism/String/CharTraits.hpp>
 #include <Prism/Utility/Hash.hpp>
 #include <Prism/Utility/Math.hpp>
 
 #include <cassert>
 #include <ranges>
-#include <utility>
 
 #if PRISM_TARGET_CRYPTIX == 1
     #include <unordered_map>
@@ -31,8 +29,10 @@ namespace Prism
     template <typename C, typename Traits = CharTraits<C>>
     class BasicStringView
     {
-        static_assert(!std::is_array_v<C>);
-        static_assert(std::is_trivial_v<C> && std::is_standard_layout_v<C>);
+        static_assert(!IsArrayV<C>);
+        static_assert(IsTriviallyCopyableV<C>
+                      && IsTriviallyDefaultConstructibleV<C>
+                      && IsStandardLayoutV<C>);
         static_assert(IsSameV<C, typename CharTraits<C>::CharType>);
 
       public:
@@ -66,11 +66,11 @@ namespace Prism
         {
         }
         template <std::contiguous_iterator It, std::sized_sentinel_for<It> End>
-            requires std::same_as<std::iter_value_t<It>, C>
-                  && (!std::convertible_to<End, SizeType>)
+            requires SameAs<std::iter_value_t<It>, C>
+                  && (!ConvertibleTo<End, SizeType>)
 
         constexpr explicit BasicStringView(BasicStringView&& str)
-            : BasicStringView(std::move(str.m_Data), std::move(str.m_Size))
+            : BasicStringView(Move(str.m_Data), Move(str.m_Size))
         {
             str.m_Data = nullptr;
             str.m_Size = 0;
@@ -182,7 +182,7 @@ namespace Prism
         }
         constexpr void Swap(BasicStringView& other) PM_NOEXCEPT
         {
-            *this = std::exchange(other, *this);
+            *this = Exchange(other, *this);
         }
 
         //--------------------------------------------------------------------------
@@ -220,7 +220,7 @@ namespace Prism
 
             // handle last segment
             if (start < Size()) segments.PushBack(Substr(start));
-            return std::move(segments);
+            return Move(segments);
         }
         [[nodiscard]] constexpr BasicStringView
         Substr(SizeType pos = 0, SizeType count = NPos) const PM_NOEXCEPT
@@ -339,7 +339,7 @@ namespace Prism
         [[nodiscard]] constexpr SizeType
         Find(ValueType ch, SizeType pos = 0) const PM_NOEXCEPT
         {
-            return Find(BasicStringView(std::addressof(ch), 1), pos);
+            return Find(BasicStringView(AddressOf(ch), 1), pos);
         }
         [[nodiscard]] constexpr SizeType RFind(const C* pattern, SizeType pos,
                                                SizeType count) const PM_NOEXCEPT
@@ -354,7 +354,7 @@ namespace Prism
         [[nodiscard]] constexpr SizeType RFind(C ch, SizeType pos
                                                      = NPos) const PM_NOEXCEPT
         {
-            return RFind(BasicStringView(std::addressof(ch), 1), pos);
+            return RFind(BasicStringView(AddressOf(ch), 1), pos);
         }
         template <typename StringViewLike>
         [[nodiscard]] constexpr SizeType
@@ -444,7 +444,7 @@ namespace Prism
         [[nodiscard]] constexpr SizeType
         FindFirstNotOf(C ch, SizeType pos = 0) const PM_NOEXCEPT
         {
-            return FindFirstNotOf(BasicStringView(std::addressof(ch), 1), pos);
+            return FindFirstNotOf(BasicStringView(AddressOf(ch), 1), pos);
         }
 
         [[nodiscard]] constexpr SizeType
@@ -478,7 +478,7 @@ namespace Prism
         [[nodiscard]] constexpr SizeType
         FindLastNotOf(C ch, SizeType pos = NPos) const PM_NOEXCEPT
         {
-            return FindLastNotOf(BasicStringView(std::addressof(ch), 1), pos);
+            return FindLastNotOf(BasicStringView(AddressOf(ch), 1), pos);
         }
 
         [[nodiscard]] constexpr SizeType

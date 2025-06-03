@@ -7,11 +7,9 @@
 #pragma once
 
 #include <Prism/Core/Config.hpp>
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/TypeTraits.hpp>
 #include <Prism/Debug/Assertions.hpp>
-
-#include <atomic>
-#include <utility>
+#include <Prism/Utility/Atomic.hpp>
 
 namespace Prism
 {
@@ -20,13 +18,13 @@ namespace Prism
       public:
         virtual ~RefCounted() { PrismAssert(m_RefCount == 0); }
 
-        usize RefCount() const { return m_RefCount.load(); }
+        usize RefCount() const { return m_RefCount.Load(); }
 
         void  Ref() { ++m_RefCount; }
         void  Unref() { --m_RefCount; }
 
       private:
-        std::atomic<usize> m_RefCount = 0;
+        Atomic<usize> m_RefCount = 0;
     };
 
     template <typename T>
@@ -44,8 +42,7 @@ namespace Prism
         Ref(T* instance)
             : m_Instance(instance)
         {
-            static_assert(std::is_base_of<RefCounted, T>::value,
-                          "Class is not RefCounted!");
+            static_assert(IsBaseOfV<RefCounted, T>, "Class is not RefCounted!");
 
             IncRef();
         }
@@ -130,7 +127,7 @@ namespace Prism
         template <typename... Args>
         static Ref<T> Create(Args&&... args)
         {
-            return Ref<T>(new T(std::forward<Args>(args)...));
+            return Ref<T>(new T(Forward<Args>(args)...));
         }
 
         bool operator==(const Ref<T>& other) const
@@ -166,7 +163,7 @@ namespace Prism
     template <typename T, typename... Args>
     Ref<T> CreateRef(Args&&... args)
     {
-        return Ref<T>(new T(std::forward<Args>(args)...));
+        return Ref<T>(new T(Forward<Args>(args)...));
     }
 }; // namespace Prism
 

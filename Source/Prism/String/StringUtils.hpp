@@ -16,7 +16,7 @@
 namespace Prism
 {
     template <typename T>
-    concept ArithmeticType = std::is_arithmetic_v<T>;
+    concept ArithmeticType = IsArithmeticV<T>;
 
     namespace StringUtils
     {

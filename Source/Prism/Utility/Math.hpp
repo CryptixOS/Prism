@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/Core.hpp>
 
 namespace Prism::Math
 {
@@ -34,7 +34,7 @@ namespace Prism::Math
 
     template <typename T, typename U>
     constexpr auto RoundUpToPowerOfTwo(T value, U exponent)
-        requires(std::is_integral_v<T> && std::is_integral_v<U>)
+        requires(IsIntegralV<T> && IsIntegralV<U>)
     {
         return ((value - 1) & ~(exponent - 1)) + exponent;
     }

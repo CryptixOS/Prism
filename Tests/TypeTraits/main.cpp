@@ -4,7 +4,13 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/Core/TypeTraits.hpp>
+#include <Prism/Core/Details/CVRefTraits.inl>
+#include <Prism/Core/Details/CallableTraits.inl>
+#include <Prism/Core/Details/Conditional.inl>
+#include <Prism/Core/Details/Constructibility.inl>
+#include <Prism/Core/Details/CoreTraits.inl>
+#include <Prism/Core/Details/TransformationTraits.inl>
+#include <Prism/Core/Details/TypeProperties.inl>
 
 using namespace Prism;
 void TypeTraits_TestIsSame()

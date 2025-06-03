@@ -19,7 +19,7 @@ namespace Prism
     {
       public:
         using ElementType             = T;
-        using ValueType               = std::remove_cv_t<T>;
+        using ValueType               = RemoveCvType<T>;
         using SizeType                = usize;
         using PointerType             = T*;
         using ReferenceType           = T&;

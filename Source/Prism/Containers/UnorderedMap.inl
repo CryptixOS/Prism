@@ -9,12 +9,33 @@
 namespace Prism
 {
     template <typename K, typename V, typename H>
-    void UnorderedMap<K, V, H>::Insert(const K& key, V&& value)
+    UnorderedMap<K, V, H>::~UnorderedMap()
     {
-        Rehash(m_Buckets.Size() * 2);
-        usize index = HashType{}(key) % Size();
-        for (auto& [k, v] : m_Buckets[index])
+        for (auto& bucket : m_Buckets)
         {
+            while (!bucket.Empty())
+            {
+                Node* node = bucket.Head();
+                bucket.PopFront();
+                node->Hook.Unlink(node);
+
+                delete node;
+                --m_Size;
+            }
+        }
+    }
+
+    template <typename K, typename V, typename H>
+    void UnorderedMap<K, V, H>::Insert(const K& key, const V& value)
+    {
+        if (m_Size * m_LoadFactorDenominator
+            >= Capacity() * m_LoadFactorNumerator)
+            Rehash(Capacity() * 2);
+
+        auto index = HashType{}(key) % Capacity();
+        for (auto& it : m_Buckets[index])
+        {
+            auto& [k, v] = it.Entry;
             if (k == key)
             {
                 v = value;
@@ -22,58 +43,93 @@ namespace Prism
             }
         }
 
-        m_Buckets[index].EmplaceBack(key, value);
+        auto node = new Node(key, value);
+        m_Buckets[index].PushBack(node);
+        ++m_Size;
     }
     template <typename K, typename V, typename H>
-    usize UnorderedMap<K, V, H>::Erase(const K& key)
+    void UnorderedMap<K, V, H>::Insert(const KeyType& key, V&& value)
     {
-        usize index           = HashType{}(key) % Size();
-        auto& bucket          = m_Buckets[index];
+        if (m_Size * m_LoadFactorDenominator
+            >= Capacity() * m_LoadFactorNumerator)
+            Rehash(Capacity() * 2);
 
-        usize elementsRemoved = 0;
-        for (auto it = bucket.begin(); it != bucket.end(); ++it)
+        auto index = HashType{}(key) % Capacity();
+        for (auto& it : m_Buckets[index])
         {
-            if (it->Key == key)
+            auto& [k, v] = it.Entry;
+            if (k == key)
             {
-                bucket.Erase(it);
-                ++elementsRemoved;
+                v = Move(value);
+                return;
             }
         }
 
-        return elementsRemoved;
+        auto node = new Node(key, Move(value));
+        m_Buckets[index].PushBack(node);
+        ++m_Size;
+    }
+
+    template <typename K, typename V, typename H>
+    UnorderedMap<K, V, H>::Iterator UnorderedMap<K, V, H>::Erase(const K& key)
+    {
+        auto  index  = HashType{}(key) % Capacity();
+        auto& bucket = m_Buckets[index];
+
+        for (auto it = bucket.begin(); it != bucket.end(); it++)
+        {
+            auto* node = it.operator->();
+            if (node->Entry.Key == key)
+            {
+                bucket.Erase(node);
+                auto next = Iterator(this, index, ++it);
+                delete node;
+
+                --m_Size;
+                return next;
+            }
+        }
+
+        return end();
     }
 
     template <typename K, typename V, typename H>
     UnorderedMap<K, V, H>::Iterator UnorderedMap<K, V, H>::Find(const K& key)
     {
-        for (auto& bucket : m_Buckets)
+        for (usize i = 0; auto& bucket : m_Buckets)
         {
-            for (auto it = bucket.begin(); it != bucket.end(); it++)
-            {
-                if (it->Key == key) return it;
-            }
-
-            return m_Buckets.end();
+            for (auto it = bucket.begin(); it != bucket.end(); ++it)
+                if (it->Entry.Key == key) return Iterator(this, i, it);
+            ++i;
         }
+
+        return end();
     }
 
     template <typename K, typename V, typename H>
     void UnorderedMap<K, V, H>::Rehash(usize count)
     {
-        if (m_Buckets.Size() * m_LoadFactorDenominator
-            < m_Buckets.Size() * m_LoadFactorNumerator)
+        if (Capacity() * m_LoadFactorDenominator
+            < Capacity() * m_LoadFactorNumerator)
             return;
 
-        auto oldTable = std::move(m_Buckets);
-        m_Buckets.Reserve(count);
+        auto oldTable = Move(m_Buckets);
+        m_Buckets.Resize(count);
+        m_Size = 0;
 
         for (auto& bucket : oldTable)
         {
-            for (auto& [key, value] : bucket)
+            while (!bucket.Empty())
             {
-                usize newIndex = HashType{}(key) % count;
-                m_Buckets[newIndex].EmplaceBack(std::move(key),
-                                                std::move(value));
+                Node* node = bucket.Head();
+                bucket.PopFront();
+                node->Hook.Unlink(node);
+
+                const K& key      = node->Entry.Key;
+                auto     newIndex = HashType{}(key) % count;
+
+                m_Buckets[newIndex].PushBack(node);
+                ++m_Size;
             }
         }
     }

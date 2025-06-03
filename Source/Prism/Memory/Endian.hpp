@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/Concepts.hpp>
 
 namespace Prism
 {
@@ -20,15 +20,14 @@ namespace Prism
 
     template <typename T>
     concept IntegralOrUnderlyingIntegral
-        = std::is_integral_v<T>
-       || (std::is_enum_v<T> && std::is_integral_v<std::underlying_type_t<T>>);
+        = IsIntegralV<T> || (IsEnumV<T> && IsIntegralV<UnderlyingTypeType<T>>);
     template <typename T>
     concept IntegralUnderlying
-        = std::is_enum_v<T> && std::is_integral_v<std::underlying_type_t<T>>;
+        = IsEnumV<T> && IsIntegralV<UnderlyingTypeType<T>>;
 
-    template <Endian New, Endian Old = Endian::eNative, std::integral T>
+    template <Endian New, Endian Old = Endian::eNative, Integral T>
     inline constexpr T ConvertEndian(T num)
-        requires(sizeof(T) <= 8 && std::has_unique_object_representations_v<T>)
+        requires(sizeof(T) <= 8 && HasUniqueObjectRepresentationsV<T>)
     {
         if constexpr (New == Old) return num;
 
@@ -36,11 +35,11 @@ namespace Prism
     }
     template <Endian New, Endian Old = Endian::eNative, IntegralUnderlying T>
     inline constexpr T ConvertEndian(T num)
-        requires(sizeof(T) <= 8 && std::has_unique_object_representations_v<T>)
+        requires(sizeof(T) <= 8 && HasUniqueObjectRepresentationsV<T>)
     {
         if constexpr (New == Old) return num;
 
-        return static_cast<T>(std::byteswap(std::to_underlying(num)));
+        return static_cast<T>(std::byteswap(ToUnderlying(num)));
     }
 
     template <Endian New, IntegralOrUnderlyingIntegral T>

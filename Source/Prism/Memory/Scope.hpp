@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Prism/Core/Core.hpp>
 #include <Prism/Memory/Ref.hpp>
 #include <Prism/Memory/WeakRef.hpp>
 
@@ -52,33 +53,21 @@ namespace Prism
 
         ~Scope() { Reset(); }
 
-        T* Release() PM_NOEXCEPT { return std::exchange(m_Instance, nullptr); }
-        void Reset(T* instance = {}) PM_NOEXCEPT
+        T*   Release() PM_NOEXCEPT { return Exchange(m_Instance, nullptr); }
+        void Reset(T* instance = nullptr) PM_NOEXCEPT
         {
-            auto* ptr = std::exchange(m_Instance, instance);
+            auto ptr = Exchange(m_Instance, instance);
             Deleter{}(ptr);
-        }
-        template <class U>
-        void Reset(U instance) noexcept
-        {
-            Deleter{}(m_Instance);
-
-            m_Instance = instance;
-        }
-        void Reset(std::nullptr_t = nullptr) PM_NOEXCEPT
-        {
-            Deleter{}(m_Instance);
-            m_Instance = nullptr;
         }
 
         void Swap(Scope& other) PM_NOEXCEPT
         {
-            std::swap(m_Instance, other.m_Instance);
+            Swap(m_Instance, other.m_Instance);
         }
         template <typename U>
         void Swap(Scope<U>& other)
         {
-            std::swap(m_Instance, other.m_Instance);
+            Swap(m_Instance, other.m_Instance);
         }
 
         T*                 Raw() const PM_NOEXCEPT { return m_Instance; }
@@ -91,8 +80,8 @@ namespace Prism
             return m_Instance != nullptr;
         }
 
-        typename std::add_lvalue_reference<T>::type operator*() const
-            noexcept(noexcept(*std::declval<T*>()))
+        AddLValueReferenceType<T> operator*() const
+            PM_NOEXCEPT(PM_NOEXCEPT(*DeclVal<T*>()))
         {
             return *m_Instance;
         }
@@ -103,7 +92,7 @@ namespace Prism
             return m_Instance;
         }
 
-        T& operator[](std::size_t i) const { return m_Instance[i]; }
+        T& operator[](usize i) const { return m_Instance[i]; }
 
         template <typename U>
         Scope& operator=(Ref<U> const&) = delete;
@@ -112,7 +101,7 @@ namespace Prism
 
         Scope& operator=(Scope&& other)
         {
-            Scope ptr(std::move(other));
+            Scope ptr(Move(other));
             swap(ptr);
             return *this;
         }
@@ -120,7 +109,7 @@ namespace Prism
         template <typename U>
         Scope& operator=(Scope<U>&& other)
         {
-            Scope ptr(std::move(other));
+            Scope ptr(Move(other));
             Swap(ptr);
             return *this;
         }

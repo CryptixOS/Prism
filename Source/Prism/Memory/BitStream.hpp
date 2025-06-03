@@ -41,7 +41,7 @@ namespace Prism
         }
         inline usize Tell() const { return m_StreamEnd - m_CurrentPointer; }
 
-        template <std::integral T>
+        template <Integral T>
         inline T Read()
         {
             assert(m_CurrentPointer + sizeof(T) <= m_StreamEnd);
@@ -77,7 +77,7 @@ namespace Prism
         }
 
         inline bool ReadBit() { return ReadBits(1); }
-        template <std::integral T = u64>
+        template <Integral T = u64>
         inline T ReadBits(usize count)
             requires(sizeof(T) <= sizeof(u64))
         {
@@ -86,7 +86,7 @@ namespace Prism
 
             return result;
         }
-        template <std::integral T = u64>
+        template <Integral T = u64>
         inline T PeekBits(usize count)
             requires(sizeof(T) <= 8)
         {

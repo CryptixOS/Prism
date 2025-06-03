@@ -11,7 +11,6 @@
 
 namespace Prism
 {
-#include <Prism/Details/Concepts.inl>
     namespace Details
     {
         template <typename T, typename U>
@@ -20,20 +19,35 @@ namespace Prism
 
     template <typename T, typename U>
     concept SameAs = Details::SameHelper<T, U> && Details::SameHelper<U, T>;
+    template <typename Derived, typename Base>
+    concept DerivedFrom
+        = IsBaseOf<Base, Derived>::Value
+       && IsConvertible<const volatile Derived*, const volatile Base*>::Value;
+    template <typename From, typename To>
+    concept ConvertibleTo = IsConvertible<From, To>::Value
+                         && requires { static_cast<To>(DeclVal<From>()); };
+    // template <typename T, typename U>
+    // concept CommonReferenceWith
+    //     = SameAs<CommonReferenceType<T, U>, CommonReferenceType<U, T>>
+    //    && ConvertibleTo<T, CommonReferenceType<T, U>>
+    //    && ConvertibleTo<U, CommonReferenceType<T, U>>;
 
     template <typename T>
     concept Integral = IsIntegralV<T>;
     template <typename T>
-    concept SignedIntegral = Integral<T> && std::is_signed_v<T>;
+    concept SignedIntegral = Integral<T> && IsSignedV<T>;
     template <typename T>
-    concept UnsignedIntegral = std::integral<T> && !std::signed_integral<T>;
+    concept UnsignedIntegral = Integral<T> && !SignedIntegral<T>;
+#if PRISM_TARGET_CRYPTIX == 0
+    template <typename T>
+    concept FloatingPoint = IsFloatingPointV<T>;
+#endif
 
     template <typename T>
-    concept IntegralOrEnum
-        = IsIntegralV<T> || IsEnumV<T> || std::is_unsigned_v<T>;
+    concept IntegralOrEnum = IsIntegralV<T> || IsEnumV<T> || IsUnsignedV<T>;
     template <typename T>
     concept PrimitiveOrEnum = IsEnumV<T> || IsArithmeticV<T> || IsSameV<T, bool>
-                           || std::is_signed_v<T> || IsIntegralV<T>;
+                           || IsSignedV<T> || IsIntegralV<T>;
 
     template <PrimitiveOrEnum T>
     class ArithmeticEnum
@@ -52,7 +66,7 @@ namespace Prism
         {
         }
         constexpr ArithmeticEnum(ValueType&& value)
-            requires(std::is_enum_v<T>)
+            requires(IsEnumV<T>)
             : m_Value(static_cast<T>(value))
         {
         }
@@ -127,6 +141,10 @@ namespace Prism
     {
         return lhs == rhs;
     }
+
+    template <typename T>
+    concept IsImplicitlyDefaultConstructible
+        = IsDefaultConstructibleV<T> && IsTriviallyDefaultConstructibleV<T>;
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1

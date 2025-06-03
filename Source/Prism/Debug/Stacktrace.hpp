@@ -51,7 +51,7 @@ namespace Prism
                                   PhysAddr lowestSymbolAddress  = 0x0000'0000,
                                   PhysAddr highestSymbolAddress = 0xffff'ffff)
         {
-            m_Symbols              = std::move(symbols);
+            m_Symbols              = Move(symbols);
             m_LowestSymbolAddress  = lowestSymbolAddress;
             m_HighestSymbolAddress = highestSymbolAddress;
 

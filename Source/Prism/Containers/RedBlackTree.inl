@@ -46,7 +46,7 @@ namespace Prism
         Node* node = Find(key);
         if (node) return node->Value();
 
-        return (*Insert(new Node(std::move(key)))).Value;
+        return (*Insert(new Node(Move(key)))).Value;
     }
 
     template <typename K, typename V>

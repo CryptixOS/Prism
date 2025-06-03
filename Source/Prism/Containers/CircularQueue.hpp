@@ -117,7 +117,7 @@ namespace Prism
             auto& element = m_Storage[(m_Head + m_Size) % Capacity];
             if (m_Size == Capacity) element.~T();
 
-            new (&element) T(std::forward<T>(value));
+            new (&element) T(Forward<T>(value));
             if (m_Size == Capacity) m_Head = (m_Head + 1) % Capacity;
             else ++m_Size;
         }
@@ -127,7 +127,7 @@ namespace Prism
             auto& element = m_Storage[(m_Head + m_Size) % Capacity];
             if (m_Size == Capacity) element.~T();
 
-            new (&element) T(std::forward<Args...>((args)...));
+            new (&element) T(Forward<Args...>((args)...));
             if (m_Size == Capacity) m_Head = (m_Head + 1) % Capacity;
             else ++m_Size;
         }
@@ -136,7 +136,7 @@ namespace Prism
         {
             assert(!Empty());
             auto& element = m_Storage[m_Head];
-            T     value   = std::move(element);
+            T     value   = Move(element);
             element.~T();
 
             m_Head = (m_Head + 1) % Capacity;
@@ -148,7 +148,7 @@ namespace Prism
             assert(!Empty());
             m_Head = m_Head == 0 ? Capacity - 1 : (m_Head - 1) % Capacity;
             auto& element = m_Storage[(m_Head + m_Size - 1) % Capacity];
-            T     value   = std::move(element);
+            T     value   = Move(element);
             element.~T();
 
             --m_Size;

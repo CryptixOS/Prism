@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Compiler.hpp>
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/TypeTraits.hpp>
 
 namespace Prism
 {
@@ -15,14 +15,15 @@ namespace Prism
     struct CharTraits
     {
         using CharType   = C;
-        using IntType    = std::wint_t;
+        using IntType    = i64;
         using OffsetType = i64;
         using PosType    = i64;
+        static_assert(IsSignedV<IntType>, "IntType is supposed to be signed");
 
         constexpr static void Assign(CharType&       c1,
                                      const CharType& c2) PM_NOEXCEPT
         {
-            if (std::is_constant_evaluated())
+            if (IsConstantEvaluated())
                 std::construct_at(std::addressof(c1), c2);
             else c1 = c2;
         }
@@ -30,7 +31,7 @@ namespace Prism
                                           CharType ch)
         {
             if (count == 0) return dest;
-            if (std::is_constant_evaluated()) return Assign(dest, count, ch);
+            if (IsConstantEvaluated()) return Assign(dest, count, ch);
 
             return static_cast<CharType*>(std::memset(dest, ch, count));
         }
@@ -49,7 +50,7 @@ namespace Prism
         {
             assert(src && dest);
             if (count == 0) return dest;
-            if (std::is_constant_evaluated())
+            if (IsConstantEvaluated())
             {
                 if (__builtin_constant_p(src < dest) && dest > src
                     && dest < (src + count))
@@ -70,7 +71,7 @@ namespace Prism
                                         usize count)
         {
             if (count == 0) return dest;
-            if (std::is_constant_evaluated())
+            if (IsConstantEvaluated())
             {
                 for (usize i = 0; i < count; ++i)
                     std::construct_at(dest + i, src[i]);
@@ -101,7 +102,7 @@ namespace Prism
                 if (Equal(string[i], ch)) return string + i;
             return 0;
         }
-        constexpr static CharType ToCharType(const i32& c)
+        constexpr static CharType ToCharType(const IntType& c)
         {
             return static_cast<CharType>(c);
         }
@@ -110,7 +111,7 @@ namespace Prism
         {
             return static_cast<IntType>(c);
         }
-        constexpr static bool EqualIntType(const IntType& c1, const i32& c2)
+        constexpr static bool EqualIntType(const IntType& c1, const IntType& c2)
         {
             return c1 == c2;
         }

@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/Concepts.hpp>
 #if PRISM_TARGET_CRYPTIX == 1
 namespace BootInfo
 {
@@ -16,14 +16,27 @@ namespace BootInfo
 
 namespace Prism
 {
-    using VirtAddr = std::uintptr_t;
+    using VirtAddr = pointer;
 
     template <typename T>
-    concept PointerType = std::is_pointer_v<T>;
+    [[nodiscard]] constexpr T* Launder(T* object) noexcept
+    {
+        if constexpr (IsSameV<const volatile T, const volatile void>)
+            static_assert(!IsSameV<const volatile T, const volatile void>,
+                          "Launder argument must not be a void pointer");
+        else if constexpr (IsFunctionV<T>)
+            static_assert(!IsFunctionV<T>,
+                          "Launder argument must not be a function pointer");
+        else return __builtin_launder(object);
+        return nullptr;
+    }
+
+    template <typename T>
+    concept PointerType = IsPointerV<T>;
     template <typename T>
     concept PointerHolder = requires {
-        requires(PointerType<T>) || std::unsigned_integral<T>
-                    || std::is_same_v<T, struct Pointer>;
+        requires(PointerType<T>)
+                    || UnsignedIntegral<T> || IsSameV<T, struct Pointer>;
     };
 
     struct Pointer
@@ -35,7 +48,7 @@ namespace Prism
         template <PointerHolder T = VirtAddr>
         inline constexpr Pointer(const T pointer)
         {
-            if constexpr (std::is_pointer_v<T>)
+            if constexpr (IsPointerV<T>)
                 m_Pointer = reinterpret_cast<VirtAddr>(pointer);
             else m_Pointer = pointer;
         }
@@ -43,7 +56,7 @@ namespace Prism
         template <PointerHolder T>
         inline constexpr Pointer& operator=(T addr)
         {
-            if constexpr (std::is_pointer_v<T>)
+            if constexpr (IsPointerV<T>)
                 m_Pointer = reinterpret_cast<VirtAddr>(addr);
             else m_Pointer = addr;
 
@@ -98,9 +111,8 @@ namespace Prism
             auto higherHalf
                 = IsHigherHalf() ? m_Pointer : m_Pointer + HigherHalfOffset();
 
-            if constexpr (std::is_pointer_v<T>)
-                return reinterpret_cast<T>(higherHalf);
-            else if constexpr (std::is_same_v<T, Pointer>) return higherHalf;
+            if constexpr (IsPointerV<T>) return reinterpret_cast<T>(higherHalf);
+            else if constexpr (IsSameV<T, Pointer>) return higherHalf;
             else return static_cast<T>(higherHalf);
         }
         inline constexpr Pointer ToHigherHalf() const
@@ -114,9 +126,8 @@ namespace Prism
             auto lowerHalf
                 = IsHigherHalf() ? m_Pointer - HigherHalfOffset() : m_Pointer;
 
-            if constexpr (std::is_pointer_v<T>)
-                return reinterpret_cast<T>(lowerHalf);
-            else if constexpr (std::is_same_v<T, Pointer>) return lowerHalf;
+            if constexpr (IsPointerV<T>) return reinterpret_cast<T>(lowerHalf);
+            else if constexpr (IsSameV<T, Pointer>) return lowerHalf;
             else return static_cast<T>(lowerHalf);
         }
         template <>
@@ -131,8 +142,7 @@ namespace Prism
         {
             auto addr = m_Pointer + offset;
 
-            if constexpr (std::is_pointer_v<T>)
-                return reinterpret_cast<T>(addr);
+            if constexpr (IsPointerV<T>) return reinterpret_cast<T>(addr);
             else return addr;
         }
 
@@ -216,7 +226,7 @@ namespace Prism
     template <PointerHolder T>
     inline constexpr Pointer operator|(Pointer& lhs, const T rhs)
     {
-        if constexpr (std::is_same_v<T, Pointer>) return lhs.Raw() | rhs.Raw();
+        if constexpr (IsSameV<T, Pointer>) return lhs.Raw() | rhs.Raw();
 
         return lhs.Raw() | rhs.Raw();
     }

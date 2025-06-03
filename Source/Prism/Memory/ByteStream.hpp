@@ -53,7 +53,7 @@ namespace Prism
             else m_Offset += size;
         }
 
-        template <std::integral T>
+        template <Integral T>
         T Read()
         {
             assert(m_Offset + sizeof(T) <= m_Size);

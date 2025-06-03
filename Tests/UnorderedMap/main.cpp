@@ -30,10 +30,10 @@ void Test_Insert_And_Find()
     map.Insert("banana", 20);
     map.Insert("cherry", 30);
 
-    assert(map.Find("apple")->value == 10);
-    assert(map.Find("banana")->value == 20);
-    assert(map.Find("cherry")->value == 30);
-    assert(map.Find("nonexistent") == nullptr);
+    assert(map.Find("apple")->Value == 10);
+    assert(map.Find("banana")->Value == 20);
+    assert(map.Find("cherry")->Value == 30);
+    assert(map.Find("nonexistent") == map.end());
 }
 
 void Test_InsertOrAssign()
@@ -42,10 +42,10 @@ void Test_InsertOrAssign()
 
     map.Insert("key", 1);
     map.Insert("key", 42);
-    assert(map.Find("key")->value == 1);
+    assert(map.Find("key")->Value == 42);
 
     map.Insert("key", 42);
-    assert(map.Find("key")->value == 42); // value must be updated
+    assert(map.Find("key")->Value == 42); // value must be updated
 }
 
 void Test_Erase_By_Key()
@@ -55,13 +55,14 @@ void Test_Erase_By_Key()
     map.Insert("dog", 5);
     map.Insert("cat", 6);
 
-    assert(map.Find("dog") != nullptr);
-    assert(map.Find("cat") != nullptr);
+    assert(map.Find("dog") != map.end());
+    assert(map.Find("cat") != map.end());
 
-    assert(map.Erase("dog"));
-    assert(map.Find("dog") == nullptr);
+    assert(map.Erase("dog") != map.end());
+    assert(map.Find("dog") == map.end());
 
-    assert(!map.Erase("nonexistent")); // trying to erase nonexistent key
+    assert(map.Erase("nonexistent")
+           == map.end()); // trying to erase nonexistent key
 }
 
 void Test_Iterator()
@@ -73,7 +74,7 @@ void Test_Iterator()
     map.Insert("three", 3);
 
     int sum = 0;
-    for (auto& node : map) { sum += node.value; }
+    for (auto& node : map) sum += node.Value;
 
     assert(sum == (1 + 2 + 3));
 }
@@ -84,7 +85,7 @@ int main()
     Test_InsertOrAssign();
     Test_Erase_By_Key();
     Test_Iterator();
-    // Test_Rehash();
+    //   Test_Rehash();
 
     std::cout << "All IntrusiveHashMap tests passed!\n";
     return 0;

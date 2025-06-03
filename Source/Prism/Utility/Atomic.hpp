@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Concepts.hpp>
+#include <Prism/Core/Concepts.hpp>
 
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>

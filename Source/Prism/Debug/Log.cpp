@@ -27,7 +27,7 @@ namespace Prism::Log
     {
         if (level == LogLevel::eNone) return;
         std::printf("[");
-        std::printf("%s", s_LevelForegroundColors[std::to_underlying(level)]);
+        std::printf("%s", s_LevelForegroundColors[ToUnderlying(level)]);
         if (level == LogLevel::eFatal) std::printf("\u001b[41");
 
         std::printf("%s", magic_enum::enum_name(level).data() + 1);

@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#include <Prism/Containers/InitializerList.hpp>
-
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Limits.hpp>
 #include <Prism/Core/Types.hpp>
@@ -46,9 +44,9 @@ namespace Prism
             for (usize i = 0; i < Size(); i++) Raw()[i] = other.Raw()[i];
         }
         constexpr Vector(Vector&& other)
-            : m_Data(std::move(other.m_Data))
-            , m_Size(std::move(other.m_Size))
-            , m_Capacity(std::move(other.m_Capacity))
+            : m_Data(Move(other.m_Data))
+            , m_Size(Move(other.m_Size))
+            , m_Capacity(Move(other.m_Capacity))
         {
             other.m_Data     = nullptr;
             other.m_Size     = 0;
@@ -85,9 +83,9 @@ namespace Prism
         {
             if (m_Capacity > 0) delete[] m_Data;
 
-            m_Data           = std::move(other.m_Data);
-            m_Size           = std::move(other.m_Size);
-            m_Capacity       = std::move(other.m_Capacity);
+            m_Data           = Move(other.m_Data);
+            m_Size           = Move(other.m_Size);
+            m_Capacity       = Move(other.m_Capacity);
 
             other.m_Data     = nullptr;
             other.m_Size     = 0;
@@ -183,7 +181,7 @@ namespace Prism
 
             for (SizeType i = 0; i < m_Size; i++)
             {
-                new (&newData[i]) ValueType(std::move(m_Data[i]));
+                new (&newData[i]) ValueType(Move(m_Data[i]));
                 m_Data[i].~ValueType();
             }
 
@@ -194,7 +192,7 @@ namespace Prism
         constexpr Iterator Erase(Iterator pos)
         {
             size_t i = pos - m_Data;
-            for (; i < (m_Size - 1); i++) m_Data[i] = std::move(m_Data[i + 1]);
+            for (; i < (m_Size - 1); i++) m_Data[i] = Move(m_Data[i + 1]);
 
             --m_Size;
 
@@ -258,7 +256,8 @@ namespace Prism
             m_Size += count;
             return m_Data + index;
         }
-        constexpr Iterator Insert(ConstIterator pos, InitializerList<T> ilist)
+        constexpr Iterator Insert(ConstIterator            pos,
+                                  std::initializer_list<T> ilist)
         {
             return Insert(pos, ilist.begin(), ilist.end());
         }
@@ -279,7 +278,7 @@ namespace Prism
         {
             if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
 
-            m_Data[m_Size] = std::move(value);
+            m_Data[m_Size] = Move(value);
             ++m_Size;
         }
         template <typename... Args>
@@ -287,7 +286,7 @@ namespace Prism
         {
             if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
 
-            T* element = new (&m_Data[m_Size]) T(std::forward<Args>(args)...);
+            T* element = new (&m_Data[m_Size]) T(Forward<Args>(args)...);
             ++m_Size;
             return *element;
         }
@@ -302,7 +301,7 @@ namespace Prism
         {
             assert(m_Size > 0);
 
-            T value = std::move(m_Data[m_Size - 1]);
+            T value = Move(m_Data[m_Size - 1]);
             --m_Size;
 
             return value;

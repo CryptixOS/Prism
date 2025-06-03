@@ -24,7 +24,7 @@ namespace Prism
         {
         }
         constexpr Buffer(Buffer&& other)
-            : m_Buffer(std::move(other.m_Buffer))
+            : m_Buffer(Move(other.m_Buffer))
         {
         }
 
@@ -36,7 +36,7 @@ namespace Prism
         }
         inline Buffer& operator=(Buffer&& other)
         {
-            m_Buffer = std::move(other.m_Buffer);
+            m_Buffer = Move(other.m_Buffer);
 
             return *this;
         }
@@ -60,7 +60,7 @@ namespace Prism
         {
             assert(offset + bytes <= m_Buffer.Size());
 
-            if constexpr (std::is_same_v<T, Pointer>)
+            if constexpr (IsSameV<T, Pointer>)
                 std::memcpy(dest.Raw(), Raw() + offset, bytes);
             else std::memcpy(dest, Raw() + offset, bytes);
         }

@@ -6,9 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Core/Compiler.hpp>
-#include <Prism/Core/Config.hpp>
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/Core.hpp>
 
 #include <cassert>
 
@@ -25,7 +23,7 @@ namespace Prism
             {
             }
             explicit Node(T&& value)
-                : Value(std::move(value))
+                : Value(Move(value))
             {
             }
 
@@ -181,7 +179,7 @@ namespace Prism
         template <typename... Args>
         inline T& EmplaceBack(Args&&... args)
         {
-            PushBack(T(std::forward<Args>(args)...));
+            PushBack(T(Forward<Args>(args)...));
 
             return Back();
         }

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Prism/Containers/DoublyLinkedList.hpp>
+#include <Prism/Containers/IntrusiveList.hpp>
 #include <Prism/Containers/Vector.hpp>
 
 #include <Prism/Core/NonCopyable.hpp>
@@ -17,76 +18,140 @@
 
 namespace Prism
 {
-    template <typename T>
-    concept IsImplicitlyDefaultConstructible
-        = std::is_default_constructible_v<T>
-       && std::is_trivially_default_constructible_v<T>;
-
-    template <typename K, typename V>
-    struct UnorderedMapNode
-    {
-        using Type      = UnorderedMapNode<K, V>;
-        using KeyType   = K;
-        using ValueType = V;
-
-        K Key;
-        V Value;
-
-        constexpr explicit(IsImplicitlyDefaultConstructible<K>
-                           && IsImplicitlyDefaultConstructible<V>)
-            UnorderedMapNode()
-                PM_NOEXCEPT(std::is_nothrow_default_constructible_v<K>&&
-                                std::is_nothrow_default_constructible_v<V>)
-            requires std::is_default_constructible_v<K>
-                      && std::is_default_constructible_v<V>
-            : Key()
-            , Value()
-        {
-        }
-        constexpr explicit(!std::is_convertible_v<const K&, const V&>())
-            UnorderedMapNode(const K& key, const V& value) PM_NOEXCEPT(
-                std::is_nothrow_constructible_v<const K&, const V&>())
-            requires(std::is_constructible_v<const K&, const V&>())
-            : Key(key)
-            , Value(value)
-        {
-        }
-        constexpr UnorderedMapNode(const Type&) = default;
-        constexpr UnorderedMapNode(Type&&)      = default;
-    };
     template <typename K, typename V, typename H = std::hash<K>>
     class UnorderedMap
     {
       public:
-        using KeyType    = K;
-        using ValueType  = V;
-        using HashType   = H;
-        using NodeType   = UnorderedMapNode<KeyType, ValueType>;
-        using BucketType = DoublyLinkedList<NodeType>;
+        using KeyType   = K;
+        using ValueType = V;
+        using HashType  = H;
 
-        using Iterator   = DoublyLinkedList<NodeType>::Iterator;
+        struct KeyValuePair
+        {
+            KeyType   Key;
+            ValueType Value;
 
-        UnorderedMap() { m_Buckets.Reserve(10); }
+            KeyValuePair() = default;
+            KeyValuePair(const KeyType& key, ValueType&& value)
+                : Key(key)
+                , Value(Move(value))
+            {
+            }
+        };
 
-        bool     Empty() const PM_NOEXCEPT { return m_Buckets.Size() == 0; }
-        usize    Size() const PM_NOEXCEPT { return m_Buckets.Size(); }
+        struct Node
+        {
+            using KeyType   = K;
+            using ValueType = V;
+
+            KeyValuePair            Entry;
+
+            IntrusiveListHook<Node> Hook;
+            using List = IntrusiveList<Node>;
+
+            constexpr Node()
+                requires(IsDefaultConstructibleV<KeyType>
+                         && IsDefaultConstructibleV<ValueType>)
+            {
+            }
+            constexpr Node(const KeyType& key, ValueType&& value)
+                : Entry(key, Move(value))
+            {
+            }
+        };
+
+        using NodeType   = Node;
+        using BucketType = Node::List;
+
+        struct Iterator
+        {
+            Iterator(UnorderedMap* map, usize index)
+                : m_Map(map)
+                , m_BucketIndex(index)
+            {
+                if (m_BucketIndex >= m_Map->Capacity()) return;
+
+                ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
+                AdvanceToValid();
+            }
+            Iterator(UnorderedMap* map, usize index,
+                     typename BucketType::Iterator listIt)
+                : m_Map(map)
+                , m_BucketIndex(index)
+                , ListIt(listIt)
+            {
+            }
+
+            constexpr inline void AdvanceToValid()
+            {
+                while (m_BucketIndex < m_Map->Capacity()
+                       && ListIt == m_Map->m_Buckets[m_BucketIndex].end())
+                {
+                    ++m_BucketIndex;
+                    if (m_BucketIndex < m_Map->Capacity())
+                        ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
+                }
+            }
+
+            constexpr KeyValuePair& operator*() const { return ListIt->Entry; }
+            constexpr KeyValuePair* operator->() const
+            {
+                return &ListIt->Entry;
+            }
+
+            constexpr Iterator& operator++()
+            {
+                ++ListIt;
+                AdvanceToValid();
+
+                return *this;
+            }
+
+            constexpr bool operator==(const Iterator& other) const
+            {
+                return m_BucketIndex == other.m_BucketIndex
+                    && ListIt == other.ListIt;
+            }
+            constexpr bool operator!=(const Iterator& other) const
+            {
+                return m_BucketIndex != other.m_BucketIndex
+                    || ListIt != other.ListIt;
+            }
+
+          private:
+            UnorderedMap*                 m_Map         = nullptr;
+            usize                         m_BucketIndex = 0;
+            typename BucketType::Iterator ListIt;
+        };
+
+        UnorderedMap(usize initialCapacity = 8)
+        {
+            m_Buckets.Resize(initialCapacity);
+        }
+        ~UnorderedMap();
+
+        bool     Empty() const PM_NOEXCEPT { return m_Size == 0; }
+        usize    Size() const PM_NOEXCEPT { return m_Size; }
+        usize    Capacity() const PM_NOEXCEPT { return m_Buckets.Size(); }
 
         // TODO(v1tr10l7): return iterator
+        void     Insert(const K& key, const V& value);
         void     Insert(const K& key, V&& value);
-        usize    Erase(const K& key);
+        Iterator Erase(const K& key);
 
         Iterator Find(const K& key);
-        bool     Contains(const K& key) const
-        {
-            return Find(key) != m_Buckets.end();
-        }
+        bool     Contains(const K& key) const { return Find(key); }
 
-        void Rehash(usize count);
+        void     Rehash(usize count);
+
+        constexpr Iterator begin() { return Iterator(this, 0); }
+        constexpr Iterator end() { return Iterator(this, Capacity()); }
 
       private:
         Vector<BucketType> m_Buckets;
-        usize              m_LoadFactorNumerator   = 1;
-        usize              m_LoadFactorDenominator = 1;
+        usize              m_Size                  = 0;
+        usize              m_LoadFactorNumerator   = 3;
+        usize              m_LoadFactorDenominator = 4;
         usize              m_MaxLoadFactor         = 1;
     };
 } // namespace Prism

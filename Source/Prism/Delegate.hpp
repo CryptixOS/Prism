@@ -6,9 +6,8 @@
  */
 #pragma once
 
-#include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Concepts.hpp>
 #include <Prism/Core/NonCopyable.hpp>
-#include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Assertions.hpp>
 
 /*
@@ -24,6 +23,89 @@
 
 namespace Prism
 {
+    namespace Details
+    {
+        template <typename T, typename U = typename InvUnwrap<T>::Type>
+        constexpr U&&
+        ToLValueRef(typename RemoveReference<T>::Type& value) noexcept
+        {
+            return static_cast<U&&>(value);
+        }
+
+        template <typename ResultType, typename _Fn, typename... Args>
+        constexpr ResultType DoInvoke(InvokeOther, _Fn&& fn, Args&&... args)
+        {
+            return Forward<_Fn>(fn)(Forward<Args>(args)...);
+        }
+
+        template <typename ResultType, typename MemFun, typename T,
+                  typename... Args>
+        constexpr ResultType DoInvoke(InvokeMemFunRef, MemFun&& fn, T&& arg,
+                                      Args&&... args)
+        {
+            return (ToLValueRef<T>(arg).*fn)(Forward<Args>(args)...);
+        }
+
+        template <typename ResultType, typename MemFun, typename T,
+                  typename... Args>
+        constexpr ResultType DoInvoke(InvokeMemFunDeref, MemFun&& fn, T&& arg,
+                                      Args&&... args)
+        {
+            return ((*Forward<T>(arg)).*fn)(Forward<Args>(args)...);
+        }
+
+        template <typename ResultType, typename MemPtr, typename T>
+        constexpr ResultType DoInvoke(InvokeMemObjRef, MemPtr&& fn, T&& arg)
+        {
+            return ToLValueRef<T>(arg).*fn;
+        }
+
+        template <typename ResultType, typename MemPtr, typename T>
+        constexpr ResultType DoInvoke(InvokeMemObjDeref, MemPtr&& fn, T&& arg)
+        {
+            return (*Forward<T>(arg)).*fn;
+        }
+
+        template <typename Functor, typename... Args>
+        constexpr InvokeResultType<Functor, Args...>
+        InvokeFunction(Functor&& fn, Args&&... args)
+            PM_NOEXCEPT(IsNoThrowInvocableV<Functor, Args...>)
+        {
+            using Result = InvokeResult<Functor, Args...>;
+            using Type   = typename Result::Type;
+            using Tag    = typename Result::InvokeResultType;
+
+            return DoInvoke<Type>(Tag{}, Forward<Functor>(fn),
+                                  Forward<Args>(args)...);
+        }
+    }; // namespace Details
+
+    template <typename Functor, typename... Args>
+    inline constexpr InvokeResultType<Functor, Args...> Invoke(Functor&& fn,
+                                                               Args&&... args)
+        PM_NOEXCEPT(IsNoThrowInvocable<Functor, Args...>::Value)
+    {
+        return Details::InvokeFunction(Forward<Functor>(fn),
+                                       Forward<Args>(args)...);
+    }
+
+    template <typename ResultType, typename Functor, typename... Args>
+    constexpr EnableIfType<IsInvocableR<ResultType, Functor, Args...>::Value,
+                           ResultType>
+    InvokeAsType(Functor&& fn, Args&&... args) noexcept(
+        IsNoThrowInvocableR<ResultType, Functor, Args...>::Value)
+    {
+        using Result = InvokeResult<Functor, Args...>;
+        using Type   = typename Result::Type;
+        using Tag    = typename Result::InvokeResultType;
+        if constexpr (IsVoidV<ResultType>)
+            Details::InvokeFunction<Type>(Tag{}, Forward<Functor>(fn),
+                                          Forward<Args>(args)...);
+        else
+            return Details::InvokeFunction<Type>(Tag{}, Forward<Functor>(fn),
+                                                 Forward<Args>(args)...);
+    }
+
     template <typename Ret>
     class Delegate;
 
@@ -164,12 +246,12 @@ namespace Prism
 
             if constexpr (sizeof(Decayed) <= SBO_SIZE)
             {
-                new (m_Storage) Decayed(std::forward<Lambda>(lambda));
+                new (m_Storage) Decayed(Forward<Lambda>(lambda));
                 Assign(m_Storage, LambdaStub<Decayed>, &DestroyLambda<Decayed>);
                 return;
             }
 
-            Decayed* heapAllocated = new Decayed(std::forward<Lambda>(lambda));
+            Decayed* heapAllocated = new Decayed(Forward<Lambda>(lambda));
             Assign(heapAllocated, LambdaStub<Decayed>,
                    &DestroyLambdaHeap<Decayed>);
         }
@@ -180,14 +262,12 @@ namespace Prism
             using MemberFunction      = ReturnValue (Class::*)(Args...);
             using MemberFunctionConst = ReturnValue (Class::*)(Args...) const;
 
-            if constexpr (std::is_same_v<decltype(Function),
-                                         MemberFunctionConst>)
+            if constexpr (IsSameV<decltype(Function), MemberFunctionConst>)
                 Assign(const_cast<Class*>(object),
                        ConstMemberFunctionStub<Class, Function>);
             else
             {
-                static_assert(
-                    std::is_same_v<decltype(Function), MemberFunction>);
+                static_assert(IsSameV<decltype(Function), MemberFunction>);
                 Assign(reinterpret_cast<ObjectType>(object),
                        MemberFunctionStub<Class, Function>);
             }
@@ -199,12 +279,12 @@ namespace Prism
         ReturnValue Invoke(Args... args) const
         {
             assert(IsBound() && "Trying to invoke unbound delegate.");
-            return std::invoke(m_Functor.Stub, m_Functor.Object,
-                               std::forward<Args>(args)...);
+            return /*::Prism::Invoke*/ std::invoke(
+                m_Functor.Stub, m_Functor.Object, Forward<Args>(args)...);
         }
         inline ReturnValue operator()(Args... args)
         {
-            return Invoke(std::forward<Args>(args)...);
+            return Invoke(Forward<Args>(args)...);
         }
 
         void Reset()
@@ -265,7 +345,7 @@ namespace Prism
                                               Args... args)
         {
             Class* p = static_cast<Class*>(thisObject);
-            return (p->*Function)(std::forward<Args>(args)...);
+            return (p->*Function)(Forward<Args>(args)...);
         }
 
         template <typename Class, ReturnValue (Class::*Function)(Args...) const>
@@ -273,20 +353,20 @@ namespace Prism
                                                    Args... args)
         {
             const Class* p = static_cast<Class*>(objectType);
-            return (p->*Function)(std::forward<Args>(args)...);
+            return (p->*Function)(Forward<Args>(args)...);
         }
 
         template <ReturnValue (*Function)(Args...)>
         static ReturnValue FreeFunctionStub(ObjectType objectType, Args... args)
         {
-            return (Function)(std::forward<Args>(args)...);
+            return (Function)(Forward<Args>(args)...);
         }
 
         template <typename Lambda>
         static ReturnValue LambdaStub(ObjectType thisObject, Args... args)
         {
             Lambda* p = static_cast<Lambda*>(thisObject);
-            return (p->operator())(std::forward<Args>(args)...);
+            return (p->operator())(Forward<Args>(args)...);
         }
 
         template <typename Lambda>

@@ -48,7 +48,7 @@ namespace Prism
             {
             }
             Node(K&& key)
-                : Data(std::move(key), V())
+                : Data(Move(key), V())
             {
             }
             Node(K& key, V& value)
@@ -56,7 +56,7 @@ namespace Prism
             {
             }
             Node(K&& key, V&& value)
-                : Data(std::move(key), std::move(value))
+                : Data(Move(key), Move(value))
             {
             }
 

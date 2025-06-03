@@ -27,6 +27,12 @@
 #endif
 
 #if defined(__has_builtin)
+    #define PrismHasBuiltin(builtin) __has_builtin(builtin)
+#else
+    #define PrismHasBuiltin(a) 0
+#endif
+
+#if defined(__has_builtin)
     #if __has_builtin(__builtin_LINE)
         #define PM_LINE __builtin_LINE()
     #endif
@@ -41,6 +47,9 @@
     #endif
     #if __has_builtin(__builtin_frame_address)
         #define PrismGetFrameAddress(n) __builtin_frame_address(n)
+    #endif
+    #if __has_builtin(__builtin_launder)
+        #define PmLaunder __builtin_launder
     #endif
 #endif
 

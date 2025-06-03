@@ -31,7 +31,7 @@ namespace Prism
                           Args&&... args)
         {
             auto formattedString
-                = fmt::format(format, std::forward<Args>(args)...);
+                = fmt::format(format, Forward<Args>(args)...);
             Print(logLevel,
                   StringView(formattedString.data(), formattedString.size()));
         }
@@ -39,37 +39,37 @@ namespace Prism
         template <typename... Args>
         inline void Message(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eNone, format, std::forward<Args>(args)...);
+            Print(LogLevel::eNone, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Debug(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eDebug, format, std::forward<Args>(args)...);
+            Print(LogLevel::eDebug, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Trace(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eTrace, format, std::forward<Args>(args)...);
+            Print(LogLevel::eTrace, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Info(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eInfo, format, std::forward<Args>(args)...);
+            Print(LogLevel::eInfo, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Warn(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eWarn, format, std::forward<Args>(args)...);
+            Print(LogLevel::eWarn, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Error(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eError, format, std::forward<Args>(args)...);
+            Print(LogLevel::eError, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Fatal(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eFatal, format, std::forward<Args>(args)...);
+            Print(LogLevel::eFatal, format, Forward<Args>(args)...);
         }
     }; // namespace Log
 }; // namespace Prism

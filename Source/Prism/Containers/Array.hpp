@@ -6,9 +6,8 @@
  */
 #pragma once
 
-#include <Prism/Concepts.hpp>
-#include <Prism/Core/Compiler.hpp>
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/Concepts.hpp>
+#include <Prism/Core/Core.hpp>
 
 #include <utility>
 
@@ -102,7 +101,7 @@ namespace Prism
         constexpr void Swap(Array& other) PM_NOEXCEPT
         {
             assert(other.Size() <= N);
-            for (usize i = 0; auto& v : other) std::swap(v, Data[i++]);
+            for (usize i = 0; auto& v : other) Swap(v, Data[i++]);
         }
         constexpr auto operator<=>(const Array<T, N>& other) const = default;
 
@@ -121,7 +120,7 @@ namespace Prism
     template <typename T, usize N>
     inline constexpr Array<RemoveCvType<T>, N> ToArray(T (&&arr)[N])
     {
-        return Detail::ToArray(arr, MakeIndexSequenceV<N>{});
+        return Detail::ToArray(arr, MakeIndexSequence<N>{});
     }
 }; // namespace Prism
 #if PRISM_TARGET_CRYPTIX == 1
