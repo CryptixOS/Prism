@@ -31,8 +31,13 @@ namespace Prism
             KeyType   Key;
             ValueType Value;
 
-            KeyValuePair() = default;
-            KeyValuePair(const KeyType& key, ValueType&& value)
+            constexpr KeyValuePair() = default;
+            constexpr KeyValuePair(const KeyType& key, const ValueType& value)
+                : Key(key)
+                , Value(value)
+            {
+            }
+            constexpr KeyValuePair(const KeyType& key, ValueType&& value)
                 : Key(key)
                 , Value(Move(value))
             {
@@ -54,6 +59,10 @@ namespace Prism
                          && IsDefaultConstructibleV<ValueType>)
             {
             }
+            constexpr Node(const KeyType& key, const ValueType& value)
+                : Entry(key, value)
+            {
+            }
             constexpr Node(const KeyType& key, ValueType&& value)
                 : Entry(key, Move(value))
             {
@@ -63,9 +72,17 @@ namespace Prism
         using NodeType   = Node;
         using BucketType = Node::List;
 
+        template <bool Const = false>
         struct Iterator
         {
-            Iterator(UnorderedMap* map, usize index)
+            using EntryRefType
+                = ConditionalType<Const, const KeyValuePair&, KeyValuePair&>;
+            using EntryPointerType
+                = ConditionalType<Const, KeyValuePair* const, KeyValuePair*>;
+
+            constexpr Iterator(
+                ConditionalType<Const, const UnorderedMap*, UnorderedMap*> map,
+                const usize index)
                 : m_Map(map)
                 , m_BucketIndex(index)
             {
@@ -74,8 +91,9 @@ namespace Prism
                 ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
                 AdvanceToValid();
             }
-            Iterator(UnorderedMap* map, usize index,
-                     typename BucketType::Iterator listIt)
+            constexpr Iterator(
+                ConditionalType<Const, const UnorderedMap*, UnorderedMap*> map,
+                usize index, typename BucketType::Iterator listIt)
                 : m_Map(map)
                 , m_BucketIndex(index)
                 , ListIt(listIt)
@@ -93,8 +111,8 @@ namespace Prism
                 }
             }
 
-            constexpr KeyValuePair& operator*() const { return ListIt->Entry; }
-            constexpr KeyValuePair* operator->() const
+            constexpr EntryRefType operator*() const { return ListIt->Entry; }
+            constexpr EntryPointerType operator->() const
             {
                 return &ListIt->Entry;
             }
@@ -119,33 +137,69 @@ namespace Prism
             }
 
           private:
-            UnorderedMap*                 m_Map         = nullptr;
+            ConditionalType<Const, const UnorderedMap*, UnorderedMap*> m_Map
+                = nullptr;
             usize                         m_BucketIndex = 0;
             typename BucketType::Iterator ListIt;
         };
+        using ConstIterator = Iterator<true>;
 
-        UnorderedMap(usize initialCapacity = 8)
+        constexpr UnorderedMap(usize initialCapacity = 8)
         {
             m_Buckets.Resize(initialCapacity);
         }
-        ~UnorderedMap();
+        constexpr ~UnorderedMap();
 
-        bool     Empty() const PM_NOEXCEPT { return m_Size == 0; }
-        usize    Size() const PM_NOEXCEPT { return m_Size; }
-        usize    Capacity() const PM_NOEXCEPT { return m_Buckets.Size(); }
+        constexpr bool  Empty() const PM_NOEXCEPT { return m_Size == 0; }
+        constexpr usize Size() const PM_NOEXCEPT { return m_Size; }
+        constexpr usize Capacity() const PM_NOEXCEPT
+        {
+            return m_Buckets.Size();
+        }
 
-        // TODO(v1tr10l7): return iterator
-        void     Insert(const K& key, const V& value);
-        void     Insert(const K& key, V&& value);
-        Iterator Erase(const K& key);
+        constexpr void       Clear() PM_NOEXCEPT;
+        constexpr Iterator<> Insert(const K& key, const V& value);
+        constexpr Iterator<> Insert(const K& key, V&& value);
+        template <typename... Args>
+        constexpr Iterator<>       Emplace(Args&&... args);
+        constexpr Iterator<>       Erase(const K& key);
 
-        Iterator Find(const K& key);
-        bool     Contains(const K& key) const { return Find(key); }
+        constexpr ValueType&       At(const KeyType& key);
+        constexpr const ValueType& At(const KeyType& key) const;
+        constexpr ValueType&       operator[](const KeyType& key);
+        constexpr ValueType&       operator[](KeyType&& key);
 
-        void     Rehash(usize count);
+        constexpr Iterator<>       Find(const K& key);
+        constexpr ConstIterator    Find(const K& key) const;
+        constexpr bool             Contains(const K& key) const
+        {
+            return Find(key) != end();
+        }
 
-        constexpr Iterator begin() { return Iterator(this, 0); }
-        constexpr Iterator end() { return Iterator(this, Capacity()); }
+        constexpr void       Rehash(usize count);
+
+        constexpr Iterator<> begin() PM_NOEXCEPT { return Iterator<>(this, 0); }
+        constexpr ConstIterator begin() const PM_NOEXCEPT
+        {
+            return ConstIterator(this, 0);
+        }
+        constexpr ConstIterator cbegin() const PM_NOEXCEPT
+        {
+            return ConstIterator(this, 0);
+        }
+
+        constexpr Iterator<> end() PM_NOEXCEPT
+        {
+            return Iterator<>(this, Capacity());
+        }
+        constexpr ConstIterator end() const PM_NOEXCEPT
+        {
+            return ConstIterator(this, Capacity());
+        }
+        constexpr ConstIterator cend() const PM_NOEXCEPT
+        {
+            return ConstIterator(this, Capacity());
+        }
 
       private:
         Vector<BucketType> m_Buckets;

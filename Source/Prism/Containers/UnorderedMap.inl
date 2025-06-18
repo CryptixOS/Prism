@@ -9,7 +9,13 @@
 namespace Prism
 {
     template <typename K, typename V, typename H>
-    UnorderedMap<K, V, H>::~UnorderedMap()
+    constexpr UnorderedMap<K, V, H>::~UnorderedMap()
+    {
+        Clear();
+    }
+
+    template <typename K, typename V, typename H>
+    constexpr void UnorderedMap<K, V, H>::Clear() PM_NOEXCEPT
     {
         for (auto& bucket : m_Buckets)
         {
@@ -24,69 +30,98 @@ namespace Prism
             }
         }
     }
-
     template <typename K, typename V, typename H>
-    void UnorderedMap<K, V, H>::Insert(const K& key, const V& value)
+    constexpr UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::Insert(const K& key, const V& value)
     {
         if (m_Size * m_LoadFactorDenominator
             >= Capacity() * m_LoadFactorNumerator)
             Rehash(Capacity() * 2);
 
-        auto index = HashType{}(key) % Capacity();
-        for (auto& it : m_Buckets[index])
+        auto  index  = HashType{}(key) % Capacity();
+        auto& bucket = m_Buckets[index];
+
+        for (auto it = bucket.begin(); it != bucket.end(); it++)
         {
-            auto& [k, v] = it.Entry;
+            auto& [k, v] = it->Entry;
             if (k == key)
             {
                 v = value;
-                return;
+                return Iterator<>(this, index, it);
             }
         }
 
         auto node = new Node(key, value);
-        m_Buckets[index].PushBack(node);
+        bucket.PushBack(node);
         ++m_Size;
+
+        typename BucketType::Iterator newElement(bucket.Tail());
+        return Iterator<>(this, index, newElement);
     }
     template <typename K, typename V, typename H>
-    void UnorderedMap<K, V, H>::Insert(const KeyType& key, V&& value)
+    constexpr UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::Insert(const KeyType& key, V&& value)
     {
         if (m_Size * m_LoadFactorDenominator
             >= Capacity() * m_LoadFactorNumerator)
             Rehash(Capacity() * 2);
 
-        auto index = HashType{}(key) % Capacity();
-        for (auto& it : m_Buckets[index])
+        auto  index  = HashType{}(key) % Capacity();
+        auto& bucket = m_Buckets[index];
+        for (auto it = bucket.begin(); it != bucket.end(); it++)
         {
-            auto& [k, v] = it.Entry;
+            auto& [k, v] = it->Entry;
             if (k == key)
             {
                 v = Move(value);
-                return;
+                return Iterator<>(this, index, it);
             }
         }
 
         auto node = new Node(key, Move(value));
-        m_Buckets[index].PushBack(node);
+        bucket.PushBack(node);
         ++m_Size;
+
+        typename BucketType::Iterator newElement(bucket.Tail());
+        return Iterator<>(this, index, newElement);
     }
 
     template <typename K, typename V, typename H>
-    UnorderedMap<K, V, H>::Iterator UnorderedMap<K, V, H>::Erase(const K& key)
+    template <typename... Args>
+    constexpr UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::Emplace(Args&&... args)
+    {
+        auto node = new Node(Forward<Args>(args)...);
+
+        if (m_Size * 4 >= m_Buckets.Size() * 3)
+            Rehash(Capacity() == 0 ? 8 : Capacity() * 2);
+
+        usize index = HashType{}(node->Key) % Capacity();
+        m_Buckets[index].PushFront(node);
+        ++m_Size;
+
+        return Iterator<>(this, index, m_Buckets[index].begin());
+    }
+
+    template <typename K, typename V, typename H>
+    constexpr UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::Erase(const K& key)
     {
         auto  index  = HashType{}(key) % Capacity();
         auto& bucket = m_Buckets[index];
 
         for (auto it = bucket.begin(); it != bucket.end(); it++)
         {
-            auto* node = it.operator->();
+            auto node = it.operator->();
             if (node->Entry.Key == key)
             {
                 bucket.Erase(node);
-                auto next = Iterator(this, index, ++it);
                 delete node;
 
                 --m_Size;
-                return next;
+                auto next = ++it;
+                return next == bucket.end() ? Iterator<>(this, index)
+                                            : Iterator<>(this, index, next);
             }
         }
 
@@ -94,12 +129,55 @@ namespace Prism
     }
 
     template <typename K, typename V, typename H>
-    UnorderedMap<K, V, H>::Iterator UnorderedMap<K, V, H>::Find(const K& key)
+    constexpr V& UnorderedMap<K, V, H>::At(const KeyType& key)
+    {
+        return Find(key)->Value;
+    }
+    template <typename K, typename V, typename H>
+    constexpr const V& UnorderedMap<K, V, H>::At(const KeyType& key) const
+    {
+        return Find(key)->Value;
+    }
+    template <typename K, typename V, typename H>
+    constexpr V& UnorderedMap<K, V, H>::operator[](const KeyType& key)
+    {
+        auto it = Find(key);
+        if (it != end()) return it->Value;
+
+        return Insert(key, V())->Value;
+    }
+    template <typename K, typename V, typename H>
+    constexpr V& UnorderedMap<K, V, H>::operator[](KeyType&& k)
+    {
+        auto key = Move(k);
+
+        auto it  = Find(key);
+        if (it != end()) return it->Value;
+
+        return Insert(key, {})->Value;
+    }
+
+    template <typename K, typename V, typename H>
+    constexpr UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::Find(const K& key)
     {
         for (usize i = 0; auto& bucket : m_Buckets)
         {
             for (auto it = bucket.begin(); it != bucket.end(); ++it)
-                if (it->Entry.Key == key) return Iterator(this, i, it);
+                if (it->Entry.Key == key) return Iterator<>(this, i, it);
+            ++i;
+        }
+
+        return end();
+    }
+    template <typename K, typename V, typename H>
+    constexpr UnorderedMap<K, V, H>::ConstIterator
+    UnorderedMap<K, V, H>::Find(const K& key) const
+    {
+        for (usize i = 0; auto& bucket : m_Buckets)
+        {
+            for (auto it = bucket.begin(); it != bucket.end(); ++it)
+                if (it->Entry.Key == key) return ConstIterator(this, i, it);
             ++i;
         }
 
@@ -107,7 +185,7 @@ namespace Prism
     }
 
     template <typename K, typename V, typename H>
-    void UnorderedMap<K, V, H>::Rehash(usize count)
+    constexpr void UnorderedMap<K, V, H>::Rehash(usize count)
     {
         if (Capacity() * m_LoadFactorDenominator
             < Capacity() * m_LoadFactorNumerator)
