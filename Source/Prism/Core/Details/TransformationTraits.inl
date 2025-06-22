@@ -376,3 +376,7 @@ namespace Prism
         return static_cast<UnderlyingTypeType<T>>(value);
     }
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::ToUnderlying;
+#endif

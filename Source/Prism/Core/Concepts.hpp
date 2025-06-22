@@ -149,4 +149,5 @@ namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::ArithmeticEnum;
+using Prism::SameAs;
 #endif
