@@ -381,17 +381,19 @@ namespace Prism
     struct IsNoThrowConvertible : public IsNtConvertibleHelper<From, To>::Type
     {
     };
-    /*
-        template <typename From, typename To>
-        struct IsNoThrowConvertible
-            : BooleanConstant<IsNoThrowConvertibleV(From, To)>
-        {
-        };
-        */
+/*
+    template <typename From, typename To>
+    struct IsNoThrowConvertible
+        : BooleanConstant<IsNoThrowConvertibleV(From, To)>
+    {
+    };
+    */
+#if __has_builtin(__is_layout_compatible)
     template <typename T, typename U>
     struct IsLayoutCompatible : BooleanConstant<__is_layout_compatible(T, U)>
     {
     };
+#endif
 
     template <typename T>
     struct AlignmentOf : IntegralConstant<usize, __alignof__(T)>
@@ -518,8 +520,10 @@ namespace Prism
     template <typename From, typename To>
     constexpr bool IsNoThrowConvertibleV
         = IsNoThrowConvertible<From, To>::Value;
+#if __has_builtin(__is_layout_compatible)
     template <typename T, typename U>
     constexpr bool IsLayoutCompatibleV = IsLayoutCompatible<T, U>::Value;
+#endif
 
     template <typename T, usize N = 0>
     constexpr usize ExtentV = Extent<T, N>::Value;

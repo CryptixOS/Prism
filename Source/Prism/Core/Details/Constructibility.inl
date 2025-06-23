@@ -272,16 +272,20 @@ namespace Prism
     struct IsNoThrowSwappable : IsNoThrowSwappableWith<T&, T&>
     {
     };
+#if __has_builtin(__reference_constructs_from_temporary)
     template <typename T, typename U>
     struct ReferenceConstructsFromTemporary
         : BooleanConstant<__reference_constructs_from_temporary(T, U)>
     {
     };
+#endif
+#if __has_builtin(__reference_converts_from_temporary)
     template <typename T, typename U>
     struct ReferenceConvertsFromTemporary
         : BooleanConstant<__reference_converts_from_temporary(T, U)>
     {
     };
+#endif
 
     template <typename T, typename... Args>
     inline constexpr bool IsConstructibleV = IsConstructible<T, Args...>::Value;
