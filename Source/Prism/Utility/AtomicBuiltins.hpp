@@ -259,11 +259,11 @@ namespace Prism
                               ToUnderlying(memoryOrder));
     }
 #if PRISM_TARGET_CRYPTIX != 1
-    PM_ALWAYS_INLINE void AtomicThreadFence(MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE inline void AtomicThreadFence(MemoryOrder memoryOrder)
     {
         return __atomic_thread_fence(ToUnderlying(memoryOrder));
     }
-    PM_ALWAYS_INLINE void AtomicSignalFence(MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE inline void AtomicSignalFence(MemoryOrder memoryOrder)
     {
         return __atomic_signal_fence(ToUnderlying(memoryOrder));
     }
