@@ -146,8 +146,7 @@ namespace Prism
         return __atomic_compare_exchange_n(
             reinterpret_cast<volatile u32*>(&target),
             reinterpret_cast<u32*>(&expected), desired, weak,
-            ToUnderlying(successMemoryOrder),
-            ToUnderlying(failureMemoryOrder));
+            ToUnderlying(successMemoryOrder), ToUnderlying(failureMemoryOrder));
     }
     template <typename T, typename U = u32>
     PM_ALWAYS_INLINE constexpr bool
@@ -260,11 +259,11 @@ namespace Prism
                               ToUnderlying(memoryOrder));
     }
 #if PRISM_TARGET_CRYPTIX != 1
-    PM_ALWAYS_INLINE constexpr void AtomicThreadFence(MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE void AtomicThreadFence(MemoryOrder memoryOrder)
     {
         return __atomic_thread_fence(ToUnderlying(memoryOrder));
     }
-    PM_ALWAYS_INLINE constexpr void AtomicSignalFence(MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE void AtomicSignalFence(MemoryOrder memoryOrder)
     {
         return __atomic_signal_fence(ToUnderlying(memoryOrder));
     }
