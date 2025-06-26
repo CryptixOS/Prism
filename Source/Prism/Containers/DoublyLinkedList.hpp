@@ -77,7 +77,6 @@ namespace Prism
         {
             for (const auto& element : other) EmplaceBack(element);
         }
-
         constexpr DoublyLinkedList(DoublyLinkedList&& other)
         {
             m_Head       = other.m_Head;
@@ -122,11 +121,11 @@ namespace Prism
             return node->Value;
         }
 
-        T&             Front() { return m_Head->Value; }
-        const T&       Front() const { return m_Head->Value; }
+        T&             Head() { return m_Head->Value; }
+        const T&       Head() const { return m_Head->Value; }
 
-        T&             Back() { return m_Tail->Value; }
-        const T&       Back() const { return m_Tail->Value; }
+        T&             Tail() { return m_Tail->Value; }
+        const T&       Tail() const { return m_Tail->Value; }
 
         Iterator       begin() { return Iterator(m_Head); }
         const Iterator begin() const { return Iterator(m_Head); }
@@ -181,9 +180,9 @@ namespace Prism
         {
             PushBack(T(Forward<Args>(args)...));
 
-            return Back();
+            return Tail();
         }
-        inline void PushBack(const T& value)
+        inline Iterator PushBack(const T& value)
         {
             Node* node = new Node(value);
             node->Next = nullptr;
@@ -194,8 +193,10 @@ namespace Prism
 
             m_Tail = node;
             ++m_Size;
+
+            return Iterator(node);
         }
-        inline void PushBack(T&& value)
+        inline Iterator PushBack(T&& value)
         {
             Node* node = new Node(value);
             node->Next = nullptr;
@@ -206,9 +207,11 @@ namespace Prism
 
             m_Tail = node;
             ++m_Size;
+
+            return Iterator(node);
         }
 
-        inline void PushFront(const T& value)
+        inline Iterator PushFront(const T& value)
         {
             Node* newNode = new Node(value);
             newNode->Next = m_Head;
@@ -219,8 +222,9 @@ namespace Prism
 
             m_Head = newNode;
             ++m_Size;
+            return Iterator(newNode);
         }
-        inline void PushFront(T&& value)
+        inline Iterator PushFront(T&& value)
         {
             Node* newNode = new Node(value);
             newNode->Next = m_Head;
@@ -231,39 +235,46 @@ namespace Prism
 
             m_Head = newNode;
             ++m_Size;
+
+            return Iterator(newNode);
         }
 
         inline T PopFrontElement()
         {
             auto front = m_Head;
-            if (front)
-            {
-                m_Head = front->Next;
-                if (m_Head) m_Head->Prev = nullptr;
-                else m_Tail = nullptr; // List became empty
-            }
-
             auto value = front->Value;
-            delete front;
 
-            --m_Size;
+            Erase(Iterator(front));
             return value;
         }
         inline T PopBackElement()
         {
-            auto back = m_Tail;
-            if (back)
-            {
-                m_Tail = back->Prev;
-                if (m_Tail) m_Tail->Next = nullptr;
-                else m_Head = nullptr; // List became empty
-            }
-
+            auto back  = m_Tail;
             auto value = back->Value;
-            delete back;
+
+            Erase(Iterator(back));
+            return value;
+        }
+
+        inline Iterator Erase(Iterator it)
+        {
+            auto node = it.m_Node;
+            auto prev = node->Prev;
+            auto next = node->Next;
+
+            if (node == m_Head) m_Head = prev;
+            else if (node == m_Tail) m_Tail = next;
+
+            if (prev) prev->Next = next;
+            else m_Head = next;
+
+            if (next) next->Prev = prev;
+            else m_Tail = prev;
+
+            delete node;
 
             --m_Size;
-            return value;
+            return next ? Iterator(next) : Iterator::UniversalEnd();
         }
 
       private:
