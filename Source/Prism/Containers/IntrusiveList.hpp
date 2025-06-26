@@ -6,9 +6,8 @@
  */
 #pragma once
 
+#include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
-
-#include <cassert>
 
 namespace Prism
 {
@@ -18,9 +17,9 @@ namespace Prism
     template <typename T>
     struct IntrusiveListHook
     {
+        IntrusiveList<T, IntrusiveListHook<T>>* Owner    = nullptr;
         T*                                      Previous = nullptr;
         T*                                      Next     = nullptr;
-        IntrusiveList<T, IntrusiveListHook<T>>* Owner    = nullptr;
 
         static IntrusiveListHook& Hook(T* node) { return node->Hook; }
         constexpr bool            IsLinked() const { return Owner; }
@@ -31,24 +30,6 @@ namespace Prism
     class IntrusiveList
     {
       public:
-        friend struct IntrusiveListHook<T>;
-        constexpr IntrusiveList() = default;
-
-        constexpr bool     Empty() const { return !m_Head; }
-
-        constexpr T*       Head() { return m_Head; }
-        constexpr const T* Head() const { return m_Head; }
-        constexpr T*       Tail() { return m_Tail; }
-        constexpr const T* Tail() const { return m_Tail; }
-
-        constexpr void     PushFront(T* node);
-        constexpr void     PushBack(T* node);
-        constexpr void     PopFront();
-        constexpr void     PopBack();
-
-        constexpr void     Erase(T* node);
-        constexpr void     Clear();
-
         struct Iterator
         {
             T* Current;
@@ -57,6 +38,11 @@ namespace Prism
             constexpr explicit Iterator(T* node)
                 : Current(node)
             {
+            }
+
+            constexpr static Iterator UniversalEnd()
+            {
+                return Iterator(nullptr);
             }
 
             constexpr T&        operator*() const { return *Current; }
@@ -74,16 +60,68 @@ namespace Prism
                 return Current != other.Current;
             }
         };
+        using ReverseIterator = std::reverse_iterator<Iterator>;
 
-        constexpr Iterator begin() { return Iterator(m_Head); }
-        constexpr Iterator end() { return Iterator(nullptr); }
+        friend struct IntrusiveListHook<T>;
+        constexpr IntrusiveList() = default;
 
-        constexpr Iterator begin() const { return Iterator(m_Head); }
-        constexpr Iterator end() const { return Iterator(nullptr); }
+        constexpr IntrusiveList(const IntrusiveList& other);
+        constexpr IntrusiveList(IntrusiveList&& other);
+
+        constexpr ~IntrusiveList();
+
+        constexpr IntrusiveList& operator=(const IntrusiveList& other);
+        constexpr IntrusiveList& operator=(IntrusiveList&& other);
+
+        PM_ALWAYS_INLINE inline constexpr bool     Empty() const;
+        PM_ALWAYS_INLINE inline constexpr usize    Size() const;
+
+        PM_ALWAYS_INLINE inline constexpr T*       Head();
+        PM_ALWAYS_INLINE inline constexpr const T* Head() const;
+
+        PM_ALWAYS_INLINE inline constexpr T*       Tail();
+        PM_ALWAYS_INLINE inline constexpr const T* Tail() const;
+
+        PM_ALWAYS_INLINE inline Iterator           begin();
+        PM_ALWAYS_INLINE inline const Iterator     begin() const;
+        PM_ALWAYS_INLINE inline const Iterator     cbegin() const PM_NOEXCEPT;
+
+        PM_ALWAYS_INLINE inline Iterator           end();
+        PM_ALWAYS_INLINE inline const Iterator     end() const;
+        PM_ALWAYS_INLINE inline const Iterator     cend() const PM_NOEXCEPT;
+
+        PM_ALWAYS_INLINE inline ReverseIterator    rbegin();
+        PM_ALWAYS_INLINE inline const ReverseIterator rbegin() const;
+        PM_ALWAYS_INLINE inline const ReverseIterator
+                                                crbegin() const PM_NOEXCEPT;
+
+        PM_ALWAYS_INLINE inline ReverseIterator rend();
+        PM_ALWAYS_INLINE inline const ReverseIterator rend() const;
+        PM_ALWAYS_INLINE inline const ReverseIterator crend() const PM_NOEXCEPT;
+
+        constexpr void                                Clear();
+
+        template <typename... Args>
+        inline constexpr Iterator EmplaceFront(Args&&... args);
+        template <typename... Args>
+        inline constexpr Iterator EmplaceBack(Args&&... args);
+
+        inline constexpr Iterator PushFront(T* node);
+        inline constexpr Iterator PushBack(T* node);
+
+        inline constexpr void     PopFront();
+        inline constexpr void     PopBack();
+
+        inline constexpr T*       PopFrontElement();
+        inline constexpr T*       PopBackElement();
+
+        inline constexpr Iterator Erase(Iterator it);
+        inline constexpr void     Erase(T* node);
 
       private:
-        T* m_Head = nullptr;
-        T* m_Tail = nullptr;
+        T*    m_Head = nullptr;
+        T*    m_Tail = nullptr;
+        usize m_Size = 0;
     };
 }; // namespace Prism
 
