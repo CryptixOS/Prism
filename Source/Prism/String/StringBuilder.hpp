@@ -20,7 +20,7 @@ namespace Prism
             : m_Length(0)
         {
             m_Segments.PushBack(String{""});
-            auto& segment = m_Segments.Back();
+            auto& segment = m_Segments.Tail();
             segment.Reserve(segmentCapacity);
         }
         constexpr ~StringBuilder() {}
@@ -99,7 +99,7 @@ namespace Prism
       private:
         constexpr static usize MAX_SEGMENT_SIZE = 128;
 
-        constexpr SegmentType& Segment() { return m_Segments.Back(); }
+        constexpr SegmentType& Segment() { return m_Segments.Tail(); }
         constexpr void         Reinvalidate()
         {
             auto& segment = Segment();
