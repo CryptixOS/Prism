@@ -10,6 +10,7 @@
 #include <Prism/Containers/IntrusiveList.hpp>
 #include <Prism/Containers/Vector.hpp>
 
+#include <Prism/Core/Iterator.hpp>
 #include <Prism/Core/NonCopyable.hpp>
 #include <Prism/Core/NonMovable.hpp>
 #include <Prism/Core/Types.hpp>
@@ -18,7 +19,18 @@
 
 namespace Prism
 {
-    template <typename K, typename V, typename H = std::hash<K>>
+    template <typename K>
+    struct Hasher
+    {
+        constexpr usize operator()(K key)
+        {
+            auto hash = std::hash<K>{}(key);
+
+            return hash;
+        }
+    };
+
+    template <typename K, typename V, typename H = Hasher<K>>
     class UnorderedMap
     {
       public:
@@ -70,7 +82,7 @@ namespace Prism
         };
 
         using NodeType   = Node;
-        using BucketType = Node::List;
+        using BucketType = IntrusiveList<Node>;
 
         template <bool Const = false>
         struct Iterator
@@ -85,6 +97,7 @@ namespace Prism
                 const usize index)
                 : m_Map(map)
                 , m_BucketIndex(index)
+                , ListIt(BucketType::Iterator::UniversalEnd())
             {
                 if (m_BucketIndex >= m_Map->Capacity()) return;
 
@@ -111,43 +124,62 @@ namespace Prism
                 }
             }
 
-            constexpr EntryRefType operator*() const { return ListIt->Entry; }
-            constexpr EntryPointerType operator->() const
+            constexpr EntryRefType operator*()
             {
+#define PRISM_USE_INTRUSIVE_HASH_MAP 1
+#if PRISM_USE_INTRUSIVE_HASH_MAP == 0
+                return (*ListIt)->Entry;
+#else
+                return ListIt->Entry;
+#endif
+            }
+            constexpr EntryPointerType operator->()
+            {
+#if PRISM_USE_INTRUSIVE_HASH_MAP == 0
+                auto node = *ListIt;
+                return &node->Entry;
+#else
                 return &ListIt->Entry;
+#endif
             }
 
             constexpr Iterator& operator++()
             {
                 ++ListIt;
-                AdvanceToValid();
+                while (ListIt == m_Map->m_Buckets[m_BucketIndex].end())
+                {
+                    ++m_BucketIndex;
+                    if (m_BucketIndex >= m_Map->Capacity()) break;
+
+                    ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
+                }
 
                 return *this;
             }
 
             constexpr bool operator==(const Iterator& other) const
             {
-                return m_BucketIndex == other.m_BucketIndex
-                    && ListIt == other.ListIt;
+                return (m_BucketIndex >= m_Map->Capacity()
+                        && other.m_BucketIndex >= m_Map->Capacity())
+                    || (m_BucketIndex == other.m_BucketIndex
+                        && ListIt == other.ListIt);
             }
             constexpr bool operator!=(const Iterator& other) const
             {
-                return m_BucketIndex != other.m_BucketIndex
-                    || ListIt != other.ListIt;
+                return !(*this == other);
             }
 
-          private:
             ConditionalType<Const, const UnorderedMap*, UnorderedMap*> m_Map
                 = nullptr;
             usize                         m_BucketIndex = 0;
-            typename BucketType::Iterator ListIt;
+            typename BucketType::Iterator ListIt
+                = BucketType::Iterator::UniversalEnd();
         };
-        using ConstIterator = Iterator<true>;
+        using ConstIterator        = Iterator<true>;
+        using ReverseIterator      = ::Prism::ReverseIterator<Iterator<false>>;
+        using ConstReverseIterator = ::Prism::ReverseIterator<Iterator<true>>;
 
-        constexpr UnorderedMap(usize initialCapacity = 8)
-        {
-            m_Buckets.Resize(initialCapacity);
-        }
+        constexpr UnorderedMap(usize initialCapacity = 8);
         constexpr ~UnorderedMap();
 
         constexpr bool  Empty() const PM_NOEXCEPT { return m_Size == 0; }
@@ -156,13 +188,6 @@ namespace Prism
         {
             return m_Buckets.Size();
         }
-
-        constexpr void       Clear() PM_NOEXCEPT;
-        constexpr Iterator<> Insert(const K& key, const V& value);
-        constexpr Iterator<> Insert(const K& key, V&& value);
-        template <typename... Args>
-        constexpr Iterator<>       Emplace(Args&&... args);
-        constexpr Iterator<>       Erase(const K& key);
 
         constexpr ValueType&       At(const KeyType& key);
         constexpr const ValueType& At(const KeyType& key) const;
@@ -176,30 +201,35 @@ namespace Prism
             return Find(key) != end();
         }
 
-        constexpr void       Rehash(usize count);
+        constexpr Iterator<>           begin();
+        constexpr ConstIterator        begin() const;
+        constexpr ConstIterator        cbegin() const PM_NOEXCEPT;
 
-        constexpr Iterator<> begin() PM_NOEXCEPT { return Iterator<>(this, 0); }
-        constexpr ConstIterator begin() const PM_NOEXCEPT
-        {
-            return ConstIterator(this, 0);
-        }
-        constexpr ConstIterator cbegin() const PM_NOEXCEPT
-        {
-            return ConstIterator(this, 0);
-        }
+        constexpr Iterator<>           end();
+        constexpr ConstIterator        end() const;
+        constexpr ConstIterator        cend() const PM_NOEXCEPT;
 
-        constexpr Iterator<> end() PM_NOEXCEPT
-        {
-            return Iterator<>(this, Capacity());
-        }
-        constexpr ConstIterator end() const PM_NOEXCEPT
-        {
-            return ConstIterator(this, Capacity());
-        }
-        constexpr ConstIterator cend() const PM_NOEXCEPT
-        {
-            return ConstIterator(this, Capacity());
-        }
+        // TODO(v1tr10l7): Reverse iterators
+
+        constexpr ReverseIterator      rbegin();
+        constexpr ConstReverseIterator rbegin() const;
+        constexpr ConstReverseIterator crbegin() const PM_NOEXCEPT;
+
+        constexpr ReverseIterator      rend();
+        constexpr ConstReverseIterator rend() const;
+        constexpr ConstReverseIterator crend() const PM_NOEXCEPT;
+
+        constexpr void                 Clear() PM_NOEXCEPT;
+        constexpr void                 Rehash(usize count);
+        constexpr void                 Reserve(usize capacity);
+        constexpr void                 EnsureCapacity();
+
+        constexpr Iterator<>           Insert(const K& key, const V& value);
+        constexpr Iterator<>           Insert(const K& key, V&& value);
+        constexpr Iterator<>           Insert(Node* node);
+        template <typename... Args>
+        constexpr Iterator<> Emplace(Args&&... args);
+        constexpr Iterator<> Erase(const K& key);
 
       private:
         Vector<BucketType> m_Buckets;
@@ -213,5 +243,4 @@ namespace Prism
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::UnorderedMap;
 #endif
-
 #include <Prism/Containers/UnorderedMap.inl>
