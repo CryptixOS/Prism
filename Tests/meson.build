@@ -23,7 +23,8 @@ foreach name : tests
     meson.project_source_root() / 'Source/Prism/Containers/RingBuffer.cpp',
     meson.project_source_root() / 'Source/Prism/Debug/Assertions.cpp',
     meson.project_source_root() / 'Source/Prism/Debug/Log.cpp',
-    meson.project_source_root() / 'Source/Prism/PathView.cpp',
+    meson.project_source_root() / 'Source/Prism/Utility/PathView.cpp',
+    meson.project_source_root() / 'Source/Prism/Utility/Path.cpp',
     name / 'main.cpp')
   test = executable(name, srcs, cpp_args: cpp_args, include_directories: incdirs, dependencies: deps)
   test(name, test)

@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <Prism/PathView.hpp>
+#include <Prism/Utility/PathView.hpp>
 
 namespace Prism
 {

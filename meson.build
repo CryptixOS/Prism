@@ -82,40 +82,66 @@ prism_dep = declare_dependency(
 )
 pkg.generate(prism)
 install_headers(
-  #'Source/Prism/Concepts.hpp',
-  'Source/Prism/Delegate.hpp',
-  'Source/Prism/Path.hpp',
-  'Source/Prism/PathView.hpp',
   #'Source/Prism/Printf.hpp',
   'Source/Prism/UUID.hpp',
   subdir: 'Prism'
+)
+
+install_headers(
+  #'Source/Prism/Algorithm/Random.hpp',
+  'Source/Prism/Algorithm/SearchString.hpp',
+
+  subdir: 'Source/Prism/Algorithm'
 )
 install_headers(
   'Source/Prism/Containers/Array.hpp',
   'Source/Prism/Containers/Bitmap.hpp',
   'Source/Prism/Containers/CircularQueue.hpp',
+  'Source/Prism/Containers/Deque.hpp',
   'Source/Prism/Containers/DoublyLinkedList.hpp',
+  'Source/Prism/Containers/IntrusiveList.hpp',
+  'Source/Prism/Containers/IntrusiveList.inl',
   'Source/Prism/Containers/RedBlackTree.hpp',
   'Source/Prism/Containers/RedBlackTree.inl',
+  'Source/Prism/Containers/RingBuffer.hpp',
   'Source/Prism/Containers/Span.hpp',
-  #'Source/Prism/Containers/UnorderedMap.hpp',
-  #'Source/Prism/Containers/UnorderedMap.inl',
+  'Source/Prism/Containers/SplitBuffer.hpp',
+  'Source/Prism/Containers/Tuple.hpp',
+  'Source/Prism/Containers/UnorderedMap.hpp',
+  'Source/Prism/Containers/UnorderedMap.inl',
   'Source/Prism/Containers/Vector.hpp',
 
   subdir: 'Prism/Containers'
 )
 install_headers(
   'Source/Prism/Core/Compiler.hpp',
+  'Source/Prism/Core/Concepts.hpp',
   'Source/Prism/Core/Config.hpp',
+  'Source/Prism/Core/Core.hpp',
+  'Source/Prism/Core/Iterator.hpp',
+  'Source/Prism/Core/Limits.hpp',
   'Source/Prism/Core/NonCopyable.hpp',
   'Source/Prism/Core/NonMovable.hpp',
   'Source/Prism/Core/Platform.hpp',
   'Source/Prism/Core/Singleton.hpp',
   'Source/Prism/Core/Types.hpp',
   'Source/Prism/Core/TypeTraits.hpp',
+  'Source/Prism/Core/TypeTraitsForward.hpp',
 
   subdir: 'Prism/Core'
 )
+install_headers(
+  'Source/Prism/Core/Details/CallableTraits.inl',
+  'Source/Prism/Core/Details/Conditional.inl',
+  'Source/Prism/Core/Details/Constructibility.inl',
+  'Source/Prism/Core/Details/CoreTraits.inl',
+  'Source/Prism/Core/Details/CVRefTraits.inl',
+  'Source/Prism/Core/Details/TransformationTraits.inl',
+  'Source/Prism/Core/Details/TypeProperties.inl',
+
+  subdir: 'Prism/Core/Details'
+)
+
 install_headers(
   'Source/Prism/Debug/Assertions.hpp',
   'Source/Prism/Debug/Log.hpp',
@@ -141,19 +167,28 @@ install_headers(
   subdir: 'Prism/Memory'
 )
 install_headers(
+  'Source/Prism/String/CharTraits.hpp',
   #'Source/Prism/String/FormatString.hpp',
+  'Source/Prism/String/Formatter.hpp',
   'Source/Prism/String/String.hpp',
+  'Source/Prism/String/StringBuilder.hpp',
   'Source/Prism/String/StringUtils.hpp',
   'Source/Prism/String/StringView.hpp',
+  'Source/Prism/String/StringView.inl',
   subdir: 'Prism/String'
 )
 install_headers(
+  'Source/Prism/Utility/Atomic.hpp',
+  'Source/Prism/Utility/AtomicBuiltins.hpp',
   'Source/Prism/Utility/Checksum.hpp',
+  'Source/Prism/Utility/Delegate.hpp',
   #'Source/Prism/Utility/Expected.hpp',
   'Source/Prism/Utility/Hash.hpp',
   'Source/Prism/Utility/Math.hpp',
-  #'Source/Prism/Utility/Optional.hpp',
+  'Source/Prism/Utility/Optional.hpp',
   #'Source/Prism/Utility/OptionParser.hpp',
+  'Source/Prism/Utility/Path.hpp',
+  'Source/Prism/Utility/PathView.hpp',
   'Source/Prism/Utility/Time.hpp',
   subdir: 'Prism/Utility'
 )

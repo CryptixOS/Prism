@@ -169,7 +169,7 @@ namespace Prism
                     FormatSpec spec;
                     ++fmt;
                     fmt = ParseFormatSpec(fmt, spec);
-                    VisitArgument(std::forward<T>(value), spec);
+                    VisitArgument(Forward<T>(value), spec);
                     continue;
                 }
 
@@ -180,7 +180,7 @@ namespace Prism
         template <typename T>
         constexpr void VisitArgument(const T& value, const FormatSpec& spec)
         {
-            if constexpr (std::is_integral_v<T>)
+            if constexpr (IsIntegralV<T>)
                 VisitArgument(static_cast<u64>(value), spec);
             else if constexpr (IsSameV<T, const char*>
                                || IsSameV<T, StringView>)
@@ -272,7 +272,7 @@ namespace Prism
     {
         const char* current = fmt;
         Formatter   formatter(context);
-        formatter.Parse(current, std::forward<Args>(args)...);
+        formatter.Parse(current, Forward<Args>(args)...);
     }
 }; // namespace Prism
 

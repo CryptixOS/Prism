@@ -4,7 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/PathView.hpp>
+#include <Prism/Utility/PathView.hpp>
 
 #if PRISM_TARGET_CRYPTIX == 1
     #include <API/Limits.hpp>

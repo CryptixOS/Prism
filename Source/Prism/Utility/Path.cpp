@@ -4,7 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/Path.hpp>
+#include <Prism/Utility/Path.hpp>
 
 namespace Prism
 {
