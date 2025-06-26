@@ -242,11 +242,11 @@ namespace Prism
     template <typename T, typename HookType>
     constexpr void IntrusiveList<T, HookType>::Clear()
     {
-        auto it = begin();
-        while (it != end()) it = Erase(it);
+        while (m_Head) Erase(m_Head);
 
         m_Head = nullptr;
         m_Tail = nullptr;
+        m_Size = 0;
     }
 
     template <typename T, typename HookType>
@@ -349,7 +349,7 @@ namespace Prism
     IntrusiveList<T, HookType>::Erase(Iterator it)
     {
         auto& hook = HookType::Hook(it.Current);
-        auto& next = hook.Next;
+        T*    next = HookType::Hook(it.Current).Next;
 
         hook.Unlink(it.Current);
         --m_Size;
