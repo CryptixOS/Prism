@@ -17,6 +17,9 @@ cpp_args = [
   '-Wno-unused-parameter',
   '-Wno-self-assign-overloaded',
 ]
+link_args = [
+  '-lstdc++exp',
+]
 
 foreach name : tests
   srcs = files(
@@ -26,6 +29,10 @@ foreach name : tests
     meson.project_source_root() / 'Source/Prism/Utility/PathView.cpp',
     meson.project_source_root() / 'Source/Prism/Utility/Path.cpp',
     name / 'main.cpp')
-  test = executable(name, srcs, cpp_args: cpp_args, include_directories: incdirs, dependencies: deps)
+  test = executable(
+    name, srcs,
+    cpp_args: cpp_args, link_args: link_args,
+    include_directories: incdirs, dependencies: deps
+  )
   test(name, test)
 endforeach

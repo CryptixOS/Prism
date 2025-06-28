@@ -185,12 +185,14 @@ namespace Prism
              */
             constexpr inline void AdvanceToValid()
             {
-                while (m_BucketIndex < m_Map->Capacity()
-                       && ListIt == m_Map->m_Buckets[m_BucketIndex].end())
+                if (m_BucketIndex >= m_Map->Capacity()) return;
+
+                while (ListIt == m_Map->m_Buckets[m_BucketIndex].end())
                 {
                     ++m_BucketIndex;
-                    if (m_BucketIndex < m_Map->Capacity())
-                        ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
+                    if (m_BucketIndex >= m_Map->Capacity()) break;
+
+                    ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
                 }
             }
 
@@ -219,15 +221,17 @@ namespace Prism
             constexpr Iterator& operator++()
             {
                 ++ListIt;
-                while (ListIt == m_Map->m_Buckets[m_BucketIndex].end())
-                {
-                    ++m_BucketIndex;
-                    if (m_BucketIndex >= m_Map->Capacity()) break;
-
-                    ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
-                }
+                AdvanceToValid();
 
                 return *this;
+            }
+            /// @brief Postfix increment operator.
+            constexpr Iterator operator++(int)
+            {
+                auto it = *this;
+                ++*this;
+
+                return it;
             }
 
             /// @brief Equality operator.
@@ -345,15 +349,41 @@ namespace Prism
         constexpr void                 EnsureCapacity();
 
         /**
-         * @brief Inserts a new key-value pair.
+         * @brief Inserts a new key-value pair, if it doesn't exist.
+         *  Otherwise it assigns the value to the existing element
+         *
+         *  @return iterator to the inserted value
          */
-        constexpr Iterator<>           Insert(const K& key, const V& value);
-        /// @copydoc Insert(const K&, const V&)
-        constexpr Iterator<>           Insert(const K& key, V&& value);
+        constexpr Iterator<> InsertOrAssign(const K& key, const V& value);
+        /// @copydoc InsertOrAssign(const K&, const V&)
+        constexpr Iterator<> InsertOrAssign(const K& key, V&& value);
+        /// @copydoc InsertOrAssign(const K&, const V&)
+        constexpr Iterator<> InsertOrAssign(K&& key, V&& value);
+        /**
+         * @brief Inserts a new key-value pair, if it doesn't exist.
+         *
+         *  @return iterator to the inserted value
+         */
+        constexpr Iterator<> Insert(const KeyValuePair& value);
+        /// @copydoc Insert(const KeyValuePair&)
+        constexpr Iterator<> Insert(KeyValuePair&& value);
         /**
          * @brief Inserts a pre-allocated node into the map.
          */
-        constexpr Iterator<>           Insert(Node* node);
+        constexpr Iterator<> Insert(Node* node);
+
+        /**
+         * @brief Constructs a key-value pair in-place, if it doesn't already
+         * eixst. If it exists, it does nothing
+         *
+         * @tparam Args Argument types for key/value.
+         * @param args Arguments to forward to constructor.
+         */
+        template <typename... Args>
+        Iterator<> TryEmplace(const K& key, Args&&... args);
+        /// @copydoc TryEmplace(const K&, Args&&... args)
+        template <typename... Args>
+        Iterator<> TryEmplace(K&& key, Args&&... args);
         /**
          * @brief Constructs a key-value pair in-place.
          *

@@ -8,6 +8,7 @@
 
 #include <Prism/Containers/Array.hpp>
 #include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Iterator.hpp>
 #include <Prism/Core/Limits.hpp>
 
 namespace Prism
@@ -26,8 +27,8 @@ namespace Prism
         using ConstReference         = const T&;
         using Iterator               = Pointer;
         using ConstIterator          = ConstPointer;
-        using ReverseIterator        = std::reverse_iterator<Iterator>;
-        using ConstReverseIterator   = std::reverse_iterator<ConstIterator>;
+        using ReverseIterator        = ::Prism::ReverseIterator<Iterator>;
+        using ConstReverseIterator   = ::Prism::ReverseIterator<ConstIterator>;
 
         constexpr Span() PM_NOEXCEPT = default;
         template <typename It>
@@ -43,7 +44,7 @@ namespace Prism
         {
         }
         template <usize N>
-        constexpr Span(std::type_identity_t<ElementType> (&arr)[N]) PM_NOEXCEPT
+        constexpr Span(TypeIdentityType<ElementType> (&arr)[N]) PM_NOEXCEPT
             : m_Data(arr),
               m_Size(N)
         {
@@ -58,12 +59,12 @@ namespace Prism
                                                              m_Size(N)
         {
         }
-        /*
+
         template <typename R>
         explicit(Extent != DynamicExtent) constexpr Span(R&& r)
-        : m_Data()
+            : m_Data()
         {
-        }*/
+        }
         explicit(Extent != DynamicExtent) constexpr Span(
             std::initializer_list<ValueType> il) PM_NOEXCEPT
             : m_Data(il.begin()),

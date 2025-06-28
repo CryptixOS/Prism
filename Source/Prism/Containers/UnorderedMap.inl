@@ -35,7 +35,7 @@ namespace Prism
         auto it = Find(key);
         if (it != end()) return it->Value;
 
-        it = Insert(key, V());
+        it = InsertOrAssign(key, V());
         return it->Value;
     }
     template <typename K, typename V, typename H>
@@ -46,7 +46,7 @@ namespace Prism
         auto it  = Find(key);
         if (it != end()) return it->Value;
 
-        return Insert(key, {})->Value;
+        return InsertOrAssign(key, {})->Value;
     }
 
     template <typename K, typename V, typename H>
@@ -224,10 +224,8 @@ namespace Prism
 
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::Iterator<>
-    UnorderedMap<K, V, H>::Insert(const K& key, const V& value)
+    UnorderedMap<K, V, H>::InsertOrAssign(const K& key, const V& value)
     {
-        EnsureCapacity();
-
         auto it = Find(key);
         if (it != end())
         {
@@ -239,10 +237,8 @@ namespace Prism
     }
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::Iterator<>
-    UnorderedMap<K, V, H>::Insert(const KeyType& key, V&& value)
+    UnorderedMap<K, V, H>::InsertOrAssign(const KeyType& key, V&& value)
     {
-        EnsureCapacity();
-
         auto it = Find(key);
         if (it != end())
         {
@@ -252,6 +248,41 @@ namespace Prism
 
         return Insert(new Node({key, Move(value)}));
     }
+    template <typename K, typename V, typename H>
+    constexpr UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::InsertOrAssign(K&& k, V&& value)
+    {
+        auto key = Move(k);
+
+        auto it  = Find(key);
+        if (it != end())
+        {
+            it->Value = Move(value);
+            return it;
+        }
+
+        return Insert(new Node(Move(key), Move(value)));
+    }
+
+    template <typename K, typename V, typename H>
+    constexpr UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::Insert(const KeyValuePair& entry)
+    {
+        auto it = Find(entry.Key);
+        if (it != end()) return it;
+
+        return Insert(entry);
+    }
+    template <typename K, typename V, typename H>
+    constexpr UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::Insert(KeyValuePair&& entry)
+    {
+        auto it = Find(entry.Key);
+        if (it != end()) return it;
+
+        return Insert(new Node(Move(entry.Key), Move(entry.Value)));
+    }
+
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::Iterator<>
     UnorderedMap<K, V, H>::Insert(Node* node)
@@ -267,6 +298,28 @@ namespace Prism
         return Iterator<>(this, index, it);
     }
 
+    template <typename K, typename V, typename H>
+    template <typename... Args>
+    UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::TryEmplace(const K& key, Args&&... args)
+    {
+        auto it = Find(key);
+        if (it != end()) return it;
+
+        return Insert(new Node(key, Forward<Args>(args)...));
+    }
+    template <typename K, typename V, typename H>
+    template <typename... Args>
+    UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::TryEmplace(K&& k, Args&&... args)
+    {
+        auto key = Move(k);
+
+        auto it  = Find(key);
+        if (it != end()) return it;
+
+        return Insert(new Node(Move(key), Forward<Args>(args)...));
+    }
     template <typename K, typename V, typename H>
     template <typename... Args>
     constexpr UnorderedMap<K, V, H>::Iterator<>

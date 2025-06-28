@@ -125,6 +125,8 @@ namespace Prism
             return *this;
         }
 
+        constexpr bool operator==(NullOptType) const { return !HasValue(); }
+        constexpr bool operator!=(NullOptType) const { return HasValue(); }
         template <typename O>
         constexpr bool operator==(Optional<O> const& other) const
         {

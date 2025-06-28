@@ -528,3 +528,7 @@ namespace Prism
     template <typename T, usize N = 0>
     constexpr usize ExtentV = Extent<T, N>::Value;
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::IsPointerV;
+#endif

@@ -274,6 +274,16 @@ namespace Prism
         Formatter   formatter(context);
         formatter.Parse(current, Forward<Args>(args)...);
     }
+
+    template <typename... Args>
+    String Format(const char* fmt, Args&&... args)
+    {
+        StringBuilder<char> context;
+        Formatter           formatter(context);
+
+        Format(formatter, fmt, Forward<Args>(args)...);
+        return context;
+    }
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
