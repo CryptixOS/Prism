@@ -298,10 +298,12 @@ namespace Prism
     struct IsBoundedArray : BooleanConstant<__is_bounded_array(T)>
     {
     };
+#if __has_builtin(__is_unbounded_array)
     template <typename T>
     struct IsUnboundedArray : BooleanConstant<__is_unbounded_array(T)>
     {
     };
+#endif
     template <typename T>
     struct IsScopedEnum : BooleanConstant<__is_scoped_enum(T)>
     {
@@ -504,8 +506,12 @@ namespace Prism
     constexpr bool IsUnsignedV = IsUnsigned<T>::Value;
     template <typename T>
     constexpr bool IsBoundedArrayV = IsBoundedArray<T>::Value;
+
+#if __has_builtin(__is_unbounded_array)
     template <typename T>
     constexpr bool IsUnboundedArrayV = IsUnboundedArray<T>::Value;
+#endif
+
     template <typename T>
     constexpr bool IsScopedEnumV = IsScopedEnum<T>::Value;
 
@@ -530,5 +536,6 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
+using Prism::IsEnumV;
 using Prism::IsPointerV;
 #endif
