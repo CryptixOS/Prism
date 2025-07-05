@@ -8,6 +8,7 @@
 
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Concepts.hpp>
+#include <Prism/Memory/Pointer.hpp>
 
 namespace Prism
 {
