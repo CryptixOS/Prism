@@ -46,6 +46,7 @@ namespace Prism
             m_Size = size;
         }
 
+        inline constexpr void Advance(usize offset) { m_Offset + offset; }
         inline constexpr void Seek(usize offset) { m_Offset = offset; }
         inline constexpr void Skip(usize size)
         {
