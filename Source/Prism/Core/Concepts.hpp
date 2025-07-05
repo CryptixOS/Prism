@@ -147,7 +147,17 @@ namespace Prism
         = IsDefaultConstructibleV<T> && IsTriviallyDefaultConstructibleV<T>;
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::ArithmeticEnum;
+using Prism::DerivedFrom;
+using Prism::ConvertibleTo;
 using Prism::SameAs;
+using Prism::Integral;
+using Prism::SignedIntegral;
+using Prism::UnsignedIntegral;
+using Prism::IntegralOrEnum;
+using Prism::PrimitiveOrEnum;
+using Prism::ArithmeticEnum;
+using Prism::EnumType;
+using Prism::IsImplicitlyDefaultConstructible;
 #endif
