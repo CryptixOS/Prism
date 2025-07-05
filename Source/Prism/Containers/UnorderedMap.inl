@@ -353,6 +353,23 @@ namespace Prism
             = Iterator<>(this, index, typename BucketType::Iterator(nextPos));
         return index < Capacity() ? nextIt : end();
     }
+    template <typename K, typename V, typename H>
+    constexpr UnorderedMap<K, V, H>::Iterator<>
+    UnorderedMap<K, V, H>::Erase(Iterator<> it)
+    {
+        if (Empty()) return end();
+
+        --m_Size;
+        auto node = it.ListIt.operator->();
+        usize index = HashType{}(node->Entry.Key) % Capacity();
+        auto bucket = m_Buckets[index];
+
+        auto nextPos = bucket.Erase(it.ListIt);
+        delete node;
+
+        auto nextIt = Iterator<>(this, index, typename BucketType::Iterator(nextPos));
+        return index < Capacity() ? nextIt : end();
+    }
 
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::Iterator<>

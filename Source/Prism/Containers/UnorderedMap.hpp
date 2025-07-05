@@ -399,6 +399,13 @@ namespace Prism
          * @return Iterator pointing to next valid element.
          */
         constexpr Iterator<> Erase(const K& key);
+        /**
+         * @brief Removes a key-value pair by iterator.
+         *
+         * @param it Iterator to element to be removed.
+         * @return Iterator pointing to next valid element.
+         */
+        constexpr Iterator<> Erase(Iterator<> it);
 
       private:
         ///> Buckets holding linked lists of nodes.
