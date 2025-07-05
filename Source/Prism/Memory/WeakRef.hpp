@@ -24,11 +24,13 @@ namespace Prism
         WeakRef(Ref<T> ref) { m_Instance = ref.Raw(); }
         WeakRef(T* instance) { m_Instance = instance; }
 
-        T*       operator->() { return m_Instance; }
-        const T* operator->() const { return m_Instance; }
+        inline constexpr T* Raw() const { return m_Instance; }
 
-        T&       operator*() { return &m_Instance; }
-        const T& operator*() const { return &m_Instance; }
+        T*                  operator->() { return m_Instance; }
+        const T*            operator->() const { return m_Instance; }
+
+        T&                  operator*() { return &m_Instance; }
+        const T&            operator*() const { return &m_Instance; }
 
         operator bool() const { return m_Instance != nullptr; }
 
