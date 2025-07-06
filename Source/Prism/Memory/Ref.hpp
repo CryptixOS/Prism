@@ -64,7 +64,7 @@ namespace Prism
             IncRef();
         }
 
-        virtual ~Ref() { DecRef(); }
+        constexpr virtual ~Ref() { DecRef(); }
 
         constexpr Ref& operator=(std::nullptr_t)
         {
