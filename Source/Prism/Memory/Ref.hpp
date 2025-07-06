@@ -31,15 +31,15 @@ namespace Prism
     class Ref
     {
       public:
-        Ref()
+        constexpr Ref()
             : m_Instance(nullptr)
         {
         }
-        Ref(std::nullptr_t)
+        constexpr Ref(std::nullptr_t)
             : m_Instance(nullptr)
         {
         }
-        Ref(T* instance)
+        constexpr Ref(T* instance)
             : m_Instance(instance)
         {
             static_assert(IsBaseOfV<RefCounted, T>, "Class is not RefCounted!");
@@ -47,18 +47,18 @@ namespace Prism
             IncRef();
         }
         template <typename U>
-        Ref(const Ref<U>& other)
+        constexpr Ref(const Ref<U>& other)
         {
             m_Instance = reinterpret_cast<T*>(other.m_Instance);
             IncRef();
         }
         template <typename U>
-        Ref(Ref<U>&& other)
+        constexpr Ref(Ref<U>&& other)
         {
             m_Instance       = reinterpret_cast<T*>(other.m_Instance);
             other.m_Instance = nullptr;
         }
-        Ref(const Ref<T>& other)
+        constexpr Ref(const Ref<T>& other)
             : m_Instance(other.m_Instance)
         {
             IncRef();
@@ -66,13 +66,13 @@ namespace Prism
 
         virtual ~Ref() { DecRef(); }
 
-        Ref& operator=(std::nullptr_t)
+        constexpr Ref& operator=(std::nullptr_t)
         {
             DecRef();
             m_Instance = nullptr;
             return *this;
         }
-        Ref& operator=(const Ref<T>& other)
+        constexpr Ref& operator=(const Ref<T>& other)
         {
             if (this == &other) return *this;
             const_cast<Ref<T>&>(other).IncRef();
@@ -82,7 +82,7 @@ namespace Prism
             return *this;
         }
         template <typename U>
-        Ref& operator=(const Ref<U>& other)
+        constexpr Ref& operator=(const Ref<U>& other)
         {
             other.IncRef();
             DecRef();
@@ -91,7 +91,7 @@ namespace Prism
             return *this;
         }
         template <typename U>
-        Ref& operator=(Ref<U>&& other)
+        constexpr Ref& operator=(Ref<U>&& other)
         {
             DecRef();
 
@@ -100,26 +100,26 @@ namespace Prism
             return *this;
         }
 
-        operator bool() const { return m_Instance != nullptr; }
+        constexpr operator bool() const { return m_Instance != nullptr; }
 
-        T*              operator->() { return m_Instance; }
-        const T*        operator->() const { return m_Instance; }
+        constexpr T*              operator->() { return m_Instance; }
+        constexpr const T*        operator->() const { return m_Instance; }
 
-        T&              operator*() { return *m_Instance; }
-        const T&        operator*() const { return *m_Instance; }
+        constexpr T&              operator*() { return *m_Instance; }
+        constexpr const T&        operator*() const { return *m_Instance; }
 
-        T*              Raw() { return m_Instance; }
-        const T*        Raw() const { return m_Instance; }
+        constexpr T*              Raw() { return m_Instance; }
+        constexpr const T*        Raw() const { return m_Instance; }
 
         constexpr usize RefCount() const { return m_Instance->RefCount(); }
-        void            Reset(T* instance = nullptr)
+        constexpr void            Reset(T* instance = nullptr)
         {
             DecRef();
             m_Instance = instance;
         }
 
         template <typename U>
-        Ref<U> As() const
+        constexpr Ref<U> As() const
         {
             return Ref<U>(*this);
         }
@@ -130,11 +130,11 @@ namespace Prism
             return Ref<T>(new T(Forward<Args>(args)...));
         }
 
-        bool operator==(const Ref<T>& other) const
+        constexpr bool operator==(const Ref<T>& other) const
         {
             return m_Instance == other.m_Instance;
         }
-        bool operator!=(const Ref<T>& other) const
+        constexpr bool operator!=(const Ref<T>& other) const
         {
             return m_Instance != other.m_Instance;
         }
@@ -142,12 +142,12 @@ namespace Prism
       private:
         T*   m_Instance = nullptr;
 
-        void IncRef()
+        constexpr void IncRef()
         {
             if (!m_Instance) return;
             m_Instance->Ref();
         }
-        void DecRef()
+        constexpr void DecRef()
         {
             if (!m_Instance) return;
             m_Instance->Unref();
@@ -161,7 +161,7 @@ namespace Prism
     };
 
     template <typename T, typename... Args>
-    Ref<T> CreateRef(Args&&... args)
+    constexpr Ref<T> CreateRef(Args&&... args)
     {
         return Ref<T>(new T(Forward<Args>(args)...));
     }
