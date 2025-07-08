@@ -45,3 +45,7 @@ namespace Prism
         Pointer ScanForCharacter(const Pointer memory, u8 c, usize size);
     }; // namespace Memory
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+namespace Memory = Prism::Memory;
+#endif

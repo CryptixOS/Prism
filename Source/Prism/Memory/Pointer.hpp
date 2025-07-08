@@ -270,3 +270,22 @@ struct fmt::formatter<Prism::Pointer> : fmt::formatter<fmt::string_view>
             fmt::format("{}", addr.Raw()), ctx);
     }
 };
+
+// hash support
+template <>
+struct std::hash<Prism::Pointer>
+{
+    [[nodiscard]] constexpr usize
+    operator()(const Prism::Pointer& pointer) const PM_NOEXCEPT
+    {
+#if PRISM_TARGET_CRYPTIX == 1
+        return std::hash<Prism::pointer>{}(pointer.Raw());
+#else
+        const char* key    = str.Raw();
+        usize       length = str.Size() * sizeof(C);
+        const usize seed   = 0xc70f6907ul;
+
+        return Hash::MurmurHash2(key, length, seed);
+#endif
+    }
+};
