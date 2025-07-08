@@ -7,10 +7,10 @@
 #pragma once
 
 #include <cassert>
-#include <functional>
 #include <memory>
-#include <type_traits>
 #include <utility>
+
+#include <Prism/Core/Core.hpp>
 
 namespace Prism
 {
@@ -40,18 +40,18 @@ namespace Prism
         constexpr bool IsUnexpected<Unexpected<T>> = true;
 
         template <typename F, typename T>
-        using Result = std::remove_cvref_t<std::invoke_result_t<F&&, T&&>>;
+        using Result = RemoveCvRefType<InvokeResultType<F&&, T&&>>;
         template <typename F, typename T>
-        using ResultFrom = std::remove_cv_t<std::invoke_result_t<F&&, T&&>>;
+        using ResultFrom = RemoveCvType<InvokeResultType<F&&, T&&>>;
         template <typename F>
-        using Result0 = std::remove_cvref_t<std::invoke_result_t<F&&>>;
+        using Result0 = RemoveCvRefType<InvokeResultType<F&&>>;
         template <typename F>
-        using Result0From = std::remove_cv_t<std::invoke_result_t<F&&>>;
+        using Result0From = RemoveCvType<InvokeResultType<F&&>>;
 
         template <typename E>
         concept CanBeUnexpected
-            = std::is_object_v<E> && (!std::is_array_v<E>) && (!IsUnexpected<E>)
-           && (!std::is_const_v<E>) && (!std::is_volatile_v<E>);
+            = IsObjectV<E> && (!IsArrayV<E>) && (!IsUnexpected<E>)
+           && (!IsConstV<E>) && (!IsVolatileV<E>);
 
         struct InPlaceInvocation
         {
@@ -71,28 +71,26 @@ namespace Prism
         constexpr Unexpected(Unexpected&&)      = default;
 
         template <typename Err = E>
-            requires(!std::is_same_v<std::remove_cvref_t<Err>, Unexpected>)
-                 && (!std::is_same_v<std::remove_cvref_t<Err>, std::in_place_t>)
-                 && std::is_constructible_v<E, Err>
+            requires(!IsSameV<RemoveCvRefType<Err>, Unexpected>)
+                 && (!IsSameV<RemoveCvRefType<Err>, InPlaceT>)
+                 && IsConstructibleV<E, Err>
         constexpr explicit Unexpected(Err&& e) noexcept
-            : m_Unexpected(std::forward<Err>(e))
+            : m_Unexpected(Forward<Err>(e))
         {
         }
 
         template <typename... Args>
-            requires std::is_constructible_v<E, Args...>
-        constexpr explicit Unexpected(std::in_place_t, Args&&... args) noexcept
-            : m_Unexpected(std::forward<Args>(args)...)
+            requires IsConstructibleV<E, Args...>
+        constexpr explicit Unexpected(InPlaceT, Args&&... args) noexcept
+            : m_Unexpected(Forward<Args>(args)...)
         {
         }
 
         template <typename U, typename... Args>
-            requires std::is_constructible_v<E, std::initializer_list<U>&,
-                                             Args...>
-        constexpr explicit Unexpected(std::in_place_t,
-                                      std::initializer_list<U> list,
+            requires IsConstructibleV<E, std::initializer_list<U>&, Args...>
+        constexpr explicit Unexpected(InPlaceT, std::initializer_list<U> list,
                                       Args&&... args) noexcept
-            : m_Unexpected(list, std::forward<Args>(args)...)
+            : m_Unexpected(list, Forward<Args>(args)...)
         {
         }
 
@@ -114,19 +112,19 @@ namespace Prism
         [[nodiscard]]
         constexpr const E&& Error() const&& noexcept
         {
-            return std::move(m_Unexpected);
+            return Move(m_Unexpected);
         }
 
         [[nodiscard]]
         constexpr E&& Error() && noexcept
         {
-            return std::move(m_Unexpected);
+            return Move(m_Unexpected);
         }
 
         constexpr void Swap(Unexpected& other) noexcept
-            requires std::is_swappable_v<E>
+            requires IsSwappableV<E>
         {
-            std::swap(m_Unexpected, other.m_Unexpected);
+            Swap(m_Unexpected, other.m_Unexpected);
         }
 
         template <typename Err>
@@ -139,7 +137,7 @@ namespace Prism
 
         friend constexpr void
         swap(Unexpected& lhs, Unexpected& rhs) noexcept(noexcept(lhs.Swap(rhs)))
-            requires std::is_swappable_v<E>
+            requires IsSwappableV<E>
         {
             lhs.Swap(rhs);
         }
@@ -157,8 +155,8 @@ namespace Prism
         struct Guard
         {
             constexpr explicit Guard(T& lhs)
-                : m_Guarded(std::addressof(lhs))
-                , m_Temp(std::move(lhs))
+                : m_Guarded(AddressOf(lhs))
+                , m_Temp(Move(lhs))
             {
                 std::destroy_at(m_Guarded);
             }
@@ -166,7 +164,7 @@ namespace Prism
             constexpr ~Guard()
             {
                 if (m_Guarded) [[unlikely]]
-                    std::construct_at(m_Guarded, std::move(m_Temp));
+                    std::construct_at(m_Guarded, Move(m_Temp));
             }
 
             Guard(const Guard&)                   = delete;
@@ -175,7 +173,7 @@ namespace Prism
             constexpr T&& Release() noexcept
             {
                 m_Guarded = nullptr;
-                return std::move(m_Temp);
+                return Move(m_Temp);
             }
 
           private:
@@ -187,47 +185,44 @@ namespace Prism
         constexpr void Reinitialize(T* newValue, U* oldValue, V&& arg) noexcept
         {
             std::destroy_at(oldValue);
-            std::construct_at(newValue, std::forward<V>(arg));
+            std::construct_at(newValue, Forward<V>(arg));
         }
     } // namespace Detail
 
     template <typename T, typename E>
     class Expected
     {
-        static_assert(!std::is_reference_v<T>);
-        static_assert(!std::is_function_v<T>);
-        static_assert(!std::is_same_v<std::remove_cv_t<T>, std::in_place_t>);
-        static_assert(!std::is_same_v<std::remove_cv_t<T>, UnexpectedBase>);
-        static_assert(!Detail::IsUnexpected<std::remove_cv_t<T>>);
+        static_assert(!IsReferenceV<T>);
+        static_assert(!IsFunctionV<T>);
+        static_assert(!IsSameV<RemoveCvType<T>, InPlaceT>);
+        static_assert(!IsSameV<RemoveCvType<T>, UnexpectedBase>);
+        static_assert(!Detail::IsUnexpected<RemoveCvType<T>>);
         static_assert(Detail::CanBeUnexpected<E>);
 
         template <typename U, typename Err, typename Un = Unexpected<E>>
-        static constexpr bool IsCostructibleFromExpected = std::disjunction_v<
-            std::is_constructible<T, Expected<U, Err>&>,
-            std::is_constructible<T, Expected<U, Err>>,
-            std::is_constructible<T, const Expected<U, Err>&>,
-            std::is_constructible<T, const Expected<U, Err>>,
-            std::is_convertible<Expected<U, Err>&, T>,
-            std::is_convertible<Expected<U, Err>, T>,
-            std::is_convertible<const Expected<U, Err>&, T>,
-            std::is_convertible<const Expected<U, Err>, T>,
-            std::is_constructible<Un, Expected<U, Err>&>,
-            std::is_constructible<Un, Expected<U, Err>>,
-            std::is_constructible<Un, const Expected<U, Err>&>,
-            std::is_constructible<Un, const Expected<U, Err>>>;
+        static constexpr bool IsCostructibleFromExpected
+            = DisjunctionV<IsConstructible<T, Expected<U, Err>&>,
+                           IsConstructible<T, Expected<U, Err>>,
+                           IsConstructible<T, const Expected<U, Err>&>,
+                           IsConstructible<T, const Expected<U, Err>>,
+                           IsConvertible<Expected<U, Err>&, T>,
+                           IsConvertible<Expected<U, Err>, T>,
+                           IsConvertible<const Expected<U, Err>&, T>,
+                           IsConvertible<const Expected<U, Err>, T>,
+                           IsConstructible<Un, Expected<U, Err>&>,
+                           IsConstructible<Un, Expected<U, Err>>,
+                           IsConstructible<Un, const Expected<U, Err>&>,
+                           IsConstructible<Un, const Expected<U, Err>>>;
 
         template <typename U, typename Err>
         constexpr static bool IsExplicitlyConstructible
-            = !std::is_convertible<U, T>::value
-           || !std::is_convertible<Err, E>::value;
+            = !IsConvertible<U, T>::Value || !IsConvertible<Err, E>::Value;
 
         template <typename U>
-        static constexpr bool SameValue
-            = std::is_same_v<typename U::ValueType, T>;
+        static constexpr bool SameValue = IsSameV<typename U::ValueType, T>;
 
         template <typename U>
-        static constexpr bool SameError
-            = std::is_same_v<typename U::ErrorType, E>;
+        static constexpr bool SameError = IsSameV<typename U::ErrorType, E>;
 
       public:
         using ValueType      = T;
@@ -238,7 +233,7 @@ namespace Prism
         using Rebind = Expected<U, ErrorType>;
 
         constexpr Expected() noexcept
-            requires std::is_default_constructible_v<T>
+            requires IsDefaultConstructibleV<T>
             : m_Value()
             , m_HasValue(true)
         {
@@ -247,132 +242,117 @@ namespace Prism
         Expected(const Expected&) = default;
 
         constexpr Expected(const Expected& lhs) noexcept
-            requires std::is_copy_constructible_v<T>
-                  && std::is_copy_constructible_v<E>
-                  && (!std::is_trivially_copy_constructible_v<T>
-                      || !std::is_trivially_copy_constructible_v<E>)
+            requires IsCopyConstructibleV<T> && IsCopyConstructibleV<E>
+                  && (!IsTriviallyCopyConstructibleV<T>
+                      || !IsTriviallyCopyConstructibleV<E>)
             : m_HasValue(lhs.m_HasValue)
         {
-            if (m_HasValue)
-                std::construct_at(std::addressof(m_Value), lhs.m_Value);
-            else
-                std::construct_at(std::addressof(m_Unexpected),
-                                  lhs.m_Unexpected);
+            if (m_HasValue) std::construct_at(AddressOf(m_Value), lhs.m_Value);
+            else std::construct_at(AddressOf(m_Unexpected), lhs.m_Unexpected);
         }
 
         Expected(Expected&&) = default;
 
         constexpr Expected(Expected&& lhs) noexcept
-            requires std::is_move_constructible_v<T>
-                  && std::is_move_constructible_v<E>
-                  && (!std::is_trivially_move_constructible_v<T>
-                      || !std::is_trivially_move_constructible_v<E>)
+            requires IsMoveConstructibleV<T> && IsMoveConstructibleV<E>
+                  && (!IsTriviallyMoveConstructibleV<T>
+                      || !IsTriviallyMoveConstructibleV<E>)
             : m_HasValue(lhs.m_HasValue)
         {
             if (m_HasValue)
-                std::construct_at(std::addressof(m_Value),
-                                  std::move(lhs).m_Value);
+                std::construct_at(AddressOf(m_Value), Move(lhs).m_Value);
             else
-                std::construct_at(std::addressof(m_Unexpected),
-                                  std::move(lhs).m_Unexpected);
+                std::construct_at(AddressOf(m_Unexpected),
+                                  Move(lhs).m_Unexpected);
         }
 
         template <typename U, typename UnexpectedResult>
-            requires std::is_constructible_v<T, const U&>
-                  && std::is_constructible_v<E, const UnexpectedResult&>
+            requires IsConstructibleV<T, const U&>
+                  && IsConstructibleV<E, const UnexpectedResult&>
                   && (!IsCostructibleFromExpected<U, UnexpectedResult>)
         constexpr explicit Expected(
             const Expected<U, UnexpectedResult>& lhs) noexcept
             : m_HasValue(lhs.m_HasValue)
         {
-            if (m_HasValue)
-                std::construct_at(std::addressof(m_Value), lhs.m_Value);
-            else
-                std::construct_at(std::addressof(m_Unexpected),
-                                  lhs.m_Unexpected);
+            if (m_HasValue) std::construct_at(AddressOf(m_Value), lhs.m_Value);
+            else std::construct_at(AddressOf(m_Unexpected), lhs.m_Unexpected);
         }
 
         template <typename U, typename UnexpectedResult>
-            requires std::is_constructible_v<T, U>
-                  && std::is_constructible_v<E, UnexpectedResult>
+            requires IsConstructibleV<T, U>
+                  && IsConstructibleV<E, UnexpectedResult>
                   && (!IsCostructibleFromExpected<U, UnexpectedResult>)
         constexpr explicit Expected(
             Expected<U, UnexpectedResult>&& lhs) noexcept
             : m_HasValue(lhs.m_HasValue)
         {
             if (m_HasValue)
-                std::construct_at(std::addressof(m_Value),
-                                  std::move(lhs).m_Value);
+                std::construct_at(AddressOf(m_Value), Move(lhs).m_Value);
             else
-                std::construct_at(std::addressof(m_Unexpected),
-                                  std::move(lhs).m_Unexpected);
+                std::construct_at(AddressOf(m_Unexpected),
+                                  Move(lhs).m_Unexpected);
         }
 
         template <typename U = T>
-            requires(!std::is_same_v<std::remove_cvref_t<U>, Expected>)
-                     && (!std::is_same_v<std::remove_cvref_t<U>,
-                                         std::in_place_t>)
-                     && (!Detail::IsUnexpected<std::remove_cvref_t<U>>)
-                     && std::is_constructible_v<T, U>
-        constexpr explicit(!std::is_convertible_v<U, T>)
-            Expected(U&& value) noexcept
-            : m_Value(std::forward<U>(value))
+            requires(!IsSameV<RemoveCvRefType<U>, Expected>)
+                     && (!IsSameV<RemoveCvRefType<U>, InPlaceT>)
+                     && (!Detail::IsUnexpected<RemoveCvRefType<U>>)
+                     && IsConstructibleV<T, U>
+        constexpr explicit(!IsConvertibleV<U, T>) Expected(U&& value) noexcept
+            : m_Value(Forward<U>(value))
             , m_HasValue(true)
         {
         }
 
         template <typename UnexpectedResult = E>
-            requires std::is_constructible_v<E, const UnexpectedResult&>
-        constexpr explicit(!std::is_convertible_v<const UnexpectedResult&, E>)
-            Expected(const Unexpected<UnexpectedResult>& __u) noexcept
-            : m_Unexpected(__u.Error())
+            requires IsConstructibleV<E, const UnexpectedResult&>
+        constexpr explicit(!IsConvertibleV<const UnexpectedResult&, E>)
+            Expected(const Unexpected<UnexpectedResult>& unexpect) noexcept
+            : m_Unexpected(unexpect.Error())
             , m_HasValue(false)
         {
         }
 
         template <typename UnexpectedResult = E>
-            requires std::is_constructible_v<E, UnexpectedResult>
-        constexpr explicit(!std::is_convertible_v<UnexpectedResult, E>)
-            Expected(Unexpected<UnexpectedResult>&& __u) noexcept
-            : m_Unexpected(std::move(__u).Error())
+            requires IsConstructibleV<E, UnexpectedResult>
+        constexpr explicit(!IsConvertibleV<UnexpectedResult, E>)
+            Expected(Unexpected<UnexpectedResult>&& unexpect) noexcept
+            : m_Unexpected(Move(unexpect).Error())
             , m_HasValue(false)
         {
         }
 
         template <typename... Args>
-            requires std::is_constructible_v<T, Args...>
-        constexpr explicit Expected(std::in_place_t, Args&&... args) noexcept
-            : m_Value(std::forward<Args>(args)...)
+            requires IsConstructibleV<T, Args...>
+        constexpr explicit Expected(InPlaceT, Args&&... args) noexcept
+            : m_Value(Forward<Args>(args)...)
             , m_HasValue(true)
         {
         }
 
         template <typename U, typename... Args>
-            requires std::is_constructible_v<T, std::initializer_list<U>&,
-                                             Args...>
-        constexpr explicit Expected(std::in_place_t,
-                                    std::initializer_list<U> ilist,
+            requires IsConstructibleV<T, std::initializer_list<U>&, Args...>
+        constexpr explicit Expected(InPlaceT, std::initializer_list<U> ilist,
                                     Args&&... args) noexcept
-            : m_Value(ilist, std::forward<Args>(args)...)
+            : m_Value(ilist, Forward<Args>(args)...)
             , m_HasValue(true)
         {
         }
 
         template <typename... Args>
-            requires std::is_constructible_v<E, Args...>
+            requires IsConstructibleV<E, Args...>
         constexpr explicit Expected(UnexpectedBase, Args&&... args) noexcept
-            : m_Unexpected(std::forward<Args>(args)...)
+            : m_Unexpected(Forward<Args>(args)...)
             , m_HasValue(false)
         {
         }
 
         template <typename U, typename... Args>
-            requires std::is_constructible_v<E, std::initializer_list<U>&,
-                                             Args...>
+            requires IsConstructibleV<E, std::initializer_list<U>&, Args...>
         constexpr explicit Expected(UnexpectedBase,
                                     std::initializer_list<U> ilist,
                                     Args&&... args) noexcept
-            : m_Unexpected(ilist, std::forward<Args>(args)...)
+            : m_Unexpected(ilist, Forward<Args>(args)...)
             , m_HasValue(false)
         {
         }
@@ -383,46 +363,42 @@ namespace Prism
             requires(!std::is_trivially_destructible_v<T>)
                  || (!std::is_trivially_destructible_v<E>)
         {
-            if (m_HasValue) std::destroy_at(std::addressof(m_Value));
-            else std::destroy_at(std::addressof(m_Unexpected));
+            if (m_HasValue) std::destroy_at(AddressOf(m_Value));
+            else std::destroy_at(AddressOf(m_Unexpected));
         }
 
         Expected&           operator=(const Expected&) = delete;
         constexpr Expected& operator=(const Expected& lhs) noexcept
-            requires std::is_copy_assignable_v<T>
-                  && std::is_copy_constructible_v<T>
-                  && std::is_copy_assignable_v<E>
-                  && std::is_copy_constructible_v<E>
+            requires IsCopyAssignableV<T> && IsCopyConstructibleV<T>
+                  && IsCopyAssignableV<E> && IsCopyConstructibleV<E>
         {
-            if (lhs.m_HasValue) this->_assign_value(lhs.m_Value);
+            if (lhs.m_HasValue) this->AssignValue(lhs.m_Value);
             else this->AssignUnexpected(lhs.m_Unexpected);
             return *this;
         }
 
         constexpr Expected& operator=(Expected&& lhs) noexcept
-            requires std::is_move_assignable_v<T>
-                  && std::is_move_constructible_v<T>
-                  && std::is_move_assignable_v<E>
-                  && std::is_move_constructible_v<E>
+            requires IsMoveAssignableV<T> && IsMoveConstructibleV<T>
+                  && IsMoveAssignableV<E> && IsMoveConstructibleV<E>
         {
-            if (lhs.m_HasValue) AssignValue(std::move(lhs.m_Value));
-            else AssignUnexpected(std::move(lhs.m_Unexpected));
+            if (lhs.m_HasValue) AssignValue(Move(lhs.m_Value));
+            else AssignUnexpected(Move(lhs.m_Unexpected));
             return *this;
         }
 
         template <typename U = T>
-            requires(!std::is_same_v<Expected, std::remove_cvref_t<U>>)
-                 && (!Detail::IsUnexpected<std::remove_cvref_t<U>>)
-                 && std::is_constructible_v<T, U> && std::is_assignable_v<T&, U>
+            requires(!IsSameV<Expected, RemoveCvRefType<U>>)
+                 && (!Detail::IsUnexpected<RemoveCvRefType<U>>)
+                 && IsConstructibleV<T, U> && IsAssignableV<T&, U>
         constexpr Expected& operator=(U&& value)
         {
-            AssignValue(std::forward<U>(value));
+            AssignValue(Forward<U>(value));
             return *this;
         }
 
         template <typename UnexpectedResult>
-            requires std::is_constructible_v<E, const UnexpectedResult&>
-                  && std::is_assignable_v<E&, const UnexpectedResult&>
+            requires IsConstructibleV<E, const UnexpectedResult&>
+                  && IsAssignableV<E&, const UnexpectedResult&>
         constexpr Expected& operator=(const Unexpected<UnexpectedResult>& e)
         {
             AssignUnexpected(e.Error());
@@ -430,25 +406,24 @@ namespace Prism
         }
 
         template <typename UnexpectedResult>
-            requires std::is_constructible_v<E, UnexpectedResult>
-                  && std::is_assignable_v<E&, UnexpectedResult>
+            requires IsConstructibleV<E, UnexpectedResult>
+                  && IsAssignableV<E&, UnexpectedResult>
         constexpr Expected& operator=(Unexpected<UnexpectedResult>&& e)
         {
-            AssignUnexpected(std::move(e).Error());
+            AssignUnexpected(Move(e).Error());
             return *this;
         }
 
         template <typename... Args>
         constexpr T& Emplace(Args&&... args) noexcept
         {
-            if (m_HasValue) std::destroy_at(std::addressof(m_Value));
+            if (m_HasValue) std::destroy_at(AddressOf(m_Value));
             else
             {
-                std::destroy_at(std::addressof(m_Unexpected));
+                std::destroy_at(AddressOf(m_Unexpected));
                 m_HasValue = true;
             }
-            std::construct_at(std::addressof(m_Value),
-                              std::forward<Args>(args)...);
+            std::construct_at(AddressOf(m_Value), Forward<Args>(args)...);
             return m_Value;
         }
 
@@ -456,31 +431,30 @@ namespace Prism
         constexpr T& Emplace(std::initializer_list<U> ilist,
                              Args&&... args) noexcept
         {
-            if (m_HasValue) std::destroy_at(std::addressof(m_Value));
+            if (m_HasValue) std::destroy_at(AddressOf(m_Value));
             else
             {
-                std::destroy_at(std::addressof(m_Unexpected));
+                std::destroy_at(AddressOf(m_Unexpected));
                 m_HasValue = true;
             }
-            std::construct_at(std::addressof(m_Value), ilist,
-                              std::forward<Args>(args)...);
+            std::construct_at(AddressOf(m_Value), ilist,
+                              Forward<Args>(args)...);
             return m_Value;
         }
 
         constexpr void Swap(Expected& lhs) noexcept
-            requires std::is_swappable_v<T> && std::is_swappable_v<E>
-                  && std::is_move_constructible_v<T>
-                  && std::is_move_constructible_v<E>
+            requires IsSwappableV<T> && IsSwappableV<E>
+                  && IsMoveConstructibleV<T> && IsMoveConstructibleV<E>
         {
             if (m_HasValue)
             {
-                if (lhs.m_HasValue) std::swap(m_Value, lhs.m_Value);
+                if (lhs.m_HasValue) Swap(m_Value, lhs.m_Value);
                 else SwapValueWithUnexpected(lhs);
             }
             else
             {
                 if (lhs.m_HasValue) lhs.SwapValueWithUnexpected(*this);
-                else std::swap(m_Unexpected, lhs.m_Unexpected);
+                else Swap(m_Unexpected, lhs.m_Unexpected);
             }
         }
 
@@ -490,14 +464,14 @@ namespace Prism
         constexpr const T* operator->() const noexcept
         {
             assert(m_HasValue);
-            return std::addressof(m_Value);
+            return AddressOf(m_Value);
         }
 
         [[nodiscard]]
         constexpr T* operator->() noexcept
         {
             assert(m_HasValue);
-            return std::addressof(m_Value);
+            return AddressOf(m_Value);
         }
 
         [[nodiscard]]
@@ -518,14 +492,14 @@ namespace Prism
         constexpr const T&& operator*() const&& noexcept
         {
             assert(m_HasValue);
-            return std::move(m_Value);
+            return Move(m_Value);
         }
 
         [[nodiscard]]
         constexpr T&& operator*() && noexcept
         {
             assert(m_HasValue);
-            return std::move(m_Value);
+            return Move(m_Value);
         }
 
         [[nodiscard]]
@@ -557,14 +531,14 @@ namespace Prism
         constexpr const T&& value() const&&
         {
             if (m_HasValue) [[likely]]
-                return std::move(m_Value);
+                return Move(m_Value);
             assert(false);
         }
 
         constexpr T&& value() &&
         {
             if (m_HasValue) [[likely]]
-                return std::move(m_Value);
+                return Move(m_Value);
             assert(false);
         }
 
@@ -583,59 +557,59 @@ namespace Prism
         constexpr const E&& Error() const&& noexcept
         {
             assert(!m_HasValue);
-            return std::move(m_Unexpected);
+            return Move(m_Unexpected);
         }
 
         constexpr E&& Error() && noexcept
         {
             assert(!m_HasValue);
-            return std::move(m_Unexpected);
+            return Move(m_Unexpected);
         }
 
         template <typename U>
         constexpr T ValueOr(U&& value) const& noexcept
         {
-            static_assert(std::is_copy_constructible_v<T>);
-            static_assert(std::is_convertible_v<U, T>);
+            static_assert(IsCopyConstructibleV<T>);
+            static_assert(IsConvertibleV<U, T>);
 
             if (m_HasValue) return m_Value;
-            return static_cast<T>(std::forward<U>(value));
+            return static_cast<T>(Forward<U>(value));
         }
 
         template <typename U>
         constexpr T ValueOr(U&& value) && noexcept
         {
-            static_assert(std::is_move_constructible_v<T>);
-            static_assert(std::is_convertible_v<U, T>);
+            static_assert(IsMoveConstructibleV<T>);
+            static_assert(IsConvertibleV<U, T>);
 
-            if (m_HasValue) return std::move(m_Value);
-            return static_cast<T>(std::forward<U>(value));
+            if (m_HasValue) return Move(m_Value);
+            return static_cast<T>(Forward<U>(value));
         }
 
         template <typename UnexpectedResult = E>
         constexpr E ErrorOr(UnexpectedResult&& e) const&
         {
-            static_assert(std::is_copy_constructible_v<E>);
-            static_assert(std::is_convertible_v<UnexpectedResult, E>);
+            static_assert(IsCopyConstructibleV<E>);
+            static_assert(IsConvertibleV<UnexpectedResult, E>);
 
-            if (m_HasValue) return std::forward<UnexpectedResult>(e);
+            if (m_HasValue) return Forward<UnexpectedResult>(e);
             return m_Unexpected;
         }
 
         template <typename UnexpectedResult = E>
         constexpr E ErrorOr(UnexpectedResult&& e) &&
         {
-            static_assert(std::is_move_constructible_v<E>);
-            static_assert(std::is_convertible_v<UnexpectedResult, E>);
+            static_assert(IsMoveConstructibleV<E>);
+            static_assert(IsConvertibleV<UnexpectedResult, E>);
 
-            if (m_HasValue) return std::forward<UnexpectedResult>(e);
-            return std::move(m_Unexpected);
+            if (m_HasValue) return Forward<UnexpectedResult>(e);
+            return Move(m_Unexpected);
         }
 
         // monadic operations
 
         template <typename F>
-            requires std::is_constructible_v<E, E&>
+            requires IsConstructibleV<E, E&>
         constexpr auto AndThen(F&& f) &
         {
             using U = Detail::Result<F, T&>;
@@ -643,16 +617,16 @@ namespace Prism
                           "the function passed to std::Expected<T, E>::AndThen "
                           "must return a std::Expected");
             static_assert(
-                std::is_same_v<typename U::ErrorType, E>,
+                IsSameV<typename U::ErrorType, E>,
                 "the function passed to std::Expected<T, E>::AndThen "
                 "must return a std::Expected with the same ErrorType");
 
-            if (HasValue()) return std::invoke(std::forward<F>(f), m_Value);
+            if (HasValue()) return Invoke(Forward<F>(f), m_Value);
             else return U(unexpect, m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, const E&>
+            requires IsConstructibleV<E, const E&>
         constexpr auto AndThen(F&& f) const&
         {
             using U = Detail::Result<F, const T&>;
@@ -660,16 +634,16 @@ namespace Prism
                           "the function passed to std::Expected<T, E>::AndThen "
                           "must return a std::Expected");
             static_assert(
-                std::is_same_v<typename U::ErrorType, E>,
+                IsSameV<typename U::ErrorType, E>,
                 "the function passed to std::Expected<T, E>::AndThen "
                 "must return a std::Expected with the same ErrorType");
 
-            if (HasValue()) return std::invoke(std::forward<F>(f), m_Value);
+            if (HasValue()) return Invoke(Forward<F>(f), m_Value);
             else return U(unexpect, m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, E>
+            requires IsConstructibleV<E, E>
         constexpr auto AndThen(F&& f) &&
         {
             using U = Detail::Result<F, T&&>;
@@ -677,17 +651,16 @@ namespace Prism
                           "the function passed to std::Expected<T, E>::AndThen "
                           "must return a std::Expected");
             static_assert(
-                std::is_same_v<typename U::ErrorType, E>,
+                IsSameV<typename U::ErrorType, E>,
                 "the function passed to std::Expected<T, E>::AndThen "
                 "must return a std::Expected with the same ErrorType");
 
-            if (HasValue())
-                return std::invoke(std::forward<F>(f), std::move(m_Value));
-            else return U(unexpect, std::move(m_Unexpected));
+            if (HasValue()) return Invoke(Forward<F>(f), Move(m_Value));
+            else return U(unexpect, Move(m_Unexpected));
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, const E>
+            requires IsConstructibleV<E, const E>
         constexpr auto AndThen(F&& f) const&&
         {
             using U = Detail::Result<F, const T&&>;
@@ -695,17 +668,16 @@ namespace Prism
                           "the function passed to std::Expected<T, E>::AndThen "
                           "must return a std::Expected");
             static_assert(
-                std::is_same_v<typename U::ErrorType, E>,
+                IsSameV<typename U::ErrorType, E>,
                 "the function passed to std::Expected<T, E>::AndThen "
                 "must return a std::Expected with the same ErrorType");
 
-            if (HasValue())
-                return std::invoke(std::forward<F>(f), std::move(m_Value));
-            else return U(unexpect, std::move(m_Unexpected));
+            if (HasValue()) return Invoke(Forward<F>(f), Move(m_Value));
+            else return U(unexpect, Move(m_Unexpected));
         }
 
         template <typename F>
-            requires std::is_constructible_v<T, T&>
+            requires IsConstructibleV<T, T&>
         constexpr auto OrElse(F&& f) &
         {
             using UnexpectedResult = Detail::Result<F, E&>;
@@ -713,16 +685,16 @@ namespace Prism
                           "the function passed to std::Expected<T, E>::OrElse "
                           "must return a std::Expected");
             static_assert(
-                std::is_same_v<typename UnexpectedResult::ValueType, T>,
+                IsSameV<typename UnexpectedResult::ValueType, T>,
                 "the function passed to std::Expected<T, E>::OrElse "
                 "must return a std::Expected with the same ValueType");
 
             if (HasValue()) return UnexpectedResult(std::in_place, m_Value);
-            else return std::invoke(std::forward<F>(f), m_Unexpected);
+            else return Invoke(Forward<F>(f), m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<T, const T&>
+            requires IsConstructibleV<T, const T&>
         constexpr auto OrElse(F&& f) const&
         {
             using UnexpectedResult = Detail::Result<F, const E&>;
@@ -730,16 +702,16 @@ namespace Prism
                           "the function passed to std::Expected<T, E>::OrElse "
                           "must return a std::Expected");
             static_assert(
-                std::is_same_v<typename UnexpectedResult::ValueType, T>,
+                IsSameV<typename UnexpectedResult::ValueType, T>,
                 "the function passed to std::Expected<T, E>::OrElse "
                 "must return a std::Expected with the same ValueType");
 
             if (HasValue()) return UnexpectedResult(std::in_place, m_Value);
-            else return std::invoke(std::forward<F>(f), m_Unexpected);
+            else return Invoke(Forward<F>(f), m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<T, T>
+            requires IsConstructibleV<T, T>
         constexpr auto OrElse(F&& f) &&
         {
             using UnexpectedResult = Detail::Result<F, E&&>;
@@ -747,18 +719,17 @@ namespace Prism
                           "the function passed to std::Expected<T, E>::OrElse "
                           "must return a std::Expected");
             static_assert(
-                std::is_same_v<typename UnexpectedResult::ValueType, T>,
+                IsSameV<typename UnexpectedResult::ValueType, T>,
                 "the function passed to std::Expected<T, E>::OrElse "
                 "must return a std::Expected with the same ValueType");
 
             if (HasValue())
-                return UnexpectedResult(std::in_place, std::move(m_Value));
-            else
-                return std::invoke(std::forward<F>(f), std::move(m_Unexpected));
+                return UnexpectedResult(std::in_place, Move(m_Value));
+            else return Invoke(Forward<F>(f), Move(m_Unexpected));
         }
 
         template <typename F>
-            requires std::is_constructible_v<T, const T>
+            requires IsConstructibleV<T, const T>
         constexpr auto OrElse(F&& f) const&&
         {
             using UnexpectedResult = Detail::Result<F, const E&&>;
@@ -766,80 +737,71 @@ namespace Prism
                           "the function passed to std::Expected<T, E>::OrElse "
                           "must return a std::Expected");
             static_assert(
-                std::is_same_v<typename UnexpectedResult::ValueType, T>,
+                IsSameV<typename UnexpectedResult::ValueType, T>,
                 "the function passed to std::Expected<T, E>::OrElse "
                 "must return a std::Expected with the same ValueType");
 
             if (HasValue())
-                return UnexpectedResult(std::in_place, std::move(m_Value));
-            else
-                return std::invoke(std::forward<F>(f), std::move(m_Unexpected));
+                return UnexpectedResult(std::in_place, Move(m_Value));
+            else return Invoke(Forward<F>(f), Move(m_Unexpected));
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, E&>
+            requires IsConstructibleV<E, E&>
         constexpr auto Transform(F&& f) &
         {
             using U          = Detail::ResultFrom<F, T&>;
             using ResultType = Expected<U, E>;
 
             if (HasValue())
-                return ResultType(
-                    InPlaceInvocation{},
-                    [&]() { return std::invoke(std::forward<F>(f), m_Value); });
+                return ResultType(InPlaceInvocation{}, [&]()
+                                  { return Invoke(Forward<F>(f), m_Value); });
             else return ResultType(unexpect, m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, const E&>
+            requires IsConstructibleV<E, const E&>
         constexpr auto Transform(F&& f) const&
         {
             using U          = Detail::ResultFrom<F, const T&>;
             using ResultType = Expected<U, E>;
 
             if (HasValue())
-                return ResultType(
-                    InPlaceInvocation{},
-                    [&]() { return std::invoke(std::forward<F>(f), m_Value); });
+                return ResultType(InPlaceInvocation{}, [&]()
+                                  { return Invoke(Forward<F>(f), m_Value); });
             else return ResultType(unexpect, m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, E>
+            requires IsConstructibleV<E, E>
         constexpr auto Transform(F&& f) &&
         {
             using U          = Detail::ResultFrom<F, T>;
             using ResultType = Expected<U, E>;
 
             if (HasValue())
-                return ResultType(InPlaceInvocation{},
-                                  [&]()
-                                  {
-                                      return std::invoke(std::forward<F>(f),
-                                                         std::move(m_Value));
-                                  });
-            else return ResultType(unexpect, std::move(m_Unexpected));
+                return ResultType(
+                    InPlaceInvocation{},
+                    [&]() { return Invoke(Forward<F>(f), Move(m_Value)); });
+            else return ResultType(unexpect, Move(m_Unexpected));
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, const E>
+            requires IsConstructibleV<E, const E>
         constexpr auto Transform(F&& f) const&&
         {
             using U          = Detail::ResultFrom<F, const T>;
             using ResultType = Expected<U, E>;
 
             if (HasValue())
-                return ResultType(InPlaceInvocation{},
-                                  [&]()
-                                  {
-                                      return std::invoke(std::forward<F>(f),
-                                                         std::move(m_Value));
-                                  });
-            else return ResultType(unexpect, std::move(m_Unexpected));
+                return ResultType(
+                    InPlaceInvocation{},
+                    [&]() { return Invoke(Forward<F>(f), Move(m_Value)); });
+            else return ResultType(unexpect, Move(m_Unexpected));
         }
 
         template <typename F>
-            requires std::is_constructible_v<T, T&>
+            requires IsConstructibleV<T, T&>
         constexpr auto TransformError(F&& f) &
         {
             using UnexpectedResult = Detail::ResultFrom<F, E&>;
@@ -848,12 +810,12 @@ namespace Prism
             if (HasValue()) return ResultType(std::in_place, m_Value);
             else
                 return ResultType(
-                    UnexpectedInvocation{}, [&]()
-                    { return std::invoke(std::forward<F>(f), m_Unexpected); });
+                    UnexpectedInvocation{},
+                    [&]() { return Invoke(Forward<F>(f), m_Unexpected); });
         }
 
         template <typename F>
-            requires std::is_constructible_v<T, const T&>
+            requires IsConstructibleV<T, const T&>
         constexpr auto TransformError(F&& f) const&
         {
             using UnexpectedResult = Detail::ResultFrom<F, const E&>;
@@ -862,50 +824,40 @@ namespace Prism
             if (HasValue()) return ResultType(std::in_place, m_Value);
             else
                 return ResultType(
-                    UnexpectedInvocation{}, [&]()
-                    { return std::invoke(std::forward<F>(f), m_Unexpected); });
+                    UnexpectedInvocation{},
+                    [&]() { return Invoke(Forward<F>(f), m_Unexpected); });
         }
 
         template <typename F>
-            requires std::is_constructible_v<T, T>
+            requires IsConstructibleV<T, T>
         constexpr auto TransformError(F&& f) &&
         {
             using UnexpectedResult = Detail::ResultFrom<F, E&&>;
             using ResultType       = Expected<T, UnexpectedResult>;
 
-            if (HasValue())
-                return ResultType(std::in_place, std::move(m_Value));
+            if (HasValue()) return ResultType(std::in_place, Move(m_Value));
             else
-                return ResultType(UnexpectedInvocation{},
-                                  [&]()
-                                  {
-                                      return std::invoke(
-                                          std::forward<F>(f),
-                                          std::move(m_Unexpected));
-                                  });
+                return ResultType(
+                    UnexpectedInvocation{}, [&]()
+                    { return Invoke(Forward<F>(f), Move(m_Unexpected)); });
         }
 
         template <typename F>
-            requires std::is_constructible_v<T, const T>
+            requires IsConstructibleV<T, const T>
         constexpr auto TransformError(F&& f) const&&
         {
             using UnexpectedResult = Detail::ResultFrom<F, const E&&>;
             using ResultType       = Expected<T, UnexpectedResult>;
 
-            if (HasValue())
-                return ResultType(std::in_place, std::move(m_Value));
+            if (HasValue()) return ResultType(std::in_place, Move(m_Value));
             else
-                return ResultType(UnexpectedInvocation{},
-                                  [&]()
-                                  {
-                                      return std::invoke(
-                                          std::forward<F>(f),
-                                          std::move(m_Unexpected));
-                                  });
+                return ResultType(
+                    UnexpectedInvocation{}, [&]()
+                    { return Invoke(Forward<F>(f), Move(m_Unexpected)); });
         }
 
         template <typename U, typename E2>
-            requires(!std::is_void_v<U>)
+            requires(!IsVoidV<U>)
         friend constexpr bool
         operator==(const Expected& lhs, const Expected<U, E2>& rhs) noexcept(
             noexcept(bool(*lhs == *rhs))
@@ -945,12 +897,12 @@ namespace Prism
         template <typename V>
         constexpr void AssignValue(V&& value)
         {
-            if (m_HasValue) m_Value = std::forward<V>(value);
+            if (m_HasValue) m_Value = Forward<V>(value);
             else
             {
-                Detail::Reinitialize(std::addressof(m_Value),
-                                     std::addressof(m_Unexpected),
-                                     std::forward<V>(value));
+                Detail::Reinitialize(AddressOf(m_Value),
+                                     AddressOf(m_Unexpected),
+                                     Forward<V>(value));
                 m_HasValue = true;
             }
         }
@@ -960,36 +912,33 @@ namespace Prism
         {
             if (m_HasValue)
             {
-                Detail::Reinitialize(std::addressof(m_Unexpected),
-                                     std::addressof(m_Value),
-                                     std::forward<V>(value));
+                Detail::Reinitialize(AddressOf(m_Unexpected),
+                                     AddressOf(m_Value), Forward<V>(value));
                 m_HasValue = false;
                 return;
             }
-            m_Unexpected = std::forward<V>(value);
+            m_Unexpected = Forward<V>(value);
         }
 
         constexpr void SwapValueWithUnexpected(Expected& rhs) noexcept
         {
-            if constexpr (std::is_move_constructible_v<E>)
+            if constexpr (IsMoveConstructibleV<E>)
             {
                 Detail::Guard<E> __guard(rhs.m_Unexpected);
-                std::construct_at(std::addressof(rhs.m_Value),
-                                  std::move(m_Value));
+                std::construct_at(AddressOf(rhs.m_Value), Move(m_Value));
                 rhs.m_HasValue = true;
-                std::destroy_at(std::addressof(m_Value));
-                std::construct_at(std::addressof(m_Unexpected),
-                                  __guard.release());
+                std::destroy_at(AddressOf(m_Value));
+                std::construct_at(AddressOf(m_Unexpected), __guard.release());
                 m_HasValue = false;
             }
             else
             {
                 Detail::Guard<T> guard(m_Value);
-                std::construct_at(std::addressof(m_Unexpected),
-                                  std::move(rhs.m_Unexpected));
+                std::construct_at(AddressOf(m_Unexpected),
+                                  Move(rhs.m_Unexpected));
                 m_HasValue = false;
-                std::destroy_at(std::addressof(rhs.m_Unexpected));
-                std::construct_at(std::addressof(rhs.m_Value), guard.release());
+                std::destroy_at(AddressOf(rhs.m_Unexpected));
+                std::construct_at(AddressOf(rhs.m_Value), guard.release());
                 rhs.m_HasValue = true;
             }
         }
@@ -999,14 +948,14 @@ namespace Prism
 
         template <typename F>
         explicit constexpr Expected(InPlaceInvocation, F&& f)
-            : m_Value(std::forward<F>(f)())
+            : m_Value(Forward<F>(f)())
             , m_HasValue(true)
         {
         }
 
         template <typename F>
         explicit constexpr Expected(UnexpectedInvocation, F&& f)
-            : m_Unexpected(std::forward<F>(f)())
+            : m_Unexpected(Forward<F>(f)())
             , m_HasValue(false)
         {
         }
@@ -1021,25 +970,23 @@ namespace Prism
     };
 
     template <typename T, typename E>
-        requires std::is_void_v<T>
+        requires IsVoidV<T>
     class Expected<T, E>
     {
         static_assert(Detail::CanBeUnexpected<E>);
 
         template <typename U, typename Err, typename Unex = Unexpected<E>>
-        static constexpr bool IsCostructibleFromExpected = std::disjunction_v<
-            std::is_constructible<Unex, Expected<U, Err>&>,
-            std::is_constructible<Unex, Expected<U, Err>>,
-            std::is_constructible<Unex, const Expected<U, Err>&>,
-            std::is_constructible<Unex, const Expected<U, Err>>>;
+        static constexpr bool IsCostructibleFromExpected
+            = DisjunctionV<IsConstructible<Unex, Expected<U, Err>&>,
+                           IsConstructible<Unex, Expected<U, Err>>,
+                           IsConstructible<Unex, const Expected<U, Err>&>,
+                           IsConstructible<Unex, const Expected<U, Err>>>;
 
         template <typename U>
-        static constexpr bool SameValue
-            = std::is_same_v<typename U::ValueType, T>;
+        static constexpr bool SameValue = IsSameV<typename U::ValueType, T>;
 
         template <typename U>
-        static constexpr bool SameError
-            = std::is_same_v<typename U::ErrorType, E>;
+        static constexpr bool SameError = IsSameV<typename U::ErrorType, E>;
 
       public:
         using ValueType      = T;
@@ -1058,95 +1005,90 @@ namespace Prism
         Expected(const Expected&) = default;
 
         constexpr Expected(const Expected& lhs) noexcept
-            requires std::is_copy_constructible_v<E>
-                      && (!std::is_trivially_copy_constructible_v<E>)
+            requires IsCopyConstructibleV<E>
+                      && (!IsTriviallyCopyConstructibleV<E>)
             : m_Void()
             , m_HasValue(lhs.m_HasValue)
         {
             if (!m_HasValue)
-                std::construct_at(std::addressof(m_Unexpected),
-                                  lhs.m_Unexpected);
+                std::construct_at(AddressOf(m_Unexpected), lhs.m_Unexpected);
         }
 
         Expected(Expected&&) = default;
 
         constexpr Expected(Expected&& lhs) noexcept
-            requires std::is_move_constructible_v<E>
-                      && (!std::is_trivially_move_constructible_v<E>)
+            requires IsMoveConstructibleV<E>
+                      && (!IsTriviallyMoveConstructibleV<E>)
             : m_Void()
             , m_HasValue(lhs.m_HasValue)
         {
             if (!m_HasValue)
-                std::construct_at(std::addressof(m_Unexpected),
-                                  std::move(lhs).m_Unexpected);
+                std::construct_at(AddressOf(m_Unexpected),
+                                  Move(lhs).m_Unexpected);
         }
 
         template <typename U, typename UnexpectedResult>
-            requires std::is_void_v<U>
-                      && std::is_constructible_v<E, const UnexpectedResult&>
+            requires IsVoidV<U> && IsConstructibleV<E, const UnexpectedResult&>
                       && (!IsCostructibleFromExpected<U, UnexpectedResult>)
-        constexpr explicit(!std::is_convertible_v<const UnexpectedResult&, E>)
+        constexpr explicit(!IsConvertibleV<const UnexpectedResult&, E>)
             Expected(const Expected<U, UnexpectedResult>& lhs) noexcept
             : m_Void()
             , m_HasValue(lhs.m_HasValue)
         {
             if (!m_HasValue)
-                std::construct_at(std::addressof(m_Unexpected),
-                                  lhs.m_Unexpected);
+                std::construct_at(AddressOf(m_Unexpected), lhs.m_Unexpected);
         }
 
         template <typename U, typename UnexpectedResult>
-            requires std::is_void_v<U>
-                      && std::is_constructible_v<E, UnexpectedResult>
+            requires IsVoidV<U> && IsConstructibleV<E, UnexpectedResult>
                       && (!IsCostructibleFromExpected<U, UnexpectedResult>)
-        constexpr explicit(!std::is_convertible_v<UnexpectedResult, E>)
+        constexpr explicit(!IsConvertibleV<UnexpectedResult, E>)
             Expected(Expected<U, UnexpectedResult>&& lhs) noexcept
             : m_Void()
             , m_HasValue(lhs.m_HasValue)
         {
             if (!m_HasValue)
-                std::construct_at(std::addressof(m_Unexpected),
-                                  std::move(lhs).m_Unexpected);
+                std::construct_at(AddressOf(m_Unexpected),
+                                  Move(lhs).m_Unexpected);
         }
 
         template <typename UnexpectedResult = E>
-            requires std::is_constructible_v<E, const UnexpectedResult&>
-        constexpr explicit(!std::is_convertible_v<const UnexpectedResult&, E>)
-            Expected(const Unexpected<UnexpectedResult>& __u) noexcept
-            : m_Unexpected(__u.Error())
+            requires IsConstructibleV<E, const UnexpectedResult&>
+        constexpr explicit(!IsConvertibleV<const UnexpectedResult&, E>)
+            Expected(const Unexpected<UnexpectedResult>& unexpect) noexcept
+            : m_Unexpected(unexpect.Error())
             , m_HasValue(false)
         {
         }
 
         template <typename UnexpectedResult = E>
-            requires std::is_constructible_v<E, UnexpectedResult>
-        constexpr explicit(!std::is_convertible_v<UnexpectedResult, E>)
-            Expected(Unexpected<UnexpectedResult>&& __u) noexcept
-            : m_Unexpected(std::move(__u).Error())
+            requires IsConstructibleV<E, UnexpectedResult>
+        constexpr explicit(!IsConvertibleV<UnexpectedResult, E>)
+            Expected(Unexpected<UnexpectedResult>&& unexpect) noexcept
+            : m_Unexpected(Move(unexpect).Error())
             , m_HasValue(false)
         {
         }
 
-        constexpr explicit Expected(std::in_place_t) noexcept
+        constexpr explicit Expected(InPlaceT) noexcept
             : Expected()
         {
         }
 
         template <typename... Args>
-            requires std::is_constructible_v<E, Args...>
+            requires IsConstructibleV<E, Args...>
         constexpr explicit Expected(UnexpectedBase, Args&&... args) noexcept
-            : m_Unexpected(std::forward<Args>(args)...)
+            : m_Unexpected(Forward<Args>(args)...)
             , m_HasValue(false)
         {
         }
 
         template <typename U, typename... Args>
-            requires std::is_constructible_v<E, std::initializer_list<U>&,
-                                             Args...>
+            requires IsConstructibleV<E, std::initializer_list<U>&, Args...>
         constexpr explicit Expected(UnexpectedBase,
                                     std::initializer_list<U> ilist,
                                     Args&&... args) noexcept
-            : m_Unexpected(ilist, std::forward<Args>(args)...)
+            : m_Unexpected(ilist, Forward<Args>(args)...)
             , m_HasValue(false)
         {
         }
@@ -1156,14 +1098,13 @@ namespace Prism
         constexpr ~Expected()
             requires(!std::is_trivially_destructible_v<E>)
         {
-            if (!m_HasValue) std::destroy_at(std::addressof(m_Unexpected));
+            if (!m_HasValue) std::destroy_at(AddressOf(m_Unexpected));
         }
 
         Expected&           operator=(const Expected&) = delete;
 
         constexpr Expected& operator=(const Expected& lhs) noexcept
-            requires std::is_copy_constructible_v<E>
-                  && std::is_copy_assignable_v<E>
+            requires IsCopyConstructibleV<E> && IsCopyAssignableV<E>
         {
             if (lhs.m_HasValue) Emplace();
             else AssignUnexpected(lhs.m_Unexpected);
@@ -1171,17 +1112,16 @@ namespace Prism
         }
 
         constexpr Expected& operator=(Expected&& lhs) noexcept
-            requires std::is_move_constructible_v<E>
-                  && std::is_move_assignable_v<E>
+            requires IsMoveConstructibleV<E> && IsMoveAssignableV<E>
         {
             if (lhs.m_HasValue) Emplace();
-            else AssignUnexpected(std::move(lhs.m_Unexpected));
+            else AssignUnexpected(Move(lhs.m_Unexpected));
             return *this;
         }
 
         template <typename UnexpectedResult>
-            requires std::is_constructible_v<E, const UnexpectedResult&>
-                  && std::is_assignable_v<E&, const UnexpectedResult&>
+            requires IsConstructibleV<E, const UnexpectedResult&>
+                  && IsAssignableV<E&, const UnexpectedResult&>
         constexpr Expected& operator=(const Unexpected<UnexpectedResult>& e)
         {
             AssignUnexpected(e.Error());
@@ -1189,11 +1129,11 @@ namespace Prism
         }
 
         template <typename UnexpectedResult>
-            requires std::is_constructible_v<E, UnexpectedResult>
-                  && std::is_assignable_v<E&, UnexpectedResult>
+            requires IsConstructibleV<E, UnexpectedResult>
+                  && IsAssignableV<E&, UnexpectedResult>
         constexpr Expected& operator=(Unexpected<UnexpectedResult>&& e)
         {
-            AssignUnexpected(std::move(e.Error()));
+            AssignUnexpected(Move(e.Error()));
             return *this;
         }
 
@@ -1201,21 +1141,21 @@ namespace Prism
         {
             if (!m_HasValue)
             {
-                std::destroy_at(std::addressof(m_Unexpected));
+                std::destroy_at(AddressOf(m_Unexpected));
                 m_HasValue = true;
             }
         }
 
         constexpr void Swap(Expected& lhs) noexcept
-            requires std::is_swappable_v<E> && std::is_move_constructible_v<E>
+            requires IsSwappableV<E> && IsMoveConstructibleV<E>
         {
             if (m_HasValue)
             {
                 if (!lhs.m_HasValue)
                 {
-                    std::construct_at(std::addressof(m_Unexpected),
-                                      std::move(lhs.m_Unexpected));
-                    std::destroy_at(std::addressof(lhs.m_Unexpected));
+                    std::construct_at(AddressOf(m_Unexpected),
+                                      Move(lhs.m_Unexpected));
+                    std::destroy_at(AddressOf(lhs.m_Unexpected));
                     m_HasValue     = false;
                     lhs.m_HasValue = true;
                 }
@@ -1224,13 +1164,13 @@ namespace Prism
             {
                 if (lhs.m_HasValue)
                 {
-                    std::construct_at(std::addressof(lhs.m_Unexpected),
-                                      std::move(m_Unexpected));
-                    std::destroy_at(std::addressof(m_Unexpected));
+                    std::construct_at(AddressOf(lhs.m_Unexpected),
+                                      Move(m_Unexpected));
+                    std::destroy_at(AddressOf(m_Unexpected));
                     m_HasValue     = true;
                     lhs.m_HasValue = false;
                 }
-                else std::swap(m_Unexpected, lhs.m_Unexpected);
+                else Swap(m_Unexpected, lhs.m_Unexpected);
             }
         }
 
@@ -1277,81 +1217,81 @@ namespace Prism
         constexpr const E&& Error() const&& noexcept
         {
             assert(!m_HasValue);
-            return std::move(m_Unexpected);
+            return Move(m_Unexpected);
         }
 
         constexpr E&& Error() && noexcept
         {
             assert(!m_HasValue);
-            return std::move(m_Unexpected);
+            return Move(m_Unexpected);
         }
 
         template <typename UnexpectedResult = E>
         constexpr E ErrorOr(UnexpectedResult&& e) const&
         {
-            static_assert(std::is_copy_constructible_v<E>);
-            static_assert(std::is_convertible_v<UnexpectedResult, E>);
+            static_assert(IsCopyConstructibleV<E>);
+            static_assert(IsConvertibleV<UnexpectedResult, E>);
 
-            if (m_HasValue) return std::forward<UnexpectedResult>(e);
+            if (m_HasValue) return Forward<UnexpectedResult>(e);
             return m_Unexpected;
         }
 
         template <typename UnexpectedResult = E>
         constexpr E ErrorOr(UnexpectedResult&& e) &&
         {
-            static_assert(std::is_move_constructible_v<E>);
-            static_assert(std::is_convertible_v<UnexpectedResult, E>);
+            static_assert(IsMoveConstructibleV<E>);
+            static_assert(IsConvertibleV<UnexpectedResult, E>);
 
-            if (m_HasValue) return std::forward<UnexpectedResult>(e);
-            return std::move(m_Unexpected);
+            if (m_HasValue) return Forward<UnexpectedResult>(e);
+            return Move(m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, E&>
+            requires IsConstructibleV<E, E&>
         constexpr auto AndThen(F&& f) &
         {
             using U = Detail::Result0<F>;
             static_assert(Detail::IsExpected<U>);
-            static_assert(std::is_same_v<typename U::ErrorType, E>);
+            static_assert(IsSameV<typename U::ErrorType, E>);
 
-            if (HasValue()) return std::invoke(std::forward<F>(f));
+            if (HasValue()) return Invoke(Forward<F>(f));
             else return U(unexpect, m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, const E&>
+            requires IsConstructibleV<E, const E&>
         constexpr auto AndThen(F&& f) const&
         {
             using U = Detail::Result0<F>;
             static_assert(Detail::IsExpected<U>);
-            static_assert(std::is_same_v<typename U::ErrorType, E>);
+            static_assert(IsSameV<typename U::ErrorType, E>);
 
-            if (HasValue()) return std::invoke(std::forward<F>(f));
+            if (HasValue()) return Invoke(Forward<F>(f));
             else return U(unexpect, m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, E>
+            requires IsConstructibleV<E, E>
         constexpr auto AndThen(F&& f) &&
         {
             using U = Detail::Result0<F>;
             static_assert(Detail::IsExpected<U>);
-            static_assert(std::is_same_v<typename U::ErrorType, E>);
+            static_assert(IsSameV<typename U::ErrorType, E>);
 
-            if (HasValue()) return std::invoke(std::forward<F>(f));
-            else return U(unexpect, std::move(m_Unexpected));
+            if (HasValue()) return Invoke(Forward<F>(f));
+            else return U(unexpect, Move(m_Unexpected));
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, const E>
+            requires IsConstructibleV<E, const E>
         constexpr auto AndThen(F&& f) const&&
         {
             using U = Detail::Result0<F>;
             static_assert(Detail::IsExpected<U>);
-            static_assert(std::is_same_v<typename U::ErrorType, E>);
+            static_assert(IsSameV<typename U::ErrorType, E>);
 
-            if (HasValue()) return std::invoke(std::forward<F>(f));
-            else return U(unexpect, std::move(m_Unexpected));
+            if (HasValue()) return Invoke(Forward<F>(f));
+            else return U(unexpect, Move(m_Unexpected));
         }
 
         template <typename F>
@@ -1359,11 +1299,10 @@ namespace Prism
         {
             using UnexpectedResult = Detail::Result<F, E&>;
             static_assert(Detail::IsExpected<UnexpectedResult>);
-            static_assert(
-                std::is_same_v<typename UnexpectedResult::ValueType, T>);
+            static_assert(IsSameV<typename UnexpectedResult::ValueType, T>);
 
             if (HasValue()) return UnexpectedResult();
-            else return std::invoke(std::forward<F>(f), m_Unexpected);
+            else return Invoke(Forward<F>(f), m_Unexpected);
         }
 
         template <typename F>
@@ -1371,11 +1310,10 @@ namespace Prism
         {
             using UnexpectedResult = Detail::Result<F, const E&>;
             static_assert(Detail::IsExpected<UnexpectedResult>);
-            static_assert(
-                std::is_same_v<typename UnexpectedResult::ValueType, T>);
+            static_assert(IsSameV<typename UnexpectedResult::ValueType, T>);
 
             if (HasValue()) return UnexpectedResult();
-            else return std::invoke(std::forward<F>(f), m_Unexpected);
+            else return Invoke(Forward<F>(f), m_Unexpected);
         }
 
         template <typename F>
@@ -1383,12 +1321,10 @@ namespace Prism
         {
             using UnexpectedResult = Detail::Result<F, E&&>;
             static_assert(Detail::IsExpected<UnexpectedResult>);
-            static_assert(
-                std::is_same_v<typename UnexpectedResult::ValueType, T>);
+            static_assert(IsSameV<typename UnexpectedResult::ValueType, T>);
 
             if (HasValue()) return UnexpectedResult();
-            else
-                return std::invoke(std::forward<F>(f), std::move(m_Unexpected));
+            else return Invoke(Forward<F>(f), Move(m_Unexpected));
         }
 
         template <typename F>
@@ -1396,60 +1332,58 @@ namespace Prism
         {
             using UnexpectedResult = Detail::Result<F, const E&&>;
             static_assert(Detail::IsExpected<UnexpectedResult>);
-            static_assert(
-                std::is_same_v<typename UnexpectedResult::ValueType, T>);
+            static_assert(IsSameV<typename UnexpectedResult::ValueType, T>);
 
             if (HasValue()) return UnexpectedResult();
-            else
-                return std::invoke(std::forward<F>(f), std::move(m_Unexpected));
+            else return Invoke(Forward<F>(f), Move(m_Unexpected));
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, E&>
+            requires IsConstructibleV<E, E&>
         constexpr auto Transform(F&& f) &
         {
             using U          = Detail::Result0From<F>;
             using ResultType = Expected<U, E>;
 
             if (HasValue())
-                return ResultType(InPlaceInvocation{}, std::forward<F>(f));
+                return ResultType(InPlaceInvocation{}, Forward<F>(f));
             else return ResultType(unexpect, m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, const E&>
+            requires IsConstructibleV<E, const E&>
         constexpr auto Transform(F&& f) const&
         {
             using U          = Detail::Result0From<F>;
             using ResultType = Expected<U, E>;
 
             if (HasValue())
-                return ResultType(InPlaceInvocation{}, std::forward<F>(f));
+                return ResultType(InPlaceInvocation{}, Forward<F>(f));
             else return ResultType(unexpect, m_Unexpected);
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, E>
+            requires IsConstructibleV<E, E>
         constexpr auto Transform(F&& f) &&
         {
             using U          = Detail::Result0From<F>;
             using ResultType = Expected<U, E>;
 
             if (HasValue())
-                return ResultType(InPlaceInvocation{}, std::forward<F>(f));
-            else return ResultType(unexpect, std::move(m_Unexpected));
+                return ResultType(InPlaceInvocation{}, Forward<F>(f));
+            else return ResultType(unexpect, Move(m_Unexpected));
         }
 
         template <typename F>
-            requires std::is_constructible_v<E, const E>
+            requires IsConstructibleV<E, const E>
         constexpr auto Transform(F&& f) const&&
         {
             using U          = Detail::Result0From<F>;
             using ResultType = Expected<U, E>;
 
             if (HasValue())
-                return ResultType(InPlaceInvocation{}, std::forward<F>(f));
-            else return ResultType(unexpect, std::move(m_Unexpected));
+                return ResultType(InPlaceInvocation{}, Forward<F>(f));
+            else return ResultType(unexpect, Move(m_Unexpected));
         }
 
         template <typename F>
@@ -1461,8 +1395,8 @@ namespace Prism
             if (HasValue()) return ResultType();
             else
                 return ResultType(
-                    UnexpectedInvocation{}, [&]()
-                    { return std::invoke(std::forward<F>(f), m_Unexpected); });
+                    UnexpectedInvocation{},
+                    [&]() { return Invoke(Forward<F>(f), m_Unexpected); });
         }
 
         template <typename F>
@@ -1474,8 +1408,8 @@ namespace Prism
             if (HasValue()) return ResultType();
             else
                 return ResultType(
-                    UnexpectedInvocation{}, [&]()
-                    { return std::invoke(std::forward<F>(f), m_Unexpected); });
+                    UnexpectedInvocation{},
+                    [&]() { return Invoke(Forward<F>(f), m_Unexpected); });
         }
 
         template <typename F>
@@ -1486,13 +1420,9 @@ namespace Prism
 
             if (HasValue()) return ResultType();
             else
-                return ResultType(UnexpectedInvocation{},
-                                  [&]()
-                                  {
-                                      return std::invoke(
-                                          std::forward<F>(f),
-                                          std::move(m_Unexpected));
-                                  });
+                return ResultType(
+                    UnexpectedInvocation{}, [&]()
+                    { return Invoke(Forward<F>(f), Move(m_Unexpected)); });
         }
 
         template <typename F>
@@ -1503,17 +1433,13 @@ namespace Prism
 
             if (HasValue()) return ResultType();
             else
-                return ResultType(UnexpectedInvocation{},
-                                  [&]()
-                                  {
-                                      return std::invoke(
-                                          std::forward<F>(f),
-                                          std::move(m_Unexpected));
-                                  });
+                return ResultType(
+                    UnexpectedInvocation{}, [&]()
+                    { return Invoke(Forward<F>(f), Move(m_Unexpected)); });
         }
 
         template <typename U, typename E2>
-            requires std::is_void_v<U>
+            requires IsVoidV<U>
         friend constexpr bool operator==(const Expected&        lhs,
                                          const Expected<U, E2>& rhs)
         {
@@ -1544,12 +1470,11 @@ namespace Prism
         {
             if (m_HasValue)
             {
-                std::construct_at(std::addressof(m_Unexpected),
-                                  std::forward<V>(value));
+                std::construct_at(AddressOf(m_Unexpected), Forward<V>(value));
                 m_HasValue = false;
                 return;
             }
-            m_Unexpected = std::forward<V>(value);
+            m_Unexpected = Forward<V>(value);
         }
 
         using InPlaceInvocation    = Detail::InPlaceInvocation;
@@ -1560,12 +1485,12 @@ namespace Prism
             : m_Void()
             , m_HasValue(true)
         {
-            std::forward<F>(f)();
+            Forward<F>(f)();
         }
 
         template <typename F>
         explicit constexpr Expected(UnexpectedInvocation, F&& f)
-            : m_Unexpected(std::forward<F>(f)())
+            : m_Unexpected(Forward<F>(f)())
             , m_HasValue(false)
         {
         }
