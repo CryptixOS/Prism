@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Concepts.hpp>
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 namespace BootInfo
 {
     extern u64 GetHHDMOffset();
@@ -95,7 +95,7 @@ namespace Prism
 
         inline constexpr bool IsValid() const { return m_Pointer != 0; }
 
-#ifdef PRISM_TARGET_CRYPTIX
+#if PRISM_TARGET_CRYPTIX != 0
         inline VirtAddr HigherHalfOffset() const
         {
             return BootInfo::GetHHDMOffset();
