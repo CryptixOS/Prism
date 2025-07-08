@@ -17,9 +17,6 @@
 
 namespace Prism
 {
-    template <typename T>
-    concept ArithmeticType = IsArithmeticV<T>;
-
     namespace StringUtils
     {
         template <ArithmeticType T>
@@ -82,13 +79,13 @@ namespace Prism
 
             return ToString(value, string.Raw(), base);
         }
-        template <typename T>
-        constexpr String ToString(T enumerator)
-            requires(IsEnumV<T>)
+
+        template <EnumType T>
+        constexpr StringView ToString(T enumerator)
         {
             auto str = magic_enum::enum_name(enumerator);
 
-            return String(str.data(), str.size());
+            return StringView(str.data(), str.size());
         }
 
         constexpr u64 ToLower(u64 c)

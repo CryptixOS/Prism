@@ -44,9 +44,14 @@ namespace Prism
 #endif
 
     template <typename T>
-    concept IntegralOrEnum = IsIntegralV<T> || IsEnumV<T> || IsUnsignedV<T>;
+    concept ArithmeticType = IsArithmeticV<T>;
+
     template <typename T>
-    concept PrimitiveOrEnum = IsEnumV<T> || IsArithmeticV<T> || IsSameV<T, bool>
+    concept EnumType = IsEnumV<T>;
+    template <typename T>
+    concept IntegralOrEnum = IsIntegralV<T> || EnumType<T> || IsUnsignedV<T>;
+    template <typename T>
+    concept PrimitiveOrEnum = EnumType<T> || IsArithmeticV<T> || IsSameV<T, bool>
                            || IsSignedV<T> || IsIntegralV<T>;
 
     template <PrimitiveOrEnum T>
@@ -106,8 +111,6 @@ namespace Prism
       private:
         T m_Value{};
     };
-    template <typename T>
-    concept EnumType = IsEnumV<T>;
 
     template <>
     class ArithmeticEnum<bool>
