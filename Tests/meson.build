@@ -7,11 +7,8 @@
 
 incdirs = include_directories('../Source/')
 tests = [
-  'Algorithm', 'IntrusiveList', 'Deque',
-  'DoublyLinkedList', 'Ref', 'RingBuffer',
-  'RedBlackTree', 'SimdIntrinsics', 'String', 'StringBuilder',
-  'StringUtils', #'Tuple',
-  'TypeTraits', 'UnorderedMap', 'Vector',
+  'Algorithm', 'Memory', 'Ref', 
+  'SimdIntrinsics', 'TypeTraits', 
 ]
 cpp_args = [
   '-Wno-unused-parameter',
@@ -21,16 +18,22 @@ link_args = [
   '-lstdc++exp',
 ]
 
+srcs = [
+  meson.project_source_root() / 'Source/Prism/Containers/RingBuffer.cpp',
+  meson.project_source_root() / 'Source/Prism/Debug/Assertions.cpp',
+  meson.project_source_root() / 'Source/Prism/Debug/Log.cpp',
+  meson.project_source_root() / 'Source/Prism/Memory/Memory.cpp',
+
+  meson.project_source_root() / 'Source/Prism/Utility/PathView.cpp',
+  meson.project_source_root() / 'Source/Prism/Utility/Path.cpp'
+]
+
+subdir('Containers')
+subdir('String')
+
 foreach name : tests
-  srcs = files(
-    meson.project_source_root() / 'Source/Prism/Containers/RingBuffer.cpp',
-    meson.project_source_root() / 'Source/Prism/Debug/Assertions.cpp',
-    meson.project_source_root() / 'Source/Prism/Debug/Log.cpp',
-    meson.project_source_root() / 'Source/Prism/Utility/PathView.cpp',
-    meson.project_source_root() / 'Source/Prism/Utility/Path.cpp',
-    name / 'main.cpp')
   test = executable(
-    name, srcs,
+    name, files(srcs, name / 'main.cpp'),
     cpp_args: cpp_args, link_args: link_args,
     include_directories: incdirs, dependencies: deps
   )
