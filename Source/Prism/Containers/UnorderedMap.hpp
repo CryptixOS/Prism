@@ -146,27 +146,50 @@ namespace Prism
         template <bool Const = false>
         struct Iterator
         {
+            using MapPointerType
+                = ConditionalType<Const, const UnorderedMap*, UnorderedMap*>;
             using EntryRefType
                 = ConditionalType<Const, const KeyValuePair&, KeyValuePair&>;
             using EntryPointerType
                 = ConditionalType<Const, KeyValuePair* const, KeyValuePair*>;
 
+            constexpr Iterator(MapPointerType map, bool end)
+                : m_Map(map)
+            {
+                if (end)
+                {
+                    m_BucketIndex = map->Capacity();
+                    ListIt        = BucketType::Iterator::UniversalEnd();
+                    return;
+                }
+
+                m_BucketIndex = 0;
+                ListIt        = map->m_Buckets[m_BucketIndex].begin();
+                while (ListIt == BucketType::Iterator::UniversalEnd()
+                       && ++m_BucketIndex < map->Capacity())
+                    ListIt = map->m_Buckets[m_BucketIndex].begin();
+            }
+            constexpr Iterator(const Iterator& other)
+                : m_Map(other.m_Map)
+                , m_BucketIndex(other.m_BucketIndex)
+                , ListIt(other.ListIt)
+            {
+            }
+
             /**
              * @brief Constructs an iterator to the given bucket index in the
              * map.
              */
-            constexpr Iterator(
-                ConditionalType<Const, const UnorderedMap*, UnorderedMap*> map,
-                const usize index)
-                : m_Map(map)
-                , m_BucketIndex(index)
-                , ListIt(BucketType::Iterator::UniversalEnd())
-            {
-                if (m_BucketIndex >= m_Map->Capacity()) return;
-
-                ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
-                AdvanceToValid();
-            }
+            // constexpr Iterator(
+            //     ConditionalType<Const, const UnorderedMap*, UnorderedMap*>
+            //     map, const usize index) : m_Map(map) , m_BucketIndex(index)
+            //     , ListIt(BucketType::Iterator::UniversalEnd())
+            // {
+            //     if (m_BucketIndex >= m_Map->Capacity()) return;
+            //
+            //     ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
+            //     AdvanceToValid();
+            // }
             /**
              * @brief Constructs an iterator pointing to a specific element in a
              * bucket.
@@ -178,6 +201,15 @@ namespace Prism
                 , m_BucketIndex(index)
                 , ListIt(listIt)
             {
+            }
+
+            constexpr Iterator& operator=(const Iterator& other)
+            {
+                m_Map         = other.m_Map;
+                m_BucketIndex = other.m_BucketIndex;
+                ListIt        = other.ListIt;
+
+                return *this;
             }
 
             /**
@@ -220,6 +252,13 @@ namespace Prism
             /// @brief Prefix increment operator.
             constexpr Iterator& operator++()
             {
+                ListIt++;
+                while (ListIt == BucketType::Iterator::UniversalEnd()
+                       && ++m_BucketIndex < m_Map->Capacity())
+                    ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
+
+                return *this;
+
                 ++ListIt;
                 AdvanceToValid();
 
@@ -228,6 +267,10 @@ namespace Prism
             /// @brief Postfix increment operator.
             constexpr Iterator operator++(int)
             {
+                Iterator copy(*this);
+                operator++();
+                return copy;
+
                 auto it = *this;
                 ++*this;
 
@@ -237,10 +280,13 @@ namespace Prism
             /// @brief Equality operator.
             constexpr bool operator==(const Iterator& other) const
             {
-                return (m_BucketIndex >= m_Map->Capacity()
-                        && other.m_BucketIndex >= m_Map->Capacity())
-                    || (m_BucketIndex == other.m_BucketIndex
-                        && ListIt == other.ListIt);
+                return m_Map == other.m_Map
+                    && m_BucketIndex == other.m_BucketIndex
+                    && ListIt == other.ListIt;
+                // return (m_BucketIndex >= m_Map->Capacity()
+                //         && other.m_BucketIndex >= m_Map->Capacity())
+                //     || (m_BucketIndex == other.m_BucketIndex
+                //         && ListIt == other.ListIt);
             }
             /// @brief Inequality operator.
             constexpr bool operator!=(const Iterator& other) const

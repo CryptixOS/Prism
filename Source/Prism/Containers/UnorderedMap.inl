@@ -46,43 +46,43 @@ namespace Prism
         auto it  = Find(key);
         if (it != end()) return it->Value;
 
-        return InsertOrAssign(key, {})->Value;
+        return InsertOrAssign(key, V())->Value;
     }
 
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::Iterator<> UnorderedMap<K, V, H>::begin()
     {
-        return Iterator<>(this, 0, m_Buckets.Front().begin());
+        return Iterator<>(this, false);
     }
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::ConstIterator
     UnorderedMap<K, V, H>::begin() const
     {
-        return ConstIterator(this, 0, m_Buckets.Front().begin());
+        return ConstIterator(this, false);
     }
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::ConstIterator
     UnorderedMap<K, V, H>::cbegin() const PM_NOEXCEPT
     {
-        return ConstIterator(this, 0, m_Buckets.Front().begin());
+        return ConstIterator(this, false);
     }
 
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::Iterator<> UnorderedMap<K, V, H>::end()
     {
-        return Iterator<>(this, Capacity());
+        return Iterator<>(this, true);
     }
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::ConstIterator
     UnorderedMap<K, V, H>::end() const
     {
-        return ConstIterator(this, Capacity());
+        return ConstIterator(this, true);
     }
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::ConstIterator
     UnorderedMap<K, V, H>::cend() const PM_NOEXCEPT
     {
-        return ConstIterator(this, Capacity());
+        return ConstIterator(this, true);
     }
 
     template <typename K, typename V, typename H>
@@ -360,14 +360,15 @@ namespace Prism
         if (Empty()) return end();
 
         --m_Size;
-        auto node = it.ListIt.operator->();
-        usize index = HashType{}(node->Entry.Key) % Capacity();
-        auto bucket = m_Buckets[index];
+        auto  node    = it.ListIt.operator->();
+        usize index   = HashType{}(node->Entry.Key) % Capacity();
+        auto  bucket  = m_Buckets[index];
 
-        auto nextPos = bucket.Erase(it.ListIt);
+        auto  nextPos = bucket.Erase(it.ListIt);
         delete node;
 
-        auto nextIt = Iterator<>(this, index, typename BucketType::Iterator(nextPos));
+        auto nextIt
+            = Iterator<>(this, index, typename BucketType::Iterator(nextPos));
         return index < Capacity() ? nextIt : end();
     }
 
