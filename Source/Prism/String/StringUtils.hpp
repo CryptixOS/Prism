@@ -13,6 +13,8 @@
 #include <Prism/String/StringView.hpp>
 #include <Prism/Utility/Math.hpp>
 
+#include <magic_enum/magic_enum.hpp>
+
 namespace Prism
 {
     template <typename T>
@@ -79,6 +81,14 @@ namespace Prism
             string.Reserve(size);
 
             return ToString(value, string.Raw(), base);
+        }
+        template <typename T>
+        constexpr String ToString(T enumerator)
+            requires(IsEnumV<T>)
+        {
+            auto str = magic_enum::enum_name(enumerator);
+
+            return String(str.data(), str.size());
         }
 
         constexpr u64 ToLower(u64 c)
