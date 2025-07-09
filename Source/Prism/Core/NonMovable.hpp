@@ -22,3 +22,7 @@ namespace Prism
         NonMovable& operator=(NonMovable&&) = delete;
     };
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::NonMovable;
+#endif
