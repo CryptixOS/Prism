@@ -7,6 +7,8 @@
 #pragma once
 
 #include <Prism/Core/Concepts.hpp>
+#include <Prism/Utility/Hash.hpp>
+
 #if PRISM_TARGET_CRYPTIX != 0
 namespace BootInfo
 {
@@ -275,17 +277,19 @@ struct fmt::formatter<Prism::Pointer> : fmt::formatter<fmt::string_view>
 template <>
 struct std::hash<Prism::Pointer>
 {
-    [[nodiscard]] constexpr usize
+    [[nodiscard]] constexpr Prism::usize
     operator()(const Prism::Pointer& pointer) const PM_NOEXCEPT
     {
-#if PRISM_TARGET_CRYPTIX == 1
+        using namespace Prism;
+#if PRISM_TARGET_CRYPTIX != 0
         return std::hash<Prism::pointer>{}(pointer.Raw());
 #else
-        const char* key    = str.Raw();
-        usize       length = str.Size() * sizeof(C);
+        u64         key    = pointer.Raw();
+        usize       length = sizeof(u64);
         const usize seed   = 0xc70f6907ul;
 
-        return Hash::MurmurHash2(key, length, seed);
+        return Hash::MurmurHash2(reinterpret_cast<const char*>(&key), length,
+                                 seed);
 #endif
     }
 };

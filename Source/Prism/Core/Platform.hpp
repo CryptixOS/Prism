@@ -7,18 +7,18 @@
 #pragma once
 
 #ifdef __i386__
-    #define PRISM_ARCH_IA32
-    #define PRISM_ARCH_STRING "ia32"
+    #define PRISM_TARGET_IA32
+    #define PRISM_TARGET_STRING "ia32"
 #elifdef __x86_64__
-    #define PRISM_ARCH_X86_64
-    #define PRISM_ARCH_STRING "x86_64"
+    #define PRISM_TARGET_X86_64
+    #define PRISM_TARGET_STRING "x86_64"
 #elifdef __aarch64__
-    #define PRISM_ARCH_AARCH64
-    #define PRISM_ARCH_STRING "aarch64"
+    #define PRISM_TARGET_AARCH64
+    #define PRISM_TARGET_STRING "aarch64"
 #elif defined(__riscv) && __riscv_xlen == 64
-    #define PRISM_ARCH_RISCV64
-    #define PRISM_ARCH_STRING "riscv64"
+    #define PRISM_TARGET_RISCV64
+    #define PRISM_TARGET_STRING "riscv64"
 #elifdef __loongarch64
-    #define PRISM_ARCH_LOONGARCH64
-    #define PRISM_ARCH_STRING "loongarch64"
+    #define PRISM_TARGET_LOONGARCH64
+    #define PRISM_TARGET_STRING "loongarch64"
 #endif
