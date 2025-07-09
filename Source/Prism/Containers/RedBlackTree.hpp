@@ -42,7 +42,7 @@ namespace Prism
             KeyValuePair Data;
 
             Node() = default;
-            Node(K& key)
+            Node(const K& key)
                 : Data(key, V())
             {
             }
@@ -50,7 +50,7 @@ namespace Prism
                 : Data(Move(key), V())
             {
             }
-            Node(K& key, V& value)
+            Node(const K& key, const V& value)
                 : Data(key, value)
             {
             }
