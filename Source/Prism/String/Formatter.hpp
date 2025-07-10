@@ -268,7 +268,7 @@ namespace Prism
     };
 
     template <typename Context, typename... Args>
-    void Format(Context& context, const char* fmt, Args&&... args)
+    void FormatTo(Context& context, const char* fmt, Args&&... args)
     {
         const char* current = fmt;
         Formatter   formatter(context);
@@ -276,13 +276,19 @@ namespace Prism
     }
 
     template <typename... Args>
-    String Format(const char* fmt, Args&&... args)
+    String FormatString(const char* fmt, Args&&... args)
     {
         StringBuilder<char> context;
         Formatter           formatter(context);
 
-        Format(formatter, fmt, Forward<Args>(args)...);
+        FormatTo(formatter, fmt, Forward<Args>(args)...);
         return context;
+    }
+
+    template <typename... Args>
+    [[nodiscard]] inline auto Format(fmt::format_string<Args...> fmt, Args&&... args)
+    {
+        return fmt::format(fmt, Forward<Args>(args)...);
     }
 }; // namespace Prism
 

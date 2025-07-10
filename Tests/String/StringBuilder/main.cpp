@@ -21,10 +21,10 @@ int main()
 {
     StringBuilder<char> sb;
 
-    Format(sb, "val: {:08x}\n", 255);     // "val: 000000ff"
-    Format(sb, "val: {:6}\n", 42);        // "val:     42"
-    Format(sb, "val: {:#X}\n", 0xABCDEF); // "val: ABCDEF"
-    Format(sb, "val: {:#b}\n", 32);       // "val: ABCDEF"
+    FormatTo(sb, "val: {:08x}\n", 255);     // "val: 000000ff"
+    FormatTo(sb, "val: {:6}\n", 42);        // "val:     42"
+    FormatTo(sb, "val: {:#X}\n", 0xABCDEF); // "val: ABCDEF"
+    FormatTo(sb, "val: {:#b}\n", 32);       // "val: ABCDEF"
     //
     BasicString<char> final = sb;
     printf("final: %s\n", final.Raw());
