@@ -202,6 +202,17 @@ namespace Prism
             ++m_Pointer;
             return ret;
         }
+        Pointer& operator--()
+        {
+            --m_Pointer;
+            return *this;
+        }
+        Pointer operator--(int)
+        {
+            Pointer ret = *this;
+            --m_Pointer;
+            return ret;
+        }
 
       private:
         VirtAddr m_Pointer = 0;
