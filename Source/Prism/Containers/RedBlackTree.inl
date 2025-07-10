@@ -265,6 +265,26 @@ namespace Prism
     }
 
     template <typename K, typename V>
+    typename RedBlackTree<K, V>::Iterator
+    RedBlackTree<K, V>::FindLargestNotAbove(const K& key)
+    {
+        auto  node      = m_Root;
+        Node* candidate = nullptr;
+        while (node)
+        {
+            if (key == node->Key) return node;
+            if (key < node->Key)
+            {
+                node = node->LeftChild;
+                continue;
+            }
+            candidate = node;
+            node      = node->RightChild;
+        }
+
+        return Iterator(candidate, key);
+    }
+    template <typename K, typename V>
     typename RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Find(const K& key)
     {
         return Iterator(Find(m_Root, key));

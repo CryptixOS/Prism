@@ -149,6 +149,7 @@ namespace Prism
         bool            Erase(const K& key);
         bool            Erase(Node* node);
 
+        Iterator        FindLargestNotAbove(const K& key);
         Iterator        Find(const K& key);
         ConstIterator   Find(const K& key) const;
 
