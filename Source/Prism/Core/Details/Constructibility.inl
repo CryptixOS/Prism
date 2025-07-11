@@ -373,4 +373,7 @@ namespace Prism
         = IsNoThrowSwappableWith<T, U>::Value;
     template <typename T>
     inline constexpr bool IsNoThrowSwappableV = IsNoThrowSwappable<T>::Value;
+
+    template <typename To, typename From>
+    using IsArrayConvertible = IsConvertible<From (*)[], To (*)[]>;
 }; // namespace Prism

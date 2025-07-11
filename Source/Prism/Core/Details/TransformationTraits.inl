@@ -184,7 +184,233 @@ namespace Prism
     {
     };
 
-    // TODO(v1tr10l7): CommonReference
+    template <typename Unqualified, bool IsConst, bool IsVolatile>
+    struct CvSelector;
+
+    template <typename Unqualified>
+    struct CvSelector<Unqualified, false, false>
+    {
+        using Type = Unqualified;
+    };
+
+    template <typename Unqualified>
+    struct CvSelector<Unqualified, false, true>
+    {
+        using Type = volatile Unqualified;
+    };
+
+    template <typename Unqualified>
+    struct CvSelector<Unqualified, true, false>
+    {
+        using Type = const Unqualified;
+    };
+
+    template <typename Unqualified>
+    struct CvSelector<Unqualified, true, true>
+    {
+        using Type = const volatile Unqualified;
+    };
+
+    template <typename Qualified, typename Unqualified,
+              bool IsConst    = IsConst<Qualified>::Value,
+              bool IsVolatile = IsVolatile<Qualified>::Value>
+    class MatchCvQualifiers
+    {
+        using Match = CvSelector<Unqualified, IsConst, IsVolatile>;
+
+      public:
+        using Type = typename Match::Type;
+    };
+
+    template <typename From, typename To>
+    using CopyCv = typename MatchCvQualifiers<From, To>::Type;
+
+    template <typename X, typename Y>
+    using ConditionResult
+        = decltype(false ? DeclVal<X (&)()>()() : DeclVal<Y (&)()>()());
+
+    template <typename A, typename B, typename = void>
+    struct CommonRefImpl
+    {
+    };
+
+    template <typename A, typename B>
+    using CommonRef = typename CommonRefImpl<A, B>::Type;
+
+    template <typename X, typename Y>
+    using ConditionResultCvRef = ConditionResult<CopyCv<X, Y>&, CopyCv<Y, X>&>;
+
+    template <typename X, typename Y>
+    struct CommonRefImpl<X&, Y&, VoidType<ConditionResultCvRef<X, Y>>>
+        : EnableIf<IsReferenceV<ConditionResultCvRef<X, Y>>,
+                   ConditionResultCvRef<X, Y>>
+    {
+    };
+
+    template <typename X, typename Y>
+    using CommonRefC = RemoveReferenceType<CommonRef<X&, Y&>>&&;
+
+    template <typename X, typename Y>
+    struct CommonRefImpl<
+        X&&, Y&&,
+        EnableIfType<IsConvertible<X&&, CommonRefC<X, Y>>::Value,
+                     IsConvertible<Y&&, CommonRefC<X, Y>>>>
+    {
+        using Type = CommonRefC<X, Y>;
+    };
+
+    template <typename X, typename Y>
+    using CommonRefD = CommonRef<const X&, Y&>;
+
+    template <typename X, typename Y>
+    struct CommonRefImpl<
+        X&&, Y&, EnableIfType<IsConvertible<X&&, CommonRefD<X, Y>>::Value>>
+    {
+        using Type = CommonRefD<X, Y>;
+    };
+
+    template <typename X, typename Y>
+    struct CommonRefImpl<X&, Y&&> : CommonRefImpl<Y&&, X&>
+    {
+    };
+
+    template <typename T, typename U, template <typename> class TQual,
+              template <typename> class UQual>
+    struct BasicCommonReference
+    {
+    };
+
+    template <typename T>
+    struct RefX
+    {
+        template <typename U>
+        using Type = CopyCv<T, U>;
+    };
+
+    template <typename T>
+    struct RefX<T&>
+    {
+        template <typename U>
+        using Type = CopyCv<T, U>&;
+    };
+
+    template <typename T>
+    struct RefX<T&&>
+    {
+        template <typename U>
+        using Type = CopyCv<T, U>&&;
+    };
+
+    template <typename T1, typename T2>
+    using BasicCommonRef =
+        typename BasicCommonReference<RemoveCvRefType<T1>, RemoveCvRefType<T2>,
+                                      RefX<T1>::template Type,
+                                      RefX<T2>::template Type>::Type;
+
+    template <typename... T>
+    struct CommonReference;
+
+    template <typename... T>
+    using CommonReferenceType = typename CommonReference<T...>::Type;
+
+    template <>
+    struct CommonReference<>
+    {
+    };
+
+    template <typename T0>
+    struct CommonReference<T0>
+    {
+        using Type = T0;
+    };
+
+    template <typename T1, typename T2, int Bullet = 1, typename = void>
+    struct CommonReferenceImpl : CommonReferenceImpl<T1, T2, Bullet + 1>
+    {
+    };
+
+    // If sizeof...(T) is two ...
+    template <typename T1, typename T2>
+    struct CommonReference<T1, T2> : CommonReferenceImpl<T1, T2>
+    {
+    };
+
+    // If T1 and T2 are reference types and COMMON-REF(T1, T2) is well-formed,
+    // ...
+    template <typename T1, typename T2>
+    struct CommonReferenceImpl<T1&, T2&, 1, VoidType<CommonRef<T1&, T2&>>>
+    {
+        using Type = CommonRef<T1&, T2&>;
+    };
+
+    template <typename T1, typename T2>
+    struct CommonReferenceImpl<T1&&, T2&&, 1, VoidType<CommonRef<T1&&, T2&&>>>
+    {
+        using type = CommonRef<T1&&, T2&&>;
+    };
+
+    template <typename T1, typename T2>
+    struct CommonReferenceImpl<T1&, T2&&, 1, VoidType<CommonRef<T1&, T2&&>>>
+    {
+        using type = CommonRef<T1&, T2&&>;
+    };
+
+    template <typename T1, typename T2>
+    struct CommonReferenceImpl<T1&&, T2&, 1, VoidType<CommonRef<T1&&, T2&>>>
+    {
+        using type = CommonRef<T1&&, T2&>;
+    };
+
+    template <typename T1, typename T2>
+    struct CommonReferenceImpl<T1, T2, 2, VoidType<BasicCommonRef<T1, T2>>>
+    {
+        using Type = BasicCommonRef<T1, T2>;
+    };
+
+    template <typename T1, typename T2>
+    struct CommonReferenceImpl<T1, T2, 3, VoidType<ConditionResult<T1, T2>>>
+    {
+        using Type = ConditionResult<T1, T2>;
+    };
+
+    template <typename T1, typename T2>
+    struct CommonReferenceImpl<T1, T2, 4,
+                               VoidType<typename CommonType<T1, T2>::Type>>
+    {
+        using Type = typename CommonType<T1, T2>::Type;
+    };
+
+    template <typename T1, typename T2>
+    struct CommonReferenceImpl<T1, T2, 5, void>
+    {
+    };
+
+    template <typename...>
+    struct CommonTypePack
+    {
+    };
+
+    template <typename, typename, typename = void>
+    struct CommonTypeFold;
+
+    template <typename T1, typename T2, typename... Rest>
+    struct CommonReference<T1, T2, Rest...>
+        : CommonTypeFold<CommonReference<T1, T2>, CommonTypePack<Rest...>>
+    {
+    };
+
+    template <typename T1, typename T2, typename... Rest>
+    struct CommonTypeFold<CommonReference<T1, T2>, CommonTypePack<Rest...>,
+                          VoidType<CommonReferenceType<T1, T2>>>
+        : public CommonReference<CommonReferenceType<T1, T2>, Rest...>
+    {
+    };
+
+    template <typename CT, typename R>
+    struct CommonTypeFold<CT, R, void>
+    {
+    };
+
     template <typename T>
     struct UnderlyingType
     {
