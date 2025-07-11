@@ -49,7 +49,7 @@ cxx_args = [
   '-fno-rtti',
   '-fno-exceptions',
   '-Wno-frame-address',
-  '-MP'
+  '-MP',
 ]
 
 incs = [ include_directories('Source') ]
@@ -59,6 +59,7 @@ incs = [ include_directories('Source') ]
 deps = [
   subproject('fmt-10.2.0').get_variable('fmt_dep'),
   dependency('demangler'),
+  # dependency('libstdcxx_headers'),
   dependency('magic_enum', default_options: [
     'test=false',
   ]),
@@ -162,7 +163,6 @@ install_headers(
   'Source/Prism/Memory/Pointer.hpp',
   'Source/Prism/Memory/Ref.hpp',
   'Source/Prism/Memory/Scope.hpp',
-  'Source/Prism/Memory/Span.hpp',
   'Source/Prism/Memory/WeakRef.hpp',
   subdir: 'Prism/Memory'
 )
