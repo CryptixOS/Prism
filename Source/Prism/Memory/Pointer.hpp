@@ -288,7 +288,7 @@ struct fmt::formatter<Prism::Pointer> : fmt::formatter<fmt::string_view>
 template <>
 struct std::hash<Prism::Pointer>
 {
-    [[nodiscard]] constexpr Prism::usize
+    [[nodiscard]] Prism::usize
     operator()(const Prism::Pointer& pointer) const PM_NOEXCEPT
     {
         using namespace Prism;
