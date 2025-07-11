@@ -15,7 +15,31 @@ namespace Prism
     {
         template <typename T, typename U>
         concept SameHelper = IsSameV<T, U>;
-    }
+
+        template <typename T>
+        using CRef = const RemoveReferenceType<T>&;
+
+        template <typename T>
+        concept ClassOrEnum = IsClassV<T> || IsUnionV<T> || IsEnumV<T>;
+
+        template <typename T>
+        constexpr bool DestructibleImpl = false;
+        template <typename T>
+            requires requires(T& t) {
+                { t.~T() }
+                PM_NOEXCEPT;
+            }
+        constexpr bool DestructibleImpl<T> = true;
+
+        template <typename T>
+        constexpr bool Destructible = DestructibleImpl<T>;
+        template <typename T>
+        constexpr bool Destructible<T&> = true;
+        template <typename T>
+        constexpr bool Destructible<T&&> = true;
+        template <typename T, usize N>
+        constexpr bool Destructible<T[N]> = Destructible<T>;
+    } // namespace Details
 
     template <typename T, typename U>
     concept SameAs = Details::SameHelper<T, U> && Details::SameHelper<U, T>;
@@ -24,13 +48,18 @@ namespace Prism
         = IsBaseOf<Base, Derived>::Value
        && IsConvertible<const volatile Derived*, const volatile Base*>::Value;
     template <typename From, typename To>
-    concept ConvertibleTo = IsConvertible<From, To>::Value
+    concept ConvertibleTo = IsConvertibleV<From, To>
                          && requires { static_cast<To>(DeclVal<From>()); };
-    // template <typename T, typename U>
-    // concept CommonReferenceWith
-    //     = SameAs<CommonReferenceType<T, U>, CommonReferenceType<U, T>>
-    //    && ConvertibleTo<T, CommonReferenceType<T, U>>
-    //    && ConvertibleTo<U, CommonReferenceType<T, U>>;
+    template <typename T, typename U>
+    concept CommonReferenceWith
+        = SameAs<CommonReferenceType<T, U>, CommonReferenceType<U, T>>
+       && ConvertibleTo<T, CommonReferenceType<T, U>>
+       && ConvertibleTo<U, CommonReferenceType<T, U>>;
+    template <typename T, typename U>
+    concept CommonWith = SameAs<CommonTypeType<T, U>, CommonTypeType<U, T>> && requires {
+        static_cast<CommonTypeType<T, U>>(DeclVal<T>());
+        static_cast<CommonTypeType<T, U>>(DeclVal<U>());
+    } && CommonReferenceWith<AddLValueReferenceType<const T>, AddLValueReferenceType<const U>> && CommonReferenceWith<AddLValueReferenceType<CommonTypeType<T, U>>, CommonReferenceType<AddLValueReferenceType<const T>, AddLValueReferenceType<const U>>>;
 
     template <typename T>
     concept Integral = IsIntegralV<T>;
@@ -42,6 +71,136 @@ namespace Prism
     template <typename T>
     concept FloatingPoint = IsFloatingPointV<T>;
 #endif
+    template <class LHS, class RHS>
+
+    concept AssignableFrom
+        = IsLValueReferenceV<LHS>
+       && CommonReferenceWith<const RemoveReferenceType<LHS>&,
+                              const RemoveReferenceType<RHS>&>
+       && requires(LHS lhs, RHS&& rhs) {
+              { lhs = Forward<RHS>(rhs) } -> SameAs<LHS>;
+          };
+    template <typename T>
+    concept Swappable = requires(T& a, T& b) { Swap(a, b); };
+
+    namespace Ranges
+    {
+
+    };
+
+    template <typename T>
+    concept Destructible = Details::Destructible<T>;
+    template <typename T, typename... Args>
+    concept ConstructibleFrom = Destructible<T> && IsConstructibleV<T, Args...>;
+    template <typename T>
+    concept DefaultInitializable = ConstructibleFrom<T> && requires {
+        T{};
+        ::new T;
+    };
+    template <typename T>
+    concept MoveConstructible = ConstructibleFrom<T, T> && ConvertibleTo<T, T>;
+    template <class T>
+    concept CopyConstructible
+        = MoveConstructible<T> && ConstructibleFrom<T, T&>
+       && ConvertibleTo<T&, T> && ConstructibleFrom<T, const T&>
+       && ConvertibleTo<const T&, T> && ConstructibleFrom<T, const T>
+       && ConvertibleTo<const T, T>;
+
+    template <typename T>
+    concept BooleanTestableImpl = ConvertibleTo<T, bool>;
+    template <typename T>
+    concept BooleanTestable = BooleanTestableImpl<T> && requires(T&& t) {
+        { !Forward<T>(t) } -> BooleanTestableImpl;
+    };
+
+    template <typename T>
+    concept Movable = IsObjectV<T> && MoveConstructible<T>
+                   && AssignableFrom<T&, T> && Swappable<T>;
+    template <typename T>
+    concept Copyable
+        = CopyConstructible<T> && Movable<T> && AssignableFrom<T&, T&>
+       && AssignableFrom<T&, const T&> && AssignableFrom<T&, const T>;
+    template <typename T>
+    concept SemiRegular = Copyable<T> && DefaultInitializable<T>;
+    template <typename T>
+    concept Regular = SemiRegular<T> && std::equality_comparable<T>;
+
+    namespace Ranges
+    {
+        namespace Swappable
+        {
+            template <typename T>
+            void Swap(T&, T&) = delete;
+
+            template <typename T, typename U>
+            concept AdlSwap
+                = (Details::ClassOrEnum<RemoveReferenceType<T>>
+                   || Details::ClassOrEnum<RemoveReferenceType<U>>)
+               && requires(T&& t, U&& u) {
+                      Swap(static_cast<T &&>(t), static_cast<U &&>(u));
+                  };
+
+            struct SwapType
+            {
+              private:
+                template <typename T, typename U>
+                static constexpr bool NoExcept()
+                {
+                    if constexpr (AdlSwap<T, U>)
+                        return PM_NOEXCEPT(Swap(DeclVal<T>(), DeclVal<U>()));
+                    else
+                        return IsNoThrowMoveConstructibleV<
+                                   RemoveReferenceType<T>>
+                            && IsNoThrowCopyConstructibleV<
+                                   RemoveReferenceType<T>>;
+                }
+
+              public:
+                template <typename T, typename U>
+                    requires AdlSwap<T, U>
+                          || (SameAs<T, U> && IsLValueReferenceV<T>
+                              && MoveConstructible<RemoveReferenceType<T>>
+                              && AssignableFrom<T, RemoveReferenceType<T>>)
+                constexpr void operator()(T&& t, U&& u) const
+                    PM_NOEXCEPT(NoExcept<T, U>())
+                {
+                    if constexpr (AdlSwap<T, U>)
+                        Swap(static_cast<T&&>(t), static_cast<U&&>(u));
+                    else
+                    {
+                        auto tmp = static_cast<RemoveReferenceType<T>&&>(t);
+                        t        = static_cast<RemoveReferenceType<T>&&>(u);
+                        u        = static_cast<RemoveReferenceType<T>&&>(tmp);
+                    }
+                }
+
+                template <typename T, typename U, usize N>
+                    requires requires(const SwapType& swap, T& e1, U& e2) {
+                        swap(e1, e2);
+                    }
+                constexpr void operator()(T (&e1)[N], U (&e2)[N]) const
+                    PM_NOEXCEPT(PM_NOEXCEPT(DeclVal<const SwapType&>()(*e1,
+                                                                       *e2)))
+                {
+                    for (usize n = 0; n < N; ++n) (*this)(e1[n], e2[n]);
+                }
+            };
+        }; // namespace Swappable
+
+        inline namespace Cpo
+        {
+            inline constexpr Swappable::SwapType Swap{};
+        }
+    } // namespace Ranges
+
+    template <typename T, typename U>
+    concept SwappableWith
+        = CommonReferenceWith<T, U> && requires(T&& t, U&& u) {
+              Ranges::Swap(Forward<T>(t), Forward<T>(t));
+              Ranges::Swap(Forward<U>(u), Forward<U>(u));
+              Ranges::Swap(Forward<T>(t), Forward<U>(u));
+              Ranges::Swap(Forward<U>(u), Forward<T>(t));
+          };
 
     template <typename T>
     concept ArithmeticType = IsArithmeticV<T>;
@@ -51,8 +210,9 @@ namespace Prism
     template <typename T>
     concept IntegralOrEnum = IsIntegralV<T> || EnumType<T> || IsUnsignedV<T>;
     template <typename T>
-    concept PrimitiveOrEnum = EnumType<T> || IsArithmeticV<T> || IsSameV<T, bool>
-                           || IsSignedV<T> || IsIntegralV<T>;
+    concept PrimitiveOrEnum
+        = EnumType<T> || IsArithmeticV<T> || IsSameV<T, bool> || IsSignedV<T>
+       || IsIntegralV<T>;
 
     template <PrimitiveOrEnum T>
     class ArithmeticEnum
@@ -148,19 +308,21 @@ namespace Prism
     template <typename T>
     concept IsImplicitlyDefaultConstructible
         = IsDefaultConstructibleV<T> && IsTriviallyDefaultConstructibleV<T>;
+
+    template <typename T>
+    concept ClassOrEnum = IsClassV<T> || IsUnionV<T> || IsEnumV<T>;
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
 using Prism::ArithmeticEnum;
-using Prism::DerivedFrom;
 using Prism::ConvertibleTo;
-using Prism::SameAs;
+using Prism::DerivedFrom;
+using Prism::EnumType;
 using Prism::Integral;
+using Prism::IntegralOrEnum;
+using Prism::IsImplicitlyDefaultConstructible;
+using Prism::PrimitiveOrEnum;
+using Prism::SameAs;
 using Prism::SignedIntegral;
 using Prism::UnsignedIntegral;
-using Prism::IntegralOrEnum;
-using Prism::PrimitiveOrEnum;
-using Prism::ArithmeticEnum;
-using Prism::EnumType;
-using Prism::IsImplicitlyDefaultConstructible;
 #endif
