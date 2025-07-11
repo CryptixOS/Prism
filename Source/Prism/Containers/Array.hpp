@@ -8,11 +8,42 @@
 
 #include <Prism/Core/Concepts.hpp>
 #include <Prism/Core/Core.hpp>
+#include <Prism/Core/Iterator.hpp>
 
-#include <utility>
+#include <Prism/Memory/Memory.hpp>
 
 namespace Prism
 {
+    template <typename T, usize N>
+    struct ArrayTraits
+    {
+        using Type               = T[N];
+        using IsSwappable        = IsSwappable<T>;
+        using IsNoThrowSwappable = IsNoThrowSwappable<T>;
+    };
+
+    template <typename T>
+    struct ArrayTraits<T, 0>
+    {
+        struct Type
+        {
+            __attribute__((__always_inline__, __noreturn__)) T&
+            operator[](usize) const PM_NOEXCEPT
+            {
+                PrismNotReached();
+            }
+
+            __attribute__((__always_inline__)) constexpr explicit
+            operator T*() const PM_NOEXCEPT
+            {
+                return nullptr;
+            }
+        };
+
+        using IsSwappable        = TrueType;
+        using IsNoThrowSwappable = TrueType;
+    };
+
     template <typename T, usize N>
     struct Array
     {
@@ -21,8 +52,8 @@ namespace Prism
         using ConstReference       = const T&;
         using Iterator             = ValueType*;
         using ConstIterator        = const ValueType*;
-        using ReverseIterator      = std::reverse_iterator<Iterator>;
-        using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
+        using ReverseIterator      = ::Prism::ReverseIterator<Iterator>;
+        using ConstReverseIterator = ::Prism::ReverseIterator<ConstIterator>;
         using SizeType             = usize;
 
         //--------------------------------------------------------------------------
@@ -96,7 +127,7 @@ namespace Prism
 
         constexpr void     Fill(const ValueType& value)
         {
-            std::memset(Data, value, N * sizeof(T));
+            Memory::Fill(Data, value, N * sizeof(T));
         }
         constexpr void Swap(Array& other) PM_NOEXCEPT
         {
@@ -105,8 +136,12 @@ namespace Prism
         }
         constexpr auto operator<=>(const Array<T, N>& other) const = default;
 
-        T              Data[N];
+        typename ArrayTraits<T, N>::Type Data;
     };
+
+    template <typename T, typename... U>
+    Array(T, U...)
+        -> Array<EnableIfType<(IsSameV<T, U> && ...), T>, 1 + sizeof...(U)>;
 
     namespace Detail
     {
