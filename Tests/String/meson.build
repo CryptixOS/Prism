@@ -16,5 +16,5 @@ foreach name : string_tests
     cpp_args: cpp_args, link_args: link_args,
     include_directories: incdirs, dependencies: deps
   )
-  test(name, test)
+  test(name, test, suite: 'String')
 endforeach
