@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Config.hpp>
 
-#include <cassert>
+#include <assert.h>
 #include <fmt/format.h>
 
 #define PrismStringifyInner(x) #x
