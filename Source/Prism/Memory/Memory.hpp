@@ -15,6 +15,30 @@ namespace Prism
     using dword = u32;
     using qword = u64;
 
+    template <typename T>
+    PM_ALWAYS_INLINE constexpr T* ToAddress(T* addr) PM_NOEXCEPT
+    {
+        static_assert(!IsFunctionV<T>,
+                      "ToAddress argument "
+                      "must not be a function pointer");
+        return addr;
+    }
+
+    template <typename Pointer>
+    constexpr auto ToAddress(const Pointer& addr) PM_NOEXCEPT
+    {
+        // if constexpr (requires { PointerTraits<Pointer>::ToAddress(addr); })
+        //     return PointerTraits<Pointer>::ToAddress(addr);
+        return ToAddress(addr.operator->());
+    }
+
+    template <typename Pointer>
+    PM_ALWAYS_INLINE constexpr auto
+    ToAddressImpl(const Pointer& addr) PM_NOEXCEPT
+    {
+        return ToAddress(addr);
+    }
+
     constexpr usize operator""_kib(unsigned long long count)
     {
         return count * 1024;
