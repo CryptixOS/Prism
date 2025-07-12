@@ -4,7 +4,17 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Core/Compiler.hpp>
 #include <Prism/Debug/Assertions.hpp>
+
+#if !(PrismHasInclude(<assert.h>))
+extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
+                                          unsigned int line,
+                                          const char*  function)
+{
+    PrismAssert("Assertion Failed({}::{}:{}): {}", file, function, line, expr);
+}
+#endif
 
 namespace Prism
 {

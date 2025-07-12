@@ -13,6 +13,7 @@
 #endif
 
 #define PM_ALWAYS_INLINE [[gnu::always_inline]]
+#define PM_NORETURN      [[noreturn]]
 #define PM_USED          [[gnu::used]]
 #define PM_PACKED        [[gnu::packed]]
 #if defined __has_include

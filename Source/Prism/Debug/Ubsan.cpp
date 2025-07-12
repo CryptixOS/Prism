@@ -10,6 +10,8 @@
 #include <Prism/Debug/Log.hpp>
 
 #if PRISM_TARGET_CRYPTIX == 1
+    #include <Library/Stacktrace.hpp>
+
 namespace
 {
     struct SourceLocation
@@ -117,6 +119,7 @@ PM_ALWAYS_INLINE static void Warn(const char* message, SourceLocation source)
 {
     Prism::Log::Warn("Ubsan: {} ->\n{}[{}:{}]", message, source.File,
                      source.Line, source.Column);
+    // ::Stacktrace::Print(5);
 }
 
 extern "C"

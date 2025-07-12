@@ -6,9 +6,20 @@
  */
 #pragma once
 
+#include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Config.hpp>
 
-#include <assert.h>
+#if PrismHasInclude(<assert.h>)
+    #include <assert.h>
+#else
+extern "C" void PM_NORETURN __assert_fail(const char* expr, const char* file,
+                                          unsigned int line,
+                                          const char*  function);
+    #define assert(expr)                                                       \
+        (__builtin_expect(!(expr), 0)                                          \
+             ? __assert_fail(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__)   \
+             : (void)0)
+#endif
 #include <fmt/format.h>
 
 #define PrismStringifyInner(x) #x
