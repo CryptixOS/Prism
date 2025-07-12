@@ -8,6 +8,7 @@
 
 #include <Prism/Core/Config.hpp>
 #include <Prism/Core/TypeTraits.hpp>
+
 #include <Prism/Debug/Assertions.hpp>
 #include <Prism/Utility/Atomic.hpp>
 
@@ -75,7 +76,7 @@ namespace Prism
         constexpr Ref& operator=(const Ref<T>& other)
         {
             if (this == &other) return *this;
-            const_cast<Ref<T>&>(other).IncRef();
+            const_cast<Ref<T>*>(&other)->IncRef();
             DecRef();
 
             m_Instance = other.m_Instance;
@@ -100,19 +101,19 @@ namespace Prism
             return *this;
         }
 
-        constexpr operator bool() const { return m_Instance != nullptr; }
+        constexpr    operator bool() const { return m_Instance != nullptr; }
 
-        constexpr T*              operator->() { return m_Instance; }
-        constexpr const T*        operator->() const { return m_Instance; }
+        constexpr T* operator->() { return m_Instance; }
+        constexpr const T* operator->() const { return m_Instance; }
 
-        constexpr T&              operator*() { return *m_Instance; }
-        constexpr const T&        operator*() const { return *m_Instance; }
+        constexpr T&       operator*() { return *m_Instance; }
+        constexpr const T& operator*() const { return *m_Instance; }
 
-        constexpr T*              Raw() { return m_Instance; }
-        constexpr const T*        Raw() const { return m_Instance; }
+        constexpr T*       Raw() { return m_Instance; }
+        constexpr const T* Raw() const { return m_Instance; }
 
-        constexpr usize RefCount() const { return m_Instance->RefCount(); }
-        constexpr void            Reset(T* instance = nullptr)
+        constexpr usize    RefCount() const { return m_Instance->RefCount(); }
+        constexpr void     Reset(T* instance = nullptr)
         {
             DecRef();
             m_Instance = instance;
@@ -139,8 +140,15 @@ namespace Prism
             return m_Instance != other.m_Instance;
         }
 
+        // using List = IntrusiveList<Ref<T>>;
+
       private:
-        T*   m_Instance = nullptr;
+        T*             m_Instance = nullptr;
+
+        // friend class IntrusiveList<Ref<T>>;
+        // friend struct IntrusiveListHook<Ref<T>>;
+        //
+        // IntrusiveListHook<Ref<T>> Hook;
 
         constexpr void IncRef()
         {
