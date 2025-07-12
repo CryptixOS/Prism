@@ -85,6 +85,13 @@ namespace Prism
         using IsCompatibleRef = IsArrayConvertible<T, RemoveReferenceType<Ref>>;
 
         constexpr Span() PM_NOEXCEPT = default;
+        constexpr Span() noexcept
+            requires(Extent == DynamicExtent || Extent == 0)
+            : m_Data(nullptr)
+            , m_Extent(Value<0>)
+        {
+        }
+
         template <typename It>
         explicit(Extent != DynamicExtent) constexpr Span(It first, usize count)
             requires IsCompatibleRef<IteratorReferenceType<It>>::Value
