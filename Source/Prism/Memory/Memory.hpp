@@ -55,6 +55,10 @@ namespace Prism
     {
         return count * 1024_gib;
     }
+    constexpr usize operator""_pib(unsigned long long count)
+    {
+        return count * 1024_tib;
+    }
 
     namespace Memory
     {
@@ -72,4 +76,9 @@ namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
 namespace Memory = Prism::Memory;
+using Prism::operator""_kib;
+using Prism::operator""_mib;
+using Prism::operator""_gib;
+using Prism::operator""_tib;
+using Prism::operator""_pib;
 #endif
