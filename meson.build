@@ -59,7 +59,6 @@ incs = [ include_directories('Source') ]
 deps = [
   subproject('fmt-10.2.0').get_variable('fmt_dep'),
   dependency('demangler'),
-  # dependency('libstdcxx_headers'),
   dependency('magic_enum', default_options: [
     'test=false',
   ]),
@@ -84,7 +83,6 @@ prism_dep = declare_dependency(
 pkg.generate(prism)
 install_headers(
   #'Source/Prism/Printf.hpp',
-  'Source/Prism/UUID.hpp',
   subdir: 'Prism'
 )
 
@@ -128,6 +126,7 @@ install_headers(
   'Source/Prism/Core/Types.hpp',
   'Source/Prism/Core/TypeTraits.hpp',
   'Source/Prism/Core/TypeTraitsForward.hpp',
+  'Source/Prism/Core/UUID.hpp',
 
   subdir: 'Prism/Core'
 )
@@ -151,10 +150,6 @@ install_headers(
   'Source/Prism/Debug/Stacktrace.hpp',
   subdir: 'Prism/Debug'
 )
-#install_headers(
-  #'Source/Prism/Details/Concepts.inl',
-  #subdir: 'Prism/Details'
-#)
 install_headers(
   'Source/Prism/Memory/BitStream.hpp',
   'Source/Prism/Memory/Buffer.hpp',
