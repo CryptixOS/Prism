@@ -10,6 +10,7 @@
 #include <Prism/Core/Core.hpp>
 #include <Prism/Core/Iterator.hpp>
 
+#include <Debug/Assertions.hpp>
 #include <Prism/Memory/Memory.hpp>
 
 namespace Prism
