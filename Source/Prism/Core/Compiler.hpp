@@ -69,3 +69,15 @@
 #ifndef PrismGetFrameAddress
     #define PrismGetFrameAddress 0
 #endif
+
+namespace Prism
+{
+    template <typename... T>
+    constexpr void IgnoreUnused(const T&...)
+    {
+    }
+}; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::IgnoreUnused;
+#endif
