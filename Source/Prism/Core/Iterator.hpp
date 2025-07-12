@@ -75,12 +75,12 @@ namespace Prism
         concept CanReference = requires { typename WithRef<T>; };
 
         template <typename T>
-        concept Dereferencable = requires(T& t) {
+        concept Dereferenceable = requires(T& t) {
             { *t } -> CanReference;
         };
     } // namespace Details
 
-    template <Details::Dereferencable T>
+    template <Details::Dereferenceable T>
     using IteratorReferenceType = decltype(*DeclVal<T&>());
 
     template <typename Iterator>
