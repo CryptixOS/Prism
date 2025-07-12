@@ -280,7 +280,7 @@ struct fmt::formatter<Prism::Pointer> : fmt::formatter<fmt::string_view>
     auto format(const Prism::Pointer addr, FormatContext& ctx) const
     {
         return fmt::formatter<fmt::string_view>::format(
-            fmt::format("{}", addr.Raw()), ctx);
+            fmt::format("{:#x}", addr.Raw()), ctx);
     }
 };
 
