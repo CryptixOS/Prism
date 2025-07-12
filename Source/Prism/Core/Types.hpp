@@ -12,7 +12,7 @@
 #if PrismHasInclude(<assert.h>)
     #include <assert.h>
 #else
-extern "C" void PM_NORETURN __assert_fail(const char* expr, const char* file,
+PM_NORETURN extern "C" void __assert_fail(const char* expr, const char* file,
                                           unsigned int line,
                                           const char*  function);
     #define assert(expr)                                                       \
