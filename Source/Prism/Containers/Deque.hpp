@@ -174,7 +174,7 @@ namespace Prism
             template <typename, bool>
             friend class DequeIterator;
             template <typename>
-            friend class ReverseIterator;
+            friend struct ReverseIterator;
             friend class Deque<T>;
         };
 
