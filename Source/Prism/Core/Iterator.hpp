@@ -27,7 +27,7 @@ namespace Prism
     };
 
     template <typename Iterator>
-    class IteratorTraits
+    struct IteratorTraits
     {
       public:
         using DifferenceType   = typename Iterator::DifferenceType;
@@ -38,7 +38,7 @@ namespace Prism
     };
     // Partial specialization for pointer types
     template <typename T>
-    class IteratorTraits<T*>
+    struct IteratorTraits<T*>
     {
       public:
         using DifferenceType   = ptrdiff;
@@ -49,7 +49,7 @@ namespace Prism
     };
     // Partial specialization for const pointer types
     template <typename T>
-    class IteratorTraits<const T*>
+    struct IteratorTraits<const T*>
     {
       public:
         using DifferenceType   = ptrdiff;
@@ -59,8 +59,32 @@ namespace Prism
         using IteratorCategory = RandomAccessIteratorTag;
     };
 
+    struct DefaultSentinelType
+    {
+    };
+
+    /// A default sentinel value.
+    inline constexpr DefaultSentinelType DefaultSentinel{};
+
+    namespace Details
+    {
+        template <typename T>
+        using WithRef = T&;
+
+        template <typename T>
+        concept CanReference = requires { typename WithRef<T>; };
+
+        template <typename T>
+        concept Dereferencable = requires(T& t) {
+            { *t } -> CanReference;
+        };
+    } // namespace Details
+
+    template <Details::Dereferencable T>
+    using IteratorReferenceType = decltype(*DeclVal<T&>());
+
     template <typename Iterator>
-    class ReverseIterator
+    struct ReverseIterator
     {
       public:
         using IteratorType = Iterator;
