@@ -53,7 +53,7 @@ cxx_args = [
 ]
 add_global_arguments(
   '-fno-exceptions',
-  languages: 'cpp'
+  language: 'cpp'
 )
 
 incs = [ include_directories('Source') ]
