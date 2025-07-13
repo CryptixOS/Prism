@@ -80,6 +80,8 @@ namespace Prism
     IntrusiveList<T, HookType>::operator=(const IntrusiveList& other)
     {
         if (m_Head) Clear();
+        if (!other.m_Head) return *this;
+
         auto otherCurrent = other.m_Head;
         auto current = m_Head = new T(*other.m_Head);
         current->Hook.Owner   = this;
