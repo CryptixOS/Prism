@@ -51,6 +51,10 @@ cxx_args = [
   '-Wno-frame-address',
   '-MP',
 ]
+add_global_arguments(
+  '-fno-exceptions',
+  languages: 'cpp'
+)
 
 incs = [ include_directories('Source') ]
 
