@@ -47,7 +47,7 @@ namespace Prism
         Stacktrace(Pointer frameAddress, usize skipFrames = 0,
                    usize maxDepth = 32);
 
-        ErrorOr<void> LoadSymbols(Vector<Symbol>&& symbols,
+        bool LoadSymbols(Vector<Symbol>&& symbols,
                                   PhysAddr lowestSymbolAddress  = 0x0000'0000,
                                   PhysAddr highestSymbolAddress = 0xffff'ffff)
         {
