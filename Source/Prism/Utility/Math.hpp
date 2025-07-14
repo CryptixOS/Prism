@@ -10,10 +10,41 @@
 
 namespace Prism::Math
 {
-    constexpr usize Abs(isize value)
+    template <typename T>
+    constexpr const T& Min(const T& lhs, const T& rhs)
     {
-        if (value < 0) return -value;
-        return value;
+        return lhs < rhs ? lhs : rhs;
+    }
+    template <typename T>
+    constexpr const T& Min(std::initializer_list<T> ilist)
+    {
+        auto it = ilist.begin();
+        const T& result = *it++;
+        for (; it != ilist.end(); it++)
+            if (*it < result) result = *it;
+
+        return result;
+    }
+    template <typename T>
+    constexpr const T& Max(const T& lhs, const T& rhs)
+    {
+        return lhs > rhs ? lhs : rhs;
+    }
+    template <typename T>
+    constexpr const T& Max(std::initializer_list<T> ilist)
+    {
+        auto it = ilist.begin();
+        const T& result = *it++;
+        for (; it != ilist.end(); it++)
+            if (*it > result) result = *it;
+
+        return result;
+    }
+
+    template <typename T, typename UT = MakeUnsigned<T>::Type>
+    constexpr UT Absolute(T value)
+    {
+        return static_cast<UT>(value < 0 ? -value : value);
     }
     constexpr usize AlignDown(usize value, usize alignment)
     {
