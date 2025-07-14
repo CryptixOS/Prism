@@ -238,34 +238,53 @@ namespace Prism
     // {
     // };
     // Swappability (C++17-style detection)
-    namespace Detail
+    namespace Details
     {
-        using std::swap;
+        struct Swappable
+        {
+            template <typename T,
+                      typename = decltype(Swap(DeclVal<T&>(), DeclVal<T&>()))>
+            static TrueType TestSwap(int);
+
+            template <typename>
+            static FalseType TestSwap(...);
+        };
+
+        template <typename T>
+        struct IsSwappableImpl : public Swappable
+        {
+            using Type = decltype(Swappable::TestSwap<T>(0));
+        };
+        template <typename T>
+        struct IsSwappable : public IsSwappableImpl<T>::Type
+        {
+        };
 
         template <typename T, typename U>
         constexpr auto TestSwap(int)
-            -> decltype(swap(DeclVal<T>(), DeclVal<U>()), TrueType{});
+            -> decltype(Swap(DeclVal<T>(), DeclVal<U>()), TrueType{});
 
         template <typename, typename>
         constexpr FalseType TestSwap(...);
 
         template <typename T, typename U>
         constexpr auto TestNoThrowSwap(int)
-            -> BooleanConstant<noexcept(swap(DeclVal<T>(), DeclVal<U>()))>;
+            -> BooleanConstant<noexcept(Swap(DeclVal<T>(), DeclVal<U>()))>;
         template <typename, typename>
         constexpr FalseType TestNoThrowSwap(...);
-    } // namespace Detail
+    } // namespace Details
 
     template <typename T, typename U>
-    struct IsSwappableWith : decltype(Detail::TestSwap<T, U>(0))
+    struct IsSwappableWith : decltype(Details::TestSwap<T, U>(0))
     {
     };
     template <typename T>
-    struct IsSwappable : IsSwappableWith<T&, T&>
+    struct IsSwappable : public Details::IsSwappable<T>::Type
     {
     };
+
     template <typename T, typename U>
-    struct IsNoThrowSwappableWith : decltype(Detail::TestNoThrowSwap<T, U>(0))
+    struct IsNoThrowSwappableWith : decltype(Details::TestNoThrowSwap<T, U>(0))
     {
     };
     template <typename T>

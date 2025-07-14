@@ -61,7 +61,7 @@ namespace Prism
             T     end    = i - 1;
             while (start < end)
             {
-                std::swap(*(str + start), *(str + end));
+                Swap(*(str + start), *(str + end));
                 --start;
                 --end;
             }

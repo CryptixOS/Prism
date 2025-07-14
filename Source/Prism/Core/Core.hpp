@@ -49,6 +49,12 @@ namespace Prism
         object     = Forward<U>(newValue);
         return oldValue;
     }
+    template <typename T, typename U>
+    constexpr inline void Swap(T& lhs, U& rhs)
+    {
+        if (&lhs == &rhs) return;
+        lhs = Exchange(lhs, rhs);
+    }
 
     template <typename T>
     inline constexpr AddConstType<T>& AsConst(T& t) PM_NOEXCEPT
