@@ -107,8 +107,6 @@ namespace Prism
         /** @brief Destructor. Releases allocated memory. */
         constexpr ~Vector()
         {
-            if (Capacity() == 0) return;
-
             delete[] m_Data;
             m_Data = nullptr;
             m_Size = 0;
@@ -476,7 +474,7 @@ namespace Prism
 
             T* newData = new T[newCapacity];
             for (usize i = 0; const auto& c : *this) newData[i++] = c;
-            if (m_Size > 0) delete[] m_Data;
+            if (Capacity() > 0) delete[] m_Data;
 
             m_Data     = newData;
             m_Capacity = newCapacity;

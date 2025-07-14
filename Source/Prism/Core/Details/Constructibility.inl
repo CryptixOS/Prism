@@ -260,6 +260,27 @@ namespace Prism
         {
         };
 
+        struct NoThrowSwappable
+        {
+            template <typename T>
+            static BooleanConstant<PM_NOEXCEPT(Swap(DeclVal<T&>(),
+                                                    DeclVal<T&>()))>
+            TestSwap(int);
+
+            template <typename>
+            static FalseType TestSwap(...);
+        };
+
+        template <typename T>
+        struct IsNoThrowSwappableImpl : public NoThrowSwappable
+        {
+            using Type = decltype(TestSwap<T>(0));
+        };
+        template <typename T>
+        struct IsNoThrowSwappable : public IsNoThrowSwappableImpl<T>::Type
+        {
+        };
+
         template <typename T, typename U>
         constexpr auto TestSwap(int)
             -> decltype(Swap(DeclVal<T>(), DeclVal<U>()), TrueType{});

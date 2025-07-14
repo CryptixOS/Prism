@@ -93,8 +93,8 @@ namespace Prism
         }
 
         template <typename It>
-        explicit(Extent != DynamicExtent) constexpr Span(It first, usize count)
             requires IsCompatibleRef<IteratorReferenceType<It>>::Value
+        constexpr explicit(Extent != DynamicExtent)  Span(It first, usize count) PM_NOEXCEPT
             : m_Data(ToAddress(first))
             , m_Extent(count)
         {
