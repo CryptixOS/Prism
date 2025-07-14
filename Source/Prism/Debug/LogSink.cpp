@@ -5,20 +5,21 @@
  * SPDX-License-Identifier: GPL-3
  */
 #include <Prism/Debug/LogSink.hpp>
-
-#include <magic_enum/magic_enum.hpp>
-#include <utility>
+#include <Prism/String/StringUtils.hpp>
 
 namespace Prism
 {
-    void LogSink::Log(LogLevel level, StringView message)
+    isize LogSink::Log(LogLevel level, StringView message)
     {
         // std::unique_lock guard(m_Lock);
-
-        PrintLevel(level);
-        WriteNoLock(message);
+        isize nwritten = 0;
+        
+        nwritten += PrintLevel(level);
+        nwritten += WriteNoLock(message);
 
         EndOfLine();
+        ++nwritten;
+        return nwritten;
     }
 
     void LogSink::PutChar(u64 c)
@@ -29,22 +30,24 @@ namespace Prism
     {
         // std::unique_lock guard(m_Lock);
 
-        return std::exchange(m_Enabled, true);
+        return Exchange(m_Enabled, true);
     }
     bool LogSink::Disable()
     {
         // std::unique_lock guard(m_Lock);
 
-        return std::exchange(m_Enabled, false);
+        return Exchange(m_Enabled, false);
     }
 
-    void LogSink::PrintLevel(LogLevel level)
+    isize LogSink::PrintLevel(LogLevel level)
     {
 
-        if (level == LogLevel::eNone) return;
+        if (level == LogLevel::eNone) return 0;
         PutChar('[');
+        isize nwritten = 1;
 
-        WriteNoLock(magic_enum::enum_name(level).data() + 1);
-        WriteNoLock("]: ");
+        nwritten += WriteNoLock(ToString(level).Substr(1));
+        nwritten += WriteNoLock("]: ");
+        return nwritten;
     }
 }; // namespace Prism

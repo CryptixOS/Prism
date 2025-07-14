@@ -16,11 +16,11 @@ namespace Prism
     class LogSink
     {
       public:
-        void           Log(LogLevel level, StringView message);
+        isize           Log(LogLevel level, StringView message);
 
         void           PutChar(u64 c);
 
-        virtual void   WriteNoLock(StringView str) = 0;
+        virtual isize   WriteNoLock(StringView str) = 0;
 
         void           EndOfLine() { WriteNoLock("\n"); }
 
@@ -33,6 +33,6 @@ namespace Prism
         // std::mutex m_Lock;
         bool m_Enabled = true;
 
-        void PrintLevel(LogLevel level);
+        isize PrintLevel(LogLevel level);
     };
 }; // namespace Prism
