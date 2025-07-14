@@ -76,7 +76,7 @@ namespace Prism::Murmur
         return k;
     }
 
-    // TODO(v1tr10l7): Endiannes
+    // TODO(v1tr10l7): Endianness
     u128 Hash3(Span<u8> input, const u32 seed)
     {
         const isize blockCount = input.Size() >> 4;
