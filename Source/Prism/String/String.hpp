@@ -859,6 +859,7 @@ struct std::hash<Prism::BasicString<wchar_t, Prism::CharTraits<wchar_t>>>
 {
 };
 
+#if PRISM_DISABLE_FMT == 0
 template <>
 struct fmt::formatter<Prism::String> : fmt::formatter<fmt::string_view>
 {
@@ -869,6 +870,7 @@ struct fmt::formatter<Prism::String> : fmt::formatter<fmt::string_view>
             fmt::format("{}", fmt::string_view(src.Raw(), src.Size())), ctx);
     }
 };
+#endif
 
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::BasicString;

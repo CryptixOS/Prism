@@ -79,6 +79,7 @@ namespace Prism
 using Prism::Path;
 #endif
 
+#if PRISM_DISABLE_FMT == 0
 template <>
 struct fmt::formatter<Prism::Path> : fmt::formatter<fmt::string_view>
 {
@@ -91,3 +92,4 @@ struct fmt::formatter<Prism::Path> : fmt::formatter<fmt::string_view>
             ctx);
     }
 };
+#endif

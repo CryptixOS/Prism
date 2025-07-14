@@ -76,6 +76,7 @@ namespace Prism
     };
 }; // namespace Prism
 
+#if PRISM_DISABLE_FMT == 0
 template <>
 struct fmt::formatter<Prism::SourceLocation> : fmt::formatter<fmt::string_view>
 {
@@ -93,3 +94,4 @@ struct fmt::formatter<Prism::SourceLocation> : fmt::formatter<fmt::string_view>
             ctx);
     }
 };
+#endif

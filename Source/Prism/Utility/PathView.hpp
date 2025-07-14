@@ -69,6 +69,7 @@ namespace Prism
 using Prism::PathView;
 #endif
 
+#if PRISM_DISABLE_FMT == 0
 template <>
 struct fmt::formatter<Prism::PathView> : fmt::formatter<fmt::string_view>
 {
@@ -79,3 +80,4 @@ struct fmt::formatter<Prism::PathView> : fmt::formatter<fmt::string_view>
             fmt::format("{}", fmt::string_view{src.Raw(), src.Size()}), ctx);
     }
 };
+#endif

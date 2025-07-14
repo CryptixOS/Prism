@@ -118,6 +118,8 @@ namespace Prism::Time
     };
 }; // namespace Prism::Time
 
+
+#if PRISM_DISABLE_FMT == 0
 template <>
 struct fmt::formatter<Prism::Time::DateTime> : fmt::formatter<fmt::string_view>
 {
@@ -131,6 +133,7 @@ struct fmt::formatter<Prism::Time::DateTime> : fmt::formatter<fmt::string_view>
             ctx);
     }
 };
+#endif
 
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::Time::DateTime;

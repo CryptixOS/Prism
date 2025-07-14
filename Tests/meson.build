@@ -5,7 +5,6 @@
 #* SPDX-License-Identifier: GPL-3
 #*/
 
-incdirs = include_directories('../Source/')
 tests = [
   'Algorithm', 'Memory', 'Ref', 
   'SimdIntrinsics', 'TypeTraits', 
@@ -18,24 +17,30 @@ link_args = [
   '-lstdc++exp',
 ]
 
-srcs = [
-  meson.project_source_root() / 'Source/Prism/Containers/RingBuffer.cpp',
-  meson.project_source_root() / 'Source/Prism/Debug/Assertions.cpp',
-  meson.project_source_root() / 'Source/Prism/Debug/Log.cpp',
-  meson.project_source_root() / 'Source/Prism/Memory/Memory.cpp',
-
-  meson.project_source_root() / 'Source/Prism/Utility/PathView.cpp',
-  meson.project_source_root() / 'Source/Prism/Utility/Path.cpp'
-]
+# srcs = [
+#   meson.project_source_root() / 'Source/Prism/Containers/RingBuffer.cpp',
+#   meson.project_source_root() / 'Source/Prism/Debug/Assertions.cpp',
+#   meson.project_source_root() / 'Source/Prism/Debug/Log.cpp',
+#   meson.project_source_root() / 'Source/Prism/Memory/Memory.cpp',
+#
+#   meson.project_source_root() / 'Source/Prism/Utility/PathView.cpp',
+#   meson.project_source_root() / 'Source/Prism/Utility/Path.cpp'
+# ]
+#
 
 subdir('Containers')
 subdir('String')
 
+extraincs = get_option('extra_incs')
+if extraincs != ''
+  cpp_args += '-I' + extraincs
+endif
+
 foreach name : tests
   test = executable(
-    name, files(srcs, name / 'main.cpp'),
+    name, [srcs, files(name / 'main.cpp')],
     cpp_args: cpp_args, link_args: link_args,
-    include_directories: incdirs, dependencies: deps
+    include_directories: incs, dependencies: deps
   )
   test(name, test)
 endforeach

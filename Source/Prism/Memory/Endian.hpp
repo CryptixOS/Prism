@@ -90,6 +90,7 @@ namespace Prism
     using NetworkOrdered = BigEndian<T>;
 }; // namespace Prism
 
+#if PRISM_DISABLE_FMT == 0
 template <typename T, Prism::Endian E>
 struct fmt::formatter<Prism::EndianStorage<T, E>>
     : fmt::formatter<fmt::string_view>
@@ -102,6 +103,7 @@ struct fmt::formatter<Prism::EndianStorage<T, E>>
             fmt::format("{}", value.Load()), ctx);
     }
 };
+#endif
 
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::BigEndian;

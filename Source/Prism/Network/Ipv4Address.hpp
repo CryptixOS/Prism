@@ -90,6 +90,8 @@ namespace Prism
     static_assert(sizeof(IPv4Address) == 4);
 }; // namespace Prism
 
+
+#if PRISM_DISABLE_FMT == 0
 template <>
 struct fmt::formatter<Prism::IPv4Address> : fmt::formatter<fmt::string_view>
 {
@@ -99,6 +101,7 @@ struct fmt::formatter<Prism::IPv4Address> : fmt::formatter<fmt::string_view>
         return ip;
     }
 };
+#endif
 
 // hash support
 template <>

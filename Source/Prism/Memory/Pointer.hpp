@@ -273,6 +273,7 @@ using Prism::PointerType;
 using Prism::VirtAddr;
 #endif
 
+#if PRISM_DISABLE_FMT == 0
 template <>
 struct fmt::formatter<Prism::Pointer> : fmt::formatter<fmt::string_view>
 {
@@ -283,6 +284,7 @@ struct fmt::formatter<Prism::Pointer> : fmt::formatter<fmt::string_view>
             fmt::format("{:#x}", addr.Raw()), ctx);
     }
 };
+#endif
 
 // hash support
 template <>

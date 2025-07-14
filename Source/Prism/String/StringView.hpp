@@ -17,10 +17,6 @@
 #include <cassert>
 #include <ranges>
 
-#if PRISM_TARGET_CRYPTIX == 1
-    #include <unordered_map>
-#endif
-
 namespace Prism
 {
     template <typename C, typename Traits>
@@ -559,15 +555,11 @@ namespace Prism
             [[nodiscard]] constexpr usize
             operator()(const StringType& str) const PM_NOEXCEPT
             {
-#if PRISM_TARGET_CRYPTIX == 1
-                return phmap::Hash<std::string_view>{}({str.Raw(), str.Size()});
-#else
                 const char* key    = str.Raw();
                 usize       length = str.Size() * sizeof(C);
                 const usize seed   = 0xc70f6907ul;
 
                 return Hash::MurmurHash2(key, length, seed);
-#endif
             }
         };
         template <typename C,
@@ -577,15 +569,11 @@ namespace Prism
             [[nodiscard]] constexpr usize
             operator()(const StringViewType& str) const PM_NOEXCEPT
             {
-#if PRISM_TARGET_CRYPTIX == 1
-                return phmap::Hash<std::string_view>{}({str.Raw(), str.Size()});
-#else
                 const char* key    = str.Raw();
                 usize       length = str.Size() * sizeof(C);
                 const usize seed   = 0xc70f6907ul;
 
                 return Hash::MurmurHash2(key, length, seed);
-#endif
             }
         };
     }; // namespace Detail
@@ -667,6 +655,7 @@ inline constexpr bool
     std::ranges::enable_view<Prism::BasicStringView<C, Traits>>
     = true;
 
+#if PRISM_DISABLE_FMT == 0
 template <>
 struct fmt::formatter<Prism::StringView> : fmt::formatter<fmt::string_view>
 {
@@ -677,6 +666,7 @@ struct fmt::formatter<Prism::StringView> : fmt::formatter<fmt::string_view>
             fmt::format("{}", fmt::string_view(src.Raw(), src.Size())), ctx);
     }
 };
+#endif
 
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::StringView;

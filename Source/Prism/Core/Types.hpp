@@ -20,7 +20,9 @@ extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
              ? __assert_fail(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__)   \
              : (void)0)
 #endif
+#if PRISM_DISABLE_FMT == 0
 #include <fmt/format.h>
+#endif
 
 #define PrismStringifyInner(x) #x
 #define PrismStringify(x)      PrismStringifyInner(x)
