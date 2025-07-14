@@ -24,6 +24,7 @@ namespace Prism
         usize     Width           = 0;
         bool      PrintBasePrefix = false;
         bool      UpperCase       = false;
+        bool      PrintAsAscii    = false;
 
         enum Base
         {
@@ -117,9 +118,20 @@ namespace Prism
                         ++fmt;
                         break;
 
+                    case 'c':
+                        enterState(State::eEnd);
+                        spec.PrintAsAscii = true;
+                        ++fmt;
+                        break;
+
                     case 'b':
                         enterState(State::eEnd);
                         spec.Base = FormatSpec::eBinary;
+                        ++fmt;
+                        break;
+                    case 'o':
+                        enterState(State::eEnd);
+                        spec.Base = FormatSpec::eOctal;
                         ++fmt;
                         break;
                     case 'X': spec.UpperCase = true; [[fallthrough]];
@@ -201,6 +213,8 @@ namespace Prism
         }
         constexpr void VisitArgument(u64 val, const FormatSpec& spec)
         {
+            if (spec.PrintAsAscii)
+                return VisitArgument(static_cast<char>(val), spec);
             if (spec.PrintBasePrefix)
             {
                 if (spec.Base == FormatSpec::eBinary) m_Builder.Append("0b");
@@ -224,43 +238,8 @@ namespace Prism
         {
             FormatSpecParser parser;
             spec = parser(fmt);
+
             return fmt;
-
-            if (*fmt != ':') return ++fmt; // "{}"
-            ++fmt;                         // skip ':'
-
-            if (*fmt == '0')
-            {
-                spec.PaddingChar = '0';
-                ++fmt;
-            }
-
-            while (StringUtils::IsDigit(*fmt))
-            {
-                spec.Width = spec.Width * 10 + (*fmt - '0');
-                ++fmt;
-            }
-
-            if (*fmt == '#')
-            {
-                spec.PrintBasePrefix = true;
-                ++fmt;
-            }
-            if (*fmt == 'b') spec.Base = FormatSpec::eBinary, ++fmt;
-            else if (*fmt == '0') spec.Base = FormatSpec::eOctal, ++fmt;
-            else if (*fmt == 'x')
-            {
-                spec.Base = FormatSpec::eHexadecimal;
-                ++fmt;
-            }
-            else if (*fmt == 'X')
-            {
-                spec.Base      = FormatSpec::eHexadecimal, ++fmt;
-                spec.UpperCase = true;
-            }
-
-            if (*fmt != '}') assert(false);
-            return fmt + 1;
         }
 
       private:
@@ -286,7 +265,8 @@ namespace Prism
     }
 
     template <typename... Args>
-    [[nodiscard]] inline auto Format(fmt::format_string<Args...> fmt, Args&&... args)
+    [[nodiscard]] inline auto Format(fmt::format_string<Args...> fmt,
+                                     Args&&... args)
     {
         return fmt::format(fmt, Forward<Args>(args)...);
     }
