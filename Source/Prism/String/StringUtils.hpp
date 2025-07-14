@@ -62,7 +62,7 @@ namespace Prism
             while (start < end)
             {
                 Swap(*(str + start), *(str + end));
-                --start;
+                ++start;
                 --end;
             }
 
