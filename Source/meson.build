@@ -10,6 +10,7 @@ srcs = files(
   'Prism/Debug/Stacktrace.cpp',
 
   'Prism/Memory/Memory.cpp',
+  'Prism/String/Printf.cpp',
 
   'Prism/Utility/Path.cpp',
   'Prism/Utility/PathView.cpp',

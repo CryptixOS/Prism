@@ -51,12 +51,16 @@ cxx_args = [
   '-Wno-frame-address',
   '-MP',
 ]
-add_global_arguments(
-  '-fno-exceptions',
-  language: 'cpp'
-)
 
 incs = [ include_directories('Source') ]
+extraincs = get_option('extra_incs')
+
+if extraincs != ''
+  cxx_args += '-I' + extraincs
+  message('\n\n\n\nextra incs: ', extraincs)
+else 
+  message('no extra incs\n\n\n\n')
+endif
 
 # ==============================================================================
 ### Dependencies
@@ -85,11 +89,6 @@ prism_dep = declare_dependency(
   dependencies: deps, 
 )
 pkg.generate(prism)
-install_headers(
-  #'Source/Prism/Printf.hpp',
-  subdir: 'Prism'
-)
-
 install_headers(
   #'Source/Prism/Algorithm/Random.hpp',
   'Source/Prism/Algorithm/SearchString.hpp',
@@ -169,6 +168,7 @@ install_headers(
   'Source/Prism/String/CharTraits.hpp',
   #'Source/Prism/String/FormatString.hpp',
   'Source/Prism/String/Formatter.hpp',
+  'Source/Prism/String/Printf.hpp',
   'Source/Prism/String/String.hpp',
   'Source/Prism/String/StringBuilder.hpp',
   'Source/Prism/String/StringUtils.hpp',
