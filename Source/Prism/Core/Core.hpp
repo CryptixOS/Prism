@@ -134,3 +134,18 @@ namespace Prism
     template <usize I>
     constexpr InPlaceIndexT<I> InPlaceIndex{};
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::AddressOf;
+using Prism::Swap;
+using Prism::Exchange;
+using Prism::AsConst;
+using Prism::Unreachable;
+using Prism::IntegerSequence;
+using Prism::MakeIntegerSequence;
+using Prism::IndexSequence;
+using Prism::MakeIndexSequence;
+using Prism::IndexSequenceFor;
+using Prism::AddConstType;
+using Prism::InPlaceT;
+#endif
