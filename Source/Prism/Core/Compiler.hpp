@@ -14,8 +14,11 @@
 
 #define PM_ALWAYS_INLINE [[gnu::always_inline]]
 #define PM_NORETURN      [[noreturn]]
+#define PM_FALLTHROUGH   [[fallthrough]]
 #define PM_USED          [[gnu::used]]
 #define PM_PACKED        [[gnu::packed]]
+#define PM_UNUSED        [[maybe_unused]]
+
 #if defined __has_include
     #define PrismHasInclude(...) __has_include(__VA_ARGS__)
 #else
