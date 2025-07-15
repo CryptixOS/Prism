@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Prism/Containers/Array.hpp>
 #include <Prism/Core/Core.hpp>
 
 namespace Prism::Math
@@ -18,7 +19,7 @@ namespace Prism::Math
     template <typename T>
     constexpr const T& Min(std::initializer_list<T> ilist)
     {
-        auto it = ilist.begin();
+        auto     it     = ilist.begin();
         const T& result = *it++;
         for (; it != ilist.end(); it++)
             if (*it < result) result = *it;
@@ -33,7 +34,7 @@ namespace Prism::Math
     template <typename T>
     constexpr const T& Max(std::initializer_list<T> ilist)
     {
-        auto it = ilist.begin();
+        auto     it     = ilist.begin();
         const T& result = *it++;
         for (; it != ilist.end(); it++)
             if (*it > result) result = *it;
@@ -101,6 +102,31 @@ namespace Prism::Math
         }
 
         return result;
+    }
+
+    template <typename T>
+    constexpr T Log2(const T value)
+    {
+        const auto lookupTable = ToArray<i32>(
+            {63, 0,  58, 1,  59, 47, 53, 2,  60, 39, 48, 27, 54, 33, 42, 3,
+             61, 51, 37, 40, 49, 18, 28, 20, 55, 30, 34, 11, 43, 14, 22, 4,
+             62, 57, 46, 52, 38, 26, 32, 41, 50, 36, 17, 19, 29, 10, 13, 21,
+             56, 45, 25, 31, 35, 16, 9,  12, 44, 24, 15, 8,  23, 7,  6,  5});
+
+        T result = value;
+
+        for (usize i = 1; i <= 32; i = i * 2)
+            result |= result >> i;
+
+        constexpr usize MAGIC       = 0x07edd5e59a4e28c2;
+        constexpr usize SHIFT_WIDTH = 58;
+        auto index = static_cast<u64>((result - (result >> 1)) * MAGIC) >> SHIFT_WIDTH;
+        return lookupTable[index];
+    }
+    template <typename T>
+    consteval T Log2CEval(const T value)
+    {
+        return Log2(value);
     }
 } // namespace Prism::Math
 
