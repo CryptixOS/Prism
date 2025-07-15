@@ -6,7 +6,7 @@
 #*/
 
 tests = [
-  'Algorithm', 'Memory', 'Ref', 
+  'Algorithm', 'Ref', 
   'SimdIntrinsics', 'TypeTraits', 
 ]
 cpp_args = [
@@ -29,6 +29,7 @@ link_args = [
 #
 
 subdir('Containers')
+subdir('Memory')
 subdir('String')
 
 extraincs = get_option('extra_incs')

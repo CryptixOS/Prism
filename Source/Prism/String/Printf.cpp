@@ -7,8 +7,12 @@
 #include <Prism/String/Printf.hpp>
 #include <Prism/String/StringUtils.hpp>
 
+#include <stdarg.h>
+
 namespace Prism::Printf
 {
+    using namespace StringUtils;
+
     FormatSpec FormatParser::operator()(StringView::Iterator& it, va_list& args)
     {
         FormatSpec specs;
@@ -92,6 +96,8 @@ namespace Prism::Printf
                         assert(
                             "Printf: Invalid format specifier, parsing "
                             "precision failed");
+
+                    PM_FALLTHROUGH;
                 }
                 case 'l':
                     enterState(State::eLength);
@@ -130,6 +136,7 @@ namespace Prism::Printf
                 specs.Base = 16;
                 break;
             case 'X': specs.UpperCase = true;
+                    PM_FALLTHROUGH;
             case 'x':
                 specs.Base = 16;
                 if (specs.Type < ArgumentType::eInteger)
@@ -142,9 +149,13 @@ namespace Prism::Printf
                     = static_cast<ArgumentType>(ToUnderlying(specs.Type) + 5);
                 break;
             case 'd':
+                    PM_FALLTHROUGH;
             case 'i': break;
+                    PM_FALLTHROUGH;
             case 'c': specs.Type = ArgumentType::eChar; break;
+                    PM_FALLTHROUGH;
             case 's': specs.Type = ArgumentType::eString; break;
+                    PM_FALLTHROUGH;
             case 'n': specs.Type = ArgumentType::eOutWrittenCharCount; break;
         }
         ++it;
