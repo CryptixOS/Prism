@@ -9,6 +9,8 @@
 
 namespace Prism
 {
+    using namespace StringUtils;
+
     isize LogSink::Log(LogLevel level, StringView message)
     {
         // std::unique_lock guard(m_Lock);
@@ -24,7 +26,7 @@ namespace Prism
 
     void LogSink::PutChar(u64 c)
     {
-        WriteNoLock(reinterpret_cast<const char*>(c));
+        WriteNoLock(reinterpret_cast<const char*>(&c));
     }
     bool LogSink::Enable()
     {

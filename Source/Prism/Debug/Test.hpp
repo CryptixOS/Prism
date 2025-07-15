@@ -33,4 +33,5 @@ namespace Prism
 
       private:
     };
+    
 }; // namespace Prism

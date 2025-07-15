@@ -21,7 +21,7 @@ extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
              : (void)0)
 #endif
 #if PRISM_DISABLE_FMT == 0
-#include <fmt/format.h>
+    #include <fmt/format.h>
 #endif
 
 #define PrismStringifyInner(x) #x
@@ -29,11 +29,14 @@ extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
 
 #if PRISM_TARGET_CRYPTIX == 1
     #include <cerrno>
-    #include <expected>
+    // #include <expected>
+    // #include <Prism/Utility/Expected.hpp>
     #define PRISM_ERRNO_T      std::errno_t;
     #define Stringify(x)       PrismStringify(x)
-    #define PRISM_EXPECTED_T   std::expected
-    #define PRISM_UNEXPECTED_T std::unexpected
+    // #define PRISM_EXPECTED_T   std::expected
+    // #define PRISM_UNEXPECTED_T std::unexpected
+    #define PRISM_EXPECTED_T   Expected
+    #define PRISM_UNEXPECTED_T Unexpected
 #else
     // #include <Prism/Utility/Expected.hpp>
     #define PRISM_ERRNO_T      i32
@@ -116,28 +119,23 @@ namespace Prism
     using f64 = double;
 #endif
 
-    using u8      = __UINT8_TYPE__;
-    using u16     = __UINT16_TYPE__;
-    using u32     = __UINT32_TYPE__;
-    using u64     = __UINT64_TYPE__;
+    using u8       = __UINT8_TYPE__;
+    using u16      = __UINT16_TYPE__;
+    using u32      = __UINT32_TYPE__;
+    using u64      = __UINT64_TYPE__;
 
-    using i8      = __INT8_TYPE__;
-    using i16     = __INT16_TYPE__;
-    using i32     = __INT32_TYPE__;
-    using i64     = __INT64_TYPE__;
+    using i8       = __INT8_TYPE__;
+    using i16      = __INT16_TYPE__;
+    using i32      = __INT32_TYPE__;
+    using i64      = __INT64_TYPE__;
 
-    using pointer = __UINTPTR_TYPE__;
-    using ptrdiff = __PTRDIFF_TYPE__;
+    using pointer  = __UINTPTR_TYPE__;
+    using upointer = __UINTPTR_TYPE__;
+    using ipointer = __INTPTR_TYPE__;
 
-    using symbol  = void*[];
-#if PRISM_TARGET_CRYPTIX == 1
-    using ErrorCode = PRISM_ERRNO_T;
-    using Error     = PRISM_UNEXPECTED_T<ErrorCode>;
+    using ptrdiff  = __PTRDIFF_TYPE__;
 
-    template <typename R>
-    using ErrorOr = PRISM_EXPECTED_T<R, ErrorCode>;
-#endif
-
+    using symbol   = void*[];
     constexpr u64 Bit(u64 n) { return (1ull << n); }
 }; // namespace Prism
 
@@ -157,11 +155,12 @@ using Prism::i32;
 using Prism::i64;
 using Prism::i8;
 
-using Prism::Error;
-using Prism::ErrorCode;
-using Prism::symbol;
+using Prism::ipointer;
+using Prism::pointer;
+using Prism::ptrdiff;
+using Prism::upointer;
 
-using Prism::ErrorOr;
+using Prism::symbol;
 
 using Prism::Bit;
 #endif

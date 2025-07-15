@@ -121,6 +121,30 @@ namespace Prism
             return Move(m_Unexpected);
         }
 
+        [[nodiscard]]
+        constexpr const E& error() const& noexcept
+        {
+            return m_Unexpected;
+        }
+
+        [[nodiscard]]
+        constexpr E& error() & noexcept
+        {
+            return m_Unexpected;
+        }
+
+        [[nodiscard]]
+        constexpr const E&& error() const&& noexcept
+        {
+            return Move(m_Unexpected);
+        }
+
+        [[nodiscard]]
+        constexpr E&& error() && noexcept
+        {
+            return Move(m_Unexpected);
+        }
+
         constexpr void Swap(Unexpected& other) noexcept
             requires IsSwappableV<E>
         {
@@ -240,7 +264,6 @@ namespace Prism
         }
 
         Expected(const Expected&) = default;
-
         constexpr Expected(const Expected& lhs) noexcept
             requires IsCopyConstructibleV<T> && IsCopyConstructibleV<E>
                   && (!IsTriviallyCopyConstructibleV<T>
@@ -277,6 +300,14 @@ namespace Prism
             if (m_HasValue) std::construct_at(AddressOf(m_Value), lhs.m_Value);
             else std::construct_at(AddressOf(m_Unexpected), lhs.m_Unexpected);
         }
+        template <typename U, typename = EnableIfType<IsConvertibleV<U, T>>>
+        Expected(const Expected<U, E>& other)
+            : m_HasValue(other.m_HasValue)
+        {
+            if (m_HasValue)
+                std::construct_at(AddressOf(m_Value), other.m_Value);
+            else std::construct_at(AddressOf(m_Unexpected), other.m_Unexpected);
+        }
 
         template <typename U, typename UnexpectedResult>
             requires IsConstructibleV<T, U>
@@ -291,6 +322,17 @@ namespace Prism
             else
                 std::construct_at(AddressOf(m_Unexpected),
                                   Move(lhs).m_Unexpected);
+        }
+        template <typename U,
+                  typename = std::enable_if_t<std::is_convertible_v<U, T>>>
+        Expected(Expected<U, E>&& other)
+            : m_HasValue(other.m_HasValue)
+        {
+            if (m_HasValue)
+                std::construct_at(AddressOf(m_Value), Move(other).m_Value);
+            else
+                std::construct_at(AddressOf(m_Unexpected),
+                                  Move(other).m_Unexpected);
         }
 
         template <typename U = T>
@@ -393,6 +435,15 @@ namespace Prism
         constexpr Expected& operator=(U&& value)
         {
             AssignValue(Forward<U>(value));
+            return *this;
+        }
+
+        template <typename U,
+                  typename = std::enable_if_t<std::is_convertible_v<U, T>>>
+        Expected& operator=(const Expected<U, E>& other)
+        {
+            if (other.m_HasValue) AssignValue(Move(other.m_Value));
+            else AssignUnexpected(Move(other.m_Unexpected));
             return *this;
         }
 
@@ -513,6 +564,11 @@ namespace Prism
         {
             return m_HasValue;
         }
+        [[nodiscard]]
+        constexpr bool has_value() const noexcept
+        {
+            return m_HasValue;
+        }
 
         constexpr const T& value() const&
         {
@@ -566,6 +622,30 @@ namespace Prism
             return Move(m_Unexpected);
         }
 
+        constexpr const E& error() const& noexcept
+        {
+            assert(!m_HasValue);
+            return m_Unexpected;
+        }
+
+        constexpr E& error() & noexcept
+        {
+            assert(!m_HasValue);
+            return m_Unexpected;
+        }
+
+        constexpr const E&& error() const&& noexcept
+        {
+            assert(!m_HasValue);
+            return Move(m_Unexpected);
+        }
+
+        constexpr E&& error() && noexcept
+        {
+            assert(!m_HasValue);
+            return Move(m_Unexpected);
+        }
+
         template <typename U>
         constexpr T ValueOr(U&& value) const& noexcept
         {
@@ -578,6 +658,26 @@ namespace Prism
 
         template <typename U>
         constexpr T ValueOr(U&& value) && noexcept
+        {
+            static_assert(IsMoveConstructibleV<T>);
+            static_assert(IsConvertibleV<U, T>);
+
+            if (m_HasValue) return Move(m_Value);
+            return static_cast<T>(Forward<U>(value));
+        }
+
+        template <typename U>
+        constexpr T value_or(U&& value) const& noexcept
+        {
+            static_assert(IsCopyConstructibleV<T>);
+            static_assert(IsConvertibleV<U, T>);
+
+            if (m_HasValue) return m_Value;
+            return static_cast<T>(Forward<U>(value));
+        }
+
+        template <typename U>
+        constexpr T value_or(U&& value) && noexcept
         {
             static_assert(IsMoveConstructibleV<T>);
             static_assert(IsConvertibleV<U, T>);
@@ -1185,6 +1285,11 @@ namespace Prism
         {
             return m_HasValue;
         }
+        [[nodiscard]]
+        constexpr bool has_value() const noexcept
+        {
+            return m_HasValue;
+        }
 
         constexpr void operator*() const noexcept { assert(m_HasValue); }
 
@@ -1196,6 +1301,19 @@ namespace Prism
         }
 
         constexpr void Value() &&
+        {
+            if (m_HasValue) [[likely]]
+                return;
+            assert(false);
+        }
+        constexpr void value() const&
+        {
+            if (m_HasValue) [[likely]]
+                return;
+            assert(false);
+        }
+
+        constexpr void value() &&
         {
             if (m_HasValue) [[likely]]
                 return;
@@ -1221,6 +1339,30 @@ namespace Prism
         }
 
         constexpr E&& Error() && noexcept
+        {
+            assert(!m_HasValue);
+            return Move(m_Unexpected);
+        }
+
+        constexpr const E& error() const& noexcept
+        {
+            assert(!m_HasValue);
+            return m_Unexpected;
+        }
+
+        constexpr E& error() & noexcept
+        {
+            assert(!m_HasValue);
+            return m_Unexpected;
+        }
+
+        constexpr const E&& error() const&& noexcept
+        {
+            assert(!m_HasValue);
+            return Move(m_Unexpected);
+        }
+
+        constexpr E&& error() && noexcept
         {
             assert(!m_HasValue);
             return Move(m_Unexpected);
@@ -1505,5 +1647,9 @@ namespace Prism
 
         bool m_HasValue;
     };
-
 } // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::Expected;
+using Prism::Unexpected;
+#endif
