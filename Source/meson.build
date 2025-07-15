@@ -1,5 +1,7 @@
 srcs = files(
   'Prism/Algorithm/Hash.cpp',
+
+  'Prism/Containers/Bitmap.cpp',
   'Prism/Containers/RingBuffer.cpp',
 
   'Prism/Debug/Assertions.cpp',
