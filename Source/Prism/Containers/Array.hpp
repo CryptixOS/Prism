@@ -64,59 +64,62 @@ namespace Prism
         {
             assert(pos < N);
 
-            return Data[pos];
+            return Raw()[pos];
         }
         constexpr ConstReference At(SizeType pos) const
         {
             assert(pos < N);
 
-            return Data[pos];
+            return Raw()[pos];
         }
         constexpr Reference operator[](SizeType pos)
         {
             assert(pos < N);
 
-            return Data[pos];
+            return Raw()[pos];
         }
         constexpr ConstReference operator[](SizeType pos) const
         {
             assert(pos < N);
 
-            return Data[pos];
+            return Raw()[pos];
         }
-        constexpr Reference       Front() { return Data[0]; }
-        constexpr ConstReference  Front() const { return Data[0]; }
-        constexpr Reference       Back() { return Data[N - 1]; }
-        constexpr ConstReference  Back() const { return Data[N - 1]; }
+        constexpr Reference       Front() { return Raw()[0]; }
+        constexpr ConstReference  Front() const { return Raw()[0]; }
+        constexpr Reference       Back() { return Raw()[N - 1]; }
+        constexpr ConstReference  Back() const { return Raw()[N - 1]; }
         constexpr T*              Raw() PM_NOEXCEPT { return Data; }
         constexpr const T*        Raw() const PM_NOEXCEPT { return Data; }
 
         //--------------------------------------------------------------------------
         // Iterators
         //--------------------------------------------------------------------------
-        constexpr Iterator        begin() PM_NOEXCEPT { return Data; }
-        constexpr ConstIterator   begin() const PM_NOEXCEPT { return Data; }
-        constexpr ConstIterator   cbegin() const PM_NOEXCEPT { return Data; }
+        constexpr Iterator        begin() PM_NOEXCEPT { return Raw(); }
+        constexpr ConstIterator   begin() const PM_NOEXCEPT { return Raw(); }
+        constexpr ConstIterator   cbegin() const PM_NOEXCEPT { return Raw(); }
 
-        constexpr Iterator        end() PM_NOEXCEPT { return Data + N; }
-        constexpr ConstIterator   end() const PM_NOEXCEPT { return Data + N; }
-        constexpr ConstIterator   cend() const PM_NOEXCEPT { return Data + N; }
+        constexpr Iterator        end() PM_NOEXCEPT { return Raw() + N; }
+        constexpr ConstIterator   end() const PM_NOEXCEPT { return Raw() + N; }
+        constexpr ConstIterator   cend() const PM_NOEXCEPT { return Raw() + N; }
 
-        constexpr ReverseIterator rbegin() PM_NOEXCEPT { return Data + N; }
+        constexpr ReverseIterator rbegin() PM_NOEXCEPT { return Raw() + N; }
         constexpr ConstReverseIterator rbegin() const PM_NOEXCEPT
         {
-            return Data + N;
+            return Raw() + N;
         }
         constexpr ConstReverseIterator crbegin() const PM_NOEXCEPT
         {
-            return Data + N;
+            return Raw() + N;
         }
 
-        constexpr ReverseIterator      rend() PM_NOEXCEPT { return Data; }
-        constexpr ConstReverseIterator rend() const PM_NOEXCEPT { return Data; }
+        constexpr ReverseIterator      rend() PM_NOEXCEPT { return Raw(); }
+        constexpr ConstReverseIterator rend() const PM_NOEXCEPT
+        {
+            return Raw();
+        }
         constexpr ConstReverseIterator crend() const PM_NOEXCEPT
         {
-            return Data;
+            return Raw();
         }
 
         //--------------------------------------------------------------------------
@@ -128,16 +131,16 @@ namespace Prism
 
         constexpr void     Fill(const ValueType& value)
         {
-            Memory::Fill(Data, value, N * sizeof(T));
+            Memory::Fill(Raw(), value, N * sizeof(T));
         }
         constexpr void Swap(Array& other) PM_NOEXCEPT
         {
             assert(other.Size() <= N);
-            for (usize i = 0; auto& v : other) Swap(v, Data[i++]);
+            for (usize i = 0; auto& v : other) Swap(v, Raw()[i++]);
         }
         constexpr auto operator<=>(const Array<T, N>& other) const = default;
 
-        typename ArrayTraits<T, N>::Type Data;
+        alignas(T) typename ArrayTraits<T, N>::Type Data;
     };
 
     template <typename T, typename... U>
