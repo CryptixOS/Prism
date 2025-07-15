@@ -12,7 +12,6 @@
 #include <Prism/Core/Core.hpp>
 #include <Prism/String/CharTraits.hpp>
 #include <Prism/Utility/Hash.hpp>
-#include <Prism/Utility/Math.hpp>
 
 #include <cassert>
 #include <ranges>

@@ -702,7 +702,9 @@ namespace Prism
 
         constexpr void Reallocate(usize newCapacity, bool copyOld)
         {
-            newCapacity = Math::AlignUp(newCapacity, sizeof(ValueType*));
+            constexpr usize ALIGNMENT = sizeof(ValueType*);
+            newCapacity               = (newCapacity + ALIGNMENT - 1)
+                        & ~(ALIGNMENT - 1);
             if (newCapacity == Capacity()) return;
 
             usize newSize = Size();

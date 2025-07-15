@@ -11,7 +11,6 @@
 
 #include <Prism/String/String.hpp>
 #include <Prism/String/StringView.hpp>
-#include <Prism/Utility/Math.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
