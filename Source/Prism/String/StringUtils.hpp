@@ -95,6 +95,7 @@ namespace Prism
         {
             return c >= 'a' && c <= 'z' ? c - 32 : c;
         }
+
         constexpr bool IsDigit(u64 c) { return c >= '0' && c <= '9'; }
         constexpr bool IsHexDigit(u64 c)
         {
@@ -102,6 +103,59 @@ namespace Prism
 
             return IsDigit(c) || (c >= 'a' && c <= 'f');
         }
+
+        template <typename T>
+        constexpr bool IsLower(T c)
+        {
+            return c >= 'a' && c <= 'z';
+        }
+        template <typename T>
+        constexpr bool IsUpper(T c)
+        {
+            return c >= 'A' && c <= 'Z';
+        }
+        template <typename T>
+        constexpr bool IsAlpha(T c)
+        {
+            return IsLower(c) || IsUpper(c);
+        }
+        template <typename T>
+        constexpr bool IsAlphanumeric(T c)
+        {
+            return IsAlpha(c) || IsDigit(c);
+        }
+        template <typename T>
+        constexpr bool IsControl(T c)
+        {
+            return c < 32 || c == '\x7f';
+        }
+        template <typename T>
+        constexpr bool IsSpace(T c)
+        {
+            return (c >= '\n' && c <= '\r') || IsBlank(c);
+        }
+        template <typename T>
+        constexpr bool IsBlank(T c)
+        {
+            return c == ' ' || c == '\t';
+        }
+        template <typename T>
+        constexpr bool IsPunctuation(T c)
+        {
+            return (c >= '!' && c <= '/') || (c >= ':' && c <= '@')
+                || (c >= '[' && c <= '`') || (c >= '{' && c <= '~');
+        }
+        template <typename T>
+        constexpr bool IsGraph(T c)
+        {
+            return c >= '!' && c <= '~';
+        }
+        template <typename T>
+        constexpr bool IsPrintable(T c)
+        {
+            return IsAlphanumeric(c) || IsSpace(c) || IsPunctuation(c);
+        }
+
         template <ArithmeticType T>
         constexpr T ToDigit(u64 c)
         {
@@ -132,11 +186,21 @@ namespace Prism
     }; // namespace StringUtils
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 namespace StringUtils = Prism::StringUtils;
 
 using Prism::StringUtils::GetDigitCount;
+using Prism::StringUtils::IsAlpha;
+using Prism::StringUtils::IsAlphanumeric;
+using Prism::StringUtils::IsBlank;
+using Prism::StringUtils::IsControl;
+using Prism::StringUtils::IsGraph;
 using Prism::StringUtils::IsHexDigit;
+using Prism::StringUtils::IsLower;
+using Prism::StringUtils::IsPrintable;
+using Prism::StringUtils::IsPunctuation;
+using Prism::StringUtils::IsSpace;
+using Prism::StringUtils::IsUpper;
 using Prism::StringUtils::ToDigit;
 using Prism::StringUtils::ToLower;
 using Prism::StringUtils::ToNumber;

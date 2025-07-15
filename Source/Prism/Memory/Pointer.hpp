@@ -10,9 +10,9 @@
 #include <Prism/Utility/Hash.hpp>
 
 #if PRISM_TARGET_CRYPTIX != 0
-namespace BootInfo
+namespace MemoryManager
 {
-    extern u64 GetHHDMOffset();
+    usize HigherHalfOffset();
 };
 #endif
 
@@ -98,9 +98,9 @@ namespace Prism
         inline constexpr bool IsValid() const { return m_Pointer != 0; }
 
 #if PRISM_TARGET_CRYPTIX != 0
-        inline VirtAddr HigherHalfOffset() const
+        constexpr VirtAddr HigherHalfOffset() const
         {
-            return BootInfo::GetHHDMOffset();
+            return MemoryManager::HigherHalfOffset();
         }
         inline constexpr bool IsHigherHalf() const
         {
