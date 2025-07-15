@@ -18,7 +18,7 @@ namespace Prism
         usize PageCount;
         usize Size;
     };
-
+    
     template <usize BucketCount, typename PageAllocPolicy, typename LockPolicy>
     class SlabPool : public AllocatorBase
     {
@@ -72,13 +72,11 @@ namespace Prism
                 return nullptr;
             }
 
-            // Large allocation (page-aligned)
-            if ((memory.Raw() & 0xFFF) == 0)
+            if ((memory.Raw() & 0xfff) == 0)
             {
                 auto  meta    = memory.Offset<BigAllocMeta*>(-PAGE_SIZE);
                 usize oldSize = meta->Size;
 
-                // If still fits in current pages, just update size
                 if (Math::DivRoundUp(oldSize, PAGE_SIZE)
                     == Math::DivRoundUp(bytes, PAGE_SIZE))
                 {
@@ -86,7 +84,6 @@ namespace Prism
                     return memory;
                 }
 
-                // Otherwise reallocate
                 auto newMemory = Allocate(bytes);
                 if (!newMemory) return nullptr;
 
@@ -95,12 +92,10 @@ namespace Prism
                 return newMemory;
             }
 
-            // Slab allocation
             auto allocator
-                = Pointer(memory.Raw() & ~0xFFF).As<SlabHeader>()->Slab;
+                = Pointer(memory.Raw() & ~0xFFF).As<SlabFrame>()->Allocator;
             usize oldSize = allocator->AllocationSize();
 
-            // If still fits, reuse it
             if (bytes <= oldSize) return memory;
 
             auto newMemory = Allocate(bytes);
@@ -114,9 +109,9 @@ namespace Prism
         {
             if ((memory.Raw() & 0xfff) == 0) return LargeFree(memory);
 
-            auto allocator = Pointer(memory.Raw() & ~0xfff).As<SlabHeader>();
-            allocator->Slab->Free(memory);
-            m_TotalFreed += allocator->Slab->AllocationSize();
+            auto allocator = Pointer(memory.Raw() & ~0xfff).As<SlabFrame>();
+            allocator->Allocator->Free(memory);
+            m_TotalFreed += allocator->Allocator->AllocationSize();
         }
 
         Pointer LargeAllocate(usize bytes)

@@ -6,34 +6,48 @@
  */
 #pragma once
 
+#include <Prism/Core/Error.hpp>
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
 #include <Prism/Utility/Math.hpp>
 
 #ifndef ToDoWarn
-#define ToDoWarn(...) PrismWarn("{}[{}:{}]: {} is not implemented", PM_FILENAME, PM_LINE, PM_COLUMN, PM_FUNCTION_NAME)
+    #define ToDoWarn(...)                                                      \
+        PrismWarn("{}[{}:{}]: {} is not implemented", PM_FILENAME, PM_LINE,    \
+                  PM_COLUMN, PM_FUNCTION_NAME)
 #endif
 
 namespace Prism
 {
-    struct SlabFrame
+    struct SlabObject
     {
-        SlabFrame* Next = nullptr;
+        SlabObject* Next = nullptr;
     };
 
     constexpr u64   SLAB_CANARY = 0xDEADBEEFCAFEBABE;
     constexpr u64   FREE_POISON = 0xDEADDEADDEADDEAD;
     constexpr usize PAGE_SIZE   = 0x1000;
 
+    //TODO(v1tr10l7): Memory poisoning
+    //TODO(v1tr10l7): canaries
+    //TODO(v1tr10l7): frame tracking
+    //TODO(v1tr10l7): alignment, shutdown
     class SlabAllocatorBase
     {
       public:
         virtual usize AllocationSize()     = 0;
         virtual void  Free(Pointer memory) = 0;
     };
-    struct SlabHeader
+    struct SlabFrame
     {
-        SlabAllocatorBase* Slab = nullptr;
+        Pointer            Base                 = nullptr;
+        usize              TotalLength          = 0;
+        Pointer            Data                 = nullptr;
+        usize              DataLength           = 0;
+
+        usize              AllocatedObjectCount = 0;
+        SlabObject*        NextFree             = nullptr;
+        SlabAllocatorBase* Allocator            = nullptr;
     };
 
     template <typename PageAllocPolicy, typename LockPolicy>
@@ -45,78 +59,68 @@ namespace Prism
         virtual ErrorOr<void> Initialize(usize chunkSize)
         {
             assert(Math::IsPowerOfTwo(chunkSize));
-            m_ChunkSize     = chunkSize;
+            m_ObjectSize                 = chunkSize;
 
-            usize pageCount = Math::DivRoundUp(chunkSize, PAGE_SIZE);
-            m_FirstFree     = PageAllocPolicy::CallocatePages(pageCount);
-            if (!m_FirstFree) return Error(ENOMEM);
+            constexpr usize SLAB_SIZE    = 0x1000;
+            constexpr usize SLAB_SB_SIZE = 0x1000;
 
-            auto firstSlab  = m_FirstFree.As<SlabHeader>();
-            firstSlab->Slab = this;
+            usize           totalSize    = SLAB_SIZE + SLAB_SB_SIZE;
+            usize           pageCount = Math::DivRoundUp(totalSize, PAGE_SIZE);
 
-            usize usableSize
-                = PAGE_SIZE - Math::AlignUp(sizeof(SlabFrame), m_ChunkSize);
-            PM_UNUSED usize   usableCount = usableSize / m_ChunkSize;
+            Pointer         base = PageAllocPolicy::CallocatePages(pageCount);
+            if (!base) return Error(ENOMEM);
 
-            PM_UNUSED Pointer frameBase   = m_FirstFree.Offset(
-                Math::AlignUp(sizeof(SlabFrame), m_ChunkSize));
-            PM_UNUSED SlabFrame* previous = nullptr;
+            auto  address  = Math::AlignUp(base, SLAB_SB_SIZE);
+            usize overhead = 0;
+            for (; overhead < sizeof(SlabFrame); overhead += m_ObjectSize);
 
-            for (usize i = 0; i < usableCount; i++)
+            auto frame         = new (base.As<void>()) SlabFrame;
+            frame->Data        = address + overhead;
+            frame->DataLength  = SLAB_SIZE - overhead;
+            frame->Base        = base;
+            frame->TotalLength = totalSize;
+            m_Frame            = frame;
+            m_Frame->NextFree  = base;
+            m_Frame->Allocator = this;
+
+            SlabObject* previous = nullptr;
+            for (usize offset = 0; offset < m_Frame->DataLength;
+                 offset += m_ObjectSize)
             {
-                auto frame         = frameBase.Offset<SlabFrame*>(i *
-                m_ChunkSize);
-                // frame->Header.Slab = this;
-                frame->Next        = previous;
-                previous           = frame;
+                auto object  = frame->Data.Offset<SlabObject*>(offset);
+                object->Next = previous;
+                previous     = object;
             }
-            m_FirstFree = previous;
-            return {};
-
-            auto                   available
-                = PAGE_SIZE - Math::AlignUp(sizeof(SlabHeader), m_ChunkSize);
-
-            PM_UNUSED auto guard = m_Lock.Lock();
-            m_FirstFree += Math::AlignUp(sizeof(SlabHeader), m_ChunkSize);
-
-            auto       count = available / m_ChunkSize;
-            SlabFrame* prev  = nullptr;
-            for (usize i = 0; i < count; i++)
-            {
-                auto frame  = m_FirstFree.Offset<SlabFrame*>(i * m_ChunkSize);
-                frame->Next = prev;
-                prev        = frame;
-            }
-            m_FirstFree = prev;
+            m_Frame->NextFree = previous;
             return {};
         }
         virtual void    Shutdown() { ToDoWarn(); }
 
         virtual Pointer Allocate()
         {
-            if (!m_FirstFree && !Initialize(m_ChunkSize)) return nullptr;
+            if (!m_Frame->NextFree && !Initialize(m_ObjectSize)) return nullptr;
 
-            PM_UNUSED auto guard  = m_Lock.Lock();
-            auto frame  = m_FirstFree.As<SlabFrame>();
-            m_FirstFree = frame->Next;
+            PM_UNUSED auto guard = m_Lock.Lock();
+            auto           frame = Pointer(m_Frame->NextFree).As<SlabObject>();
+            m_Frame->NextFree    = frame->Next;
 
-            m_TotalAllocated += m_ChunkSize;
+            m_TotalAllocated += m_ObjectSize;
             return frame;
         }
         virtual void Free(Pointer memory) override
         {
             if (!memory) return;
 
-            PM_UNUSED auto guard  = m_Lock.Lock();
-            auto frame  = memory.As<SlabFrame>();
-            frame->Next = m_FirstFree;
-            m_FirstFree = frame;
+            PM_UNUSED auto guard = m_Lock.Lock();
+            auto           frame = memory.As<SlabObject>();
+            frame->Next          = m_Frame->NextFree;
+            m_Frame->NextFree    = frame;
 
-            m_TotalFreed += m_ChunkSize;
+            m_TotalFreed += m_ObjectSize;
             return;
         }
 
-        virtual usize AllocationSize() override { return m_ChunkSize; }
+        virtual usize AllocationSize() override { return m_ObjectSize; }
 
         virtual usize TotalAllocated() const { return m_TotalAllocated; }
         virtual usize TotalFreed() const { return m_TotalFreed; }
@@ -124,17 +128,17 @@ namespace Prism
 
       private:
         LockPolicy m_Lock;
-        Pointer    m_FirstFree = 0;
-        usize      m_ChunkSize = 0;
+
+        SlabFrame* m_Frame          = nullptr;
+        usize      m_ObjectSize     = 0;
 
         usize      m_TotalAllocated = 0;
-        usize      m_TotalFreed = 0;
+        usize      m_TotalFreed     = 0;
     };
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
 using Prism::SlabAllocator;
 using Prism::SlabAllocatorBase;
-using Prism::SlabFrame;
-using Prism::SlabHeader;
+using Prism::SlabObject;
 #endif
