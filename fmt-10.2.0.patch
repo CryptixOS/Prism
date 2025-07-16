@@ -1,5 +1,5 @@
 diff --color -Naur fmt-original/include/fmt/chrono.h fmt-10.2.0/include/fmt/chrono.h
---- fmt-original/include/fmt/chrono.h	2024-01-01 20:10:16.000000000 +0100
+--- fmt-original/include/fmt/chrono.h	2025-07-16 22:36:59.476005995 +0200
 +++ fmt-10.2.0/include/fmt/chrono.h	1970-01-01 01:00:00.000000000 +0100
 @@ -1,2240 +0,0 @@
 -// Formatting library for C++ - chrono support
@@ -2243,8 +2243,8 @@ diff --color -Naur fmt-original/include/fmt/chrono.h fmt-10.2.0/include/fmt/chro
 -
 -#endif  // FMT_CHRONO_H_
 diff --color -Naur fmt-original/include/fmt/color.h fmt-10.2.0/include/fmt/color.h
---- fmt-original/include/fmt/color.h	2024-01-01 20:10:16.000000000 +0100
-+++ fmt-10.2.0/include/fmt/color.h	2025-04-27 21:02:24.918871770 +0200
+--- fmt-original/include/fmt/color.h	2025-07-16 22:36:59.476480925 +0200
++++ fmt-10.2.0/include/fmt/color.h	2025-07-16 22:36:52.875895041 +0200
 @@ -155,7 +155,7 @@
    white_smoke = 0xF5F5F5,              // rgb(245,245,245)
    yellow = 0xFFFF00,                   // rgb(255,255,0)
@@ -2313,8 +2313,8 @@ diff --color -Naur fmt-original/include/fmt/color.h fmt-10.2.0/include/fmt/color
    \rst
    Formats arguments and returns the result as a string using ANSI
 diff --color -Naur fmt-original/include/fmt/compile.h fmt-10.2.0/include/fmt/compile.h
---- fmt-original/include/fmt/compile.h	2024-01-01 20:10:16.000000000 +0100
-+++ fmt-10.2.0/include/fmt/compile.h	2025-04-27 21:02:24.920404187 +0200
+--- fmt-original/include/fmt/compile.h	2025-07-16 22:36:59.476818474 +0200
++++ fmt-10.2.0/include/fmt/compile.h	2025-07-16 22:36:52.874240330 +0200
 @@ -510,7 +510,6 @@
  void print(std::FILE* f, const S& format_str, const Args&... args) {
    memory_buffer buffer;
@@ -2324,8 +2324,8 @@ diff --color -Naur fmt-original/include/fmt/compile.h fmt-10.2.0/include/fmt/com
  
  template <typename S, typename... Args,
 diff --color -Naur fmt-original/include/fmt/core.h fmt-10.2.0/include/fmt/core.h
---- fmt-original/include/fmt/core.h	2024-01-01 20:10:16.000000000 +0100
-+++ fmt-10.2.0/include/fmt/core.h	2025-04-27 21:02:24.921242254 +0200
+--- fmt-original/include/fmt/core.h	2025-07-16 22:36:59.477450620 +0200
++++ fmt-10.2.0/include/fmt/core.h	2025-07-16 22:36:52.874903136 +0200
 @@ -9,7 +9,6 @@
  #define FMT_CORE_H_
  
@@ -3027,8 +3027,8 @@ diff --color -Naur fmt-original/include/fmt/core.h fmt-10.2.0/include/fmt/core.h
  
  #ifdef FMT_HEADER_ONLY
 diff --color -Naur fmt-original/include/fmt/format.h fmt-10.2.0/include/fmt/format.h
---- fmt-original/include/fmt/format.h	2024-01-01 20:10:16.000000000 +0100
-+++ fmt-10.2.0/include/fmt/format.h	2025-07-16 22:26:22.125238687 +0200
+--- fmt-original/include/fmt/format.h	2025-07-16 22:36:59.478481567 +0200
++++ fmt-10.2.0/include/fmt/format.h	2025-07-16 22:38:03.064889675 +0200
 @@ -33,14 +33,11 @@
  #ifndef FMT_FORMAT_H_
  #define FMT_FORMAT_H_
@@ -3905,7 +3905,15 @@ diff --color -Naur fmt-original/include/fmt/format.h fmt-10.2.0/include/fmt/form
    return !detail::isnan(value) && value < inf && value > -inf;
  }
  
-@@ -2773,7 +2160,7 @@
+@@ -2766,14 +2153,14 @@
+     }
+ #endif
+   }
+-  return std::signbit(static_cast<double>(value));
++  return __builtin_signbit(static_cast<double>(value));
+ }
+ 
+ inline FMT_CONSTEXPR20 void adjust_precision(int& precision, int exp10) {
    // Adjust fixed precision by exponent because it is relative to decimal
    // point.
    if (exp10 > 0 && precision > max_value<int>() - exp10)
@@ -4767,8 +4775,8 @@ diff --color -Naur fmt-original/include/fmt/format.h fmt-10.2.0/include/fmt/form
 -
  #endif  // FMT_FORMAT_H_
 diff --color -Naur fmt-original/include/fmt/format-inl.h fmt-10.2.0/include/fmt/format-inl.h
---- fmt-original/include/fmt/format-inl.h	2024-01-01 20:10:16.000000000 +0100
-+++ fmt-10.2.0/include/fmt/format-inl.h	2025-04-27 21:02:24.925871890 +0200
+--- fmt-original/include/fmt/format-inl.h	2025-07-16 22:36:59.478009151 +0200
++++ fmt-10.2.0/include/fmt/format-inl.h	2025-07-16 22:36:52.875195846 +0200
 @@ -8,19 +8,7 @@
  #ifndef FMT_FORMAT_INL_H_
  #define FMT_FORMAT_INL_H_
@@ -6251,7 +6259,7 @@ diff --color -Naur fmt-original/include/fmt/format-inl.h fmt-10.2.0/include/fmt/
 -
  #endif  // FMT_FORMAT_INL_H_
 diff --color -Naur fmt-original/include/fmt/os.h fmt-10.2.0/include/fmt/os.h
---- fmt-original/include/fmt/os.h	2024-01-01 20:10:16.000000000 +0100
+--- fmt-original/include/fmt/os.h	2025-07-16 22:36:59.479481573 +0200
 +++ fmt-10.2.0/include/fmt/os.h	1970-01-01 01:00:00.000000000 +0100
 @@ -1,455 +0,0 @@
 -// Formatting library for C++ - optional OS-specific functionality
@@ -6710,7 +6718,7 @@ diff --color -Naur fmt-original/include/fmt/os.h fmt-10.2.0/include/fmt/os.h
 -
 -#endif  // FMT_OS_H_
 diff --color -Naur fmt-original/include/fmt/ostream.h fmt-10.2.0/include/fmt/ostream.h
---- fmt-original/include/fmt/ostream.h	2024-01-01 20:10:16.000000000 +0100
+--- fmt-original/include/fmt/ostream.h	2025-07-16 22:36:59.480844622 +0200
 +++ fmt-10.2.0/include/fmt/ostream.h	1970-01-01 01:00:00.000000000 +0100
 @@ -1,245 +0,0 @@
 -// Formatting library for C++ - std::ostream support
@@ -6959,7 +6967,7 @@ diff --color -Naur fmt-original/include/fmt/ostream.h fmt-10.2.0/include/fmt/ost
 -
 -#endif  // FMT_OSTREAM_H_
 diff --color -Naur fmt-original/include/fmt/printf.h fmt-10.2.0/include/fmt/printf.h
---- fmt-original/include/fmt/printf.h	2024-01-01 20:10:16.000000000 +0100
+--- fmt-original/include/fmt/printf.h	2025-07-16 22:36:59.481424664 +0200
 +++ fmt-10.2.0/include/fmt/printf.h	1970-01-01 01:00:00.000000000 +0100
 @@ -1,675 +0,0 @@
 -// Formatting library for C++ - legacy printf implementation
@@ -7638,7 +7646,7 @@ diff --color -Naur fmt-original/include/fmt/printf.h fmt-10.2.0/include/fmt/prin
 -
 -#endif  // FMT_PRINTF_H_
 diff --color -Naur fmt-original/include/fmt/ranges.h fmt-10.2.0/include/fmt/ranges.h
---- fmt-original/include/fmt/ranges.h	2024-01-01 20:10:16.000000000 +0100
+--- fmt-original/include/fmt/ranges.h	2025-07-16 22:36:59.482004707 +0200
 +++ fmt-10.2.0/include/fmt/ranges.h	1970-01-01 01:00:00.000000000 +0100
 @@ -1,738 +0,0 @@
 -// Formatting library for C++ - range and tuple support
@@ -8380,7 +8388,7 @@ diff --color -Naur fmt-original/include/fmt/ranges.h fmt-10.2.0/include/fmt/rang
 -
 -#endif  // FMT_RANGES_H_
 diff --color -Naur fmt-original/include/fmt/std.h fmt-10.2.0/include/fmt/std.h
---- fmt-original/include/fmt/std.h	2024-01-01 20:10:16.000000000 +0100
+--- fmt-original/include/fmt/std.h	2025-07-16 22:36:59.482252858 +0200
 +++ fmt-10.2.0/include/fmt/std.h	1970-01-01 01:00:00.000000000 +0100
 @@ -1,537 +0,0 @@
 -// Formatting library for C++ - formatters for standard library types
@@ -8921,8 +8929,8 @@ diff --color -Naur fmt-original/include/fmt/std.h fmt-10.2.0/include/fmt/std.h
 -FMT_END_NAMESPACE
 -#endif  // FMT_STD_H_
 diff --color -Naur fmt-original/include/fmt/xchar.h fmt-10.2.0/include/fmt/xchar.h
---- fmt-original/include/fmt/xchar.h	2024-01-01 20:10:16.000000000 +0100
-+++ fmt-10.2.0/include/fmt/xchar.h	2025-04-27 21:02:24.930575631 +0200
+--- fmt-original/include/fmt/xchar.h	2025-07-16 22:36:59.482485364 +0200
++++ fmt-10.2.0/include/fmt/xchar.h	2025-07-16 22:36:52.875486392 +0200
 @@ -12,31 +12,12 @@
  
  #include "format.h"
