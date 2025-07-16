@@ -10,6 +10,7 @@ extend-ignore-identifiers-re = [
 extend-exclude = [
     "Source/Prism/elf.h",
     "Tests/*",
+    "*.patch",
 ]
 
 [default.extend-identifiers]
