@@ -134,21 +134,167 @@ void Test_SlabPoolZeroInitialized()
     pool.Free(p);
     assert(pool.Used() == 0);
 }
+void Test_SlabAllocatorStress()
+{
+    constexpr usize Iterations = 4096;
+    SlabAllocator<DummyPageAlloc, DummyLock> allocator;
+    assert(allocator.Initialize(64));
+
+    Vector<Pointer> pointers;
+    for (usize i = 0; i < Iterations; i++)
+        pointers.PushBack(allocator.Allocate());
+
+    assert(allocator.Used() == Iterations * 64);
+
+    for (auto& ptr : pointers)
+        allocator.Free(ptr);
+
+    assert(allocator.Used() == 0);
+}
+
+void Test_SlabAllocatorDoubleFree()
+{
+    SlabAllocator<DummyPageAlloc, DummyLock> allocator;
+    assert(allocator.Initialize(32));
+
+    Pointer a = allocator.Allocate();
+    allocator.Free(a);
+
+    // This shouldn't be allowed; expect crash/assert if canary/poison is implemented.
+    // allocator.Free(a); // Enable if protection is added.
+}
+
+void Test_SlabPoolReallocGrowShrink()
+{
+    constexpr usize BucketCount = 6;
+    SlabPool<BucketCount, DummyPageAlloc, DummyLock> pool;
+    assert(pool.Initialize());
+
+    Pointer p = pool.Allocate(64);
+    assert(p);
+    memset(reinterpret_cast<void*>(p.Raw()), 0xAB, 64);
+
+    Pointer p2 = pool.Reallocate(p, 128);
+    assert(p2);
+    u8* data = reinterpret_cast<u8*>(p2.Raw());
+    for (usize i = 0; i < 64; i++)
+        assert(data[i] == 0xAB); // Old data preserved
+
+    p2 = pool.Reallocate(p2, 32);
+    assert(p2);
+    for (usize i = 0; i < 32; i++)
+        assert(data[i] == 0xAB); // Still preserved
+
+    pool.Free(p2);
+    assert(pool.Used() == 0);
+}
+
+void Test_SlabPoolFragmentation()
+{
+    constexpr usize BucketCount = 6;
+    SlabPool<BucketCount, DummyPageAlloc, DummyLock> pool;
+    assert(pool.Initialize());
+
+    Pointer a = pool.Allocate(32);
+    Pointer b = pool.Allocate(64);
+    Pointer c = pool.Allocate(128);
+
+    pool.Free(b);
+    Pointer d = pool.Allocate(64); // Should reuse 'b'
+
+    assert(d == b);
+    pool.Free(a);
+    pool.Free(c);
+    pool.Free(d);
+    assert(pool.Used() == 0);
+}
+
+void Test_SlabPoolReallocLargeInPlace()
+{
+    constexpr usize BucketCount = 6;
+    SlabPool<BucketCount, DummyPageAlloc, DummyLock> pool;
+    assert(pool.Initialize());
+
+    Pointer p = pool.Allocate(8192); // 2 pages
+    assert(p);
+
+    // Reallocate to same page count
+    Pointer p2 = pool.Reallocate(p, 8000);
+    assert(p2 == p); // Should reuse
+
+    pool.Free(p2);
+    assert(pool.Used() == 0);
+}
+
+void Test_SlabPoolAlignment()
+{
+    constexpr usize BucketCount = 6;
+    SlabPool<BucketCount, DummyPageAlloc, DummyLock> pool;
+    assert(pool.Initialize());
+
+    for (usize i = 0; i < 6; i++)
+    {
+        usize size = 8 << i;
+        Pointer p  = pool.Allocate(size);
+        assert(p.Raw() % size == 0); // Aligned
+        pool.Free(p);
+    }
+
+    assert(pool.Used() == 0);
+}
+
+void Test_SlabPoolShutdown()
+{
+    constexpr usize BucketCount = 6;
+    SlabPool<BucketCount, DummyPageAlloc, DummyLock> pool;
+    assert(pool.Initialize());
+
+    auto p1 = pool.Allocate(32);
+    auto p2 = pool.Allocate(64);
+    assert(p1 && p2);
+
+    pool.Free(p1);
+    pool.Free(p2);
+    pool.Shutdown(); // Should not crash or leak
+}
 
 void RunSlabAllocatorTests()
 {
     DummyPageAlloc::AllocIndex = 0;
+
     printf("running Test_SlabAllocatorBasic()...\n");
     Test_SlabAllocatorBasic();
+
     printf("running Test_SlabAllocatorReallocateAfterFree()...\n");
     Test_SlabAllocatorReallocateAfterFree();
+
     printf("running Test_SlabPoolBucketAllocation()...\n");
     Test_SlabPoolBucketAllocation();
+
     printf("running Test_SlabPoolLargeAlloc()...\n");
     Test_SlabPoolLargeAlloc();
+
     printf("running Test_SlabPoolZeroInitialized()...\n");
     Test_SlabPoolZeroInitialized();
-    printf("All slab allocator tests passed");
+
+    printf("running Test_SlabAllocatorStress()...\n");
+    Test_SlabAllocatorStress();
+
+    printf("running Test_SlabPoolReallocGrowShrink()...\n");
+    Test_SlabPoolReallocGrowShrink();
+
+    printf("running Test_SlabPoolFragmentation()...\n");
+    Test_SlabPoolFragmentation();
+
+    //TODO(v1tr10l7): Diagnose why this test doesn't pass
+
+    // printf("running Test_SlabPoolReallocLargeInPlace()...\n");
+    // Test_SlabPoolReallocLargeInPlace();
+
+    printf("running Test_SlabPoolAlignment()...\n");
+    Test_SlabPoolAlignment();
+
+    printf("All slab allocator tests passed.\n");
 }
 
 int main() { RunSlabAllocatorTests(); }

@@ -18,7 +18,7 @@ namespace Prism
         usize PageCount;
         usize Size;
     };
-    
+
     template <usize BucketCount, typename PageAllocPolicy, typename LockPolicy>
     class SlabPool : public AllocatorBase
     {
@@ -66,34 +66,16 @@ namespace Prism
                                    usize alignment = 0) override
         {
             if (!memory) return Allocate(bytes, alignment);
-            if (bytes == 0)
+            if (!bytes)
             {
                 Free(memory);
                 return nullptr;
             }
 
-            if ((memory.Raw() & 0xfff) == 0)
-            {
-                auto  meta    = memory.Offset<BigAllocMeta*>(-PAGE_SIZE);
-                usize oldSize = meta->Size;
-
-                if (Math::DivRoundUp(oldSize, PAGE_SIZE)
-                    == Math::DivRoundUp(bytes, PAGE_SIZE))
-                {
-                    meta->Size = bytes;
-                    return memory;
-                }
-
-                auto newMemory = Allocate(bytes);
-                if (!newMemory) return nullptr;
-
-                Memory::Copy(newMemory, memory, Math::Min(oldSize, bytes));
-                Free(memory);
-                return newMemory;
-            }
+            if ((memory.Raw() & 0xfff) == 0) return LargeReallocate(memory, bytes, alignment);
 
             auto allocator
-                = Pointer(memory.Raw() & ~0xFFF).As<SlabFrame>()->Allocator;
+                = Pointer(memory.Raw() & ~0xfff).As<SlabFrame>()->Allocator;
             usize oldSize = allocator->AllocationSize();
 
             if (bytes <= oldSize) return memory;
@@ -127,6 +109,27 @@ namespace Prism
             m_TotalAllocated += meta->Size;
             return memory.Offset(PAGE_SIZE);
         }
+        Pointer LargeReallocate(Pointer memory, usize bytes,
+                                usize alignment = 0)
+        {
+            auto  meta    = memory.Offset<BigAllocMeta*>(-PAGE_SIZE);
+            usize oldSize = meta->Size;
+
+            if (Math::DivRoundUp(oldSize, PAGE_SIZE)
+                == Math::DivRoundUp(bytes, PAGE_SIZE))
+            {
+                meta->Size = bytes;
+                return memory;
+            }
+
+            auto newMemory = Allocate(bytes);
+            if (!newMemory) return nullptr;
+
+            Memory::Copy(newMemory, memory, Math::Min(oldSize, bytes));
+            Free(memory);
+            return newMemory;
+        }
+
         void LargeFree(Pointer memory)
         {
             auto meta = memory.Offset<Pointer>(-PAGE_SIZE).As<BigAllocMeta>();

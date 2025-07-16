@@ -28,10 +28,10 @@ namespace Prism
     constexpr u64   FREE_POISON = 0xDEADDEADDEADDEAD;
     constexpr usize PAGE_SIZE   = 0x1000;
 
-    //TODO(v1tr10l7): Memory poisoning
-    //TODO(v1tr10l7): canaries
-    //TODO(v1tr10l7): frame tracking
-    //TODO(v1tr10l7): alignment, shutdown
+    // TODO(v1tr10l7): Memory poisoning
+    // TODO(v1tr10l7): canaries
+    // TODO(v1tr10l7): frame tracking
+    // TODO(v1tr10l7): alignment, shutdown
     class SlabAllocatorBase
     {
       public:
@@ -74,20 +74,23 @@ namespace Prism
             usize overhead = 0;
             for (; overhead < sizeof(SlabFrame); overhead += m_ObjectSize);
 
-            auto frame         = new (base.As<void>()) SlabFrame;
-            frame->Data        = address + overhead;
-            frame->DataLength  = SLAB_SIZE - overhead;
-            frame->Base        = base;
-            frame->TotalLength = totalSize;
-            m_Frame            = frame;
-            m_Frame->NextFree  = base;
-            m_Frame->Allocator = this;
+            auto frame           = new (base.As<void>()) SlabFrame;
+            frame->Data          = address + overhead;
+            frame->DataLength    = SLAB_SIZE - overhead;
+            frame->Base          = base;
+            frame->TotalLength   = totalSize;
+            m_Frame              = frame;
+            m_Frame->NextFree    = base;
+            m_Frame->Allocator   = this;
 
             SlabObject* previous = nullptr;
             for (usize offset = 0; offset < m_Frame->DataLength;
                  offset += m_ObjectSize)
             {
-                auto object  = frame->Data.Offset<SlabObject*>(offset);
+                Pointer objectAddress = frame->Data.Offset(offset);
+                // WriteCanary(objectAddress);
+
+                auto object  = objectAddress.As<SlabObject>();
                 object->Next = previous;
                 previous     = object;
             }
@@ -100,21 +103,28 @@ namespace Prism
         {
             if (!m_Frame->NextFree && !Initialize(m_ObjectSize)) return nullptr;
 
-            PM_UNUSED auto guard = m_Lock.Lock();
-            auto           frame = Pointer(m_Frame->NextFree).As<SlabObject>();
-            m_Frame->NextFree    = frame->Next;
+            PM_UNUSED auto guard  = m_Lock.Lock();
+            auto           object = m_Frame->NextFree;
+            m_Frame->NextFree     = object->Next;
+
+            // assert(VerifyCanary(object));
 
             m_TotalAllocated += m_ObjectSize;
-            return frame;
+            return object;
         }
         virtual void Free(Pointer memory) override
         {
             if (!memory) return;
 
-            PM_UNUSED auto guard = m_Lock.Lock();
-            auto           frame = memory.As<SlabObject>();
-            frame->Next          = m_Frame->NextFree;
-            m_Frame->NextFree    = frame;
+            PM_UNUSED auto guard  = m_Lock.Lock();
+
+            auto           object = memory.As<SlabObject>();
+            // assert(VerifyCanary(object));
+            // assert(!IsPoisoned(object));
+
+            // Poison(object);
+            object->Next      = m_Frame->NextFree;
+            m_Frame->NextFree = object;
 
             m_TotalFreed += m_ObjectSize;
             return;
@@ -127,13 +137,39 @@ namespace Prism
         virtual usize Used() const { return TotalAllocated() - TotalFreed(); }
 
       private:
-        LockPolicy m_Lock;
+        LockPolicy             m_Lock;
 
-        SlabFrame* m_Frame          = nullptr;
-        usize      m_ObjectSize     = 0;
+        SlabFrame*             m_Frame          = nullptr;
+        usize                  m_ObjectSize     = 0;
 
-        usize      m_TotalAllocated = 0;
-        usize      m_TotalFreed     = 0;
+        usize                  m_TotalAllocated = 0;
+        usize                  m_TotalFreed     = 0;
+
+        static constexpr usize CANARY_SIZE      = sizeof(u64);
+        PM_UNUSED inline void            WriteCanary(Pointer object)
+        {
+            *object.As<u64>()                                = SLAB_CANARY;
+            *object.Offset<u64*>(m_ObjectSize - CANARY_SIZE) = SLAB_CANARY;
+        }
+        PM_UNUSED inline bool VerifyCanary(Pointer object)
+        {
+            return *object.As<u64>() == SLAB_CANARY
+                && *object.Offset<u64*>(m_ObjectSize - CANARY_SIZE)
+                       == SLAB_CANARY;
+        }
+
+        PM_UNUSED inline void Poison(Pointer object)
+        {
+            Memory::Fill(object, 0xde, m_ObjectSize - 2 * CANARY_SIZE);
+        }
+        PM_UNUSED inline bool IsPoisoned(Pointer object)
+        {
+            for (usize i = 0; i < (m_ObjectSize - 2 * CANARY_SIZE) / sizeof(u64);
+                 i++)
+                if (object.As<u8>()[i] != FREE_POISON) return false;
+
+            return true;
+        }
     };
 }; // namespace Prism
 
