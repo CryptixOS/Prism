@@ -125,7 +125,7 @@ namespace Prism
             auto newMemory = Allocate(bytes);
             if (!newMemory) return nullptr;
 
-            Memory::Copy(newMemory, memory, Math::Min(oldSize, bytes));
+            Memory::Copy(newMemory, memory, Min(oldSize, bytes));
             Free(memory);
             return newMemory;
         }

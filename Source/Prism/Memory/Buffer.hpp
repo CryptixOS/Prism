@@ -6,11 +6,11 @@
  */
 #pragma once
 
+#include <Prism/Containers/Span.hpp>
 #include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Types.hpp>
-#include <Prism/Memory/Pointer.hpp>
 
-#include <span>
+#include <Prism/Memory/Pointer.hpp>
 
 namespace Prism
 {
@@ -61,29 +61,29 @@ namespace Prism
             assert(offset + bytes <= m_Buffer.Size());
 
             if constexpr (IsSameV<T, Pointer>)
-                std::memcpy(dest.Raw(), Raw() + offset, bytes);
-            else std::memcpy(dest, Raw() + offset, bytes);
+                Memory::Copy(dest.Raw(), Raw() + offset, bytes);
+            else Memory::Copy(dest, Raw() + offset, bytes);
         }
         void Write(usize offset, const Byte* src, usize bytes)
         {
             // while (offset + bytes <= m_Buffer.Size())
             //     m_Buffer.Resize(m_Buffer.Size() << 1);
             assert((offset + bytes) <= m_Buffer.Size());
-            std::memcpy(Raw() + offset, src, bytes);
+            Memory::Copy(Raw() + offset, src, bytes);
         }
 
-        void Fill(Byte value) { std::memset(Raw(), value, Size()); }
+        void Fill(Byte value) { Memory::Fill(Raw(), value, Size()); }
         void Fill(usize offset, Byte value)
         {
             assert(offset < Size());
 
-            std::memset(Raw() + offset, value, Size() - offset);
+            Memory::Fill(Raw() + offset, value, Size() - offset);
         }
 
-        std::span<Byte>       Span() { return std::span<Byte>(m_Buffer); }
-        std::span<const Byte> Span() const
+        class Prism::Span<Byte>       Span() { return Prism::Span(m_Buffer.Raw(), m_Buffer.Size()); }
+        class Prism::Span<const Byte> Span() const
         {
-            return std::span<const Byte>(m_Buffer);
+            return Prism::Span(m_Buffer.Raw(), m_Buffer.Size());
         }
 
       private:

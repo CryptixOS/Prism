@@ -10,8 +10,9 @@
 #include <Prism/Memory/Endian.hpp>
 
 #include <Prism/Memory/Buffer.hpp>
+#include <Prism/Memory/Memory.hpp>
 
-#include <concepts>
+#include <Prism/Utility/Math.hpp>
 
 namespace Prism
 {
@@ -46,7 +47,7 @@ namespace Prism
             m_Size = size;
         }
 
-        inline constexpr void Advance(usize offset) { m_Offset + offset; }
+        inline constexpr void Advance(usize offset) { m_Offset += offset; }
         inline constexpr void Seek(usize offset) { m_Offset = offset; }
         inline constexpr void Skip(usize size)
         {
@@ -60,7 +61,7 @@ namespace Prism
             assert(m_Offset + sizeof(T) <= m_Size);
 
             T value;
-            std::memcpy(&value, m_Data + m_Offset, sizeof(T));
+            Memory::Copy(&value, m_Data + m_Offset, sizeof(T));
             m_Offset += sizeof(T);
 
             return ConvertEndian<E>(value);
@@ -70,7 +71,7 @@ namespace Prism
         {
             assert(m_Offset + size <= m_Size);
 
-            std::memcpy(dest, m_Data + m_Offset, size);
+            Memory::Copy(dest, m_Data + m_Offset, size);
             m_Offset += size;
         }
 
@@ -86,7 +87,7 @@ namespace Prism
         {
             assert(m_Offset + size <= m_Size);
 
-            std::memcpy(m_Data + m_Offset, data, size);
+            Memory::Copy(m_Data + m_Offset, data, size);
             m_Offset += size;
         }
         template <typename T, usize Size>
@@ -94,7 +95,8 @@ namespace Prism
         {
             assert(m_Offset + Size <= m_Size);
 
-            std::memcpy(reinterpret_cast<void*>(dest), m_Data + m_Offset, Size);
+            Memory::Copy(reinterpret_cast<void*>(dest), m_Data + m_Offset,
+                         Size);
             m_Offset += Size;
         }
 
@@ -104,7 +106,7 @@ namespace Prism
         {
             assert(m_Offset + sizeof(T) <= m_Size);
 
-            std::memcpy(&dest, m_Data + m_Offset, sizeof(T));
+            Memory::Copy(&dest, m_Data + m_Offset, sizeof(T));
             m_Offset += sizeof(T);
         }
         template <typename T>
@@ -114,7 +116,7 @@ namespace Prism
             assert(m_Offset + sizeof(T) <= m_Size);
 
             T value;
-            std::memcpy(&value, m_Data + m_Offset, sizeof(T));
+            Memory::Copy(&value, m_Data + m_Offset, sizeof(T));
 
             dest = ToEndian<E>(value);
             m_Offset += sizeof(T);

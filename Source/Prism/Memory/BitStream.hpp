@@ -12,6 +12,7 @@
 
 #include <Prism/Memory/Endian.hpp>
 #include <Prism/Memory/Pointer.hpp>
+#include <Prism/Memory/Memory.hpp>
 
 namespace Prism
 {
@@ -47,7 +48,7 @@ namespace Prism
             assert(m_CurrentPointer + sizeof(T) <= m_StreamEnd);
 
             T value;
-            std::memcpy(&value, m_CurrentPointer, sizeof(T));
+            Memory::Copy(&value, m_CurrentPointer, sizeof(T));
             m_CurrentPointer += sizeof(T);
 
             return ConvertEndian<E>(value);
@@ -62,15 +63,15 @@ namespace Prism
             usize bytesRead  = 0;
             if (m_BitCount > 0)
             {
-                auto bitsToRead = std::min(count * 8, m_BitCount);
+                auto bitsToRead = Min(count * 8, m_BitCount);
                 auto result     = ReadBits(bitsToRead);
 
                 bytesRead       = bitsToRead / 8;
-                std::memcpy(destBuffer, &result, bytesRead);
+                Memory::Copy(destBuffer, &result, bytesRead);
                 destBuffer += bytesRead;
             }
 
-            std::memcpy(destBuffer, m_CurrentPointer, count - bytesRead);
+            Memory::Copy(destBuffer, m_CurrentPointer, count - bytesRead);
             m_CurrentPointer += count - bytesRead;
 
             return count;
@@ -94,7 +95,7 @@ namespace Prism
 
             constexpr auto MAX_VALUE = NumericLimits<T>::Max();
             constexpr auto DIGITS    = NumericLimits<T>::Digits;
-            count                    = std::min(count, m_BitCount);
+            count                    = Min(count, m_BitCount);
 
             return m_BitBuffer & (MAX_VALUE >> (DIGITS - count));
         }

@@ -137,6 +137,37 @@ namespace Prism
 
     using symbol   = void*[];
     constexpr u64 Bit(u64 n) { return (1ull << n); }
+
+    template <typename T>
+    constexpr const T& Min(const T& lhs, const T& rhs)
+    {
+        return lhs < rhs ? lhs : rhs;
+    }
+    template <typename T>
+    constexpr const T& Min(std::initializer_list<T> ilist)
+    {
+        auto     it     = ilist.begin();
+        const T& result = *it++;
+        for (; it != ilist.end(); it++)
+            if (*it < result) result = *it;
+
+        return result;
+    }
+    template <typename T>
+    constexpr const T& Max(const T& lhs, const T& rhs)
+    {
+        return lhs > rhs ? lhs : rhs;
+    }
+    template <typename T>
+    constexpr const T& Max(std::initializer_list<T> ilist)
+    {
+        auto     it     = ilist.begin();
+        const T& result = *it++;
+        for (; it != ilist.end(); it++)
+            if (*it > result) result = *it;
+
+        return result;
+    }
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
