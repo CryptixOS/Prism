@@ -65,7 +65,7 @@ namespace Prism::Murmur
     }
 
     inline u64 RotateLeft(u64 x, i8 r) { return (x << r) | (x >> (64 - r)); }
-    PM_ALWAYS_INLINE inline u64 Combine(u64 k)
+    PM_ALWAYS_INLINE u64 Combine(u64 k)
     {
         k ^= k >> 33;
         k *= 0xff51'afd7'ed55'8ccdzu;
@@ -121,12 +121,12 @@ namespace Prism::Murmur
 
         switch (input.Size() & 15)
         {
-            case 15: k2 ^= ((u64)tail[14]) << 48;
-            case 14: k2 ^= ((u64)tail[13]) << 40;
-            case 13: k2 ^= ((u64)tail[12]) << 32;
-            case 12: k2 ^= ((u64)tail[11]) << 24;
-            case 11: k2 ^= ((u64)tail[10]) << 16;
-            case 10: k2 ^= ((u64)tail[9]) << 8;
+            case 15: k2 ^= ((u64)tail[14]) << 48; [[fallthrough]];
+            case 14: k2 ^= ((u64)tail[13]) << 40; [[fallthrough]];
+            case 13: k2 ^= ((u64)tail[12]) << 32; [[fallthrough]];
+            case 12: k2 ^= ((u64)tail[11]) << 24; [[fallthrough]];
+            case 11: k2 ^= ((u64)tail[10]) << 16; [[fallthrough]];
+            case 10: k2 ^= ((u64)tail[9]) << 8; [[fallthrough]];
             case 9:
                 k2 ^= ((u64)tail[8]) << 0;
                 k2 *= c2;
@@ -134,13 +134,14 @@ namespace Prism::Murmur
                 k2 *= c1;
                 h2 ^= k2;
 
-            case 8: k1 ^= ((u64)tail[7]) << 56;
-            case 7: k1 ^= ((u64)tail[6]) << 48;
-            case 6: k1 ^= ((u64)tail[5]) << 40;
-            case 5: k1 ^= ((u64)tail[4]) << 32;
-            case 4: k1 ^= ((u64)tail[3]) << 24;
-            case 3: k1 ^= ((u64)tail[2]) << 16;
-            case 2: k1 ^= ((u64)tail[1]) << 8;
+                [[fallthrough]];
+            case 8: k1 ^= ((u64)tail[7]) << 56; [[fallthrough]];
+            case 7: k1 ^= ((u64)tail[6]) << 48; [[fallthrough]];
+            case 6: k1 ^= ((u64)tail[5]) << 40; [[fallthrough]];
+            case 5: k1 ^= ((u64)tail[4]) << 32; [[fallthrough]];
+            case 4: k1 ^= ((u64)tail[3]) << 24; [[fallthrough]];
+            case 3: k1 ^= ((u64)tail[2]) << 16; [[fallthrough]];
+            case 2: k1 ^= ((u64)tail[1]) << 8; [[fallthrough]];
             case 1:
                 k1 ^= static_cast<u64>(tail[0]) << 0;
                 k1 *= c1;
