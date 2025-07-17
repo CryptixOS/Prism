@@ -9,9 +9,9 @@
 namespace Prism
 {
     bool           Path::ValidateLength() { return View().ValidateLength(); }
-    Vector<String> Path::Split(ValueType delimeter) const
+    Vector<String> Path::Split(ValueType delimiter) const
     {
-        return View().Split(delimeter);
+        return View().Split(delimiter);
     }
     StringView Path::BaseName() const { return PathView(*this).BaseName(); }
     StringView Path::ParentName() const { return PathView(*this).ParentName(); }

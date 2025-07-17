@@ -165,9 +165,9 @@ namespace Prism
             return m_Path.Copy(str, count, pos);
         }
 
-        inline Vector<String> Split(ValueType delimeter = '/') const
+        inline Vector<String> Split(ValueType delimiter = '/') const
         {
-            return m_Path.Split(delimeter);
+            return m_Path.Split(delimiter);
         }
         [[nodiscard]] constexpr StringView
         Substr(usize pos = 0, usize count = NPos) const PM_NOEXCEPT
