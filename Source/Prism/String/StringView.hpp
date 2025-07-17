@@ -63,7 +63,6 @@ namespace Prism
         template <std::contiguous_iterator It, std::sized_sentinel_for<It> End>
             requires SameAs<std::iter_value_t<It>, C>
                   && (!ConvertibleTo<End, SizeType>)
-
         constexpr explicit BasicStringView(BasicStringView&& str)
             : BasicStringView(Move(str.m_Data), Move(str.m_Size))
         {

@@ -828,7 +828,6 @@ namespace Prism
             return WString(str, size);
         }
     }; // namespace Literals
-
 }; // namespace Prism
 // hash support
 template <>

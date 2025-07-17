@@ -194,4 +194,7 @@ using Prism::upointer;
 using Prism::symbol;
 
 using Prism::Bit;
+
+using Prism::Max;
+using Prism::Min;
 #endif

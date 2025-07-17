@@ -12,7 +12,7 @@
     #define PM_NOEXCEPT
 #endif
 
-#define PM_ALWAYS_INLINE [[gnu::always_inline]]
+#define PM_ALWAYS_INLINE [[gnu::always_inline]] inline
 #define PM_NORETURN      [[noreturn]]
 #define PM_FALLTHROUGH   [[fallthrough]]
 #define PM_USED          [[gnu::used]]
