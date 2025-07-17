@@ -140,7 +140,7 @@ void String_TestCopyAndSwap()
 
 Path String_TestPath(PathView path)
 {
-    auto segments = path.SplitPath();
+    auto segments = path.Split();
     auto strings  = StringView(path).Split('/');
     for (usize i = 0; i < segments.Size(); i++)
     {
