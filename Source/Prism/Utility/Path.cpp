@@ -8,5 +8,17 @@
 
 namespace Prism
 {
-    Vector<String> Path::SplitPath() { return View().SplitPath(); }
+    bool           Path::ValidateLength() { return View().ValidateLength(); }
+    Vector<String> Path::Split(ValueType delimeter) const
+    {
+        return View().Split(delimeter);
+    }
+    StringView Path::BaseName() const { return PathView(*this).BaseName(); }
+    StringView Path::ParentName() const { return PathView(*this).ParentName(); }
+    Path       Path::ParentPath() const
+    {
+        auto view = PathView(m_Path);
+        return view.ParentPath();
+    }
+    StringView Path::Extension() const { return PathView(*this).Extension(); }
 }; // namespace Prism
