@@ -9,25 +9,10 @@
 #include <Prism/Core/Config.hpp>
 #include <Prism/Core/TypeTraits.hpp>
 
-#include <Prism/Debug/Assertions.hpp>
-#include <Prism/Utility/Atomic.hpp>
+#include <Prism/Memory/RefCounted.hpp>
 
 namespace Prism
 {
-    class RefCounted
-    {
-      public:
-        virtual ~RefCounted() { PrismAssert(m_RefCount == 0); }
-
-        usize RefCount() const { return m_RefCount.Load(); }
-
-        void  Ref() { ++m_RefCount; }
-        void  Unref() { --m_RefCount; }
-
-      private:
-        Atomic<usize> m_RefCount = 0;
-    };
-
     template <typename T>
     class Ref
     {
@@ -140,15 +125,8 @@ namespace Prism
             return m_Instance != other.m_Instance;
         }
 
-        // using List = IntrusiveList<Ref<T>>;
-
       private:
         T*             m_Instance = nullptr;
-
-        // friend class IntrusiveList<Ref<T>>;
-        // friend struct IntrusiveListHook<Ref<T>>;
-        //
-        // IntrusiveListHook<Ref<T>> Hook;
 
         constexpr void IncRef()
         {
@@ -178,5 +156,4 @@ namespace Prism
 #if PRISM_TARGET_CRYPTIX == 1
 using Prism::CreateRef;
 using Prism::Ref;
-using Prism::RefCounted;
 #endif

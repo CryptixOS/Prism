@@ -12,37 +12,35 @@
 
 namespace Prism
 {
-#ifdef PRISM_ERRNO_T
-#undef PRISM_ERRNO_T
-#endif
-#if PRISM_TARGET_CRYPTIX == 0
-    #define PRISM_ERRNO_T int
-#else 
-    #define PRISM_ERRNO_T std::errno_t
-#endif
 #ifndef Stringify
     #define Stringify(x) PrismStringify(x)
 #endif
-    // #define PRISM_EXPECTED_T   std::expected
-    // #define PRISM_UNEXPECTED_T std::unexpected
-#ifdef PRISM_EXPECTED_T
-    #undef PRISM_EXPECTED_T
+#if PRISM_TARGET_CRYPTIX != 0
+    using ErrorCode = std::errno_t;
+#else
+    using ErrorCode = i32;
 #endif
-#define PRISM_EXPECTED_T Expected
-#ifdef PRISM_UNEXPECTED_T
-    #undef PRISM_UNEXPECTED_T
-#endif
-    #define PRISM_UNEXPECTED_T Unexpected
-    using ErrorCode = PRISM_ERRNO_T;
-    using Error     = PRISM_UNEXPECTED_T<PRISM_ERRNO_T>;
+    using Error = Unexpected<ErrorCode>;
 
     template <typename R>
-    using ErrorOr = PRISM_EXPECTED_T<R, PRISM_ERRNO_T>;
-    // #endif
+    using ErrorOr = Expected<R, ErrorCode>;
 }; // namespace Prism
+
+#define PM_TryOrRetVal(expr, return_value)                                     \
+    ({                                                                         \
+        auto result = (expr);                                                  \
+        if (!result) return (return_value);                                    \
+        Prism::Move(result.Value());                                           \
+    })
+#define PM_TryOrRetCode(expr, code_on_fail)                                    \
+    PM_TryOrRetVal(expr, Error(code_on_fail))
+#define PM_TryOrRet(expr) PM_TryOrRetCode(expr, result.Error())
 
 #if PRISM_TARGET_CRYPTIX != 0
 using Prism::Error;
 using Prism::ErrorCode;
 using Prism::ErrorOr;
+    #define TryOrRetVal(expr, val)           PM_TryOrRetVal(expr, val)
+    #define TryOrRetCode(expr, code_on_fail) PM_TryOrRetCode(expr, code_on_fail)
+    #define TryOrRet(expr)                   PM_TryOrRet(expr)
 #endif

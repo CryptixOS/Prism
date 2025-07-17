@@ -570,6 +570,33 @@ namespace Prism
             return m_HasValue;
         }
 
+        constexpr const T& Value() const&
+        {
+            if (m_HasValue) [[likely]]
+                return m_Value;
+            assert(false);
+        }
+
+        constexpr T& Value() &
+        {
+            if (m_HasValue) [[likely]]
+                return m_Value;
+            assert(false);
+        }
+
+        constexpr const T&& Value() const&&
+        {
+            if (m_HasValue) [[likely]]
+                return Move(m_Value);
+            assert(false);
+        }
+
+        constexpr T&& Value() &&
+        {
+            if (m_HasValue) [[likely]]
+                return Move(m_Value);
+            assert(false);
+        }
         constexpr const T& value() const&
         {
             if (m_HasValue) [[likely]]

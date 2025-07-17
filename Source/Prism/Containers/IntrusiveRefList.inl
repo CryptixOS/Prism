@@ -127,113 +127,113 @@ namespace Prism
     }
 
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline constexpr bool
+    PM_ALWAYS_INLINE constexpr bool
     IntrusiveRefList<T, HookType>::Empty() const
     {
         return !m_Head;
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline constexpr usize
+    PM_ALWAYS_INLINE constexpr usize
     IntrusiveRefList<T, HookType>::Size() const
     {
         return m_Size;
     }
 
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline constexpr Ref<T> IntrusiveRefList<T, HookType>::Head()
+    PM_ALWAYS_INLINE constexpr Ref<T> IntrusiveRefList<T, HookType>::Head()
     {
         return m_Head;
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline constexpr const Ref<T>
+    PM_ALWAYS_INLINE constexpr const Ref<T>
     IntrusiveRefList<T, HookType>::Head() const
     {
         return m_Head;
     }
 
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline constexpr Ref<T> IntrusiveRefList<T, HookType>::Tail()
+    PM_ALWAYS_INLINE constexpr Ref<T> IntrusiveRefList<T, HookType>::Tail()
     {
         return m_Tail;
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline constexpr const Ref<T>
+    PM_ALWAYS_INLINE constexpr const Ref<T>
     IntrusiveRefList<T, HookType>::Tail() const
     {
         return m_Tail;
     }
 
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline IntrusiveRefList<T, HookType>::Iterator
+    PM_ALWAYS_INLINE IntrusiveRefList<T, HookType>::Iterator
     IntrusiveRefList<T, HookType>::begin()
     {
         return Iterator(m_Head);
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline const IntrusiveRefList<T, HookType>::Iterator
+    PM_ALWAYS_INLINE const IntrusiveRefList<T, HookType>::Iterator
     IntrusiveRefList<T, HookType>::begin() const
     {
         return Iterator(m_Head);
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline const IntrusiveRefList<T, HookType>::Iterator
+    PM_ALWAYS_INLINE const IntrusiveRefList<T, HookType>::Iterator
     IntrusiveRefList<T, HookType>::cbegin() const PM_NOEXCEPT
     {
         return Iterator(m_Head);
     }
 
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline IntrusiveRefList<T, HookType>::Iterator
+    PM_ALWAYS_INLINE IntrusiveRefList<T, HookType>::Iterator
     IntrusiveRefList<T, HookType>::end()
     {
         return Iterator(nullptr);
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline const IntrusiveRefList<T, HookType>::Iterator
+    PM_ALWAYS_INLINE const IntrusiveRefList<T, HookType>::Iterator
     IntrusiveRefList<T, HookType>::end() const
     {
         return Iterator(nullptr);
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline const IntrusiveRefList<T, HookType>::Iterator
+    PM_ALWAYS_INLINE const IntrusiveRefList<T, HookType>::Iterator
     IntrusiveRefList<T, HookType>::cend() const PM_NOEXCEPT
     {
         return Iterator(nullptr);
     }
 
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline IntrusiveRefList<T, HookType>::ReverseIterator
+    PM_ALWAYS_INLINE IntrusiveRefList<T, HookType>::ReverseIterator
     IntrusiveRefList<T, HookType>::rbegin()
     {
         return Iterator(nullptr);
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline const IntrusiveRefList<T, HookType>::ReverseIterator
+    PM_ALWAYS_INLINE const IntrusiveRefList<T, HookType>::ReverseIterator
     IntrusiveRefList<T, HookType>::rbegin() const
     {
         return Iterator(nullptr);
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline const IntrusiveRefList<T, HookType>::ReverseIterator
+    PM_ALWAYS_INLINE const IntrusiveRefList<T, HookType>::ReverseIterator
     IntrusiveRefList<T, HookType>::crbegin() const PM_NOEXCEPT
     {
         return Iterator(nullptr);
     }
 
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline IntrusiveRefList<T, HookType>::ReverseIterator
+    PM_ALWAYS_INLINE IntrusiveRefList<T, HookType>::ReverseIterator
     IntrusiveRefList<T, HookType>::rend()
     {
         return Iterator(m_Head);
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline const IntrusiveRefList<T, HookType>::ReverseIterator
+    PM_ALWAYS_INLINE const IntrusiveRefList<T, HookType>::ReverseIterator
     IntrusiveRefList<T, HookType>::rend() const
     {
         return Iterator(m_Head);
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE inline const IntrusiveRefList<T, HookType>::ReverseIterator
+    PM_ALWAYS_INLINE const IntrusiveRefList<T, HookType>::ReverseIterator
     IntrusiveRefList<T, HookType>::crend() const PM_NOEXCEPT
     {
         return Iterator(m_Head);

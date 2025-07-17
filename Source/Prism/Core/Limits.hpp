@@ -85,31 +85,37 @@ namespace Prism
 
         constexpr static T    Min()
         {
-            return IsSignedV<T> ? T(1) << (::Prism::Digits<T>() - 1) : T(0);
+            if constexpr (!IsSignedV<T>) return 0;
+
+            return -Max() - 1;
         }
-        constexpr static T    Max() { return ~T(0) >> (IsSignedV<T> ? 1 : 0); }
-        constexpr static T    Lowest() { return Min(); }
+        constexpr static T Max()
+        {
+            return static_cast<T>(typename MakeUnsigned<T>::Type(~0)
+                                  >> IsSignedV<T>);
+        }
+        constexpr static T                Lowest() { return Min(); }
 
-        constexpr static i32  Digits      = ::Prism::Digits<T>;
-        constexpr static i32  Digits10    = ::Prism::Digits10<T>;
-        constexpr static i32  MaxDigits10 = 0;
+        constexpr static i32              Digits      = ::Prism::Digits<T>;
+        constexpr static i32              Digits10    = ::Prism::Digits10<T>;
+        constexpr static i32              MaxDigits10 = 0;
 
-        constexpr static bool IsSigned    = IsSignedV<T>;
-        constexpr static bool IsInteger   = true;
-        constexpr static bool IsExact     = true;
-        constexpr static i32  Radix       = 2;
+        constexpr static bool             IsSigned    = IsSignedV<T>;
+        constexpr static bool             IsInteger   = true;
+        constexpr static bool             IsExact     = true;
+        constexpr static i32              Radix       = 2;
 
-        constexpr static T    Epsilon() { return T(0); }
-        constexpr static T    RoundError() { return T(0); }
+        constexpr static T                Epsilon() { return T(0); }
+        constexpr static T                RoundError() { return T(0); }
 
-        constexpr static i32  MinExponent           = 0;
-        constexpr static i32  MinExponent10         = 0;
-        constexpr static i32  MaxExponent           = 0;
-        constexpr static i32  MaxExponent10         = 0;
+        constexpr static i32              MinExponent     = 0;
+        constexpr static i32              MinExponent10   = 0;
+        constexpr static i32              MaxExponent     = 0;
+        constexpr static i32              MaxExponent10   = 0;
 
-        constexpr static bool HasInfinity           = false;
-        constexpr static bool HasQuietNaN           = false;
-        constexpr static bool HasSignalingNaN       = false;
+        constexpr static bool             HasInfinity     = false;
+        constexpr static bool             HasQuietNaN     = false;
+        constexpr static bool             HasSignalingNaN = false;
         constexpr static FloatDenormStyle HasDenorm = FloatDenormStyle::eAbsent;
         constexpr static bool             HasDenormLoss = false;
 

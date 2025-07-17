@@ -134,44 +134,44 @@ namespace Prism
         constexpr IntrusiveRefList& operator=(IntrusiveRefList&& other);
 
         /// @brief Returns whether the list is empty.
-        PM_ALWAYS_INLINE inline constexpr bool         Empty() const;
+        PM_ALWAYS_INLINE constexpr bool         Empty() const;
         /// @brief Returns the number of elements in the list.
-        PM_ALWAYS_INLINE inline constexpr usize        Size() const;
+        PM_ALWAYS_INLINE constexpr usize        Size() const;
 
         /// @brief Returns pointer to the head node.
-        PM_ALWAYS_INLINE inline constexpr Ref<T>       Head();
+        PM_ALWAYS_INLINE constexpr Ref<T>       Head();
         /// @brief Const-qualified version of Head().
-        PM_ALWAYS_INLINE inline constexpr const Ref<T> Head() const;
+        PM_ALWAYS_INLINE constexpr const Ref<T> Head() const;
 
         /// @brief Returns pointer to the tail node.
-        PM_ALWAYS_INLINE inline constexpr Ref<T>       Tail();
+        PM_ALWAYS_INLINE constexpr Ref<T>       Tail();
         /// @brief Const-qualified version of Tail().
-        PM_ALWAYS_INLINE inline constexpr const Ref<T> Tail() const;
+        PM_ALWAYS_INLINE constexpr const Ref<T> Tail() const;
 
         /// @name Forward Iterators
         /// @{
 
-        PM_ALWAYS_INLINE inline Iterator               begin();
-        PM_ALWAYS_INLINE inline const Iterator         begin() const;
-        PM_ALWAYS_INLINE inline const Iterator  cbegin() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE Iterator               begin();
+        PM_ALWAYS_INLINE const Iterator         begin() const;
+        PM_ALWAYS_INLINE const Iterator  cbegin() const PM_NOEXCEPT;
 
-        PM_ALWAYS_INLINE inline Iterator        end();
-        PM_ALWAYS_INLINE inline const Iterator  end() const;
-        PM_ALWAYS_INLINE inline const Iterator  cend() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE Iterator        end();
+        PM_ALWAYS_INLINE const Iterator  end() const;
+        PM_ALWAYS_INLINE const Iterator  cend() const PM_NOEXCEPT;
 
         /// @}
 
         /// @name Reverse Iterators
         /// @{
 
-        PM_ALWAYS_INLINE inline ReverseIterator rbegin();
-        PM_ALWAYS_INLINE inline const ReverseIterator rbegin() const;
-        PM_ALWAYS_INLINE inline const ReverseIterator
+        PM_ALWAYS_INLINE ReverseIterator rbegin();
+        PM_ALWAYS_INLINE const ReverseIterator rbegin() const;
+        PM_ALWAYS_INLINE const ReverseIterator
                                                 crbegin() const PM_NOEXCEPT;
 
-        PM_ALWAYS_INLINE inline ReverseIterator rend();
-        PM_ALWAYS_INLINE inline const ReverseIterator rend() const;
-        PM_ALWAYS_INLINE inline const ReverseIterator crend() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE ReverseIterator rend();
+        PM_ALWAYS_INLINE const ReverseIterator rend() const;
+        PM_ALWAYS_INLINE const ReverseIterator crend() const PM_NOEXCEPT;
 
         /// @}
 

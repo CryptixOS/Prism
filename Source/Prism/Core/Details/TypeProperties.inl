@@ -536,6 +536,31 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
+using Prism::IsVoidV;
+using Prism::IsIntegralV;
+using Prism::IsArrayV;
+using Prism::IsEnumV;
+using Prism::IsUnionV;
+using Prism::IsClassV;
+using Prism::IsReferenceV;
+using Prism::IsConstV;
+using Prism::IsFunctionV;
+using Prism::IsMemberPointerV;
+using Prism::IsMemberFunctionPointerV;
+using Prism::IsArithmeticV;
+using Prism::IsScalarV;
+using Prism::IsObjectV;
+using Prism::IsCompoundV;
+using Prism::IsVolatileV;
+using Prism::IsTriviallyCopyableV;
+using Prism::IsStandardLayoutV;
+using Prism::IsEmptyV;
+using Prism::IsPolymorphicV;
+using Prism::IsAbstractV;
+using Prism::IsFinalV;
+using Prism::IsAggregateV;
+using Prism::IsUnsignedV;
 using Prism::IsEnumV;
 using Prism::IsPointerV;
+using Prism::IsSignedV;
 #endif

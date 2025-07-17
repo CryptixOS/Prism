@@ -76,7 +76,7 @@ subdir('Source')
 subdir('Tests')
 
 pkg = import('pkgconfig')
-prism = library('prism',
+prism = static_library('prism',
   srcs, cpp_args: cxx_args,
   include_directories: incs,
   dependencies: deps,

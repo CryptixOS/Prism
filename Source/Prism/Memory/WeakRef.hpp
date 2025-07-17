@@ -24,6 +24,9 @@ namespace Prism
         WeakRef(Ref<T> ref) { m_Instance = ref.Raw(); }
         WeakRef(T* instance) { m_Instance = instance; }
 
+        constexpr WeakRef&  operator=(const WeakRef& ref) PM_NOEXCEPT = default;
+        constexpr WeakRef&  operator=(WeakRef&& ref) PM_NOEXCEPT = default;
+
         inline constexpr T* Raw() const { return m_Instance; }
 
         T*                  operator->() { return m_Instance; }
