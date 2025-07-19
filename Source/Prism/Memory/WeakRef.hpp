@@ -25,7 +25,7 @@ namespace Prism
         WeakRef(T* instance) { m_Instance = instance; }
 
         constexpr WeakRef&  operator=(const WeakRef& ref) PM_NOEXCEPT = default;
-        constexpr WeakRef&  operator=(WeakRef&& ref) PM_NOEXCEPT = default;
+        constexpr WeakRef&  operator=(WeakRef&& ref) PM_NOEXCEPT      = default;
 
         inline constexpr T* Raw() const { return m_Instance; }
 
@@ -42,6 +42,7 @@ namespace Prism
         {
             return WeakRef<U>(reinterpret_cast<U*>(m_Instance));
         }
+        constexpr Ref<T> Promote() const { return Ref<T>(m_Instance); }
 
       private:
         T* m_Instance = nullptr;
