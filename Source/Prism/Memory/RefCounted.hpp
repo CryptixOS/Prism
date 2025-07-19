@@ -21,8 +21,8 @@ namespace Prism
         void  Ref() { ++m_RefCount; }
         void  Unref() { --m_RefCount; }
 
-      private:
-        Atomic<usize> m_RefCount = 0;
+      protected:
+        mutable Atomic<usize> m_RefCount = 0;
     };
 }; // namespace Prism
 

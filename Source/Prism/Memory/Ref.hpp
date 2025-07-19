@@ -125,8 +125,10 @@ namespace Prism
             return m_Instance != other.m_Instance;
         }
 
-      private:
-        T*             m_Instance = nullptr;
+      protected:
+        template <class U>
+        friend class Ref;
+        mutable T*     m_Instance = nullptr;
 
         constexpr void IncRef()
         {
