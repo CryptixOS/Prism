@@ -93,9 +93,9 @@ namespace Prism
             }
 
             /// @brief Dereference operator.
-            constexpr T&        operator*() { return *Current; }
+            constexpr Ref<T>    operator*() { return Current; }
             /// @brief Arrow operator.
-            constexpr Ref<T>    operator->() { return Current; }
+            constexpr T&        operator->() { return *Current; }
 
             /// @brief Prefix increment.
             constexpr Iterator& operator++();
@@ -153,32 +153,31 @@ namespace Prism
 
         PM_ALWAYS_INLINE Iterator               begin();
         PM_ALWAYS_INLINE const Iterator         begin() const;
-        PM_ALWAYS_INLINE const Iterator  cbegin() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE const Iterator         cbegin() const PM_NOEXCEPT;
 
-        PM_ALWAYS_INLINE Iterator        end();
-        PM_ALWAYS_INLINE const Iterator  end() const;
-        PM_ALWAYS_INLINE const Iterator  cend() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE Iterator               end();
+        PM_ALWAYS_INLINE const Iterator         end() const;
+        PM_ALWAYS_INLINE const Iterator         cend() const PM_NOEXCEPT;
 
         /// @}
 
         /// @name Reverse Iterators
         /// @{
 
-        PM_ALWAYS_INLINE ReverseIterator rbegin();
-        PM_ALWAYS_INLINE const ReverseIterator rbegin() const;
-        PM_ALWAYS_INLINE const ReverseIterator
-                                                crbegin() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE ReverseIterator        rbegin();
+        PM_ALWAYS_INLINE const ReverseIterator  rbegin() const;
+        PM_ALWAYS_INLINE const ReverseIterator  crbegin() const PM_NOEXCEPT;
 
-        PM_ALWAYS_INLINE ReverseIterator rend();
-        PM_ALWAYS_INLINE const ReverseIterator rend() const;
-        PM_ALWAYS_INLINE const ReverseIterator crend() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE ReverseIterator        rend();
+        PM_ALWAYS_INLINE const ReverseIterator  rend() const;
+        PM_ALWAYS_INLINE const ReverseIterator  crend() const PM_NOEXCEPT;
 
         /// @}
 
         /**
          * @brief Removes all elements from the list.
          */
-        constexpr void                                Clear();
+        constexpr void                          Clear();
 
         /**
          * @brief Constructs and inserts a node at the front.
