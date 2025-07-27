@@ -70,21 +70,18 @@ namespace Prism
             : m_Instance(instance)
         {
         }
-        template <typename U>
-        constexpr Scope(U instance)
-            : m_Instance(reinterpret_cast<T*>(instance))
-        {
-        }
 
         Scope(Scope&& other)
             : m_Instance(other.Release())
         {
+            other.m_Instance = nullptr;
         }
 
         template <typename U>
         Scope(Scope<U>&& other)
             : m_Instance(other.Release())
         {
+            other.m_Instance = nullptr;
         }
 
         Scope(Scope const&) = delete;
@@ -149,16 +146,18 @@ namespace Prism
 
         Scope& operator=(Scope&& other)
         {
-            Scope ptr(Move(other));
-            Swap(ptr);
+            m_Instance       = Move(other.m_Instance);
+            other.m_Instance = nullptr;
+
             return *this;
         }
 
         template <typename U>
         Scope& operator=(Scope<U>&& other)
         {
-            Scope ptr(Move(other));
-            Swap(ptr);
+            m_Instance       = reinterpret_cast<T*>(Move(other.m_Instance));
+            other.m_Instance = nullptr;
+
             return *this;
         }
 
@@ -200,21 +199,17 @@ namespace Prism
             : m_Instance(instance)
         {
         }
-        template <typename U>
-        constexpr Scope(U instance)
-            : m_Instance(reinterpret_cast<T*>(instance))
-        {
-        }
-
         Scope(Scope&& other)
             : m_Instance(other.Release())
         {
+            other.m_Instance = nullptr;
         }
 
         template <typename U>
-        Scope(Scope<U>&& other)
+        Scope(Scope<U>& other)
             : m_Instance(other.Release())
         {
+            other.m_Instance = nullptr;
         }
 
         Scope(Scope const&) = delete;
@@ -229,7 +224,10 @@ namespace Prism
         template <typename U>
         Scope(WeakRef<U> const&) = delete;
 
-        ~Scope() { Reset(); }
+        ~Scope()
+        {
+            Reset();
+        }
 
         T*   Release() PM_NOEXCEPT { return Exchange(m_Instance, nullptr); }
         void Reset(T* instance = nullptr) PM_NOEXCEPT
@@ -279,16 +277,18 @@ namespace Prism
 
         Scope& operator=(Scope&& other)
         {
-            Scope ptr(Move(other));
-            Swap(ptr);
+            m_Instance       = Move(other.m_Instance);
+            other.m_Instance = nullptr;
+
             return *this;
         }
 
         template <typename U>
         Scope& operator=(Scope<U>&& other)
         {
-            Scope ptr(Move(other));
-            Swap(ptr);
+            m_Instance       = reinterpret_cast<T*>(Move(other.m_Instance));
+            other.m_Instance = nullptr;
+
             return *this;
         }
 
@@ -313,8 +313,15 @@ namespace Prism
       private:
         T* m_Instance = nullptr;
     };
+
+    template <typename T, typename... Args>
+    constexpr Scope<T> CreateScope(Args&&... args)
+    {
+        return Scope<T>(new T(Forward<Args>(args)...));
+    }
 }; // namespace Prism
 
 #ifdef PRISM_TARGET_CRYPTIX
+using Prism::CreateScope;
 using Prism::Scope;
 #endif
