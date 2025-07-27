@@ -20,6 +20,9 @@ namespace Prism
     Invoke(Functor&& fn, Args&&... args)
         PM_NOEXCEPT(IsNoThrowInvocable<Functor, Args...>::Value);
 
+    template <typename F, typename... Args>
+    constexpr auto GetInvokeTag(F&& f, Args&&...);
+
     namespace Details
     {
         template <typename T>
@@ -75,6 +78,8 @@ namespace Prism
         {
             using Type
                 = decltype(Details::Invoke(DeclVal<F>(), DeclVal<Args>()...));
+            using InvokeType
+                = decltype(GetInvokeTag(DeclVal<F>(), DeclVal<Args>()...));
         };
     } // namespace Details
 
@@ -84,11 +89,15 @@ namespace Prism
     struct ResultOf<F(ArgTypes...)>
         : Details::InvokeResult<void, F, ArgTypes...>
     {
+        using InvokeType
+            = decltype(GetInvokeTag(DeclVal<F>(), DeclVal<ArgTypes>()...));
     };
 
     template <typename F, typename... ArgTypes>
     struct InvokeResult : Details::InvokeResult<void, F, ArgTypes...>
     {
+        using InvokeType
+            = decltype(GetInvokeTag(DeclVal<F>(), DeclVal<ArgTypes>()...));
     };
     template <typename T>
     using ResulfOfType = typename ResultOf<T>::Type;
@@ -122,6 +131,16 @@ namespace Prism
         using Type = U&;
     };
 
+    template <typename F, typename... Args>
+    constexpr auto GetInvokeTag(F&& f, Args&&...)
+    {
+        if constexpr (IsMemberFunctionPointer<DecayType<F>>::Value)
+            return InvokeMemFunRef{};
+        else if constexpr (IsMemberObjectPointer<DecayType<F>>::Value)
+            return InvokeMemObjRef{};
+        else return InvokeOther{};
+    }
+
     template <typename Fn, typename T, typename... Args>
     constexpr bool CallIsNtHelper(InvokeMemFunRef)
     {
@@ -147,14 +166,20 @@ namespace Prism
         return noexcept((*DeclVal<T>()).*DeclVal<Fn>());
     }
 
-    template <typename Fn, typename... _Args>
+    template <typename Fn, typename... Args>
     constexpr bool CallIsNtHelper(InvokeOther)
     {
-        return noexcept(DeclVal<Fn>()(DeclVal<_Args>()...));
+        return noexcept(DeclVal<Fn>()(DeclVal<Args>()...));
     }
 
+    template <typename Fn, typename T, typename... Args>
+    constexpr bool __CallIsNt(InvokeMemFunRef)
+    {
+        using U = typename InvUnwrap<T>::Type;
+        return noexcept((DeclVal<U>().*DeclVal<Fn>())(DeclVal<Args>()...));
+    }
     template <typename Result, typename Fn, typename... Args>
-    struct CallIsNt : BooleanConstant<std::__call_is_nt<Fn, Args...>(
+    struct CallIsNt : BooleanConstant<__CallIsNt<Fn, Args...>(
                           typename Result::InvokeType{})>
     {
     };
@@ -273,3 +298,7 @@ namespace Prism
     inline constexpr bool IsNoThrowInvocableRV
         = IsNoThrowInvocableR<R, Fn, Args...>::Value;
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::Invoke;
+#endif

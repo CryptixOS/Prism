@@ -168,3 +168,9 @@ namespace Prism
     template <typename T>
     inline constexpr bool IsReferenceV = IsReference<T>::Value;
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::RemoveCvRefType;
+using Prism::RemoveReference;
+using Prism::RemoveReferenceType;
+#endif

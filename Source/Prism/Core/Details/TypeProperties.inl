@@ -551,6 +551,7 @@ using Prism::IsArrayV;
 using Prism::IsClassV;
 using Prism::IsCompoundV;
 using Prism::IsConstV;
+using Prism::IsConvertibleV;
 using Prism::IsEmptyV;
 using Prism::IsEnumV;
 using Prism::IsFinalV;

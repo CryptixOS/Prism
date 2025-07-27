@@ -459,7 +459,7 @@ namespace Prism
         constexpr ReferenceWrapper(U&& u) noexcept(
             noexcept(Details::CopyConstruct<T>(Forward<U>(u))))
             : m_Pointer(
-                  std::addressof(Details::CopyConstruct<T>(Forward<U>(u))))
+                  AddressOf(Details::CopyConstruct<T>(Forward<U>(u))))
         {
         }
         ReferenceWrapper(const ReferenceWrapper&) PM_NOEXCEPT = default;

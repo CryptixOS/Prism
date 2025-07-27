@@ -32,10 +32,12 @@ namespace Prism
             return static_cast<U&&>(value);
         }
 
-        template <typename ResultType, typename _Fn, typename... Args>
-        constexpr ResultType DoInvoke(InvokeOther, _Fn&& fn, Args&&... args)
+        template <typename ResultType, typename Fn, typename... Args>
+        constexpr ResultType DoInvoke(InvokeOther, Fn&& fn, Args&&... args)
         {
-            return Forward<_Fn>(fn)(Forward<Args>(args)...);
+            if constexpr (IsVoidV<ResultType>)
+                Forward<Fn>(fn)(Forward<Args>(args)...);
+            else return Forward<Fn>(fn)(Forward<Args>(args)...);
         }
 
         template <typename ResultType, typename MemFun, typename T,
@@ -43,7 +45,9 @@ namespace Prism
         constexpr ResultType DoInvoke(InvokeMemFunRef, MemFun&& fn, T&& arg,
                                       Args&&... args)
         {
-            return (ToLValueRef<T>(arg).*fn)(Forward<Args>(args)...);
+            if constexpr (IsVoidV<ResultType>)
+                (ToLValueRef<T>(arg).*fn)(Forward<Args>(args)...);
+            else return (ToLValueRef<T>(arg).*fn)(Forward<Args>(args)...);
         }
 
         template <typename ResultType, typename MemFun, typename T,
@@ -51,13 +55,16 @@ namespace Prism
         constexpr ResultType DoInvoke(InvokeMemFunDeref, MemFun&& fn, T&& arg,
                                       Args&&... args)
         {
-            return ((*Forward<T>(arg)).*fn)(Forward<Args>(args)...);
+            if constexpr (IsVoidV<ResultType>)
+                ((*Forward<T>(arg)).*fn)(Forward<Args>(args)...);
+            else return ((*Forward<T>(arg)).*fn)(Forward<Args>(args)...);
         }
 
         template <typename ResultType, typename MemPtr, typename T>
         constexpr ResultType DoInvoke(InvokeMemObjRef, MemPtr&& fn, T&& arg)
         {
-            return ToLValueRef<T>(arg).*fn;
+            if constexpr (IsVoidV<ResultType>) ToLValueRef<T>(arg).*fn;
+            else return ToLValueRef<T>(arg).*fn;
         }
 
         template <typename ResultType, typename MemPtr, typename T>
@@ -73,10 +80,15 @@ namespace Prism
         {
             using Result = InvokeResult<Functor, Args...>;
             using Type   = typename Result::Type;
-            using Tag    = typename Result::InvokeResultType;
+            using Tag    = decltype(GetInvokeTag(DeclVal<Functor>(),
+                                                 DeclVal<Args>()...));
 
-            return DoInvoke<Type>(Tag{}, Forward<Functor>(fn),
-                                  Forward<Args>(args)...);
+            if constexpr (IsVoidV<InvokeResultType<Functor, Args...>>)
+                DoInvoke<Type>(Tag{}, Forward<Functor>(fn),
+                               Forward<Args>(args)...);
+            else
+                return DoInvoke<Type>(Tag{}, Forward<Functor>(fn),
+                                      Forward<Args>(args)...);
         }
     }; // namespace Details
 
@@ -229,8 +241,8 @@ namespace Prism
 
         inline void Swap(Delegate& other) PM_NOEXCEPT
         {
-            std::swap(m_Functor.Object, other.m_Functor.Object);
-            std::swap(m_Functor.Stub, other.m_Functor.Stub);
+            Swap(m_Functor.Object, other.m_Functor.Object);
+            Swap(m_Functor.Stub, other.m_Functor.Stub);
         }
 
         template <Ret (*Function)(Args...)>
@@ -242,7 +254,7 @@ namespace Prism
         template <typename Lambda>
         void BindLambda(Lambda&& lambda)
         {
-            using Decayed = std::decay_t<Lambda>;
+            using Decayed = DecayType<Lambda>;
 
             if constexpr (sizeof(Decayed) <= SBO_SIZE)
             {
@@ -290,14 +302,14 @@ namespace Prism
         void Reset()
         {
             m_Functor.Reset();
-            std::memset(m_Storage, 0, SBO_SIZE);
+            Memory::Fill(m_Storage, 0, SBO_SIZE);
         }
 
       private:
         static constexpr usize SBO_SIZE  = 32;
 
         Functor                m_Functor = nullptr;
-        alignas(void*) std::byte m_Storage[SBO_SIZE];
+        alignas(void*) u8 m_Storage[SBO_SIZE];
 
         void Assign(ObjectType object, FunctionType stub,
                     void (*destroy)(void*) = nullptr)
@@ -313,7 +325,7 @@ namespace Prism
             if (other.m_Functor.Object == other.m_Storage)
             {
                 // Copy lambda stored in SBO
-                std::memcpy(m_Storage, other.m_Storage, SBO_SIZE);
+                Memory::Copy(m_Storage, other.m_Storage, SBO_SIZE);
                 m_Functor.Object = m_Storage;
             }
             else if (other.m_Functor.Object)
@@ -334,7 +346,7 @@ namespace Prism
             m_Functor = other.m_Functor;
             if (other.m_Functor.Object == other.m_Storage)
             {
-                std::memcpy(m_Storage, other.m_Storage, SBO_SIZE);
+                Memory::Copy(m_Storage, other.m_Storage, SBO_SIZE);
                 m_Functor.Object = m_Storage;
             }
             other.m_Functor = Functor();

@@ -6,8 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Core/TypeTraits.hpp>
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/Core.hpp>
 
 namespace Prism
 {
@@ -102,7 +101,7 @@ namespace Prism
         struct TupleIsConstructible
         {
             static constexpr bool Value
-                = std::is_constructible<
+                = IsConstructible<
                       typename TupleArgumentType<Index, Types...>::Type,
                       typename TupleArgumentType<Index, UTypes...>::Type>::Value
                && TupleIsConstructible<Index - 1, UTypes...>::Value;
@@ -111,7 +110,7 @@ namespace Prism
         template <typename... UTypes>
         struct TupleIsConstructible<0, UTypes...>
         {
-            static constexpr bool Value = std::is_constructible<
+            static constexpr bool Value = IsConstructible<
                 typename TupleArgumentType<0, Types...>::Type,
                 typename TupleArgumentType<0, UTypes...>::Type>::Value;
         };
@@ -335,14 +334,13 @@ namespace Prism
     template <typename F, typename... Args>
     auto Apply(F functor, const Tuple<Args...>& args)
     {
-        return Apply(Move(functor), args, std::index_sequence_for<Args...>());
+        return Apply(Move(functor), args, IndexSequenceFor<Args...>());
     }
 
     template <typename F, typename... Args>
     auto Apply(F functor, Tuple<Args...>&& args)
     {
-        return Apply(Move(functor), Move(args),
-                     std::index_sequence_for<Args...>());
+        return Apply(Move(functor), Move(args), IndexSequenceFor<Args...>());
     }
 
     template <typename... Tuples,
@@ -354,3 +352,9 @@ namespace Prism
         return Concatenator::DoConcat(Forward<Tuples>(args)...);
     }
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::Apply;
+using Prism::Tuple;
+using Prism::TupleConcatenate;
+#endif
