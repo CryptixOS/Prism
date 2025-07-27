@@ -8,18 +8,17 @@
 
 #include <format>
 #include <iostream>
-#include <print>
 #include <stacktrace>
 
 #define DumpTrace()                                                            \
     {                                                                          \
-        std::print(std::cout, "{}\n", std::stacktrace::current());             \
+        std::cout << std::format("{}\n", std::stacktrace::current());             \
     }
 #define PrismTestEq(condition)                                                 \
     {                                                                          \
         if (!(condition))                                                      \
         {                                                                      \
-            std::print(std::cout, "`{}` failed\n", #condition);                \
+            std::cout << std::format("`{}` failed\n", #condition);                \
             DumpTrace();                                                       \
             std::terminate();                                                  \
         }                                                                      \
