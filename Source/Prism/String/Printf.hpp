@@ -9,6 +9,8 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/StringView.hpp>
 
+#include <stdarg.h>
+
 namespace Prism
 {
     namespace Printf
