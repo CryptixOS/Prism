@@ -71,8 +71,7 @@ namespace Prism
     template <typename T>
     concept FloatingPoint = IsFloatingPointV<T>;
 #endif
-    template <class LHS, class RHS>
-
+    template <typename LHS, typename RHS>
     concept AssignableFrom
         = IsLValueReferenceV<LHS>
        && CommonReferenceWith<const RemoveReferenceType<LHS>&,
