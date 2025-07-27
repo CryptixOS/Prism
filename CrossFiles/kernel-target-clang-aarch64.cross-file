@@ -12,8 +12,8 @@ pkg-config = 'pkg-config'
 cmake = 'cmake'
 
 [built-in options]
-c_args = ['-target', 'aarch64-none-elf']
-cpp_args = ['-target', 'aarch64-none-elf']
+c_args = ['-target', 'aarch64-linux-elf']
+cpp_args = ['-target', 'aarch64-linux-elf']
 cpp_eh = 'none'
 cpp_rtti = 'false'
 
