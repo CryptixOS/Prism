@@ -12,13 +12,13 @@
 
 #define DumpTrace()                                                            \
     {                                                                          \
-        std::cout << std::format("{}\n", std::stacktrace::current());             \
+        std::cout << std::stacktrace::current() << std::endl;                  \
     }
 #define PrismTestEq(condition)                                                 \
     {                                                                          \
         if (!(condition))                                                      \
         {                                                                      \
-            std::cout << std::format("`{}` failed\n", #condition);                \
+            std::cout << "`" << #condition << "` failed\n";                    \
             DumpTrace();                                                       \
             std::terminate();                                                  \
         }                                                                      \
