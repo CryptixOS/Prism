@@ -306,10 +306,12 @@ namespace Prism
     {
     };
 #endif
+#if __has_builtin(__is_scoped_enum)
     template <typename T>
     struct IsScopedEnum : BooleanConstant<__is_scoped_enum(T)>
     {
     };
+#endif
 
     namespace Details
     {
@@ -516,8 +518,10 @@ namespace Prism
     constexpr bool IsUnboundedArrayV = IsUnboundedArray<T>::Value;
 #endif
 
+#if __has_builtin(__is_scoped_enum)
     template <typename T>
     constexpr bool IsScopedEnumV = IsScopedEnum<T>::Value;
+#endif
 
     template <typename Base, typename Derived>
     constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::Value;
@@ -540,31 +544,30 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::IsVoidV;
-using Prism::IsIntegralV;
-using Prism::IsArrayV;
-using Prism::IsEnumV;
-using Prism::IsUnionV;
-using Prism::IsClassV;
-using Prism::IsReferenceV;
-using Prism::IsConstV;
-using Prism::IsFunctionV;
-using Prism::IsMemberPointerV;
-using Prism::IsMemberFunctionPointerV;
-using Prism::IsArithmeticV;
-using Prism::IsScalarV;
-using Prism::IsObjectV;
-using Prism::IsCompoundV;
-using Prism::IsVolatileV;
-using Prism::IsTriviallyCopyableV;
-using Prism::IsStandardLayoutV;
-using Prism::IsEmptyV;
-using Prism::IsPolymorphicV;
 using Prism::IsAbstractV;
-using Prism::IsFinalV;
 using Prism::IsAggregateV;
-using Prism::IsUnsignedV;
+using Prism::IsArithmeticV;
+using Prism::IsArrayV;
+using Prism::IsClassV;
+using Prism::IsCompoundV;
+using Prism::IsConstV;
+using Prism::IsEmptyV;
 using Prism::IsEnumV;
+using Prism::IsFinalV;
+using Prism::IsFunctionV;
+using Prism::IsIntegralV;
+using Prism::IsMemberFunctionPointerV;
+using Prism::IsMemberPointerV;
+using Prism::IsObjectV;
 using Prism::IsPointerV;
+using Prism::IsPolymorphicV;
+using Prism::IsReferenceV;
+using Prism::IsScalarV;
 using Prism::IsSignedV;
+using Prism::IsStandardLayoutV;
+using Prism::IsTriviallyCopyableV;
+using Prism::IsUnionV;
+using Prism::IsUnsignedV;
+using Prism::IsVoidV;
+using Prism::IsVolatileV;
 #endif
