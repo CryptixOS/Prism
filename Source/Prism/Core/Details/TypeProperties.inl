@@ -294,10 +294,12 @@ namespace Prism
         : Conjunction<IsArithmetic<T>, Negation<IsSigned<T>>>::Type
     {
     };
+#if __has_builtin(__is_bounded_array)
     template <typename T>
     struct IsBoundedArray : BooleanConstant<__is_bounded_array(T)>
     {
     };
+#endif
 #if __has_builtin(__is_unbounded_array)
     template <typename T>
     struct IsUnboundedArray : BooleanConstant<__is_unbounded_array(T)>
@@ -504,8 +506,10 @@ namespace Prism
     constexpr bool IsSignedV = IsSigned<T>::Value;
     template <typename T>
     constexpr bool IsUnsignedV = IsUnsigned<T>::Value;
+#if __has_builtin(__is_bounded_array)
     template <typename T>
     constexpr bool IsBoundedArrayV = IsBoundedArray<T>::Value;
+#endif
 
 #if __has_builtin(__is_unbounded_array)
     template <typename T>
