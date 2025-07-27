@@ -8,6 +8,7 @@
 
 #include <format>
 #include <iostream>
+#include <print>
 #include <stacktrace>
 
 #define DumpTrace()                                                            \
@@ -33,5 +34,5 @@ namespace Prism
 
       private:
     };
-    
+
 }; // namespace Prism
