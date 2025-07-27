@@ -12,8 +12,8 @@ pkg-config = 'pkg-config'
 cmake = 'cmake'
 
 [built-in options]
-c_args = ['-target', 'aarch64-linux-gnu']
-cpp_args = ['-target', 'aarch64-linux-gnu']
+c_args = ['-target', 'aarch64-linux-gnu', '-I/usr/aarch64-linux-gnu/include']
+cpp_args = ['-target', 'aarch64-linux-gnu', '-I/usr/aarch64-linux-gnu/include']
 cpp_eh = 'none'
 cpp_rtti = 'false'
 
