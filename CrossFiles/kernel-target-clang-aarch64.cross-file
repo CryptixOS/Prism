@@ -13,7 +13,7 @@ cmake = 'cmake'
 
 [built-in options]
 c_args = ['-target', 'aarch64-linux-gnu', '-I/usr/aarch64-linux-gnu/include']
-cpp_args = ['-target', 'aarch64-linux-gnu', '-I/usr/aarch64-linux-gnu/include']
+cpp_args = ['-target', 'aarch64-linux-gnu', '-I/usr/aarch64-linux-gnu/include', '-I/usr/aarch64-linux-gnu/include/c++/14']
 cpp_eh = 'none'
 cpp_rtti = 'false'
 

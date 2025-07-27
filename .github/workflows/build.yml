@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt update -y && sudo apt install -y meson ninja-build clang lld llvm git cmake python3 pipx fasm
           && sudo apt install build-essential qemu-system parted udev bison flex libgmp3-dev libmpc-dev libmpfr-dev
-          && sudo apt install texinfo libisl-dev gperf gettext autopoint libreadline-dev help2man groff zsh xorriso libc6-dev-arm64-cross libstdc++6-arm64-cross 
+          && sudo apt install texinfo libisl-dev gperf gettext autopoint libreadline-dev help2man groff zsh xorriso libc14-dev-arm64-cross libstdc++14-arm64-cross 
           && pipx install xbstrap 
       - name: Configure Project
         run: meson setup build --buildtype=${{ matrix.build-configuration }} --cross-file="CrossFiles/kernel-target-clang-${{ matrix.architecture }}.cross-file"
