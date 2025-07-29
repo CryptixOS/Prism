@@ -6,9 +6,8 @@
  */
 #pragma once
 
+#include <Prism/Core/Details/Conditional.inl>
 #include <Prism/Utility/Expected.hpp>
-#include <cerrno>
-#include <expected>
 
 namespace Prism
 {
@@ -16,6 +15,7 @@ namespace Prism
     #define Stringify(x) PrismStringify(x)
 #endif
 #if PRISM_TARGET_CRYPTIX != 0
+    #include <cerrno>
     using ErrorCode = std::errno_t;
 #else
     using ErrorCode = i32;

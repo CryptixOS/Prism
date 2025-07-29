@@ -18,11 +18,14 @@
 
 namespace Prism::Log
 {
+#if PRISM_TARGET_CRYPTIX == 0
     constexpr const char* s_LevelForegroundColors[] = {
         "\u001b[37m", "\u001b[35m", "\u001b[32m", "\u001b[36m",
         "\u001b[33m", "\u001b[31m", "\u001b[37m",
     };
+#endif
 
+#if PRISM_TARGET_CRYPTIX == 0
     static void PrintLevel(LogLevel level)
     {
         if (level == LogLevel::eNone) return;
@@ -36,16 +39,17 @@ namespace Prism::Log
         std::printf("\u001b[0m");
         std::printf("]: ");
     }
+#endif
 
     void Print(LogLevel logLevel, StringView str)
     {
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
         Logger::Log(logLevel, str);
-        return;
-#endif
+#else
         PrintLevel(logLevel);
         std::printf("%s", str.Raw());
 
         std::putchar('\n');
+#endif
     }
 }; // namespace Prism::Log

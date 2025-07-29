@@ -130,6 +130,8 @@ namespace Prism
             return c < 32 || c == '\x7f';
         }
         template <typename T>
+        constexpr bool IsBlank(T c);
+        template <typename T>
         constexpr bool IsSpace(T c)
         {
             return (c >= '\n' && c <= '\r') || IsBlank(c);
