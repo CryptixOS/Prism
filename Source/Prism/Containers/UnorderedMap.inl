@@ -362,7 +362,7 @@ namespace Prism
         --m_Size;
         auto  node    = it.ListIt.operator->();
         usize index   = HashType{}(node->Entry.Key) % Capacity();
-        auto  bucket  = m_Buckets[index];
+        auto& bucket  = m_Buckets[index];
 
         auto  nextPos = bucket.Erase(it.ListIt);
         delete node;
