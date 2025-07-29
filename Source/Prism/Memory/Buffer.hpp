@@ -43,6 +43,7 @@ namespace Prism
 
         void           Resize(usize size) { m_Buffer.Resize(size); }
         void           Reserve(usize capacity) { m_Buffer.Reserve(capacity); }
+        void           ShrinkToFit() { m_Buffer.ShrinkToFit(); }
 
         Byte*          Raw() { return m_Buffer.Raw(); }
         const Byte*    Raw() const { return m_Buffer.Raw(); }
@@ -66,8 +67,6 @@ namespace Prism
         }
         void Write(usize offset, const Byte* src, usize bytes)
         {
-            // while (offset + bytes <= m_Buffer.Size())
-            //     m_Buffer.Resize(m_Buffer.Size() << 1);
             assert((offset + bytes) <= m_Buffer.Size());
             Memory::Copy(Raw() + offset, src, bytes);
         }
@@ -80,7 +79,10 @@ namespace Prism
             Memory::Fill(Raw() + offset, value, Size() - offset);
         }
 
-        class Prism::Span<Byte>       Span() { return Prism::Span(m_Buffer.Raw(), m_Buffer.Size()); }
+        class Prism::Span<Byte> Span()
+        {
+            return Prism::Span(m_Buffer.Raw(), m_Buffer.Size());
+        }
         class Prism::Span<const Byte> Span() const
         {
             return Prism::Span(m_Buffer.Raw(), m_Buffer.Size());
