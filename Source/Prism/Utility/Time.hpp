@@ -46,11 +46,24 @@ namespace Prism::Time
         constexpr void Set(u64 ns) { m_NanoSeconds = ns; }
 
         constexpr auto operator<=>(const Timestep& other) const = default;
+        constexpr bool operator==(Timestep rhs)
+        {
+            return m_NanoSeconds == rhs.m_NanoSeconds;
+        }
+        constexpr bool      operator!=(Timestep rhs) { return !(*this == rhs); }
 
         constexpr Timestep& operator+=(const Timestep& rhs)
         {
             m_NanoSeconds += rhs.m_NanoSeconds;
 
+            return *this;
+        }
+        constexpr Timestep& operator-=(const Timestep& rhs)
+        {
+            if (m_NanoSeconds >= rhs.m_NanoSeconds)
+                return m_NanoSeconds -= rhs.m_NanoSeconds, *this;
+
+            m_NanoSeconds = 0;
             return *this;
         }
 
@@ -116,8 +129,23 @@ namespace Prism::Time
                  + Second;
         }
     };
-}; // namespace Prism::Time
 
+    namespace Literals
+    {
+        constexpr inline Timestep operator""_ms(unsigned long long ms)
+        {
+            return Timestep(ms * 1'000'000);
+        }
+        constexpr inline Timestep operator""_us(unsigned long long us)
+        {
+            return Timestep(us * 1'000);
+        }
+        constexpr inline Timestep operator""_ns(unsigned long long ns)
+        {
+            return Timestep(ns);
+        }
+    }; // namespace Literals
+}; // namespace Prism::Time
 
 #if PRISM_DISABLE_FMT == 0
 template <>
@@ -139,5 +167,9 @@ struct fmt::formatter<Prism::Time::DateTime> : fmt::formatter<fmt::string_view>
 using Prism::Time::DateTime;
 using Prism::Time::DaysInMonth;
 using Prism::Time::IsLeapYear;
+using namespace Prism::Time;
+using Prism::Time::Literals::operator""_us;
+using Prism::Time::Literals::operator""_ms;
+using Prism::Time::Literals::operator""_ns;
 using Prism::Time::Timestep;
 #endif
