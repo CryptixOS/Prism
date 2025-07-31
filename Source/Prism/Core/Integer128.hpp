@@ -108,6 +108,10 @@ namespace Prism
         {
             return *this = *this >> shift;
         }
+        constexpr Integer128& operator<<=(int shift)
+        {
+            return *this = *this << shift;
+        }
         constexpr void operator+=(Integer128 n)
         {
             ValueType newLow  = m_Low + n.m_Low;
@@ -134,7 +138,7 @@ namespace Prism
             unsigned long long carry;
             m_Low = __builtin_addcll(m_Low, n, 0, &carry);
             m_High += carry;
-#elif PrismHasBuiltin(__builtin_ia32_addcarryx_u64) 
+#elif PrismHasBuiltin(__builtin_ia32_addcarryx_u64)
             unsigned long long result;
             auto carry = __builtin_ia32_addcarryx_u64(0, m_Low, n, &result);
             m_Low      = result;
