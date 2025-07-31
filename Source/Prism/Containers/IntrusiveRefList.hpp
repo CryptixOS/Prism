@@ -14,6 +14,25 @@
 
 namespace Prism
 {
+    template <typename T>
+    struct PointerTraits
+    {
+        using Type = T;
+
+        static Type Raw(Type addr) { return addr; }
+        // static const Type Raw(const Type&  addr) { return addr; }
+        static bool IsNull(Type addr) { return addr == nullptr; }
+    };
+    template <typename T>
+    struct PointerTraits<Ref<T>>
+    {
+        using Type = Ref<T>;
+
+        static T*       Raw(Type& addr) { return addr.Raw(); }
+        static const T* Raw(const Type& addr) { return addr.Raw(); }
+        static bool     IsNull(Type& addr) { return !addr; }
+    };
+
     template <typename T, typename HookType>
     class IntrusiveRefList;
 
@@ -22,12 +41,15 @@ namespace Prism
      *
      * @tparam T Type of the node that contains this hook.
      */
-    template <typename T>
+    template <typename T, typename Pointer = Ref<T>>
     struct IntrusiveRefListHook
     {
-        IntrusiveRefList<T, IntrusiveRefListHook<T>>* Owner    = nullptr;
-        Ref<T>                                        Previous = nullptr;
-        Ref<T>                                        Next     = nullptr;
+        using Type        = Pointer;
+        using PointerType = typename PointerTraits<Pointer>::Type;
+
+        IntrusiveRefList<T, IntrusiveRefListHook<T, Pointer>>* Owner = nullptr;
+        PointerType                  Previous                        = nullptr;
+        PointerType                  Next                            = nullptr;
 
         /**
          * @brief Access the hook from the containing node.
@@ -35,20 +57,23 @@ namespace Prism
          * @param node Pointer to node.
          * @return IntrusiveRefListHook& Reference to the hook.
          */
-        static IntrusiveRefListHook& Hook(Ref<T> node) { return node->Hook; }
+        static IntrusiveRefListHook& Hook(PointerType node)
+        {
+            return PointerTraits<PointerType>::Raw(node)->Hook;
+        }
         /**
          * @brief Check if the node is currently part of a list.
          *
          * @return true If linked.
          * @return false If not linked.
          */
-        constexpr bool               IsLinked() const { return Owner; }
+        constexpr bool IsLinked() const { return Owner; }
         /**
          * @brief Unlinks the node from its list.
          *
          * @param self Pointer to the node.
          */
-        void                         Unlink(Ref<T> self);
+        void           Unlink(PointerType self);
     };
 
     /**
@@ -62,13 +87,15 @@ namespace Prism
     class IntrusiveRefList
     {
       public:
+        using PointerType = HookType::PointerType;
+
         /**
          * @brief Forward iterator for IntrusiveRefList.
          */
         struct Iterator
         {
             ///> Current node.
-            Ref<T> Current;
+            PointerType Current;
 
             /// @brief Default constructor.
             constexpr Iterator() = default;
@@ -77,7 +104,7 @@ namespace Prism
              *
              * @param node Pointer to the node.
              */
-            constexpr explicit Iterator(Ref<T> node)
+            constexpr explicit Iterator(PointerType node)
                 : Current(node)
             {
             }
@@ -93,17 +120,18 @@ namespace Prism
             }
 
             /// @brief Dereference operator.
-            constexpr Ref<T>    operator*() { return Current; }
+            constexpr PointerType operator*() { return Current; }
             /// @brief Arrow operator.
-            constexpr T&        operator->() { return *Current; }
+            constexpr T&          operator->() { return *Current; }
+            constexpr const T&    operator->() const { return *Current; }
 
             /// @brief Prefix increment.
-            constexpr Iterator& operator++();
+            constexpr Iterator&   operator++();
             /// @brief Postfix increment.
-            constexpr Iterator  operator++(int);
+            constexpr Iterator    operator++(int);
 
             /// @brief Equality comparison.
-            constexpr bool      operator==(const Iterator& other) const
+            constexpr bool        operator==(const Iterator& other) const
             {
                 return Current == other.Current;
             }
@@ -116,7 +144,7 @@ namespace Prism
         /// @brief Reverse iterator type.
         using ReverseIterator = ::Prism::ReverseIterator<Iterator>;
 
-        friend struct IntrusiveRefListHook<T>;
+        friend struct IntrusiveRefListHook<T, typename HookType::Type>;
         /// @brief Default constructor.
         constexpr IntrusiveRefList() = default;
 
@@ -134,50 +162,50 @@ namespace Prism
         constexpr IntrusiveRefList& operator=(IntrusiveRefList&& other);
 
         /// @brief Returns whether the list is empty.
-        PM_ALWAYS_INLINE constexpr bool         Empty() const;
+        PM_ALWAYS_INLINE constexpr bool              Empty() const;
         /// @brief Returns the number of elements in the list.
-        PM_ALWAYS_INLINE constexpr usize        Size() const;
+        PM_ALWAYS_INLINE constexpr usize             Size() const;
 
         /// @brief Returns pointer to the head node.
-        PM_ALWAYS_INLINE constexpr Ref<T>       Head();
+        PM_ALWAYS_INLINE constexpr PointerType       Head();
         /// @brief Const-qualified version of Head().
-        PM_ALWAYS_INLINE constexpr const Ref<T> Head() const;
+        PM_ALWAYS_INLINE constexpr const PointerType Head() const;
 
         /// @brief Returns pointer to the tail node.
-        PM_ALWAYS_INLINE constexpr Ref<T>       Tail();
+        PM_ALWAYS_INLINE constexpr PointerType       Tail();
         /// @brief Const-qualified version of Tail().
-        PM_ALWAYS_INLINE constexpr const Ref<T> Tail() const;
+        PM_ALWAYS_INLINE constexpr const PointerType Tail() const;
 
         /// @name Forward Iterators
         /// @{
 
-        PM_ALWAYS_INLINE Iterator               begin();
-        PM_ALWAYS_INLINE const Iterator         begin() const;
-        PM_ALWAYS_INLINE const Iterator         cbegin() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE Iterator                    begin();
+        PM_ALWAYS_INLINE const Iterator              begin() const;
+        PM_ALWAYS_INLINE const Iterator              cbegin() const PM_NOEXCEPT;
 
-        PM_ALWAYS_INLINE Iterator               end();
-        PM_ALWAYS_INLINE const Iterator         end() const;
-        PM_ALWAYS_INLINE const Iterator         cend() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE Iterator                    end();
+        PM_ALWAYS_INLINE const Iterator              end() const;
+        PM_ALWAYS_INLINE const Iterator              cend() const PM_NOEXCEPT;
 
         /// @}
 
         /// @name Reverse Iterators
         /// @{
 
-        PM_ALWAYS_INLINE ReverseIterator        rbegin();
-        PM_ALWAYS_INLINE const ReverseIterator  rbegin() const;
-        PM_ALWAYS_INLINE const ReverseIterator  crbegin() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE ReverseIterator             rbegin();
+        PM_ALWAYS_INLINE const ReverseIterator       rbegin() const;
+        PM_ALWAYS_INLINE const ReverseIterator crbegin() const PM_NOEXCEPT;
 
-        PM_ALWAYS_INLINE ReverseIterator        rend();
-        PM_ALWAYS_INLINE const ReverseIterator  rend() const;
-        PM_ALWAYS_INLINE const ReverseIterator  crend() const PM_NOEXCEPT;
+        PM_ALWAYS_INLINE ReverseIterator       rend();
+        PM_ALWAYS_INLINE const ReverseIterator rend() const;
+        PM_ALWAYS_INLINE const ReverseIterator crend() const PM_NOEXCEPT;
 
         /// @}
 
         /**
          * @brief Removes all elements from the list.
          */
-        constexpr void                          Clear();
+        constexpr void                         Clear();
 
         /**
          * @brief Constructs and inserts a node at the front.
@@ -196,7 +224,7 @@ namespace Prism
          * @return Iterator Iterator to the inserted node.
          */
         template <typename... Args>
-        inline constexpr Iterator EmplaceBack(Args&&... args);
+        inline constexpr Iterator    EmplaceBack(Args&&... args);
 
         /**
          * @brief Inserts a node at the front of the list.
@@ -204,36 +232,36 @@ namespace Prism
          * @param node Pointer to the node.
          * @return Iterator Iterator to the inserted node.
          */
-        inline constexpr Iterator PushFront(Ref<T> node);
+        inline constexpr Iterator    PushFront(PointerType node);
         /**
          * @brief Inserts a node at the back of the list.
          *
          * @param node Pointer to the node.
          * @return Iterator Iterator to the inserted node.
          */
-        inline constexpr Iterator PushBack(Ref<T> node);
+        inline constexpr Iterator    PushBack(PointerType node);
 
         /**
          * @brief Removes the front node from the list.
          */
-        inline constexpr void     PopFront();
+        inline constexpr void        PopFront();
         /**
          * @brief Removes the back node from the list.
          */
-        inline constexpr void     PopBack();
+        inline constexpr void        PopBack();
 
         /**
          * @brief Removes and returns the front node.
          *
-         * @return Ref<T> Pointer to the removed node.
+         * @return PointerType Pointer to the removed node.
          */
-        inline constexpr Ref<T>   PopFrontElement();
+        inline constexpr PointerType PopFrontElement();
         /**
          * @brief Removes and returns the back node.
          *
-         * @return Ref<T> Pointer to the removed node.
+         * @return PointerType Pointer to the removed node.
          */
-        inline constexpr Ref<T>   PopBackElement();
+        inline constexpr PointerType PopBackElement();
 
         /**
          * @brief Removes the node pointed to by an iterator.
@@ -241,21 +269,21 @@ namespace Prism
          * @param it Iterator to the node to erase.
          * @return Iterator Iterator to the next node.
          */
-        inline constexpr Iterator Erase(Iterator it);
+        inline constexpr Iterator    Erase(Iterator it);
         /**
          * @brief Removes a specific node from the list.
          *
          * @param node Pointer to the node.
          */
-        inline constexpr void     Erase(Ref<T> node);
+        inline constexpr void        Erase(PointerType node);
 
       private:
         ///> Pointer to the first element.
-        Ref<T> m_Head = nullptr;
+        PointerType m_Head = nullptr;
         ///> Pointer to the last element.
-        Ref<T> m_Tail = nullptr;
+        PointerType m_Tail = nullptr;
         ///> Number of elements in the list.
-        usize  m_Size = 0;
+        usize       m_Size = 0;
     };
 }; // namespace Prism
 

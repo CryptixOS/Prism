@@ -9,8 +9,8 @@
 namespace Prism
 {
     // IntrusiveRefListHook
-    template <typename T>
-    void IntrusiveRefListHook<T>::Unlink(Ref<T> self)
+    template <typename T, typename Pointer>
+    void IntrusiveRefListHook<T, Pointer>::Unlink(PointerType self)
     {
         if (!Owner) return;
 
@@ -113,7 +113,7 @@ namespace Prism
 
         // Change ownership
         auto next    = Head();
-        Ref<T>   current = nullptr;
+        PointerType   current = nullptr;
         while (next)
         {
             current = next;
@@ -140,24 +140,24 @@ namespace Prism
     }
 
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE constexpr Ref<T> IntrusiveRefList<T, HookType>::Head()
+    PM_ALWAYS_INLINE constexpr HookType::PointerType IntrusiveRefList<T, HookType>::Head()
     {
         return m_Head;
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE constexpr const Ref<T>
+    PM_ALWAYS_INLINE constexpr const HookType::PointerType
     IntrusiveRefList<T, HookType>::Head() const
     {
         return m_Head;
     }
 
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE constexpr Ref<T> IntrusiveRefList<T, HookType>::Tail()
+    PM_ALWAYS_INLINE constexpr HookType::PointerType IntrusiveRefList<T, HookType>::Tail()
     {
         return m_Tail;
     }
     template <typename T, typename HookType>
-    PM_ALWAYS_INLINE constexpr const Ref<T>
+    PM_ALWAYS_INLINE constexpr const HookType::PointerType
     IntrusiveRefList<T, HookType>::Tail() const
     {
         return m_Tail;
@@ -270,7 +270,7 @@ namespace Prism
 
     template <typename T, typename HookType>
     constexpr IntrusiveRefList<T, HookType>::Iterator
-    IntrusiveRefList<T, HookType>::PushFront(Ref<T> node)
+    IntrusiveRefList<T, HookType>::PushFront(HookType::PointerType node)
     {
         auto& hook = HookType::Hook(node);
         assert(!hook.IsLinked());
@@ -293,7 +293,7 @@ namespace Prism
 
     template <typename T, typename HookType>
     constexpr IntrusiveRefList<T, HookType>::Iterator
-    IntrusiveRefList<T, HookType>::PushBack(Ref<T> node)
+    IntrusiveRefList<T, HookType>::PushBack(HookType::PointerType node)
     {
         auto& hook = HookType::Hook(node);
         assert(!hook.IsLinked());
@@ -328,7 +328,7 @@ namespace Prism
     }
 
     template <typename T, typename HookType>
-    constexpr Ref<T> IntrusiveRefList<T, HookType>::PopFrontElement()
+    constexpr HookType::PointerType IntrusiveRefList<T, HookType>::PopFrontElement()
     {
         auto head = Head();
         PopFront();
@@ -336,7 +336,7 @@ namespace Prism
         return head;
     }
     template <typename T, typename HookType>
-    constexpr Ref<T> IntrusiveRefList<T, HookType>::PopBackElement()
+    constexpr HookType::PointerType IntrusiveRefList<T, HookType>::PopBackElement()
     {
         auto tail = Tail();
         PopBack();
@@ -349,14 +349,14 @@ namespace Prism
     IntrusiveRefList<T, HookType>::Erase(Iterator it)
     {
         auto& hook = HookType::Hook(it.Current);
-        Ref<T>    next = HookType::Hook(it.Current).Next;
+        PointerType    next = HookType::Hook(it.Current).Next;
 
         hook.Unlink(it.Current);
         --m_Size;
         return next ? Iterator(next) : end();
     }
     template <typename T, typename HookType>
-    constexpr void IntrusiveRefList<T, HookType>::Erase(Ref<T> node)
+    constexpr void IntrusiveRefList<T, HookType>::Erase(HookType::PointerType node)
     {
         auto& hook = HookType::Hook(node);
         hook.Unlink(node);
