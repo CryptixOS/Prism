@@ -1,1 +1,2 @@
 option('extra_incs', type: 'string', value: '')
+option('build_tests', type: 'boolean', value: 'false')

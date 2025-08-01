@@ -50,10 +50,12 @@ cxx_args = [
   '-fno-exceptions',
   '-Wno-frame-address',
   '-MP',
+  '-lgcc_s',
 ]
 
 incs = [ include_directories('Source') ]
 extraincs = get_option('extra_incs')
+build_tests = get_option('build_tests')
 
 if extraincs != ''
   cxx_args += '-I' + extraincs
@@ -73,7 +75,9 @@ deps = [
 ]
 
 subdir('Source')
+if build_tests
 subdir('Tests')
+endif
 
 pkg = import('pkgconfig')
 prism = static_library('prism',
@@ -93,7 +97,7 @@ install_headers(
   #'Source/Prism/Algorithm/Random.hpp',
   'Source/Prism/Algorithm/SearchString.hpp',
 
-  subdir: 'Source/Prism/Algorithm'
+  subdir: 'Prism/Algorithm'
 )
 install_headers(
   'Source/Prism/Containers/Array.hpp',
@@ -158,6 +162,7 @@ install_headers(
   'Source/Prism/Memory/Buffer.hpp',
   'Source/Prism/Memory/ByteStream.hpp',
   'Source/Prism/Memory/Endian.hpp',
+  'Source/Prism/Memory/Memory.hpp',
   'Source/Prism/Memory/Pointer.hpp',
   'Source/Prism/Memory/Ref.hpp',
   'Source/Prism/Memory/Scope.hpp',
