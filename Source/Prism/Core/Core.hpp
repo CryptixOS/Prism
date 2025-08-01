@@ -28,6 +28,8 @@ namespace Prism
         PM_NOEXCEPT(Conjunction<IsNoThrowMoveConstructible<T>,
                                 IsNoThrowMoveAssignable<T>>::Value)
     {
+        if (&lhs == &rhs) return;
+
         T temp = Move(lhs);
         lhs    = Move(rhs);
         rhs    = Move(temp);
@@ -49,11 +51,13 @@ namespace Prism
         object     = Forward<U>(newValue);
         return oldValue;
     }
-    template <typename T, typename U>
+    template <typename T, typename U,
+              typename
+              = EnableIf<(IsAssignableV<T&, U> && IsMoveConstructibleV<T>)>>
     constexpr inline void Swap(T& lhs, U& rhs)
     {
         if (&lhs == &rhs) return;
-        lhs = Exchange(lhs, rhs);
+        lhs = Exchange(rhs, lhs);
     }
 
     template <typename T>
@@ -136,16 +140,16 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::AddressOf;
-using Prism::Swap;
-using Prism::Exchange;
-using Prism::AsConst;
-using Prism::Unreachable;
-using Prism::IntegerSequence;
-using Prism::MakeIntegerSequence;
-using Prism::IndexSequence;
-using Prism::MakeIndexSequence;
-using Prism::IndexSequenceFor;
 using Prism::AddConstType;
+using Prism::AddressOf;
+using Prism::AsConst;
+using Prism::Exchange;
+using Prism::IndexSequence;
+using Prism::IndexSequenceFor;
 using Prism::InPlaceT;
+using Prism::IntegerSequence;
+using Prism::MakeIndexSequence;
+using Prism::MakeIntegerSequence;
+using Prism::Swap;
+using Prism::Unreachable;
 #endif
