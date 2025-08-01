@@ -7,14 +7,13 @@
 #pragma once
 
 #include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Iterator.hpp>
 #include <Prism/Core/Limits.hpp>
 #include <Prism/Core/Types.hpp>
+
 #include <Prism/Memory/Memory.hpp>
 
 #include <cassert>
-#include <new>
-
-void operator delete(void* ptr, Prism::usize) PM_NOEXCEPT;
 
 namespace Prism
 {
@@ -36,7 +35,7 @@ namespace Prism
         /** @brief Type used for size and indexing */
         using SizeType             = usize;
         /** @brief Type used for pointer differences */
-        using DifferenceType       = std::ptrdiff_t;
+        using DifferenceType       = ptrdiff;
         /** @brief Reference to element */
         using ReferenceType        = ValueType&;
         /** @brief Const reference to element */
@@ -50,9 +49,9 @@ namespace Prism
         /** @brief Const iterator type */
         using ConstIterator        = const T*;
         /** @brief Reverse iterator type */
-        using ReverseIterator      = std::reverse_iterator<Iterator>;
+        using ReverseIterator      = Prism::ReverseIterator<Iterator>;
         /** @brief Const reverse iterator type */
-        using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
+        using ConstReverseIterator = Prism::ReverseIterator<ConstIterator>;
 
         /** @brief Constructs an empty Vector. */
         constexpr Vector()         = default;
@@ -70,6 +69,21 @@ namespace Prism
         {
             Resize(size);
             Fill(value);
+        }
+        /**
+         * @brief Constructs a Vector with elements contained in range
+         * `first`-`last`.
+         * @param first Iterator pointing to the start of value range
+         * @param value Iterator pointing to the end of value range
+         */
+        template <typename It>
+        constexpr Vector(It start, It end)
+        {
+            auto size = Distance(start, end);
+            Resize(size);
+            for (auto current = start, i = 0; i < size;
+                 current = Next(current), i++)
+                At(i) = *current;
         }
         /**
          * @brief Copy constructor.
@@ -104,6 +118,7 @@ namespace Prism
             Reserve(init.size());
             for (const auto& value : init) PushBack(value);
         }
+
         /** @brief Destructor. Releases allocated memory. */
         constexpr ~Vector()
         {
@@ -339,7 +354,7 @@ namespace Prism
                                   InputIt last)
         {
             SizeType index = pos - m_Data;
-            SizeType count = std::distance(first, last);
+            SizeType count = Distance(first, last);
             if (count == 0) return m_Data + index;
 
             Reserve(m_Size + count);
