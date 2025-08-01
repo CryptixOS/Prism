@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Core/TypeTraits.hpp>
+#include <Prism/Core/Core.hpp>
 
 namespace Prism
 {
@@ -216,4 +216,75 @@ namespace Prism
       private:
         IteratorType m_Current;
     };
+
+    template <typename It, typename Distance>
+    constexpr void Advance(It& it, Distance n)
+    {
+        using Category = typename IteratorTraits<It>::IteratorCategory;
+        static_assert(IsBaseOfV<InputIteratorTag, Category>);
+
+        auto dist = typename IteratorTraits<It>::DifferenceType(n);
+        if constexpr (IsBaseOfV<RandomAccessIteratorTag, Category>) it += dist;
+        else
+        {
+            while (dist > 0)
+            {
+                --dist;
+                ++it;
+            }
+            if constexpr (IsBaseOfV<BidirectionalIteratorTag, Category>)
+                while (dist < 0)
+                {
+                    ++dist;
+                    --it;
+                }
+        }
+    }
+    template <typename It>
+    constexpr It Next(It it, typename IteratorTraits<It>::DifferenceType n = 1)
+    {
+        Advance(it, n);
+        return it;
+    }
+    template <typename It>
+    constexpr typename IteratorTraits<It>::DifferenceType Distance(It first,
+                                                                   It last)
+    {
+        using Category = typename IteratorTraits<It>::IteratorCategory;
+        static_assert(IsBaseOfV<InputIteratorTag, Category>);
+
+        if constexpr (IsBaseOfV<RandomAccessIteratorTag, Category>)
+            return last - first;
+        else
+        {
+            typename IteratorTraits<It>::DifferenceType result = 0;
+            while (first != last)
+            {
+                ++first;
+                ++result;
+            }
+            return result;
+        }
+    }
+    template <typename ForwardIt1, typename ForwardIt2>
+    constexpr void IteratorSwap(ForwardIt1 a, ForwardIt2 b)
+    {
+        Swap(*a, *b);
+    }
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::Advance;
+using Prism::BidirectionalIteratorTag;
+using Prism::DefaultSentinelType;
+using Prism::Distance;
+using Prism::ForwardIteratorTag;
+using Prism::InputIteratorTag;
+using Prism::IteratorReferenceType;
+using Prism::IteratorSwap;
+using Prism::IteratorTraits;
+using Prism::Next;
+using Prism::OutputIteratorTag;
+using Prism::RandomAccessIteratorTag;
+using Prism::ReverseIterator;
+#endif
