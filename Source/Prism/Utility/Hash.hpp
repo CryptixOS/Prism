@@ -67,6 +67,21 @@ namespace Prism::Hash
 
         return hash;
     }
+
+    inline u64 RotateLeft(u64 x, i8 r) { return (x << r) | (x >> (64 - r)); }
+    PM_ALWAYS_INLINE u64 Combine(u64 k)
+    {
+        k ^= k >> 33;
+        k *= 0xff51'afd7'ed55'8ccdzu;
+        k ^= k >> 33;
+        k *= 0xc4ce'b9fe'1a85'ec53zu;
+        k ^= k >> 33;
+
+        return k;
+    }
+
+    void MurmurHash3(const u8* key, const isize length, const u32 seed,
+                     u64 out[2]);
 }; // namespace Prism::Hash
 
 #if PRISM_TARGET_CRYPTIX == 1
