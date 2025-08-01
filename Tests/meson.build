@@ -6,12 +6,12 @@
 #*/
 
 tests = [
-  'Algorithm', 'Ref', 
-  'SimdIntrinsics', 'TypeTraits', 
+  'Ref', 'SimdIntrinsics', 
 ]
 cpp_args = [
   '-Wno-unused-parameter',
   '-Wno-self-assign-overloaded',
+  '-lgcc_s',
 ]
 link_args = [
   '-lstdc++exp',
@@ -28,6 +28,8 @@ link_args = [
 # ]
 #
 
+subdir('Algorithm')
+subdir('Core')
 subdir('Containers')
 subdir('Memory')
 subdir('String')
