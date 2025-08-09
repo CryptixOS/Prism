@@ -53,7 +53,7 @@ namespace Prism
         using ConstReferenceType       = const ValueType&;
         using ConstIterator            = const ValueType*;
         using Iterator                 = ConstIterator;
-        using ConstReverseIterator     = ReverseIterator<ConstIterator>;
+        using ConstReverseIterator     = Prism::ReverseIterator<ConstIterator>;
         using ReverseIterator          = ConstReverseIterator;
         using SizeType                 = usize;
         using DifferenceType           = ptrdiff;
