@@ -10,6 +10,12 @@
 
 namespace Prism
 {
+    enum class IterationResult
+    {
+        eBreak    = 0x00,
+        eContinue = 0x01,
+    };
+
     struct InputIteratorTag
     {
     };
