@@ -170,6 +170,14 @@ namespace Prism
     };
 
     template <typename T>
+    struct RemovePointer;
+    template <typename T>
+    struct IsFunctionPointer
+        : Conjunction<IsPointer<T>, IsFunction<typename RemovePointer<T>::Type>>
+    {
+    };
+
+    template <typename T>
     struct IsArithmetic;
     template <typename T>
     struct IsFundamental
@@ -467,6 +475,8 @@ namespace Prism
     template <typename T>
     inline constexpr bool IsMemberFunctionPointerV
         = IsMemberFunctionPointer<T>::Value;
+    template <typename T>
+    inline constexpr bool IsFunctionPointerV = IsFunctionPointer<T>::Value;
 
     template <typename T>
     inline constexpr bool IsFundamentalV = IsFundamental<T>::Value;

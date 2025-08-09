@@ -77,23 +77,31 @@ namespace Prism
     {
     };
     template <typename T>
-    constexpr RemoveReferenceType<T>&& Move(T&& object) noexcept
+    constexpr RemoveReferenceType<T>&& Move(T&& object) PM_NOEXCEPT
     {
         return static_cast<RemoveReferenceType<T>&&>(object);
     }
 
     // FIXME(v1tr10l7): Why is it here?
     template <typename T>
-    constexpr T&& Forward(RemoveReferenceType<T>& value) noexcept
+    constexpr T&& Forward(RemoveReferenceType<T>& value) PM_NOEXCEPT
     {
         return static_cast<T&&>(value);
     }
     template <typename T>
-    constexpr T&& Forward(RemoveReferenceType<T>&& value) noexcept
+    constexpr T&& Forward(RemoveReferenceType<T>&& value) PM_NOEXCEPT
     {
         static_assert(!IsLValueReferenceV<T>,
                       "Don't forward an rvalue as an lvalue");
         return static_cast<T&&>(value);
+    }
+    template <typename T, typename... Args>
+    constexpr auto ConstructAt(T* location, Args&&... args)
+        PM_NOEXCEPT(PM_NOEXCEPT(::new((void*)0) T(DeclVal<Args>()...)))
+            -> decltype(::new((void*)0) T(DeclVal<Args>()...))
+    {
+        return ::new (reinterpret_cast<void*>(location))
+            T(Forward<Args>(args)...);
     }
 
     template <typename... Args>

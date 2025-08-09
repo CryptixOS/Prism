@@ -297,6 +297,8 @@ namespace Prism
     template <typename R, typename Fn, typename... Args>
     inline constexpr bool IsNoThrowInvocableRV
         = IsNoThrowInvocableR<R, Fn, Args...>::Value;
+    template <typename Fn, typename... Args>
+    inline constexpr bool IsInvocableV = IsInvocable<Fn, Args...>::Value;
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
