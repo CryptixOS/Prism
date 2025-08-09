@@ -134,6 +134,7 @@ namespace Prism
     using ipointer = __INTPTR_TYPE__;
 
     using ptrdiff  = __PTRDIFF_TYPE__;
+    using NullType = decltype(nullptr);
 
     using symbol   = void*[];
     constexpr u64 Bit(u64 n) { return (1ull << n); }
