@@ -21,7 +21,7 @@ namespace Prism
             : m_Instance(nullptr)
         {
         }
-        constexpr Ref(std::nullptr_t)
+        constexpr Ref(NullType)
             : m_Instance(nullptr)
         {
         }
@@ -52,7 +52,7 @@ namespace Prism
 
         virtual ~Ref() { DecRef(); }
 
-        constexpr Ref& operator=(std::nullptr_t)
+        constexpr Ref& operator=(NullType)
         {
             DecRef();
             m_Instance = nullptr;

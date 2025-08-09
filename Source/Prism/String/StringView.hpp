@@ -53,10 +53,10 @@ namespace Prism
         using ConstReferenceType       = const ValueType&;
         using ConstIterator            = const ValueType*;
         using Iterator                 = ConstIterator;
-        using ConstReverseIterator     = std::reverse_iterator<ConstIterator>;
+        using ConstReverseIterator     = ReverseIterator<ConstIterator>;
         using ReverseIterator          = ConstReverseIterator;
         using SizeType                 = usize;
-        using DifferenceType           = std::ptrdiff_t;
+        using DifferenceType           = ptrdiff;
         static constexpr SizeType NPos = SizeType(-1);
 
         //--------------------------------------------------------------------------
@@ -98,7 +98,7 @@ namespace Prism
             str.m_Data = nullptr;
             str.m_Size = 0;
         }
-        constexpr BasicStringView(std::nullptr_t) = delete;
+        constexpr BasicStringView(NullType) = delete;
 
         /**
          * @brief Copy-assignable.
@@ -280,7 +280,7 @@ namespace Prism
         constexpr SizeType Copy(C* str, SizeType count, SizeType pos = 0) const
         {
             assert(pos < m_Size);
-            usize copied = std::min(count, Size() - pos);
+            usize copied = Min(count, Size() - pos);
 
             TraitsType::Copy(str, Raw() + pos, copied);
 
@@ -328,7 +328,7 @@ namespace Prism
         Substr(SizeType pos = 0, SizeType count = NPos) const PM_NOEXCEPT
         {
             assert(pos < m_Size);
-            count = std::min(count, Size() - pos);
+            count = Min(count, Size() - pos);
             return BasicStringView(Raw() + pos, count);
         }
         ///@}
@@ -350,7 +350,7 @@ namespace Prism
         [[nodiscard]]
         constexpr i32 Compare(BasicStringView other) const PM_NOEXCEPT
         {
-            const SizeType count = std::min(Size(), other.Size());
+            const SizeType count = Min(Size(), other.Size());
             i32 result = TraitsType::Compare(m_Data, other.Raw(), count);
 
             if (result != 0) return result;

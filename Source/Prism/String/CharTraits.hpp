@@ -9,8 +9,17 @@
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/TypeTraits.hpp>
 
+#include <Prism/Memory/Pointer.hpp>
+
 namespace Prism
 {
+    namespace Memory
+    {
+        Pointer Copy(Pointer destination, const Pointer source, usize count);
+        Pointer Fill(const Pointer destination, u8 value, usize count);
+        Pointer Move(Pointer destination, const Pointer source, usize count);
+    }; // namespace Memory
+
     template <typename C>
     struct CharTraits
     {
@@ -23,8 +32,7 @@ namespace Prism
         constexpr static void Assign(CharType&       c1,
                                      const CharType& c2) PM_NOEXCEPT
         {
-            if (IsConstantEvaluated())
-                std::construct_at(std::addressof(c1), c2);
+            if (IsConstantEvaluated()) ConstructAt(AddressOf(c1), c2);
             else c1 = c2;
         }
         constexpr static CharType* Assign(CharType* dest, usize count,
@@ -33,7 +41,7 @@ namespace Prism
             if (count == 0) return dest;
             if (IsConstantEvaluated()) return Assign(dest, count, ch);
 
-            return static_cast<CharType*>(std::memset(dest, ch, count));
+            return static_cast<CharType*>(Memory::Fill(dest, ch, count));
         }
         constexpr static bool Equal(CharType lhs, CharType rhs) PM_NOEXCEPT
         {
@@ -64,7 +72,7 @@ namespace Prism
                 return dest;
             }
 
-            std::memmove(dest, src, count * sizeof(CharType));
+            Memory::Move(dest, src, count * sizeof(CharType));
             return dest;
         }
         constexpr static CharType* Copy(CharType* dest, const CharType* src,
@@ -73,11 +81,10 @@ namespace Prism
             if (count == 0) return dest;
             if (IsConstantEvaluated())
             {
-                for (usize i = 0; i < count; ++i)
-                    std::construct_at(dest + i, src[i]);
+                for (usize i = 0; i < count; ++i) ConstructAt(dest + i, src[i]);
                 return dest;
             }
-            std::memcpy(dest, src, count * sizeof(CharType));
+            Memory::Copy(dest, src, count * sizeof(CharType));
             return dest;
         }
         constexpr static i32 Compare(const CharType* lhs, const CharType* rhs,
