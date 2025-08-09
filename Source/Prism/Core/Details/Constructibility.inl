@@ -218,13 +218,19 @@ namespace Prism
     struct IsDestructible : IsDestructibleHelper<T>
     {
     };
-    // template <typename T>
-    // using IsTriviallyDestructibleHelper
-    // = BooleanConstant<__is_trivially_destructible(T)>;
-    // template <typename T>
-    // struct IsTriviallyDestructible : IsTriviallyDestructibleHelper<T>
-    // {
-    // };
+    template <typename T>
+    using IsTriviallyDestructibleHelper
+#if PrismHasBuiltin(__is_trivially_destructible)
+        = BooleanConstant<__is_trivially_destructible(T)>;
+#else
+        = BooleanConstant<__has_trivial_destructor(T)
+                          && IsDestructible<T>::Value>;
+#endif
+
+    template <typename T>
+    struct IsTriviallyDestructible : IsTriviallyDestructibleHelper<T>
+    {
+    };
     // template <typename T>
     // using IsNoThrowDestructibleHelper
     //     = BooleanConstant<__is_nothrow_destructible(T)>;
@@ -393,9 +399,9 @@ namespace Prism
 
     template <typename T>
     inline constexpr bool IsDestructibleV = IsDestructible<T>::Value;
-    // template <typename T>
-    // inline constexpr bool IsTriviallyDestructibleV
-    //     = IsTriviallyDestructible<T>::Value;
+    template <typename T>
+    inline constexpr bool IsTriviallyDestructibleV
+        = IsTriviallyDestructible<T>::Value;
     // template <typename T>
     // inline constexpr bool IsNoThrowDestructibleV
     //     = IsNoThrowDestructible<T>::Value;
@@ -417,3 +423,8 @@ namespace Prism
     template <typename To, typename From>
     using IsArrayConvertible = IsConvertible<From (*)[], To (*)[]>;
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::IsTriviallyDestructible;
+using Prism::IsTriviallyDestructibleV;
+#endif

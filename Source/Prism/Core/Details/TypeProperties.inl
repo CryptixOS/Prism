@@ -249,6 +249,14 @@ namespace Prism
     struct IsStandardLayout : public BooleanConstant<__is_standard_layout(T)>
     {
     };
+    template <typename T, template <typename...> typename U>
+    struct IsSpecializationOf : public BooleanConstant<false>
+    {
+    };
+    template <template <typename...> typename U, typename... Us>
+    struct IsSpecializationOf<U<Us...>, U> : public BooleanConstant<true>
+    {
+    };
 
     template <typename T>
     struct RemoveAllExtents;
@@ -499,6 +507,9 @@ namespace Prism
     inline constexpr bool IsTriviallyCopyableV = IsTriviallyCopyable<T>::Value;
     template <typename T>
     inline constexpr bool IsStandardLayoutV = IsStandardLayout<T>::Value;
+    template <typename... Types>
+    inline constexpr bool IsSpecializationOfV
+        = IsSpecializationOf<Types...>::Value;
     template <typename T>
     constexpr bool HasUniqueObjectRepresentationsV
         = HasUniqueObjectRepresentations<T>::Value;
@@ -575,6 +586,7 @@ using Prism::IsPolymorphicV;
 using Prism::IsReferenceV;
 using Prism::IsScalarV;
 using Prism::IsSignedV;
+using Prism::IsSpecializationOfV;
 using Prism::IsStandardLayoutV;
 using Prism::IsTriviallyCopyableV;
 using Prism::IsUnionV;

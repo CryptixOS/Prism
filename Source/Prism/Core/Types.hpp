@@ -169,6 +169,20 @@ namespace Prism
 
         return result;
     }
+
+    template <typename T, typename U>
+    [[nodiscard]] PM_ALWAYS_INLINE constexpr T BitCast(U const& a)
+    {
+#if (__has_builtin(__builtin_bit_cast))
+        return __builtin_bit_cast(T, a);
+#else
+        static_assert(sizeof(T) == sizeof(U));
+
+        T result;
+        __builtin_memcpy(&result, &a, sizeof(T));
+        return result;
+#endif
+    }
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
