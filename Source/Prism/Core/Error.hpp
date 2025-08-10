@@ -48,6 +48,12 @@ namespace Prism
 #define PM_TryOrRetCode(expr, code_on_fail)                                    \
     PM_TryOrRetVal(expr, Error(code_on_fail))
 #define PM_TryOrRet(expr) PM_TryOrRetCode(expr, result.Error())
+#define PM_Try(expr)                                                           \
+    ({                                                                         \
+        auto result = (expr);                                                  \
+        if (!result) return;                                                   \
+        Prism::Move(result.Value());                                           \
+    })
 
 #if PRISM_TARGET_CRYPTIX != 0
 using Prism::Error;
@@ -60,4 +66,5 @@ using Prism::ErrorOr;
     #define TryOrRetVal(expr, val)           PM_TryOrRetVal(expr, val)
     #define TryOrRetCode(expr, code_on_fail) PM_TryOrRetCode(expr, code_on_fail)
     #define TryOrRet(expr)                   PM_TryOrRet(expr)
+    #define Try(expr)                        PM_Try(expr)
 #endif
