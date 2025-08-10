@@ -37,6 +37,14 @@ namespace Prism
         m_Size       = 0;
     }
 
+    bool Bitmap::At(const usize index) const
+    {
+        const usize byte = index / 8;
+        const usize bit  = index % 8;
+
+        return m_Data[byte] & Bit(bit);
+    }
+
     void Bitmap::SetAll(const u8 value) { Memory::Fill(m_Data, value, m_Size); }
     void Bitmap::SetIndex(const usize index, const bool value)
     {
@@ -46,12 +54,5 @@ namespace Prism
 
         if (value) m_Data[byte] |= Bit(bit);
         else m_Data[byte] &= ~Bit(bit);
-    }
-    bool Bitmap::GetIndex(const usize index) const
-    {
-        const usize byte = index / 8;
-        const usize bit  = index % 8;
-
-        return m_Data[byte] & Bit(bit);
     }
 }; // namespace Prism
