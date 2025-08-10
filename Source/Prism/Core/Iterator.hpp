@@ -286,6 +286,7 @@ using Prism::DefaultSentinelType;
 using Prism::Distance;
 using Prism::ForwardIteratorTag;
 using Prism::InputIteratorTag;
+using Prism::IterationResult;
 using Prism::IteratorReferenceType;
 using Prism::IteratorSwap;
 using Prism::IteratorTraits;
