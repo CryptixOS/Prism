@@ -17,7 +17,7 @@ namespace Prism
         class BitReference
         {
           public:
-            BitReference(u8& byte, u8 mask)
+            constexpr BitReference(u8& byte, u8 mask)
                 : m_Byte(byte)
                 , m_Mask(mask)
             {
