@@ -132,17 +132,20 @@ namespace Prism
         struct Functor
         {
             Functor() = default;
-            Functor(std::nullptr_t)
+            Functor(NullType)
                 : Object(nullptr)
                 , Stub(nullptr)
                 , Destroy(nullptr)
+                , Clone(nullptr)
             {
             }
             Functor(ObjectType thisObject, FunctionType stub,
-                    void (*destroy)(void*) = nullptr)
+                    void (*destroy)(void*) = nullptr,
+                    void* (*clone)(void*)  = nullptr)
                 : Object(thisObject)
                 , Stub(stub)
                 , Destroy(destroy)
+                , Clone(clone)
             {
             }
             ~Functor()
@@ -150,13 +153,14 @@ namespace Prism
                 if (Destroy) Destroy(Object);
             }
 
-            Functor& operator=(std::nullptr_t)
+            Functor& operator=(NullType)
             {
                 if (Destroy) Destroy(Object);
 
                 Object  = nullptr;
                 Stub    = nullptr;
                 Destroy = nullptr;
+                Clone   = nullptr;
 
                 return *this;
             }
@@ -167,6 +171,7 @@ namespace Prism
                 Object  = nullptr;
                 Stub    = nullptr;
                 Destroy = nullptr;
+                Clone   = nullptr;
             }
 
             operator bool() const { return Object != nullptr; }
@@ -182,22 +187,35 @@ namespace Prism
             ObjectType   Object    = nullptr;
             FunctionType Stub      = nullptr;
             void (*Destroy)(void*) = nullptr;
+            void* (*Clone)(void*)  = nullptr;
         };
 
         constexpr Delegate() PM_NOEXCEPT {}
-        constexpr Delegate(std::nullptr_t) PM_NOEXCEPT
+        constexpr Delegate(NullType) PM_NOEXCEPT
             : m_Functor(nullptr, nullptr, nullptr)
         {
         }
         Delegate(const Delegate& other) { m_Functor = other.m_Functor; }
-        // Delegate(const Delegate& other) { CopyFrom(other); }
 
         Delegate(Delegate&& other) noexcept { MoveFrom(Move(other)); }
-        Delegate(FunctionType f) { Bind<f>(); }
 
+        template <typename F>
+        Delegate(F f)
+            requires(IsFunctionPointerV<F>
+                     && !IsSameV<RemoveCvRefType<F>, Delegate>)
+        {
+            Bind<f>();
+        }
+
+        template <Lambda F>
+        Delegate(F&& f)
+            requires(!IsSameV<RemoveCvRefType<F>, Delegate>)
+        {
+            BindLambda(Move(f));
+        }
         ~Delegate() { Reset(); }
 
-        Delegate& operator=(std::nullptr_t) PM_NOEXCEPT { Reset(); }
+        Delegate& operator=(NullType) PM_NOEXCEPT { Reset(); }
 
         Delegate& operator=(const Delegate& other)
         {
@@ -208,7 +226,7 @@ namespace Prism
             }
             return *this;
         }
-        Delegate& operator=(const Delegate&& other)
+        Delegate& operator=(Delegate&& other)
         {
             if (this != &other)
             {
@@ -219,16 +237,12 @@ namespace Prism
         }
         template <typename F>
         Delegate& operator=(F&& f)
+            requires(IsFunctionPointerV<F>
+                     && !IsSameV<RemoveCvRefType<F>, Delegate>)
         {
             Delegate(Move(f));
             return *this;
         }
-        /*
-            template <typename F>
-            Delegate& operator=(std::reference_wrapper<F> f) PM_NOEXCEPT
-            {
-                return Delegate(f).Swap(*this);
-            }*/
 
         bool operator==(const Delegate& other) const
         {
@@ -243,6 +257,8 @@ namespace Prism
         {
             Swap(m_Functor.Object, other.m_Functor.Object);
             Swap(m_Functor.Stub, other.m_Functor.Stub);
+            Swap(m_Functor.Destroy, other.m_Functor.Destroy);
+            Swap(m_Functor.Clone, other.m_Functor.Clone);
         }
 
         template <Ret (*Function)(Args...)>
@@ -259,13 +275,14 @@ namespace Prism
             if constexpr (sizeof(Decayed) <= SBO_SIZE)
             {
                 new (m_Storage) Decayed(Forward<Lambda>(lambda));
-                Assign(m_Storage, LambdaStub<Decayed>, &DestroyLambda<Decayed>);
+                Assign(m_Storage, LambdaStub<Decayed>, &DestroyLambda<Decayed>,
+                       &CloneLambda<Decayed>);
                 return;
             }
 
             Decayed* heapAllocated = new Decayed(Forward<Lambda>(lambda));
-            Assign(heapAllocated, LambdaStub<Decayed>,
-                   &DestroyLambdaHeap<Decayed>);
+            Assign(heapAllocated, &LambdaStub<Decayed>,
+                   &DestroyLambdaHeap<Decayed>, &CloneLambda<Decayed>);
         }
 
         template <auto Function, typename Class>
@@ -312,17 +329,20 @@ namespace Prism
         alignas(void*) u8 m_Storage[SBO_SIZE];
 
         void Assign(ObjectType object, FunctionType stub,
-                    void (*destroy)(void*) = nullptr)
+                    void (*destroy)(void*) = nullptr,
+                    void* (*clone)(void*)  = nullptr)
         {
-            m_Functor = Functor(object, stub, destroy);
+            m_Functor = Functor(object, stub, destroy, clone);
         }
 
         void CopyFrom(const Delegate& other)
         {
             m_Functor.Stub    = other.m_Functor.Stub;
             m_Functor.Destroy = other.m_Functor.Destroy;
+            m_Functor.Clone   = other.m_Functor.Clone;
 
-            if (other.m_Functor.Object == other.m_Storage)
+            if (!other.m_Functor.Object) m_Functor.Object = nullptr;
+            else if (other.m_Functor.Object == other.m_Storage)
             {
                 // Copy lambda stored in SBO
                 Memory::Copy(m_Storage, other.m_Storage, SBO_SIZE);
@@ -331,10 +351,10 @@ namespace Prism
             else if (other.m_Functor.Object)
             {
                 // Copy heap-allocated lambda
-                m_Functor.Object = other.m_Functor.Destroy
-                                     ? other.m_Functor.Destroy(
-                                           other.m_Functor.Object, CopyMode{})
-                                     : other.m_Functor.Object;
+                m_Functor.Object
+                    = other.m_Functor.Clone
+                        ? other.m_Functor.Clone(other.m_Functor.Object)
+                        : other.m_Functor.Object;
             }
         }
 
@@ -398,6 +418,11 @@ namespace Prism
         static void DestroyLambdaHeap(void* object)
         {
             delete static_cast<Lambda*>(object);
+        }
+        template <typename Lambda>
+        static void* CloneLambda(void* object)
+        {
+            return new Lambda(*static_cast<Lambda*>(object));
         }
     };
 }; // namespace Prism
