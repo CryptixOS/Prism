@@ -82,6 +82,13 @@ namespace Prism
     template <typename T>
     concept Swappable = requires(T& a, T& b) { Swap(a, b); };
 
+    template <typename F>
+    inline constexpr bool IsLambda
+        = (!IsFunctionPointerV<F> && IsRValueReferenceV<F&&>);
+
+    template <typename F>
+    concept Lambda = requires { IsLambda<F>; };
+
     namespace Ranges
     {
 
