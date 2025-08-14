@@ -151,7 +151,7 @@ namespace Prism
     constexpr void DestroyAt(T* object)
     {
         if constexpr (IsArrayV<T>)
-            for (auto& value : *object) DestoryAt(AddressOf(value));
+            for (auto& value : *object) DestroyAt(AddressOf(value));
         else object->~T();
     }
 }; // namespace Prism
