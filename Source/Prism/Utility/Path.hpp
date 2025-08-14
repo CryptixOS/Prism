@@ -17,15 +17,15 @@ namespace Prism
         using TraitsType            = ViewType::TraitsType;
         using ValueType             = TraitsType::CharType;
         using SizeType              = StringView::SizeType;
-        using DifferenceType        = std::ptrdiff_t;
+        using DifferenceType        = ptrdiff;
         using ReferenceType         = ViewType::ValueType&;
         using ConstReferenceType    = const ViewType::ValueType&;
         using PointerType           = ViewType::ValueType*;
         using ConstPointerType      = const ViewType::ValueType*;
         using Iterator              = ViewType::ValueType*;
         using ConstIterator         = const ViewType::ValueType*;
-        using ReverseIterator       = std::reverse_iterator<Iterator>;
-        using ConstReverseIterator  = std::reverse_iterator<ConstIterator>;
+        using ReverseIterator       = Prism::ReverseIterator<Iterator>;
+        using ConstReverseIterator  = Prism::ReverseIterator<ConstIterator>;
 
         constexpr static usize NPos = PathView::NPos;
 
@@ -59,7 +59,7 @@ namespace Prism
             : m_Path(Move(path.m_Path))
         {
         }
-        constexpr Path(std::nullptr_t) = delete;
+        constexpr Path(NullType) = delete;
 
         constexpr Path& operator=(const Path& other)
         {
@@ -82,7 +82,7 @@ namespace Prism
             return m_Path = str, *this;
         }
         constexpr Path& operator=(ValueType ch) { return m_Path = ch, *this; }
-        constexpr Path& operator=(std::nullptr_t) = delete;
+        constexpr Path& operator=(NullType) = delete;
 
         //--------------------------------------------------------------------------
         // Iterators
@@ -453,8 +453,8 @@ namespace Prism
         return lhs.Compare(rhs) == 0;
     }
 
-    constexpr std::strong_ordering operator<=>(const Path& lhs,
-                                               PathView    rhs) PM_NOEXCEPT
+    constexpr StrongOrdering operator<=>(const Path& lhs,
+                                         PathView    rhs) PM_NOEXCEPT
     {
         return lhs.View().Compare(rhs) <=> 0;
     }
@@ -464,13 +464,13 @@ namespace Prism
     {
         lhs.Swap(rhs);
     }
-    inline constexpr std::strong_ordering operator<=>(const Path& lhs,
-                                                      const Path& rhs) noexcept
+    inline constexpr StrongOrdering operator<=>(const Path& lhs,
+                                                const Path& rhs) noexcept
     {
         return lhs.Compare(rhs) <=> 0;
     }
-    inline constexpr std::strong_ordering
-    operator<=>(const Path& lhs, const Path::ValueType* rhs)
+    inline constexpr StrongOrdering operator<=>(const Path&            lhs,
+                                                const Path::ValueType* rhs)
     {
         return lhs.Compare(rhs) <=> 0;
     }
@@ -487,9 +487,24 @@ namespace Prism
             return Path(str, len);
         }
     }; // namespace PathLiterals
+
+#ifndef PRISM_DISABLE_STDHASH
+    #define PRISM_DISABLE_STDHASH 0
+#endif
+#if PRISM_DISABLE_STDHASH == 0
+    template <>
+    struct Hash<Path> : public Detail::StringHashBase<char>
+    {
+    };
+    template <>
+    struct IsFastHash<Hash<Path>> : FalseType
+    {
+    };
+#endif
+
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::Path;
 using namespace Prism::PathLiterals;
 #endif
@@ -506,19 +521,6 @@ struct fmt::formatter<Prism::Path> : fmt::formatter<fmt::string_view>
                         fmt::string_view{src.View().Raw(), src.View().Size()}),
             ctx);
     }
-};
-#endif
-#ifndef PRISM_DISABLE_STDHASH
-    #define PRISM_DISABLE_STDHASH 0
-#endif
-#if PRISM_DISABLE_STDHASH == 0
-template <>
-struct std::hash<Prism::Path> : public Prism::Detail::StringHashBase<char>
-{
-};
-template <>
-struct std::__is_fast_hash<std::hash<Prism::Path>> : Prism::FalseType
-{
 };
 #endif
 

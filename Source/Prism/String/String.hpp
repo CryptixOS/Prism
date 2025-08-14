@@ -23,15 +23,15 @@ namespace Prism
         using TraitsType               = Traits;
         using ValueType                = typename TraitsType::CharType;
         using SizeType                 = typename ViewType::SizeType;
-        using DifferenceType           = std::ptrdiff_t;
+        using DifferenceType           = ptrdiff;
         using ReferenceType            = ValueType&;
         using ConstReferenceType       = const ValueType&;
         using PointerType              = ValueType*;
         using ConstPointerType         = const ValueType*;
         using Iterator                 = ValueType*;
         using ConstIterator            = const ValueType*;
-        using ReverseIterator          = std::reverse_iterator<Iterator>;
-        using ConstReverseIterator     = std::reverse_iterator<ConstIterator>;
+        using ReverseIterator          = Prism::ReverseIterator<Iterator>;
+        using ConstReverseIterator     = Prism::ReverseIterator<ConstIterator>;
 
         constexpr static SizeType NPos = -1;
 
@@ -47,7 +47,7 @@ namespace Prism
         }
         template <typename InputIt>
         constexpr BasicString(InputIt first, InputIt last)
-            : BasicString(first, std::distance(first, last))
+            : BasicString(first, Distance(first, last))
         {
         }
         constexpr BasicString(const ValueType* s, SizeType count = NPos)
@@ -128,7 +128,7 @@ namespace Prism
 
             return *this;
         }
-        constexpr BasicString& operator=(std::nullptr_t) = delete;
+        constexpr BasicString& operator=(NullType) = delete;
 
         C& At(usize pos)
         {
@@ -182,28 +182,28 @@ namespace Prism
         constexpr const C* end() const PM_NOEXCEPT { return &Back() + 1; }
         constexpr const C* cend() const PM_NOEXCEPT { return &Back() + 1; }
 
-        constexpr std::reverse_iterator<C*> rbegin() PM_NOEXCEPT
+        constexpr Prism::ReverseIterator<C*> rbegin() PM_NOEXCEPT
         {
             return &Back() + 1;
         }
-        constexpr std::reverse_iterator<const C*> rbegin() const PM_NOEXCEPT
+        constexpr Prism::ReverseIterator<const C*> rbegin() const PM_NOEXCEPT
         {
             return &Back() + 1;
         }
-        constexpr std::reverse_iterator<const C*> crbegin() const PM_NOEXCEPT
+        constexpr Prism::ReverseIterator<const C*> crbegin() const PM_NOEXCEPT
         {
             return &Back() + 1;
         }
 
-        constexpr std::reverse_iterator<C*> rend() PM_NOEXCEPT
+        constexpr Prism::ReverseIterator<C*> rend() PM_NOEXCEPT
         {
             return &Front();
         }
-        constexpr std::reverse_iterator<const C*> rend() const PM_NOEXCEPT
+        constexpr Prism::ReverseIterator<const C*> rend() const PM_NOEXCEPT
         {
             return &Front();
         }
-        constexpr std::reverse_iterator<const C*> crend() const PM_NOEXCEPT
+        constexpr Prism::ReverseIterator<const C*> crend() const PM_NOEXCEPT
         {
             return &Front();
         }
@@ -221,7 +221,7 @@ namespace Prism
             assert(Size() + count <= MaxSize());
             assert(pos <= Size());
 
-            usize newSize = std::max(pos + count, Size());
+            usize newSize = Max(pos + count, Size());
 
             EnsureCapacity(newSize);
             TraitsType::Assign(Raw() + pos, ch, count);
@@ -237,7 +237,7 @@ namespace Prism
             assert(str);
 
             usize len     = Traits::Length(str);
-            usize newSize = std::max(pos + len, Size());
+            usize newSize = Max(pos + len, Size());
 
             assert(Size() + len <= MaxSize());
 
@@ -294,7 +294,7 @@ namespace Prism
         }
         constexpr void Swap(BasicString& str) PM_NOEXCEPT
         {
-            std::swap(m_Storage, str.m_Storage);
+            Prism::Swap(m_Storage, str.m_Storage);
         }
 
         constexpr SizeType Find(const BasicString& str,
@@ -703,8 +703,7 @@ namespace Prism
         constexpr void Reallocate(usize newCapacity, bool copyOld)
         {
             constexpr usize ALIGNMENT = sizeof(ValueType*);
-            newCapacity               = (newCapacity + ALIGNMENT - 1)
-                        & ~(ALIGNMENT - 1);
+            newCapacity = (newCapacity + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
             if (newCapacity == Capacity()) return;
 
             usize newSize = Size();
@@ -768,7 +767,7 @@ namespace Prism
     }
 
     template <typename C, typename Traits>
-    constexpr std::strong_ordering
+    constexpr StrongOrdering
     operator<=>(const BasicString<C, Traits>& lhs,
                 BasicStringView<C, Traits>    rhs) PM_NOEXCEPT
     {
@@ -783,14 +782,14 @@ namespace Prism
         lhs.Swap(rhs);
     }
     template <typename C, typename Traits>
-    inline constexpr std::strong_ordering
+    inline constexpr StrongOrdering
     operator<=>(const BasicString<C, Traits>& lhs,
                 const BasicString<C, Traits>& rhs) noexcept
     {
         return lhs.Compare(rhs) <=> 0;
     }
     template <typename C, typename Traits>
-    inline constexpr std::strong_ordering
+    inline constexpr StrongOrdering
     operator<=>(const BasicString<C, Traits>& lhs, const C* rhs)
     {
         return lhs.Compare(rhs) <=> 0;
@@ -828,37 +827,39 @@ namespace Prism
             return WString(str, size);
         }
     }; // namespace Literals
+
+    // hash support
+    template <>
+    struct Hash<BasicString<char, CharTraits<char>>>
+        : Detail::StringHashBase<char>
+    {
+    };
+
+    template <>
+    struct Hash<BasicString<char8_t, CharTraits<char8_t>>>
+        : Detail::StringHashBase<char8_t>
+    {
+    };
+
+    template <>
+    struct Hash<BasicString<char16_t, CharTraits<char16_t>>>
+        : Detail::StringHashBase<char16_t>
+    {
+    };
+
+    template <>
+    struct Hash<BasicString<char32_t, CharTraits<char32_t>>>
+        : Detail::StringHashBase<char32_t>
+    {
+    };
+
+    template <>
+    struct Hash<BasicString<wchar_t, CharTraits<wchar_t>>>
+        : Detail::StringHashBase<wchar_t>
+    {
+    };
+
 }; // namespace Prism
-// hash support
-template <>
-struct std::hash<Prism::BasicString<char, Prism::CharTraits<char>>>
-    : Prism::Detail::StringHashBase<char>
-{
-};
-
-template <>
-struct std::hash<Prism::BasicString<char8_t, Prism::CharTraits<char8_t>>>
-    : Prism::Detail::StringHashBase<char8_t>
-{
-};
-
-template <>
-struct std::hash<Prism::BasicString<char16_t, Prism::CharTraits<char16_t>>>
-    : Prism::Detail::StringHashBase<char16_t>
-{
-};
-
-template <>
-struct std::hash<Prism::BasicString<char32_t, Prism::CharTraits<char32_t>>>
-    : Prism::Detail::StringHashBase<char32_t>
-{
-};
-
-template <>
-struct std::hash<Prism::BasicString<wchar_t, Prism::CharTraits<wchar_t>>>
-    : Prism::Detail::StringHashBase<wchar_t>
-{
-};
 
 #if PRISM_DISABLE_FMT == 0
 template <>

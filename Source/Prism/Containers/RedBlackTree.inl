@@ -70,25 +70,25 @@ namespace Prism
         return {};
     }
     template <typename K, typename V>
-    std::reverse_iterator<typename RedBlackTree<K, V>::Iterator>
+    Prism::ReverseIterator<typename RedBlackTree<K, V>::Iterator>
     RedBlackTree<K, V>::rbegin()
     {
         return {};
     }
     template <typename K, typename V>
-    std::reverse_iterator<typename RedBlackTree<K, V>::ConstIterator>
+    Prism::ReverseIterator<typename RedBlackTree<K, V>::ConstIterator>
     RedBlackTree<K, V>::rbegin() const
     {
         return {};
     }
     template <typename K, typename V>
-    std::reverse_iterator<typename RedBlackTree<K, V>::Iterator>
+    Prism::ReverseIterator<typename RedBlackTree<K, V>::Iterator>
     RedBlackTree<K, V>::rend()
     {
         return Iterator(m_LeastNode);
     }
     template <typename K, typename V>
-    std::reverse_iterator<typename RedBlackTree<K, V>::ConstIterator>
+    Prism::ReverseIterator<typename RedBlackTree<K, V>::ConstIterator>
     RedBlackTree<K, V>::rend() const
     {
         return ConstIterator(m_LeastNode);
@@ -201,16 +201,16 @@ namespace Prism
                     else successorNode->Parent->RightChild = node;
                 }
                 else m_Root = node;
-                std::swap(node->Parent, successorNode->Parent);
+                Prism::Swap(node->Parent, successorNode->Parent);
             }
-            std::swap(node->LeftChild, successorNode->LeftChild);
+            Prism::Swap(node->LeftChild, successorNode->LeftChild);
             if (neighborSwap)
             {
                 node->RightChild          = successorNode->RightChild;
                 successorNode->RightChild = node;
             }
-            else std::swap(node->RightChild, successorNode->RightChild);
-            std::swap(node->Color, successorNode->Color);
+            else Prism::Swap(node->RightChild, successorNode->RightChild);
+            Prism::Swap(node->Color, successorNode->Color);
         }
 
         auto* child = node->LeftChild ?: node->RightChild;

@@ -27,22 +27,7 @@ extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
 #define PrismStringifyInner(x) #x
 #define PrismStringify(x)      PrismStringifyInner(x)
 
-#if PRISM_TARGET_CRYPTIX == 1
-    #include <cerrno>
-    // #include <expected>
-    // #include <Prism/Utility/Expected.hpp>
-    #define PRISM_ERRNO_T      std::errno_t;
-    #define Stringify(x)       PrismStringify(x)
-    // #define PRISM_EXPECTED_T   std::expected
-    // #define PRISM_UNEXPECTED_T std::unexpected
-    #define PRISM_EXPECTED_T   Expected
-    #define PRISM_UNEXPECTED_T Unexpected
-#else
-    // #include <Prism/Utility/Expected.hpp>
-    #define PRISM_ERRNO_T      i32
-    #define PRISM_EXPECTED_T   Expected
-    #define PRISM_UNEXPECTED_T Unexpected
-#endif
+#define Stringify(x)           PrismStringify(x)
 
 namespace Prism
 {
@@ -144,8 +129,14 @@ namespace Prism
     {
         return lhs < rhs ? lhs : rhs;
     }
+
+    using WeakOrdering   = std::weak_ordering;
+    using StrongOrdering = std::strong_ordering;
     template <typename T>
-    constexpr const T& Min(std::initializer_list<T> ilist)
+    using InitializerList = std::initializer_list<T>;
+
+    template <typename T>
+    constexpr const T& Min(InitializerList<T> ilist)
     {
         auto     it     = ilist.begin();
         const T& result = *it++;
@@ -160,7 +151,7 @@ namespace Prism
         return lhs > rhs ? lhs : rhs;
     }
     template <typename T>
-    constexpr const T& Max(std::initializer_list<T> ilist)
+    constexpr const T& Max(InitializerList<T> ilist)
     {
         auto     it     = ilist.begin();
         const T& result = *it++;
@@ -170,19 +161,8 @@ namespace Prism
         return result;
     }
 
-    template <typename T, typename U>
-    [[nodiscard]] PM_ALWAYS_INLINE constexpr T BitCast(U const& a)
-    {
-#if (__has_builtin(__builtin_bit_cast))
-        return __builtin_bit_cast(T, a);
-#else
-        static_assert(sizeof(T) == sizeof(U));
-
-        T result;
-        __builtin_memcpy(&result, &a, sizeof(T));
-        return result;
-#endif
-    }
+    template <typename T>
+    struct Hash;
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
@@ -209,7 +189,9 @@ using Prism::upointer;
 using Prism::symbol;
 
 using Prism::Bit;
-
+using Prism::InitializerList;
 using Prism::Max;
 using Prism::Min;
+using Prism::StrongOrdering;
+using Prism::WeakOrdering;
 #endif

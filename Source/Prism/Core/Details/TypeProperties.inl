@@ -15,7 +15,7 @@ namespace Prism
     {
     };
     template <typename T>
-    struct IsNullPointer : IsSame<std::nullptr_t, typename RemoveCv<T>::Type>
+    struct IsNullPointer : IsSame<NullType, typename RemoveCv<T>::Type>
     {
     };
     template <typename T>
@@ -184,7 +184,7 @@ namespace Prism
         : IntegralConstant<
               bool,
               IsArithmetic<T>::Value || IsVoid<T>::Value
-                  || IsSame<std::nullptr_t, typename RemoveCv<T>::Type>::Value>
+                  || IsSame<NullType, typename RemoveCv<T>::Type>::Value>
     {
     };
     template <typename T>

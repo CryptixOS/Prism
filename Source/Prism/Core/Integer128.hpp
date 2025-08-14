@@ -46,16 +46,16 @@ namespace Prism
         {
             return lhs.m_High == rhs.m_High && lhs.m_Low == rhs.m_Low;
         }
-        friend constexpr std::strong_ordering operator<=>(const Integer128& lhs,
-                                                          const Integer128& rhs)
+        friend constexpr StrongOrdering operator<=>(const Integer128& lhs,
+                                                    const Integer128& rhs)
         {
-            if (lhs.m_High < rhs.m_High) return std::strong_ordering::less;
-            if (lhs.m_High > rhs.m_High) return std::strong_ordering::greater;
+            if (lhs.m_High < rhs.m_High) return StrongOrdering::less;
+            if (lhs.m_High > rhs.m_High) return StrongOrdering::greater;
 
-            if (lhs.m_Low < rhs.m_Low) return std::strong_ordering::less;
-            if (lhs.m_Low > rhs.m_Low) return std::strong_ordering::greater;
+            if (lhs.m_Low < rhs.m_Low) return StrongOrdering::less;
+            if (lhs.m_Low > rhs.m_Low) return StrongOrdering::greater;
 
-            return std::strong_ordering::equal;
+            return StrongOrdering::equal;
         }
         friend constexpr Integer128 operator|(const Integer128& lhs,
                                               const Integer128& rhs)

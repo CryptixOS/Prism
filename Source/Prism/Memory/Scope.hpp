@@ -62,7 +62,7 @@ namespace Prism
             : m_Instance(nullptr)
         {
         }
-        constexpr Scope(std::nullptr_t)
+        constexpr Scope(NullType)
             : m_Instance(nullptr)
         {
         }
@@ -163,7 +163,7 @@ namespace Prism
 
         Scope& operator=(T* ptr) = delete;
 
-        Scope& operator=(std::nullptr_t)
+        Scope& operator=(NullType)
         {
             Reset();
             return *this;
@@ -191,7 +191,7 @@ namespace Prism
             : m_Instance(nullptr)
         {
         }
-        constexpr Scope(std::nullptr_t)
+        constexpr Scope(NullType)
             : m_Instance(nullptr)
         {
         }
@@ -294,7 +294,7 @@ namespace Prism
 
         Scope& operator=(T* ptr) = delete;
 
-        Scope& operator=(std::nullptr_t)
+        Scope& operator=(NullType)
         {
             Reset();
             return *this;

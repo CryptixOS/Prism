@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Core.hpp>
+#include <Prism/Core/Iterator.hpp>
 
 #include <cassert>
 
@@ -68,7 +69,7 @@ namespace Prism
 
             friend class DoublyLinkedList;
         };
-        using ReverseIteratorType = std::reverse_iterator<Iterator>;
+        using ReverseIteratorType = Prism::ReverseIterator<Iterator>;
 
         DoublyLinkedList()        = default;
         ~DoublyLinkedList() { Clear(); }

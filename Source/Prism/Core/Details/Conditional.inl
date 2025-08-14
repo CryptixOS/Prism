@@ -95,15 +95,6 @@ namespace Prism
                       "Don't forward an rvalue as an lvalue");
         return static_cast<T&&>(value);
     }
-    template <typename T, typename... Args>
-    constexpr auto ConstructAt(T* location, Args&&... args)
-        PM_NOEXCEPT(PM_NOEXCEPT(::new((void*)0) T(DeclVal<Args>()...)))
-            -> decltype(::new((void*)0) T(DeclVal<Args>()...))
-    {
-        return ::new (reinterpret_cast<void*>(location))
-            T(Forward<Args>(args)...);
-    }
-
     template <typename... Args>
     inline constexpr bool ConjunctionV = Conjunction<Args...>::Value;
     template <typename... Args>

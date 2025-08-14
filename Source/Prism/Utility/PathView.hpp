@@ -43,7 +43,7 @@ namespace Prism
         }
         constexpr PathView(const PathView&)            = default;
         constexpr PathView(PathView&&)                 = default;
-        constexpr PathView(std::nullptr_t)             = delete;
+        constexpr PathView(NullType)                   = delete;
 
         constexpr PathView& operator=(const PathView&) = default;
         constexpr PathView& operator=(PathView&&)      = default;
@@ -399,24 +399,25 @@ namespace Prism
             return PathView(str, len);
         }
     }; // namespace PathViewLiterals
-}; // namespace Prism
-#if PRISM_TARGET_CRYPTIX != 0
-using Prism::PathView;
-using namespace Prism::PathViewLiterals;
-#endif
 
 #ifndef PRISM_DISABLE_STDHASH
     #define PRISM_DISABLE_STDHASH 0
 #endif
 #if PRISM_DISABLE_STDHASH == 0
-template <>
-struct std::hash<Prism::PathView> : public Prism::Detail::StringHashBase<char>
-{
-};
-template <>
-struct std::__is_fast_hash<std::hash<Prism::PathView>> : Prism::FalseType
-{
-};
+    template <>
+    struct Hash<PathView> : public Detail::StringHashBase<char>
+    {
+    };
+    template <>
+    struct IsFastHash<Hash<PathView>> : FalseType
+    {
+    };
+#endif
+
+}; // namespace Prism
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::PathView;
+using namespace Prism::PathViewLiterals;
 #endif
 
 // Opt-in to borrowed_range concept

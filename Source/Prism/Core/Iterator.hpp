@@ -123,7 +123,7 @@ namespace Prism
         }
         constexpr Pointer operator->() const
         {
-            return std::addressof(operator*());
+            return AddressOf(operator*());
         }
 
         constexpr ReverseIterator& operator++()

@@ -35,11 +35,67 @@ namespace Prism
         constexpr Optional(V)
         {
         }
+        constexpr Optional(const Optional& other)
+            requires(!IsCopyConstructibleV<T>)
+        = delete;
         constexpr Optional(const Optional& other) = default;
+        constexpr Optional(const Optional& other)
+            requires(!IsTriviallyCopyConstructibleV<T>)
+            : m_HasValue(other.m_HasValue)
+        {
+            if (other.HasValue())
+                ConstructAt(reinterpret_cast<T*>(m_Storage), T(other.Value()));
+        }
+        template <typename U>
+            requires(IsConstructibleV<T, const U&>
+                     && !IsSpecializationOf<T, Optional>::Value
+                     && !IsSpecializationOf<U, Optional>::Value
+                     && !IsLValueReferenceV<U>)
+        constexpr explicit Optional(const Optional<U>& other)
+            : m_HasValue(other.m_HasValue)
+        {
+            if (other.HasValue())
+                ConstructAt<RemoveConstType<T>>(&m_Storage, other.Value());
+        }
+
+        constexpr Optional(Optional&& other)
+            requires(!IsMoveConstructibleV<T>)
+        = delete;
         constexpr Optional(Optional&& other)
             : m_HasValue(other.m_HasValue)
         {
-            if (other.HasValue()) new (&m_Storage) T(Move(other.Value()));
+            if (other.HasValue()) ConstructAt(&m_Storage, other.ReleaseValue());
+        }
+        template <typename U>
+            requires(IsConstructibleV<T, U &&>
+                     && !IsSpecializationOf<T, Optional>::Value
+                     && !IsSpecializationOf<U, Optional>::Value
+                     && !IsLValueReferenceV<U>)
+        constexpr explicit Optional(Optional<U>&& other)
+            : m_HasValue(other.m_HasValue)
+        {
+            if (other.HasValue())
+                ConstructAt<RemoveConstType<T>>(&m_Storage,
+                                                other.ReleaseValue());
+        }
+        template <typename U = T>
+            requires(!IsSameV<NullOptType, RemoveCvRefType<U>>)
+        constexpr explicit(!IsConvertible<U&&, T>::Value) Optional(U&& value)
+            requires(!IsSameV<RemoveCvRefType<U>, Optional<T>>
+                     && IsConstructibleV<T, U &&>)
+            : m_HasValue(true)
+        {
+            ConstructAt<RemoveConstType<T>>(&m_Storage, Forward<U>(value));
+        }
+
+        constexpr ~Optional()
+            requires(!IsDestructibleV<T>)
+        = delete;
+        constexpr ~Optional() = default;
+        constexpr ~Optional()
+            requires(!IsTriviallyDestructibleV<T>)
+        {
+            Reset();
         }
 
         template <SameAs<NullOptType> V>
@@ -49,83 +105,68 @@ namespace Prism
             return *this;
         }
 
-        Optional(const Optional& other)
-            requires(!IsCopyConstructibleV<T>)
-        = delete;
-        Optional(Optional&& other)
-            requires(!IsMoveConstructibleV<T>)
-        = delete;
-
         Optional& operator=(const Optional& other)
             requires(!IsCopyConstructibleV<T> || !IsDestructibleV<T>)
         = delete;
-        Optional& operator=(const Optional& other) = default;
-        Optional& operator=(Optional&& other)
-            requires(!IsMoveConstructibleV<T> || !IsDestructibleV<T>)
-        = delete;
-
-        constexpr Optional(const Optional& other)
-            requires(!IsTriviallyCopyConstructibleV<T>)
-            : m_HasValue(other.m_HasValue)
-        {
-            if (other.HasValue()) new (&m_Storage) T(other.Value());
-        }
-        template <typename U>
-        // requires(IsConstructibleV<T, const U&>
-        // && !IsSpecializationOf<T, Optional>
-        // && !IsSpecializationOf<U, Optional>
-        // && !IsLValueReferenceV<U>)
-        constexpr explicit Optional(const Optional<U>& other)
-            : m_HasValue(other.m_HasValue)
-        {
-            if (other.HasValue()) new (&m_Storage) T(other.Value());
-        }
-
-        template <typename U>
-        /*   requires(IsConstructibleV<T, U &&>
-                    && !IsSpecializationOf<T, Optional>
-                    && !IsSpecializationOf<U, Optional>
-                    && !IsLValueReferenceV<U>)*/
-        constexpr explicit Optional(Optional<U>&& other)
-            : m_HasValue(other.m_HasValue)
-        {
-            if (other.HasValue()) new (&m_Storage) T(Move(other.m_Value));
-        }
-
-        template <typename U = T>
-            requires(!IsSameV<NullOptType, RemoveCvRefType<U>>)
-        constexpr explicit(!IsConvertible<U&&, T>::Value) Optional(U&& value)
-            requires(!IsSameV<RemoveCvRefType<U>, Optional<T>>
-                     && IsConstructibleV<T, U &&>)
-            : m_HasValue(true)
-        {
-            new (&m_Storage) T(Forward<U>(value));
-        }
+        Optional&           operator=(const Optional& other) = default;
 
         constexpr Optional& operator=(Optional const& other)
             requires(!IsTriviallyCopyConstructibleV<T>
-                     || !std::is_trivially_destructible_v<T>)
+                     || !IsTriviallyDestructibleV<T>)
         {
             if (this != &other)
             {
                 Reset();
                 m_HasValue = other.m_HasValue;
-                if (other.HasValue()) new (&m_Storage) T(other.Value());
+                if (other.HasValue())
+                    ConstructAt<RemoveConstType<T>>(&m_Storage, other.Value());
             }
             return *this;
         }
 
+        Optional& operator=(Optional&& other)
+            requires(!IsMoveConstructibleV<T> || !IsDestructibleV<T>)
+        = delete;
         constexpr Optional& operator=(Optional&& other)
         {
             if (this != &other)
             {
                 Reset();
                 m_HasValue = other.m_HasValue;
-                if (other.HasValue()) new (&m_Storage) T(Move(other.Value()));
+                if (other.HasValue())
+                    ConstructAt<RemoveConstType<T>>(&m_Storage,
+                                                    other.ReleaseValue());
             }
             return *this;
         }
+        PM_ALWAYS_INLINE constexpr Optional& operator=(Optional&& other)
+            requires(IsMoveAssignableV<T> && IsMoveConstructibleV<T>
+                     && (!IsTriviallyMoveAssignableV<T>
+                         || !IsTriviallyMoveConstructibleV<T>
+                         || !IsTriviallyDestructibleV<T>))
+        {
+            if (this == &other) return *this;
 
+            Reset();
+            if (other.HasValue())
+            {
+                if (HasValue()) Value() = other.ReleaseValue();
+                else
+                {
+                    ConstructAt<RemoveConstType<T>>(&m_Storage,
+                                                    other.ReleaseValue());
+                    m_HasValue = true;
+                }
+
+                return *this;
+            }
+
+            Value().~T();
+            m_HasValue = false;
+            return *this;
+        }
+
+        constexpr      operator bool() const PM_NOEXCEPT { return HasValue(); }
         constexpr bool operator==(NullOptType) const { return !HasValue(); }
         constexpr bool operator!=(NullOptType) const { return HasValue(); }
         template <typename O>
@@ -134,21 +175,10 @@ namespace Prism
             return HasValue() == other.HasValue()
                 && (!HasValue() || Value() == other.Value());
         }
-
         template <typename O>
         constexpr bool operator==(O const& other) const
         {
             return HasValue() && Value() == other;
-        }
-
-        constexpr ~Optional()
-            requires(!IsDestructibleV<T>)
-        = delete;
-        constexpr ~Optional() = default;
-        constexpr ~Optional()
-            requires(!std::is_trivially_destructible_v<T>)
-        {
-            Reset();
         }
 
         constexpr void Reset()
@@ -164,25 +194,28 @@ namespace Prism
         {
             Reset();
             m_HasValue = true;
-            new (&m_Storage) T(Forward<Args>(args)...);
+            ConstructAt(reinterpret_cast<T*>(m_Storage),
+                        T(Forward<Args>(args)...));
         }
 
-        constexpr      operator bool() const PM_NOEXCEPT { return HasValue(); }
         constexpr bool HasValue() const { return m_HasValue; }
+
         [[nodiscard]] PM_ALWAYS_INLINE T& Value() &
         {
             assert(m_HasValue);
             return *Launder(reinterpret_cast<T*>(&m_Storage));
         }
-
         constexpr T const& Value() const&
         {
             assert(m_HasValue);
             return *Launder(reinterpret_cast<T const*>(&m_Storage));
         }
-
         constexpr T Value() && { return ReleaseValue(); }
-
+        constexpr T ValueOr(const T& fallback) const&
+        {
+            if (m_HasValue) return Value();
+            return fallback;
+        }
         constexpr T ReleaseValue()
         {
             assert(m_HasValue);
@@ -194,25 +227,21 @@ namespace Prism
             return releasedValue;
         }
 
-        constexpr T ValueOr(const T& fallback) const&
-        {
-            if (m_HasValue) return Value();
-            return fallback;
-        }
-
         constexpr const T& operator*() const { return Value(); }
         constexpr T&       operator*() { return Value(); }
 
         constexpr const T* operator->() const { return &Value(); }
         constexpr T*       operator->() { return &Value(); }
 
-        /*constexpr Optional& operator=(Optional const& other)
-            requires(!std::IsTriviallyCopyConstructible<T>
-                     || !std::is_trivially_destructible<T>)
-        {*/
-
       private:
-        alignas(T) u8 m_Storage[sizeof(T)];
+        union
+        {
+            struct
+            {
+                alignas(T) u8 _[sizeof(T)];
+            } m_Null{};
+            RemoveConstType<T> m_Storage;
+        };
         bool m_HasValue = false;
     };
 }; // namespace Prism

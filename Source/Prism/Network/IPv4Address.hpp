@@ -90,7 +90,6 @@ namespace Prism
     static_assert(sizeof(IPv4Address) == 4);
 }; // namespace Prism
 
-
 #if PRISM_DISABLE_FMT == 0
 template <>
 struct fmt::formatter<Prism::IPv4Address> : fmt::formatter<fmt::string_view>
@@ -105,7 +104,7 @@ struct fmt::formatter<Prism::IPv4Address> : fmt::formatter<fmt::string_view>
 
 // hash support
 template <>
-struct std::hash<Prism::IPv4Address>
+struct Hash<Prism::IPv4Address>
 {
     [[nodiscard]] Prism::usize
     operator()(const Prism::IPv4Address& ip) const PM_NOEXCEPT
@@ -114,7 +113,7 @@ struct std::hash<Prism::IPv4Address>
         u32 key = ip.Raw().Load();
 
 #if PRISM_TARGET_CRYPTIX != 0
-        return std::hash<Prism::u32>{}(key);
+        return Hash<Prism::u32>{}(key);
 #else
         usize       length = sizeof(key);
         const usize seed   = 0xc70f6907ul;

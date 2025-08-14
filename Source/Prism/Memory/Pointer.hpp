@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Concepts.hpp>
-#include <Prism/Utility/Hash.hpp>
+#include <Prism/Core/HashTraits.hpp>
 
 #if PRISM_TARGET_CRYPTIX != 0
 namespace MM
@@ -45,7 +45,7 @@ namespace Prism
     {
 
         inline constexpr Pointer() = default;
-        inline constexpr Pointer(std::nullptr_t) { m_Pointer = 0; }
+        inline constexpr Pointer(NullType) { m_Pointer = 0; }
 
         template <PointerHolder T = VirtAddr>
         inline constexpr Pointer(const T pointer)
@@ -98,10 +98,7 @@ namespace Prism
         inline constexpr bool IsValid() const { return m_Pointer != 0; }
 
 #if PRISM_TARGET_CRYPTIX != 0
-        VirtAddr HigherHalfOffset() const
-        {
-            return MM::HigherHalfOffset();
-        }
+        VirtAddr HigherHalfOffset() const { return MM::HigherHalfOffset(); }
         inline constexpr bool IsHigherHalf() const
         {
             return m_Pointer >= HigherHalfOffset();
@@ -259,6 +256,16 @@ namespace Prism
     {
         return lhs.Raw() >> rhs;
     }
+
+    // hash support
+    template <>
+    struct Hash<Pointer>
+    {
+        [[nodiscard]] usize operator()(const Pointer& pointer) const PM_NOEXCEPT
+        {
+            return Hash<Prism::pointer*>{}(pointer.Raw());
+        }
+    };
 }; // namespace Prism
 
 constexpr Prism::Pointer operator""_virt(unsigned long long address)
@@ -285,24 +292,3 @@ struct fmt::formatter<Prism::Pointer> : fmt::formatter<fmt::string_view>
     }
 };
 #endif
-
-// hash support
-template <>
-struct std::hash<Prism::Pointer>
-{
-    [[nodiscard]] Prism::usize
-    operator()(const Prism::Pointer& pointer) const PM_NOEXCEPT
-    {
-        using namespace Prism;
-#if PRISM_TARGET_CRYPTIX != 0
-        return std::hash<Prism::pointer>{}(pointer.Raw());
-#else
-        u64         key    = pointer.Raw();
-        usize       length = sizeof(u64);
-        const usize seed   = 0xc70f6907ul;
-
-        return Hash::MurmurHash2(reinterpret_cast<const char*>(&key), length,
-                                 seed);
-#endif
-    }
-};

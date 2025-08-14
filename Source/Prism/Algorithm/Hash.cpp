@@ -5,9 +5,14 @@
  * SPDX-License-Identifier: GPL-3
  */
 #include <Prism/Algorithm/Hash.hpp>
+#include <Prism/Core/Bits.hpp>
 
 namespace Prism::Murmur
 {
+    usize Hash2(u8* input, usize length, const u64 seed)
+    {
+        return Hash2(Span<u8>(input, length), seed);
+    }
     usize Hash2(Span<u8> input, const u64 seed)
     {
         // Marmur Hash constants
@@ -64,7 +69,6 @@ namespace Prism::Murmur
         return hash;
     }
 
-    inline u64 RotateLeft(u64 x, i8 r) { return (x << r) | (x >> (64 - r)); }
     PM_ALWAYS_INLINE u64 Combine(u64 k)
     {
         k ^= k >> 33;
@@ -75,7 +79,6 @@ namespace Prism::Murmur
 
         return k;
     }
-
     // TODO(v1tr10l7): Endianness
     u128 Hash3(Span<u8> input, const u32 seed)
     {

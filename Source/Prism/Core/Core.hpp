@@ -87,7 +87,7 @@ namespace Prism
     inline void Unreachable()
     {
 #ifdef PM_DEBUG
-        std::__glibcxx_assert_fail(nullptr, 0, "std::unreachable()", nullptr);
+        PrismAssertionFailed(Unreachable()");
 #elif defined PM_ENABLE_ASSERTIONS
         __builtin_trap();
 #else
@@ -137,12 +137,31 @@ namespace Prism
     };
     template <usize I>
     constexpr InPlaceIndexT<I> InPlaceIndex{};
+
+    template <typename T, typename... Args>
+    constexpr auto ConstructAt(T* location, Args&&... args)
+        PM_NOEXCEPT(PM_NOEXCEPT(::new((void*)0) T(DeclVal<Args>()...)))
+            -> decltype(::new((void*)0) T(DeclVal<Args>()...))
+    {
+        assert(location);
+        return ::new (reinterpret_cast<void*>(location))
+            T(Forward<Args>(args)...);
+    }
+    template <typename T>
+    constexpr void DestroyAt(T* object)
+    {
+        if constexpr (IsArrayV<T>)
+            for (auto& value : *object) DestoryAt(AddressOf(value));
+        else object->~T();
+    }
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
 using Prism::AddConstType;
 using Prism::AddressOf;
 using Prism::AsConst;
+using Prism::ConstructAt;
+using Prism::DestroyAt;
 using Prism::Exchange;
 using Prism::IndexSequence;
 using Prism::IndexSequenceFor;

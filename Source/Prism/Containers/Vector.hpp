@@ -113,7 +113,7 @@ namespace Prism
          * @brief Initializes the Vector with an initializer list.
          * @param init The initializer list of elements.
          */
-        Vector(std::initializer_list<T> init)
+        Vector(InitializerList<T> init)
         {
             Reserve(init.size());
             for (const auto& value : init) PushBack(value);
@@ -374,8 +374,7 @@ namespace Prism
          * @param ilist Initializer list.
          * @return Iterator to first inserted element.
          */
-        constexpr Iterator Insert(ConstIterator            pos,
-                                  std::initializer_list<T> ilist)
+        constexpr Iterator Insert(ConstIterator pos, InitializerList<T> ilist)
         {
             return Insert(pos, ilist.begin(), ilist.end());
         }

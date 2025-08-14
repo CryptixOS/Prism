@@ -35,7 +35,7 @@ namespace Prism
          */
         constexpr usize operator()(K key)
         {
-            auto hash = std::hash<K>{}(key);
+            auto hash = Hash<K>{}(key);
 
             return hash;
         }

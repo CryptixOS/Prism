@@ -6,16 +6,11 @@
  */
 #pragma once
 
+#include <Prism/Core/Bits.hpp>
 #include <Prism/Core/Concepts.hpp>
 
 namespace Prism
 {
-    enum class Endian
-    {
-        eLittle = __ORDER_LITTLE_ENDIAN__,
-        eBig    = __ORDER_BIG_ENDIAN__,
-        eNative = __BYTE_ORDER__,
-    };
     constexpr static Endian g_HostEndianness = Endian::eNative;
 
     template <typename T>
@@ -31,7 +26,7 @@ namespace Prism
     {
         if constexpr (New == Old) return num;
 
-        return std::byteswap(num);
+        return ByteSwap(num);
     }
     template <Endian New, Endian Old = Endian::eNative, IntegralUnderlying T>
     inline constexpr T ConvertEndian(T num)
@@ -39,7 +34,7 @@ namespace Prism
     {
         if constexpr (New == Old) return num;
 
-        return static_cast<T>(std::byteswap(ToUnderlying(num)));
+        return static_cast<T>(ByteSwap(ToUnderlying(num)));
     }
 
     template <Endian New, IntegralOrUnderlyingIntegral T>
@@ -105,10 +100,9 @@ struct fmt::formatter<Prism::EndianStorage<T, E>>
 };
 #endif
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::BigEndian;
 using Prism::ConvertEndian;
-using Prism::Endian;
 using Prism::EndianStorage;
 using Prism::LittleEndian;
 #endif

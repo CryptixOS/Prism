@@ -96,7 +96,7 @@ namespace Prism
 
 // hash support
 template <>
-struct std::hash<Prism::UUID>
+struct Hash<Prism::UUID>
 {
     [[nodiscard]] Prism::usize
     operator()(const Prism::UUID& uuid) const PM_NOEXCEPT
@@ -107,7 +107,7 @@ struct std::hash<Prism::UUID>
         u64 key  = low ^ high;
 
 #if PRISM_TARGET_CRYPTIX != 0
-        return std::hash<u64>{}(key);
+        return Hash<u64>{}(key);
 #else
         usize       length = sizeof(key);
         const usize seed   = 0xc70f6907ul;

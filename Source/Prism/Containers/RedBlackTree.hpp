@@ -135,10 +135,10 @@ namespace Prism
         ConstIterator                        begin() const;
         Iterator                             end();
         ConstIterator                        end() const;
-        std::reverse_iterator<Iterator>      rbegin();
-        std::reverse_iterator<ConstIterator> rbegin() const;
-        std::reverse_iterator<Iterator>      rend();
-        std::reverse_iterator<ConstIterator> rend() const;
+        Prism::ReverseIterator<Iterator>      rbegin();
+        Prism::ReverseIterator<ConstIterator> rbegin() const;
+        Prism::ReverseIterator<Iterator>      rend();
+        Prism::ReverseIterator<ConstIterator> rend() const;
 
         constexpr bool  IsEmpty() const { return m_Size == 0; }
         constexpr usize GetSize() const { return m_Size; }

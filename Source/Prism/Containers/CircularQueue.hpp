@@ -8,6 +8,7 @@
 
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Config.hpp>
+#include <Prism/Core/Iterator.hpp>
 #include <Prism/Core/Types.hpp>
 
 namespace Prism
@@ -77,25 +78,25 @@ namespace Prism
             return Iterator(*this, m_Size);
         }
 
-        std::reverse_iterator<Iterator> rbegin()
+        Prism::ReverseIterator<Iterator> rbegin()
         {
             return Iterator(*this, m_Size);
         }
-        std::reverse_iterator<const Iterator> rbegin() const
+        Prism::ReverseIterator<const Iterator> rbegin() const
         {
             return Iterator(*this, m_Size);
         }
-        std::reverse_iterator<const Iterator> rcbegin() const PM_NOEXCEPT
+        Prism::ReverseIterator<const Iterator> rcbegin() const PM_NOEXCEPT
         {
             return Iterator(*this, m_Size);
         }
 
-        std::reverse_iterator<Iterator> rend() { return Iterator(*this, 0); }
-        std::reverse_iterator<const Iterator> rend() const
+        Prism::ReverseIterator<Iterator> rend() { return Iterator(*this, 0); }
+        Prism::ReverseIterator<const Iterator> rend() const
         {
             return Iterator(*this, 0);
         }
-        std::reverse_iterator<const Iterator> rcend() const PM_NOEXCEPT
+        Prism::ReverseIterator<const Iterator> rcend() const PM_NOEXCEPT
         {
             return Iterator(*this, 0);
         }

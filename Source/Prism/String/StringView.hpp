@@ -10,8 +10,8 @@
 #include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Concepts.hpp>
 #include <Prism/Core/Core.hpp>
+#include <Prism/Core/HashTraits.hpp>
 #include <Prism/String/CharTraits.hpp>
-#include <Prism/Utility/Hash.hpp>
 
 #include <cassert>
 #include <ranges>
@@ -870,94 +870,73 @@ namespace Prism
             [[nodiscard]]
             constexpr usize operator()(const StringType& str) const PM_NOEXCEPT
             {
-                const char* key    = str.Raw();
+                const u8*   key    = reinterpret_cast<const u8*>(str.Raw());
                 usize       length = str.Size() * sizeof(C);
                 const usize seed   = 0xc70f6907ul;
 
-                return Hash::MurmurHash2(key, length, seed);
-            }
-        };
-        template <typename C,
-                  typename StringViewType = BasicStringView<C, CharTraits<C>>>
-        struct StringViewHashBase
-        {
-            [[nodiscard]]
-            constexpr usize
-            operator()(const StringViewType& str) const PM_NOEXCEPT
-            {
-                const char* key    = str.Raw();
-                usize       length = str.Size() * sizeof(C);
-                const usize seed   = 0xc70f6907ul;
-
-                return Hash::MurmurHash2(key, length, seed);
+                return Murmur::Hash2(const_cast<u8*>(key), length, seed);
             }
         };
     }; // namespace Detail
+
+    template <>
+    struct Hash<BasicStringView<char, CharTraits<char>>>
+        : public Detail::StringHashBase<char>
+    {
+    };
+    template <>
+    struct IsFastHash<Hash<StringView>> : FalseType
+    {
+    };
+    template <>
+    struct Hash<BasicStringView<wchar_t, CharTraits<wchar_t>>>
+        : public Detail::StringHashBase<wchar_t>
+    {
+    };
+
+    template <>
+    struct IsFastHash<Hash<BasicStringView<wchar_t, CharTraits<wchar_t>>>>
+        : FalseType
+    {
+    };
+
+    template <>
+    struct Hash<BasicStringView<char8_t, CharTraits<char8_t>>>
+        : public Detail::StringHashBase<char8_t>
+    {
+    };
+    template <>
+    struct IsFastHash<Hash<BasicStringView<char8_t, CharTraits<char8_t>>>>
+        : FalseType
+    {
+    };
+
+    template <>
+    struct Hash<BasicStringView<char16_t, CharTraits<char16_t>>>
+        : public Detail::StringHashBase<
+              usize, BasicStringView<char16_t, CharTraits<char16_t>>>
+    {
+    };
+
+    template <>
+    struct IsFastHash<Hash<BasicStringView<char16_t, CharTraits<char16_t>>>>
+        : FalseType
+    {
+    };
+
+    template <>
+    struct Hash<BasicStringView<char32_t, CharTraits<char32_t>>>
+        : public Detail::StringHashBase<
+              usize, BasicStringView<char32_t, CharTraits<char32_t>>>
+    {
+    };
+
+    template <>
+    struct IsFastHash<Hash<BasicStringView<char32_t, CharTraits<char32_t>>>>
+        : FalseType
+    {
+    };
 }; // namespace Prism
-
-template <>
-struct std::hash<Prism::BasicStringView<char, Prism::CharTraits<char>>>
-    : public Prism::Detail::StringHashBase<char>
-{
-};
-template <>
-struct std::__is_fast_hash<std::hash<Prism::StringView>> : Prism::FalseType
-{
-};
-template <>
-struct std::hash<Prism::BasicStringView<wchar_t, Prism::CharTraits<wchar_t>>>
-    : public Prism::Detail::StringHashBase<wchar_t>
-{
-};
-
-template <>
-struct std::__is_fast_hash<
-    std::hash<Prism::BasicStringView<wchar_t, Prism::CharTraits<wchar_t>>>>
-    : Prism::FalseType
-{
-};
-
-template <>
-struct std::hash<Prism::BasicStringView<char8_t, Prism::CharTraits<char8_t>>>
-    : public Prism::Detail::StringHashBase<char8_t>
-{
-};
-template <>
-struct std::__is_fast_hash<
-    std::hash<Prism::BasicStringView<char8_t, Prism::CharTraits<char8_t>>>>
-    : Prism::FalseType
-{
-};
-
-template <>
-struct std::hash<Prism::BasicStringView<char16_t, Prism::CharTraits<char16_t>>>
-    : public Prism::Detail::StringHashBase<
-          Prism::usize,
-          Prism::BasicStringView<char16_t, Prism::CharTraits<char16_t>>>
-{
-};
-
-template <>
-struct std::__is_fast_hash<
-    std::hash<Prism::BasicStringView<char16_t, Prism::CharTraits<char16_t>>>>
-    : Prism::FalseType
-{
-};
-
-template <>
-struct std::hash<Prism::BasicStringView<char32_t, Prism::CharTraits<char32_t>>>
-    : public Prism::Detail::StringHashBase<
-          Prism::usize,
-          Prism::BasicStringView<char32_t, Prism::CharTraits<char32_t>>>
-{
-};
-
-template <>
-struct std::__is_fast_hash<
-    std::hash<Prism::BasicStringView<char32_t, Prism::CharTraits<char32_t>>>>
-    : Prism::FalseType
-{
-};
 
 // Opt-in to borrowed_range concept
 template <typename C, typename Traits>

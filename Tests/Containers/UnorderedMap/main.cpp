@@ -11,10 +11,19 @@
 
 #include <Prism/Containers/UnorderedMap.hpp>
 #include <Prism/Debug/Test.hpp>
+#include <Prism/String/String.hpp>
 using namespace Prism;
 
 #define TestEq(condition) PrismTestEq(condition)
 
+template <>
+struct Prism::Hash<std::string>
+{
+    usize operator()(const std::string& key) const
+    {
+        return Hash<StringView>{}(StringView(key.data(), key.size()));
+    }
+};
 struct TestHasher
 {
     std::size_t operator()(const std::string& key) const

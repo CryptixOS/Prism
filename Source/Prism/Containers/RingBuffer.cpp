@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: GPL-3
  */
 #include <Prism/Containers/RingBuffer.hpp>
+#include <Prism/Memory/Memory.hpp>
 
 namespace Prism
 {
@@ -25,16 +26,16 @@ namespace Prism
     usize RingBuffer::Read(u8* const buffer, usize count)
     {
         if (Used() == 0 || !buffer) return 0;
-        count            = std::min(count, Used());
+        count            = Min(count, Used());
 
         auto  head       = m_Head.Load();
         auto  headMod    = head % Capacity();
 
-        usize firstPart  = std::min(count, Capacity() - headMod);
+        usize firstPart  = Min(count, Capacity() - headMod);
         usize secondPart = count - firstPart;
 
-        std::memcpy(buffer, m_Buffer + headMod, firstPart);
-        if (secondPart) std::memcpy(buffer + firstPart, m_Buffer, secondPart);
+        Memory::Copy(buffer, m_Buffer + headMod, firstPart);
+        if (secondPart) Memory::Copy(buffer + firstPart, m_Buffer, secondPart);
 
         m_Head.Store((head + count) % (m_Capacity * 2));
         return static_cast<isize>(count);
@@ -44,17 +45,17 @@ namespace Prism
         usize free = Free();
         if (free == 0 || !buffer) return 0;
 
-        count            = std::min(count, free);
+        count            = Min(count, free);
 
         auto  tail       = m_Tail.Load();
         auto  tailMod    = tail % m_Capacity;
 
-        usize firstPart  = std::min(count, m_Capacity - tailMod);
+        usize firstPart  = Min(count, m_Capacity - tailMod);
         usize secondPart = count - firstPart;
 
-        std::memcpy(m_Buffer + tailMod, buffer, firstPart);
+        Memory::Copy(m_Buffer + tailMod, buffer, firstPart);
         if (secondPart > 0)
-            std::memcpy(m_Buffer, buffer + firstPart, secondPart);
+            Memory::Copy(m_Buffer, buffer + firstPart, secondPart);
 
         m_Tail.Store((tail + count) % (m_Capacity * 2));
         return static_cast<isize>(count);

@@ -11,8 +11,7 @@
 #include <Prism/Core/Types.hpp>
 
 #include <Prism/String/StringView.hpp>
-
-#include <optional>
+#include <Prism/Utility/Optional.hpp>
 
 namespace Prism
 {
@@ -20,27 +19,27 @@ namespace Prism
     {
       public:
         constexpr SourceLocation() = default;
-        SourceLocation(const SourceLocation& other) PM_NOEXCEPT
+        constexpr SourceLocation(const SourceLocation& other) PM_NOEXCEPT
         {
             m_Line         = other.m_Line;
             m_Column       = other.m_Column;
             m_FileName     = other.m_FileName;
             m_FunctionName = other.m_FunctionName;
         }
-        SourceLocation(SourceLocation&& other) PM_NOEXCEPT
+        constexpr SourceLocation(SourceLocation&& other) PM_NOEXCEPT
         {
             m_Line         = other.m_Line;
             m_Column       = other.m_Column;
             m_FileName     = other.m_FileName;
             m_FunctionName = other.m_FunctionName;
 
-            other.m_Line.reset();
-            other.m_Column.reset();
+            other.m_Line.Reset();
+            other.m_Column.Reset();
             other.m_FileName.RemovePrefix(other.m_FileName.Size());
             other.m_FunctionName.RemovePrefix(other.m_FunctionName.Size());
         }
 
-        static consteval SourceLocation
+        static constexpr SourceLocation
         Current(i32 line = PM_LINE, i32 column = PM_COLUMN,
                 const char* fileName     = PM_FILENAME,
                 const char* functionName = PM_FUNCTION_NAME) PM_NOEXCEPT
@@ -48,11 +47,8 @@ namespace Prism
             return SourceLocation(line, column, fileName, functionName);
         }
 
-        constexpr u32 Line() const PM_NOEXCEPT { return m_Line.value_or(0); }
-        constexpr u32 Column() const PM_NOEXCEPT
-        {
-            return m_Column.value_or(0);
-        }
+        constexpr u32 Line() const PM_NOEXCEPT { return m_Line.ValueOr(0); }
+        constexpr u32 Column() const PM_NOEXCEPT { return m_Column.ValueOr(0); }
         constexpr StringView FileName() const PM_NOEXCEPT { return m_FileName; }
         constexpr StringView FunctionName() const PM_NOEXCEPT
         {
@@ -60,10 +56,10 @@ namespace Prism
         }
 
       private:
-        std::optional<u32> m_Line         = 0;
-        std::optional<u32> m_Column       = 0;
-        StringView         m_FileName     = "";
-        StringView         m_FunctionName = "";
+        Optional<u32> m_Line         = 0;
+        Optional<u32> m_Column       = 0;
+        StringView    m_FileName     = "";
+        StringView    m_FunctionName = "";
 
         constexpr SourceLocation(u32 line, u32 column, StringView fileName,
                                  StringView functionName)

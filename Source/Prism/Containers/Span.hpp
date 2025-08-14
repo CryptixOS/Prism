@@ -94,9 +94,9 @@ namespace Prism
 
         template <typename It>
             requires IsCompatibleRef<IteratorReferenceType<It>>::Value
-        constexpr explicit(Extent != DynamicExtent)  Span(It first, usize count) PM_NOEXCEPT
-            : m_Data(ToAddress(first))
-            , m_Extent(count)
+        constexpr explicit(Extent != DynamicExtent)
+            Span(It first, usize count) PM_NOEXCEPT : m_Data(ToAddress(first)),
+                                                      m_Extent(count)
         {
             if constexpr (Extent != DynamicExtent) assert(count == Extent);
         }
@@ -150,9 +150,8 @@ namespace Prism
         }
 
         explicit(Extent != DynamicExtent) constexpr Span(
-            std::initializer_list<ValueType> il) PM_NOEXCEPT
-            : m_Data(il.begin()),
-              m_Extent(il.size())
+            InitializerList<ValueType> il) PM_NOEXCEPT : m_Data(il.begin()),
+                                                         m_Extent(il.size())
         {
         }
 

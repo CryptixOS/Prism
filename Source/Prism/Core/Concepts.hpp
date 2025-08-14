@@ -260,10 +260,7 @@ namespace Prism
         {
             return m_Value == static_cast<ValueType>(rhs);
         }
-        constexpr std::strong_ordering operator<=>(T rhs)
-        {
-            return m_Value <=> rhs;
-        }
+        constexpr StrongOrdering  operator<=>(T rhs) { return m_Value <=> rhs; }
         constexpr ArithmeticEnum& operator+=(ValueType v)
         {
             m_Value += v;
@@ -296,7 +293,7 @@ namespace Prism
         {
             return m_Value == static_cast<ValueType>(rhs);
         }
-        constexpr std::strong_ordering operator<=>(bool rhs)
+        constexpr StrongOrdering operator<=>(bool rhs)
         {
             return m_Value <=> static_cast<ValueType>(rhs);
         }
