@@ -83,11 +83,11 @@ namespace Prism
         }
     }
 
-    [[noreturn, gnu::__always_inline__]]
-    inline void Unreachable()
+    [[noreturn]]
+    PM_ALWAYS_INLINE void Unreachable()
     {
 #ifdef PM_DEBUG
-        PrismAssertionFailed(Unreachable()");
+        PrismAssertionFailed("Unreachable()");
 #elif defined PM_ENABLE_ASSERTIONS
         __builtin_trap();
 #else
