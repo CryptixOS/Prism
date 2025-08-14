@@ -106,7 +106,7 @@ namespace Prism
     {
         constexpr auto Nd = IntegerTraits<T>::Digits;
 
-#if _GLIBCXX_USE_BUILTIN_TRAIT(builtin_clzg)
+#if PrismHasBuiltin(builtin_clzg)
         return builtin_clzg(x, Nd);
 #else
         if (x == 0) return Nd;
@@ -195,7 +195,7 @@ namespace Prism
     template <UnsignedIntegral T>
     constexpr i32 PopCount(T x) PM_NOEXCEPT
     {
-#if _GLIBCXX_USE_BUILTIN_TRAIT(__builtin_popcountg)
+#if PrismHasBuiltin(__builtin_popcountg)
         return __builtin_popcountg(x);
 #else
         constexpr auto Nd    = IntegerTraits<T>::Digits;
