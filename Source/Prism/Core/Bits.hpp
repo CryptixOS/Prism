@@ -54,19 +54,19 @@ namespace Prism
 
         using U          = typename MakeUnsigned<RemoveCvType<T>>::Type;
         usize difference = CHAR_BIT * (sizeof(T) - 1);
-        U     mask1      = static_cast<unsigned char>(~0);
-        U     mask2      = mask1 << difference;
-        U     value      = valueue;
+        usize mask1      = static_cast<unsigned char>(~0);
+        usize mask2      = mask1 << difference;
+        usize value      = valueue;
         for (usize i = 0; i < sizeof(T) / 2; ++i)
         {
-            U b1  = value & mask1;
-            U b2  = value & mask2;
+            usize b1 = value & mask1;
+            usize b2 = value & mask2;
             value = (value ^ b1 ^ b2 ^ (b1 << difference) ^ (b2 >> difference));
             mask1 <<= CHAR_BIT;
             mask2 >>= CHAR_BIT;
             difference -= 2 * CHAR_BIT;
         }
-        return value;
+        return static_cast<U>(value);
     }
 
     template <UnsignedIntegral T>
