@@ -163,6 +163,10 @@ namespace Prism
 
     template <typename T>
     struct Hash;
+
+    enum class AlignmentType : usize
+    {
+    };
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
@@ -181,6 +185,7 @@ using Prism::i32;
 using Prism::i64;
 using Prism::i8;
 
+using Prism::AlignmentType;
 using Prism::ipointer;
 using Prism::pointer;
 using Prism::ptrdiff;
