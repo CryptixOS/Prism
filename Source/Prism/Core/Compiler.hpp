@@ -14,6 +14,7 @@
 
 #define PM_ALWAYS_INLINE [[gnu::always_inline]] inline
 #define PM_NORETURN      [[noreturn]]
+#define PM_NODISCARD     [[nodiscard]]
 #define PM_FALLTHROUGH   [[fallthrough]]
 #define PM_USED          [[gnu::used]]
 #define PM_PACKED        [[gnu::packed]]
