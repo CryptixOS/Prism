@@ -9,18 +9,20 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
 
-#include <mutex>
+#if PRISM_TARGET_CRYPTIX == 0
+    #include <mutex>
+#endif
 
 namespace Prism
 {
     class LogSink
     {
       public:
-        isize           Log(LogLevel level, StringView message);
+        isize          Log(LogLevel level, StringView message);
 
         void           PutChar(u64 c);
 
-        virtual isize   WriteNoLock(StringView str) = 0;
+        virtual isize  WriteNoLock(StringView str) = 0;
 
         void           EndOfLine() { WriteNoLock("\n"); }
 
@@ -31,7 +33,7 @@ namespace Prism
 
       protected:
         // std::mutex m_Lock;
-        bool m_Enabled = true;
+        bool  m_Enabled = true;
 
         isize PrintLevel(LogLevel level);
     };
