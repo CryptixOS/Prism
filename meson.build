@@ -96,7 +96,11 @@ prism_dep = declare_dependency(
 pkg.generate(prism)
 install_headers(
   #'Source/Prism/Algorithm/Random.hpp',
+  'Source/Prism/Algorithm/Find.hpp',
+  'Source/Prism/Algorithm/FNV1aHash.hpp',
+  'Source/Prism/Algorithm/Hash.hpp',
   'Source/Prism/Algorithm/SearchString.hpp',
+  'Source/Prism/Algorithm/Sort.hpp',
 
   subdir: 'Prism/Algorithm'
 )
@@ -108,6 +112,9 @@ install_headers(
   'Source/Prism/Containers/DoublyLinkedList.hpp',
   'Source/Prism/Containers/IntrusiveList.hpp',
   'Source/Prism/Containers/IntrusiveList.inl',
+  'Source/Prism/Containers/IntrusiveRefList.hpp',
+  'Source/Prism/Containers/IntrusiveRefList.inl',
+  'Source/Prism/Containers/KeyValuePair.hpp',
   'Source/Prism/Containers/RedBlackTree.hpp',
   'Source/Prism/Containers/RedBlackTree.inl',
   'Source/Prism/Containers/RingBuffer.hpp',
@@ -121,14 +128,20 @@ install_headers(
   subdir: 'Prism/Containers'
 )
 install_headers(
+  'Source/Prism/Core/AllocatorTraits.hpp',
+  'Source/Prism/Core/Bits.hpp',
   'Source/Prism/Core/Compiler.hpp',
   'Source/Prism/Core/Concepts.hpp',
   'Source/Prism/Core/Config.hpp',
   'Source/Prism/Core/Core.hpp',
+  'Source/Prism/Core/Error.hpp',
+  'Source/Prism/Core/HashTraits.hpp',
+  'Source/Prism/Core/Integer128.hpp',
   'Source/Prism/Core/Iterator.hpp',
   'Source/Prism/Core/Limits.hpp',
   'Source/Prism/Core/NonCopyable.hpp',
   'Source/Prism/Core/NonMovable.hpp',
+  'Source/Prism/Core/ParameterPack.hpp',
   'Source/Prism/Core/Platform.hpp',
   'Source/Prism/Core/Singleton.hpp',
   'Source/Prism/Core/Types.hpp',
@@ -153,12 +166,14 @@ install_headers(
 install_headers(
   'Source/Prism/Debug/Assertions.hpp',
   'Source/Prism/Debug/Log.hpp',
+  'Source/Prism/Debug/Logger.hpp',
   'Source/Prism/Debug/LogSink.hpp',
   'Source/Prism/Debug/SourceLocation.hpp',
   'Source/Prism/Debug/Stacktrace.hpp',
   subdir: 'Prism/Debug'
 )
 install_headers(
+  'Source/Prism/Memory/Allocator.hpp',
   'Source/Prism/Memory/BitStream.hpp',
   'Source/Prism/Memory/Buffer.hpp',
   'Source/Prism/Memory/ByteStream.hpp',
@@ -166,10 +181,19 @@ install_headers(
   'Source/Prism/Memory/Memory.hpp',
   'Source/Prism/Memory/Pointer.hpp',
   'Source/Prism/Memory/Ref.hpp',
+  'Source/Prism/Memory/RefCounted.hpp',
   'Source/Prism/Memory/Scope.hpp',
+  'Source/Prism/Memory/SlabAllocator.hpp',
+  'Source/Prism/Memory/SlabPool.hpp',
   'Source/Prism/Memory/WeakRef.hpp',
   subdir: 'Prism/Memory'
 )
+
+install_headers(
+  'Source/Prism/Network/IPv4Address.hpp',
+  subdir: 'Prism/Network'
+)
+
 install_headers(
   'Source/Prism/String/CharTraits.hpp',
   #'Source/Prism/String/FormatString.hpp',
@@ -186,8 +210,9 @@ install_headers(
   'Source/Prism/Utility/Atomic.hpp',
   'Source/Prism/Utility/AtomicBuiltins.hpp',
   'Source/Prism/Utility/Checksum.hpp',
+  'Source/Prism/Utility/Compare.hpp',
   'Source/Prism/Utility/Delegate.hpp',
-  #'Source/Prism/Utility/Expected.hpp',
+  'Source/Prism/Utility/Expected.hpp',
   'Source/Prism/Utility/Hash.hpp',
   'Source/Prism/Utility/Math.hpp',
   'Source/Prism/Utility/Optional.hpp',
