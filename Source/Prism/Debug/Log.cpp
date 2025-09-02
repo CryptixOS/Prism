@@ -12,25 +12,17 @@
 #include <Prism/String/String.hpp>
 #include <Prism/String/StringUtils.hpp>
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
     #include <Library/Logger.hpp>
 #endif
 
 namespace Prism::Log
 {
 #if PRISM_TARGET_CRYPTIX == 0
-    constexpr usize  STDOUT_FILENO = 1;
+    #ifndef STDOUT_FILENO
+    constexpr usize STDOUT_FILENO = 1;
+    #endif
     extern "C" isize write(i32 fd, const void* buf, usize count);
-
-    class CoreSink   final : public LogSink
-    {
-      public:
-        isize WriteNoLock(StringView str) override
-        {
-            return write(STDOUT_FILENO, str.Raw(), str.Size());
-        }
-    };
-    CoreSink g_CoreSink;
 
     namespace
     {
@@ -139,7 +131,10 @@ namespace Prism::Log
     }; // namespace
 
     void  LogChar(u64 c) { Print(reinterpret_cast<const char*>(&c)); }
-    isize Print(StringView string) { return g_CoreSink.WriteNoLock(string); }
+    isize Print(StringView string)
+    {
+        return write(STDOUT_FILENO, string.Raw(), string.Size());
+    }
     isize Printv(const char* format, va_list* args)
     {
         return Logv(LogLevel::eNone, format, *args);
