@@ -12,25 +12,16 @@ cpp_args = [
   '-Wno-unused-parameter',
   '-Wno-self-assign-overloaded',
   '-lgcc_s',
+  '-fmodules-ts',
 ]
 link_args = [
   '-lstdc++exp',
 ]
 
-# srcs = [
-#   meson.project_source_root() / 'Source/Prism/Containers/RingBuffer.cpp',
-#   meson.project_source_root() / 'Source/Prism/Debug/Assertions.cpp',
-#   meson.project_source_root() / 'Source/Prism/Debug/Log.cpp',
-#   meson.project_source_root() / 'Source/Prism/Memory/Memory.cpp',
-#
-#   meson.project_source_root() / 'Source/Prism/Utility/PathView.cpp',
-#   meson.project_source_root() / 'Source/Prism/Utility/Path.cpp'
-# ]
-#
-
 subdir('Algorithm')
 subdir('Core')
 subdir('Containers')
+subdir('Debug')
 subdir('Memory')
 subdir('String')
 
