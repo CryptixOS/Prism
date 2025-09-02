@@ -38,6 +38,24 @@
 
 ---
 
+## 🧱 Building the Kernel & Image
+
+Just initialize the build directory with: 
+```
+meson setup build --buildtype=debugoptimized
+```
+and then you can build the Prism library like so
+```
+ninja -C build
+```
+
+## 🔨 Installation 
+
+To install Prism you just run this just after you've built it
+```
+ninja -C build install
+```
+
 ## 💻 Usage
 
 Prism is integrated with CryptixOS, but it can be used in any freestanding or embedded project. Just add the `Prism` source tree to your build and configure it as a system or static library.
@@ -83,3 +101,4 @@ Prism is inspired by the design goals of:
 ## 🛠 Maintained by
 
 **[CryptixOS Project](https://github.com/CryptixOS)**  
+
