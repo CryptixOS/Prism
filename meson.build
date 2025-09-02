@@ -36,6 +36,7 @@ macros = [
   '-DFMT_USE_EXCEPTIONS=0',
   '-DFMT_HEADER_ONLY=1',
   '-DMAGIC_ENUM_RANGE_MAX=0x8a00',
+  '-DPRISM_LOG_ENABLE=true',
 ]
 
 cxx_args = [
