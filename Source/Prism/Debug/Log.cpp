@@ -19,6 +19,7 @@
 namespace Prism::Log
 {
 #if PRISM_TARGET_CRYPTIX == 0
+    constexpr usize  STDOUT_FILENO = 1;
     extern "C" isize write(i32 fd, const void* buf, usize count);
 
     class CoreSink   final : public LogSink
