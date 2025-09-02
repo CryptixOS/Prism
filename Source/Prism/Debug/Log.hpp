@@ -9,6 +9,8 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/StringView.hpp>
 
+#include <cstdarg>
+
 namespace Prism
 {
     enum class LogLevel
@@ -24,52 +26,68 @@ namespace Prism
 
     namespace Log
     {
-        void Print(LogLevel logLevel, StringView str);
+        void  LogChar(u64 c);
+        isize Print(StringView string);
+        isize Printv(const char* format, va_list* args);
+        isize Log(LogLevel logLevel, StringView string, bool endl = true);
+        isize Logf(LogLevel logLevel, const char* fmt, ...);
+        isize Logv(LogLevel logLevel, const char* fmt, va_list& args,
+                   bool endl = true);
+
+        void  Print(LogLevel logLevel, StringView str);
 
         template <typename... Args>
         inline void Print(LogLevel logLevel, fmt::format_string<Args...> format,
                           Args&&... args)
         {
-            auto formattedString
-                = fmt::format(format, Forward<Args>(args)...);
+            auto formattedString = fmt::format(format, Forward<Args>(args)...);
             Print(logLevel,
                   StringView(formattedString.data(), formattedString.size()));
         }
 
         template <typename... Args>
+        inline void Log(LogLevel level, fmt::format_string<Args...> format,
+                        Args&&... args)
+        {
+            auto formattedString = fmt::format(format, Forward<Args>(args)...);
+            Log(level,
+                StringView(formattedString.data(), formattedString.size()));
+        }
+
+        template <typename... Args>
         inline void Message(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eNone, format, Forward<Args>(args)...);
+            Log(LogLevel::eNone, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Debug(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eDebug, format, Forward<Args>(args)...);
+            Log(LogLevel::eDebug, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Trace(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eTrace, format, Forward<Args>(args)...);
+            Log(LogLevel::eTrace, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Info(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eInfo, format, Forward<Args>(args)...);
+            Log(LogLevel::eInfo, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Warn(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eWarn, format, Forward<Args>(args)...);
+            Log(LogLevel::eWarn, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Error(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eError, format, Forward<Args>(args)...);
+            Log(LogLevel::eError, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void Fatal(fmt::format_string<Args...> format, Args&&... args)
         {
-            Print(LogLevel::eFatal, format, Forward<Args>(args)...);
+            Log(LogLevel::eFatal, format, Forward<Args>(args)...);
         }
     }; // namespace Log
 }; // namespace Prism
