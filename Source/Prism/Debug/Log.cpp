@@ -26,7 +26,7 @@ namespace Prism::Log
       public:
         isize WriteNoLock(StringView str) override
         {
-            return write(0, str.Raw(), str.Size());
+            return write(STDOUT_FILENO, str.Raw(), str.Size());
         }
     };
     CoreSink g_CoreSink;
