@@ -223,6 +223,18 @@ install_headers(
   subdir: 'Prism/Utility'
 )
 
+install_headers(
+  'subprojects/fmt-10.2.0/include/fmt/args.h',
+  'subprojects/fmt-10.2.0/include/fmt/color.h',
+  'subprojects/fmt-10.2.0/include/fmt/compile.h',
+  'subprojects/fmt-10.2.0/include/fmt/core.h',
+  'subprojects/fmt-10.2.0/include/fmt/format-inl.h',
+  'subprojects/fmt-10.2.0/include/fmt/format.h',
+  'subprojects/fmt-10.2.0/include/fmt/xchar.h',
+
+  subdir: 'fmt/'
+)
+
 dep = declare_dependency(
   compile_args: cxx_args,
   include_directories: incs,
