@@ -124,9 +124,8 @@ namespace Prism
     LowerBound(ForwardIterator first, ForwardIterator last, const T& value)
         requires(IsPointerV<ForwardIterator>)
     {
-        return LowerBound(
-            first, last, value,
-            Less<typename RemovePointerV<ForwardIterator>::Type>{});
+        return LowerBound(first, last, value,
+                          Less<RemovePointerV<ForwardIterator>>{});
     }
     template <typename ForwardIterator, typename T>
     PM_NODISCARD constexpr inline ForwardIterator
