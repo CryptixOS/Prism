@@ -23,6 +23,7 @@ namespace Prism::Log
     constexpr usize STDOUT_FILENO = 1;
     #endif
     extern "C" isize write(i32 fd, const void* buf, usize count);
+#endif
 
     namespace
     {
@@ -133,7 +134,11 @@ namespace Prism::Log
     void  LogChar(u64 c) { Print(reinterpret_cast<const char*>(&c)); }
     isize Print(StringView string)
     {
+#if PRISM_TARGET_CRYPTIX == 0
         return write(STDOUT_FILENO, string.Raw(), string.Size());
+#else
+        return Logger::Print(string);
+#endif
     }
     isize Printv(const char* format, va_list* args)
     {
@@ -142,13 +147,18 @@ namespace Prism::Log
 
     isize Log(LogLevel logLevel, StringView str, bool endl)
     {
+#if PRISM_TARGET_CRYPTIX != 0
+        return Logger::Log(logLevel, str, endl);
+#else
         // FIXME(v1tr10l7): locking
         isize nwritten = PrintLogLevel(logLevel);
         nwritten += Print(str);
 
         if (endl && logLevel != LogLevel::eNone) LogChar('\n');
         return nwritten;
+#endif
     }
+
     isize Logf(LogLevel logLevel, const char* fmt, ...)
     {
         va_list args;
@@ -261,23 +271,6 @@ namespace Prism::Log
         if (printNewline) LogChar('\n'), ++nwritten;
         return nwritten;
     }
-#endif
 
-#if PRISM_TARGET_CRYPTIX != 0
-    isize Log(LogLevel logLevel, StringView str, bool endl)
-    {
-        return Logger::Log(logLevel, str, endl);
-    }
-#endif
-    void Print(LogLevel logLevel, StringView str)
-    {
-#if PRISM_TARGET_CRYPTIX != 0
-        Logger::Log(logLevel, str);
-#else
-        PrintLogLevel(logLevel);
-        std::printf("%s", str.Raw());
-
-        std::putchar('\n');
-#endif
-    }
+    void Print(LogLevel logLevel, StringView str) { Log(logLevel, str, true); }
 }; // namespace Prism::Log
