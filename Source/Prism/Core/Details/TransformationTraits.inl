@@ -458,8 +458,7 @@ namespace Prism
                                                    RemoveCvRefType<U>>>())>
         constexpr ReferenceWrapper(U&& u) noexcept(
             noexcept(Details::CopyConstruct<T>(Forward<U>(u))))
-            : m_Pointer(
-                  AddressOf(Details::CopyConstruct<T>(Forward<U>(u))))
+            : m_Pointer(AddressOf(Details::CopyConstruct<T>(Forward<U>(u))))
         {
         }
         ReferenceWrapper(const ReferenceWrapper&) PM_NOEXCEPT = default;
@@ -601,8 +600,13 @@ namespace Prism
     {
         return static_cast<UnderlyingTypeType<T>>(value);
     }
+
+    template <typename T>
+    using RemovePointerV = typename RemovePointer<T>::Type;
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
+using Prism::RemovePointer;
+using Prism::RemovePointerV;
 using Prism::ToUnderlying;
 #endif
