@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Iterator.hpp>
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/TypeTraits.hpp>
 
 #include <Prism/Utility/Compare.hpp>
 
@@ -122,20 +122,9 @@ namespace Prism
     template <typename ForwardIterator, typename T>
     PM_NODISCARD constexpr inline ForwardIterator
     LowerBound(ForwardIterator first, ForwardIterator last, const T& value)
-        requires(IsPointerV<ForwardIterator>)
     {
-        return LowerBound(first, last, value,
-                          Less<RemovePointerV<ForwardIterator>>{});
+        return LowerBound(first, last, value, IteratorLessValueType());
     }
-    template <typename ForwardIterator, typename T>
-    PM_NODISCARD constexpr inline ForwardIterator
-    LowerBound(ForwardIterator first, ForwardIterator last, const T& value)
-        requires(!IsPointerV<ForwardIterator>)
-    {
-        return LowerBound(first, last, value,
-                          Less<typename ForwardIterator::ValueType>{});
-    }
-
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0

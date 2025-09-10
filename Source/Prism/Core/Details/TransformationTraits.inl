@@ -591,9 +591,9 @@ namespace Prism
         requires(IsEnumV<T>)
     using UnderlyingTypeType = typename UnderlyingType<T>::Type;
     template <typename T>
-    using UnwrapReferenceType = UnwrapReference<T>::Type;
+    using UnwrapReferenceType = typename UnwrapReference<T>::Type;
     template <typename T>
-    using UnwrapReferenceDecayType = UnwrapReferenceDecay<T>::Type;
+    using UnwrapReferenceDecayType = typename UnwrapReferenceDecay<T>::Type;
 
     template <typename T>
     inline constexpr auto ToUnderlying(T value) PM_NOEXCEPT
@@ -602,11 +602,11 @@ namespace Prism
     }
 
     template <typename T>
-    using RemovePointerV = typename RemovePointer<T>::Type;
+    using RemovePointerType = typename RemovePointer<T>::Type;
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
 using Prism::RemovePointer;
-using Prism::RemovePointerV;
+using Prism::RemovePointerType;
 using Prism::ToUnderlying;
 #endif
