@@ -36,7 +36,7 @@ namespace Prism
 
         void  Print(LogLevel logLevel, StringView str);
 
-#if PRISM_DISABLE_FMT != 0
+#if PRISM_DISABLE_FMT == 0
         template <typename... Args>
         inline void Print(LogLevel logLevel, fmt::format_string<Args...> format,
                           Args&&... args)
