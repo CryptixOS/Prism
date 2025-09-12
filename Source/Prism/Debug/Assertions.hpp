@@ -56,14 +56,16 @@ namespace Prism
     PrismAssertFmt(false, "{} is not implemented!", __PRETTY_FUNCTION__)
 #define PrismToDoWarn()                                                        \
     {                                                                          \
-        Prism::SourceLocation source = Prism::SourceLocation::Current();       \
+        PM_UNUSED Prism::SourceLocation source                                 \
+            = Prism::SourceLocation::Current();                                \
         PrismWarn("{}[{}:{}]: {} is not implemented!", source.FileName(),      \
                   source.Line(), source.Column(), source.FunctionName());      \
     }
 
 #define PrismAssertionFailed(...)                                              \
     {                                                                          \
-        Prism::SourceLocation source = Prism::SourceLocation::Current();       \
+        PM_UNUSED Prism::SourceLocation source                                 \
+            = Prism::SourceLocation::Current();                                \
         PrismPanic("{}: ==>\nAssertion Failed: {}", source,                    \
                    fmt::format(__VA_ARGS__));                                  \
     }
