@@ -119,10 +119,6 @@ namespace Log = Prism::Log;
     #define PrismWarn(...)         Log::Warn(__VA_ARGS__)
     #define PrismError(...)        Log::Error(__VA_ARGS__)
     #define PrismFatal(...)        Log::Fatal(__VA_ARGS__)
-
-    #define PrismToDoWarn(...)                                                 \
-        PrismWarn("{}[{}:{}]: {} is not implemented", PM_FILENAME, PM_LINE,    \
-                  PM_COLUMN, PM_FUNCTION_NAME)
 #else
     #define PrismTraceNoAlloc(...)
     #define PrismInfoNoAlloc(...)
