@@ -13,18 +13,20 @@
 #include <Prism/String/StringUtils.hpp>
 
 #if PRISM_TARGET_CRYPTIX != 0
-    #include <Library/Logger.hpp>
+namespace Logger
+{
+    using Prism::LogLevel;
+    isize Print(StringView);
+} // namespace Logger
+#else
+    #ifndef STDOUT_FILENO
+constexpr usize STDOUT_FILENO = 1;
+    #endif
+extern "C" isize write(i32 fd, const void* buf, usize count);
 #endif
 
 namespace Prism::Log
 {
-#if PRISM_TARGET_CRYPTIX == 0
-    #ifndef STDOUT_FILENO
-    constexpr usize STDOUT_FILENO = 1;
-    #endif
-    extern "C" isize write(i32 fd, const void* buf, usize count);
-#endif
-
     namespace
     {
         constexpr u64 FOREGROUND_COLOR_RED     = 0x6d31335b1b;
@@ -147,16 +149,12 @@ namespace Prism::Log
 
     isize Log(LogLevel logLevel, StringView str, bool endl)
     {
-#if PRISM_TARGET_CRYPTIX != 0
-        return Logger::Log(logLevel, str, endl);
-#else
         // FIXME(v1tr10l7): locking
         isize nwritten = PrintLogLevel(logLevel);
         nwritten += Print(str);
 
         if (endl && logLevel != LogLevel::eNone) LogChar('\n');
         return nwritten;
-#endif
     }
 
     isize Logf(LogLevel logLevel, const char* fmt, ...)
