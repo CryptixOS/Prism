@@ -7,8 +7,6 @@
 #include <Prism/String/Printf.hpp>
 #include <Prism/String/StringUtils.hpp>
 
-#include <stdarg.h>
-
 namespace Prism::Printf
 {
     using namespace StringUtils;
@@ -32,8 +30,9 @@ namespace Prism::Printf
             switch (*it)
             {
                 case '\0': return specs;
-                case '%': 
-                    enterState(State::eBegin); break;
+                case '%':
+                    enterState(State::eBegin);
+                    break;
                     ++it;
                     if (*it == '%')
                     {
@@ -74,7 +73,7 @@ namespace Prism::Printf
                 }
                 case '*':
                     enterState(State::eWidth);
-                    specs.Length = static_cast<isize>(va_arg(args, i32));
+                    specs.Length = static_cast<isize>(PrismVaArg(args, i32));
                     break;
                 case '.':
                 {
@@ -91,7 +90,8 @@ namespace Prism::Printf
                         continue;
                     }
                     else if (*it == '*')
-                        specs.Precision = static_cast<isize>(va_arg(args, i32));
+                        specs.Precision
+                            = static_cast<isize>(PrismVaArg(args, i32));
                     else
                         assert(
                             "Printf: Invalid format specifier, parsing "
@@ -135,8 +135,7 @@ namespace Prism::Printf
                     = static_cast<ArgumentType>(ToUnderlying(specs.Type) + 5);
                 specs.Base = 16;
                 break;
-            case 'X': specs.UpperCase = true;
-                    PM_FALLTHROUGH;
+            case 'X': specs.UpperCase = true; PM_FALLTHROUGH;
             case 'x':
                 specs.Base = 16;
                 if (specs.Type < ArgumentType::eInteger)
@@ -148,14 +147,16 @@ namespace Prism::Printf
                 specs.Type
                     = static_cast<ArgumentType>(ToUnderlying(specs.Type) + 5);
                 break;
-            case 'd':
-                    PM_FALLTHROUGH;
-            case 'i': break;
-                    PM_FALLTHROUGH;
-            case 'c': specs.Type = ArgumentType::eChar; break;
-                    PM_FALLTHROUGH;
-            case 's': specs.Type = ArgumentType::eString; break;
-                    PM_FALLTHROUGH;
+            case 'd': PM_FALLTHROUGH;
+            case 'i': break; PM_FALLTHROUGH;
+            case 'c':
+                specs.Type = ArgumentType::eChar;
+                break;
+                PM_FALLTHROUGH;
+            case 's':
+                specs.Type = ArgumentType::eString;
+                break;
+                PM_FALLTHROUGH;
             case 'n': specs.Type = ArgumentType::eOutWrittenCharCount; break;
         }
         ++it;

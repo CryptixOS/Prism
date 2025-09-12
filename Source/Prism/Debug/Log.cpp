@@ -22,6 +22,8 @@ namespace Logger
     #ifndef STDOUT_FILENO
 constexpr usize STDOUT_FILENO = 1;
     #endif
+
+using namespace Prism;
 extern "C" isize write(i32 fd, const void* buf, usize count);
 #endif
 
@@ -53,10 +55,10 @@ namespace Prism::Log
         using PrintfFormatSpec   = Printf::FormatSpec;
         using PrintfFormatParser = Printf::FormatParser;
         template <typename T>
-        isize LogNumber(va_list& args, PrintfFormatSpec& spec)
+        isize LogNumber(VaList& args, PrintfFormatSpec& spec)
         {
             isize nwritten = 0;
-            T     value    = va_arg(args, T);
+            T     value    = PrismVaArg(args, T);
 
             if (value < 0 && spec.Base == 10)
             {
@@ -142,7 +144,7 @@ namespace Prism::Log
         return Logger::Print(string);
 #endif
     }
-    isize Printv(const char* format, va_list* args)
+    isize Printv(const char* format, VaList* args)
     {
         return Logv(LogLevel::eNone, format, *args);
     }
@@ -159,15 +161,15 @@ namespace Prism::Log
 
     isize Logf(LogLevel logLevel, const char* fmt, ...)
     {
-        va_list args;
-        va_start(args, fmt);
+        VaList args;
+        PrismVaStart(args, fmt);
         auto nwritten = Logv(logLevel, fmt, args);
-        va_end(args);
+        PrismVaEnd(args);
 
         return nwritten;
     }
 
-    isize PrintArgument(StringView::Iterator& it, va_list& args,
+    isize PrintArgument(StringView::Iterator& it, VaList& args,
                         PrintfFormatSpec& specs)
     {
         isize nwritten = 0;
@@ -176,7 +178,7 @@ namespace Prism::Log
         {
             case ArgumentType::eChar:
             {
-                i32 c = va_arg(args, i32);
+                i32 c = PrismVaArg(args, i32);
                 LogChar(c);
                 ++nwritten;
                 break;
@@ -195,7 +197,7 @@ namespace Prism::Log
                 break;
             case ArgumentType::eUnsignedChar:
             {
-                i32 c = va_arg(args, i32);
+                i32 c = PrismVaArg(args, i32);
                 LogChar(c);
                 ++nwritten;
                 break;
@@ -214,7 +216,7 @@ namespace Prism::Log
                 break;
             case ArgumentType::eString:
             {
-                StringView string = va_arg(args, const char*);
+                StringView string = PrismVaArg(args, const char*);
                 usize      size   = string.Size();
                 if (specs.Precision > 0
                     && specs.Precision < static_cast<isize>(size))
@@ -227,7 +229,7 @@ namespace Prism::Log
             }
             case ArgumentType::eOutWrittenCharCount:
             {
-                i32* out = va_arg(args, i32*);
+                i32* out = PrismVaArg(args, i32*);
                 *out     = nwritten;
                 break;
             }
@@ -237,8 +239,7 @@ namespace Prism::Log
 
         return nwritten;
     }
-    isize Logv(LogLevel level, const char* fmt, va_list& args,
-               bool printNewline)
+    isize Logv(LogLevel level, const char* fmt, VaList& args, bool printNewline)
     {
         // FIXME(v1tr10l7): ScopedLock guard(s_Lock, true);
         PrintLogLevel(level);

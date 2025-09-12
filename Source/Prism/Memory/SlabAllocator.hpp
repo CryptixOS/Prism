@@ -11,12 +11,6 @@
 #include <Prism/Debug/Log.hpp>
 #include <Prism/Utility/Math.hpp>
 
-#ifndef ToDoWarn
-    #define ToDoWarn(...)                                                      \
-        PrismWarn("{}[{}:{}]: {} is not implemented", PM_FILENAME, PM_LINE,    \
-                  PM_COLUMN, PM_FUNCTION_NAME)
-#endif
-
 namespace Prism
 {
     struct SlabObject
@@ -24,9 +18,13 @@ namespace Prism
         SlabObject* Next = nullptr;
     };
 
-    constexpr u64   SLAB_CANARY = 0xDEADBEEFCAFEBABE;
-    constexpr u64   FREE_POISON = 0xDEADDEADDEADDEAD;
-    constexpr usize PAGE_SIZE   = 0x1000;
+    constexpr u64 SLAB_CANARY = 0xdeadbeefcafebabe;
+    constexpr u64 FREE_POISON = 0xdeaddeaddeaddead;
+
+#ifndef PRISM_PAGE_SIZE
+    #define PRISM_PAGE_SIZE 0x1000
+#endif
+    constexpr usize PAGE_SIZE = PRISM_PAGE_SIZE;
 
     // TODO(v1tr10l7): Memory poisoning
     // TODO(v1tr10l7): canaries
@@ -90,14 +88,14 @@ namespace Prism
                 Pointer objectAddress = frame->Data.Offset(offset);
                 // WriteCanary(objectAddress);
 
-                auto object  = objectAddress.As<SlabObject>();
-                object->Next = previous;
-                previous     = object;
+                auto    object        = objectAddress.As<SlabObject>();
+                object->Next          = previous;
+                previous              = object;
             }
             m_Frame->NextFree = previous;
             return {};
         }
-        virtual void    Shutdown() { ToDoWarn(); }
+        virtual void    Shutdown() { PrismToDoWarn(); }
 
         virtual Pointer Allocate()
         {
@@ -123,8 +121,8 @@ namespace Prism
             // assert(!IsPoisoned(object));
 
             // Poison(object);
-            object->Next      = m_Frame->NextFree;
-            m_Frame->NextFree = object;
+            object->Next          = m_Frame->NextFree;
+            m_Frame->NextFree     = object;
 
             m_TotalFreed += m_ObjectSize;
             return;
@@ -146,7 +144,7 @@ namespace Prism
         usize                  m_TotalFreed     = 0;
 
         static constexpr usize CANARY_SIZE      = sizeof(u64);
-        PM_UNUSED inline void            WriteCanary(Pointer object)
+        PM_UNUSED inline void  WriteCanary(Pointer object)
         {
             *object.As<u64>()                                = SLAB_CANARY;
             *object.Offset<u64*>(m_ObjectSize - CANARY_SIZE) = SLAB_CANARY;
@@ -164,8 +162,8 @@ namespace Prism
         }
         PM_UNUSED inline bool IsPoisoned(Pointer object)
         {
-            for (usize i = 0; i < (m_ObjectSize - 2 * CANARY_SIZE) / sizeof(u64);
-                 i++)
+            for (usize i = 0;
+                 i < (m_ObjectSize - 2 * CANARY_SIZE) / sizeof(u64); i++)
                 if (object.As<u8>()[i] != FREE_POISON) return false;
 
             return true;

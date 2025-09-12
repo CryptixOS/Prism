@@ -9,18 +9,25 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
 
-#if PRISM_TARGET_CRYPTIX == 0
-    #include <mutex>
-#endif
-
 namespace Prism
 {
+    template <typename LockingPolicy>
     class LogSink
     {
       public:
-        isize          Log(LogLevel level, StringView message);
+        isize Write(StringView message)
+        {
+            m_Lock.Lock();
+            isize nwritten = 0;
 
-        void           PutChar(u64 c);
+            nwritten += WriteNoLock(message);
+            EndOfLine();
+            ++nwritten;
+
+            m_Lock.Unlock();
+            return nwritten;
+        }
+        void PutChar(u64 c) { WriteNoLock(reinterpret_cast<const char*>(&c)); }
 
         virtual isize  WriteNoLock(StringView str) = 0;
 
@@ -28,13 +35,15 @@ namespace Prism
 
         constexpr bool IsEnabled() const { return m_Enabled; }
 
-        bool           Enable();
-        bool           Disable();
+        bool           Enable() { return Exchange(m_Enabled, true); }
+        bool           Disable() { return Exchange(m_Enabled, false); }
 
       protected:
-        // std::mutex m_Lock;
-        bool  m_Enabled = true;
-
-        isize PrintLevel(LogLevel level);
+        LockingPolicy m_Lock;
+        bool          m_Enabled = true;
     };
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::LogSink;
+#endif

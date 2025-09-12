@@ -134,6 +134,10 @@ namespace Prism
     using StrongOrdering = std::strong_ordering;
     template <typename T>
     using InitializerList = std::initializer_list<T>;
+    using VaList          = __builtin_va_list;
+#define PrismVaStart(args, format) __builtin_va_start(args, format)
+#define PrismVaEnd(args)           __builtin_va_end(args)
+#define PrismVaArg(args, type...)  __builtin_va_arg(args, type)
 
     template <typename T>
     constexpr const T& Min(InitializerList<T> ilist)
@@ -169,7 +173,7 @@ namespace Prism
     };
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::PhysAddr;
 
 using Prism::isize;
@@ -198,5 +202,10 @@ using Prism::InitializerList;
 using Prism::Max;
 using Prism::Min;
 using Prism::StrongOrdering;
+using Prism::VaList;
 using Prism::WeakOrdering;
+
+    #define VaStart(args, format) PrismVaStart(args, format)
+    #define VaEnd(args)           PrismVaEnd(args)
+    #define VaArg(args, type...)  PrismVaArg(args, type)
 #endif

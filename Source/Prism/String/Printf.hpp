@@ -9,8 +9,6 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/StringView.hpp>
 
-#include <stdarg.h>
-
 namespace Prism
 {
     namespace Printf
@@ -70,11 +68,11 @@ namespace Prism
                 eSpecifier = 5,
             };
 
-            FormatSpec operator()(StringView::Iterator& it, va_list& args);
+            FormatSpec operator()(StringView::Iterator& it, VaList& args);
         };
 
         isize Formatted(const char* format, ...);
-        isize Variadic(const char* format, va_list& args);
+        isize Variadic(const char* format, VaList& args);
     }; // namespace Printf
 }; // namespace Prism
 

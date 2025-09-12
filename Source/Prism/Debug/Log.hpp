@@ -9,8 +9,6 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/StringView.hpp>
 
-#include <cstdarg>
-
 namespace Prism
 {
     enum class LogLevel
@@ -28,10 +26,10 @@ namespace Prism
     {
         void  LogChar(u64 c);
         isize Print(StringView string);
-        isize Printv(const char* format, va_list* args);
+        isize Printv(const char* format, VaList* args);
         isize Log(LogLevel logLevel, StringView string, bool endl = true);
         isize Logf(LogLevel logLevel, const char* fmt, ...);
-        isize Logv(LogLevel logLevel, const char* fmt, va_list& args,
+        isize Logv(LogLevel logLevel, const char* fmt, VaList& args,
                    bool endl = true);
 
         void  Print(LogLevel logLevel, StringView str);
@@ -109,7 +107,7 @@ namespace Log = Prism::Log;
 #define PrismMessage(...)        Log::Message(__VA_ARGS__)
 #define PrismMessageNoAlloc(...) Log::Printf(LogLevel::eNone, __VA_ARGS__)
 
-#if PRISM_LOG_ENABLE == true
+#if PRISM_LOG_ENABLE != 0
     #define PrismTraceNoAlloc(...) Log::Logf(LogLevel::eTrace, __VA_ARGS__)
     #define PrismInfoNoAlloc(...)  Log::Logf(LogLevel::eInfo, __VA_ARGS__)
     #define PrismWarnNoAlloc(...)  Log::Logf(LogLevel::eWarn, __VA_ARGS__)
@@ -121,6 +119,10 @@ namespace Log = Prism::Log;
     #define PrismWarn(...)         Log::Warn(__VA_ARGS__)
     #define PrismError(...)        Log::Error(__VA_ARGS__)
     #define PrismFatal(...)        Log::Fatal(__VA_ARGS__)
+
+    #define PrismToDoWarn(...)                                                 \
+        PrismWarn("{}[{}:{}]: {} is not implemented", PM_FILENAME, PM_LINE,    \
+                  PM_COLUMN, PM_FUNCTION_NAME)
 #else
     #define PrismTraceNoAlloc(...)
     #define PrismInfoNoAlloc(...)
