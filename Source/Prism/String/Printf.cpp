@@ -11,7 +11,7 @@ namespace Prism::Printf
 {
     using namespace StringUtils;
 
-    FormatSpec FormatParser::operator()(StringView::Iterator& it, va_list& args)
+    FormatSpec FormatParser::operator()(StringView::Iterator& it, VaList& args)
     {
         FormatSpec specs;
 
