@@ -7,7 +7,6 @@ srcs = files(
   'Prism/Debug/Assertions.cpp',
   'Prism/Debug/Log.cpp',
   'Prism/Debug/Logger.cpp',
-  'Prism/Debug/LogSink.cpp',
   'Prism/Debug/Ubsan.cpp',
   'Prism/Debug/Stacktrace.cpp',
 
