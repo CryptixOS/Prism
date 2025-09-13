@@ -314,6 +314,19 @@ namespace Prism
 
     template <typename T>
     concept ClassOrEnum = IsClassV<T> || IsUnionV<T> || IsEnumV<T>;
+
+    template <typename T, typename EndT>
+    concept IteratorPairWith = requires(T it, EndT end) {
+        *it;
+        { it != end } -> SameAs<bool>;
+        ++it;
+    };
+    template <typename T>
+    concept IterableContainer = requires {
+        {
+            DeclVal<T>().begin()
+        } -> IteratorPairWith<decltype(DeclVal<T>().end())>;
+    };
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
@@ -324,6 +337,8 @@ using Prism::EnumType;
 using Prism::Integral;
 using Prism::IntegralOrEnum;
 using Prism::IsImplicitlyDefaultConstructible;
+using Prism::IterableContainer;
+using Prism::IteratorPairWith;
 using Prism::PrimitiveOrEnum;
 using Prism::SameAs;
 using Prism::SignedIntegral;
