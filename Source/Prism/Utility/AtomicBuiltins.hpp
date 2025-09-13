@@ -18,12 +18,12 @@ namespace Prism
     struct Pointer;
     enum class MemoryOrder : u32
     {
-        eAtomicRelaxed = __ATOMIC_RELAXED,
-        eAtomicConsume = __ATOMIC_CONSUME,
-        eAtomicAcquire = __ATOMIC_ACQUIRE,
-        eAtomicRelease = __ATOMIC_RELEASE,
-        eAtomicAcqRel  = __ATOMIC_ACQ_REL,
-        eAtomicSeqCst  = __ATOMIC_SEQ_CST,
+        eRelaxed = __ATOMIC_RELAXED,
+        eConsume = __ATOMIC_CONSUME,
+        eAcquire = __ATOMIC_ACQUIRE,
+        eRelease = __ATOMIC_RELEASE,
+        eAcqRel  = __ATOMIC_ACQ_REL,
+        eSeqCst  = __ATOMIC_SEQ_CST,
     };
     struct MemoryOrderType
     {
@@ -64,7 +64,7 @@ namespace Prism
      * memoryOrder
      * @param source - source of the operation
      * @param memoryOrder - memory order constraints to enforce, valid values
-     * => [eAtomicRelaxed, eAtomicSeqCst, eAtomicRelease]
+     * => [eRelaxed, eSeqCst, eRelease]
      *
      * @return The current value of the atomic variable.
      */
@@ -131,8 +131,8 @@ namespace Prism
      *used here.
      *
      *  Otherwise, false is returned and memoy is affected to
-     *  failureMemoryOrder. This memory order cannot be eAtomicRelease nor
-     *  eAtomicAcqRel. It also cannot be a stronger order than that specified by
+     *  failureMemoryOrder. This memory order cannot be eRelease nor
+     *  eAcqRel. It also cannot be a stronger order than that specified by
      *  [successMemoryOrder]
      *
      *
@@ -247,18 +247,17 @@ namespace Prism
     }
 
     PM_ALWAYS_INLINE bool AtomicTestAndSet(void*       target,
-                                                  MemoryOrder memoryOrder)
+                                           MemoryOrder memoryOrder)
     {
         return __atomic_test_and_set(reinterpret_cast<volatile u32*>(target),
                                      ToUnderlying(memoryOrder));
     }
-    PM_ALWAYS_INLINE void AtomicClear(bool*       target,
-                                             MemoryOrder memoryOrder)
+    PM_ALWAYS_INLINE void AtomicClear(bool* target, MemoryOrder memoryOrder)
     {
         return __atomic_clear(reinterpret_cast<volatile u32*>(target),
                               ToUnderlying(memoryOrder));
     }
-#if PRISM_TARGET_CRYPTIX != 1
+    // #if PRISM_TARGET_CRYPTIX == 0
     PM_ALWAYS_INLINE void AtomicThreadFence(MemoryOrder memoryOrder)
     {
         return __atomic_thread_fence(ToUnderlying(memoryOrder));
@@ -267,7 +266,7 @@ namespace Prism
     {
         return __atomic_signal_fence(ToUnderlying(memoryOrder));
     }
-#endif
+    // #endif
     PM_ALWAYS_INLINE constexpr bool AtomicAlwaysLockFree(usize size,
                                                          void* object)
     {

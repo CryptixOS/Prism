@@ -51,25 +51,24 @@ namespace Prism
             return AtomicAlwaysLockFree(sizeof(T), &m_Value);
         }
 
-        constexpr void Store(T           desired,
-                             MemoryOrder order
-                             = MemoryOrder::eAtomicSeqCst) PM_NOEXCEPT
+        constexpr void Store(T desired, MemoryOrder order
+                                        = MemoryOrder::eSeqCst) PM_NOEXCEPT
         {
             AtomicStore(m_Value, desired, order);
         }
         constexpr void Store(T           desired,
                              MemoryOrder order
-                             = MemoryOrder::eAtomicSeqCst) volatile PM_NOEXCEPT
+                             = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
         {
             AtomicStore(m_Value, desired, order);
         }
 
         constexpr T Load(MemoryOrder order
-                         = MemoryOrder::eAtomicSeqCst) const PM_NOEXCEPT
+                         = MemoryOrder::eSeqCst) const PM_NOEXCEPT
         {
             return AtomicLoad<T>(m_Value, order);
         }
-        constexpr T Load(MemoryOrder order = MemoryOrder::eAtomicSeqCst) const
+        constexpr T Load(MemoryOrder order = MemoryOrder::eSeqCst) const
             volatile PM_NOEXCEPT
         {
             return AtomicLoad<T>(m_Value, order);
@@ -77,15 +76,14 @@ namespace Prism
         constexpr   operator T() const PM_NOEXCEPT { return Load(); }
         constexpr   operator T() const volatile PM_NOEXCEPT { return Load(); }
 
-        constexpr T Exchange(T           desired,
-                             MemoryOrder order
-                             = MemoryOrder::eAtomicSeqCst) PM_NOEXCEPT
+        constexpr T Exchange(T desired, MemoryOrder order
+                                        = MemoryOrder::eSeqCst) PM_NOEXCEPT
         {
             return AtomicExchange<T, T>(m_Value, desired, order);
         }
         constexpr T Exchange(T           desired,
                              MemoryOrder order
-                             = MemoryOrder::eAtomicSeqCst) volatile PM_NOEXCEPT
+                             = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
         {
             return AtomicExchange<T, T>(m_Value, desired, order);
         }
@@ -104,62 +102,57 @@ namespace Prism
         }
 
         constexpr T FetchAdd(T rhs, MemoryOrder order
-                                    = MemoryOrder::eAtomicSeqCst) PM_NOEXCEPT
+                                    = MemoryOrder::eSeqCst) PM_NOEXCEPT
         {
             return AtomicFetchAdd<T, T>(m_Value, rhs, order);
         }
-        constexpr T FetchAdd(T           rhs,
-                             MemoryOrder order
-                             = MemoryOrder::eAtomicSeqCst) volatile PM_NOEXCEPT
+        constexpr T FetchAdd(T rhs, MemoryOrder order
+                                    = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
         {
             return AtomicFetchAdd<T, T>(m_Value, rhs, order);
         }
         constexpr T FetchSub(T rhs, MemoryOrder order
-                                    = MemoryOrder::eAtomicSeqCst) PM_NOEXCEPT
+                                    = MemoryOrder::eSeqCst) PM_NOEXCEPT
         {
             return AtomicFetchSub<T, T>(m_Value, rhs, order);
         }
-        constexpr T FetchSub(T           rhs,
-                             MemoryOrder order
-                             = MemoryOrder::eAtomicSeqCst) volatile PM_NOEXCEPT
+        constexpr T FetchSub(T rhs, MemoryOrder order
+                                    = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
         {
             return AtomicFetchSub<T, T>(m_Value, rhs, order);
         }
         constexpr T FetchAnd(T rhs, MemoryOrder order
-                                    = MemoryOrder::eAtomicSeqCst) PM_NOEXCEPT
+                                    = MemoryOrder::eSeqCst) PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
             return AtomicFetchAnd<T, T>(m_Value, rhs, order);
         }
-        constexpr T FetchAnd(T           rhs,
-                             MemoryOrder order
-                             = MemoryOrder::eAtomicSeqCst) volatile PM_NOEXCEPT
+        constexpr T FetchAnd(T rhs, MemoryOrder order
+                                    = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
             return AtomicFetchAnd<T, T>(m_Value, rhs, order);
         }
         constexpr T FetchOr(T rhs, MemoryOrder order
-                                   = MemoryOrder::eAtomicSeqCst) PM_NOEXCEPT
+                                   = MemoryOrder::eSeqCst) PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
             return AtomicFetchOr<T, T>(m_Value, rhs, order);
         }
-        constexpr T FetchOr(T           rhs,
-                            MemoryOrder order
-                            = MemoryOrder::eAtomicSeqCst) volatile PM_NOEXCEPT
+        constexpr T FetchOr(T rhs, MemoryOrder order
+                                   = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
             return AtomicFetchOr<T, T>(m_Value, rhs, order);
         }
         constexpr T FetchXor(T rhs, MemoryOrder order
-                                    = MemoryOrder::eAtomicSeqCst) PM_NOEXCEPT
+                                    = MemoryOrder::eSeqCst) PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
             return AtomicFetchXor<T, T>(m_Value, rhs, order);
         }
-        constexpr T FetchXor(T           rhs,
-                             MemoryOrder order
-                             = MemoryOrder::eAtomicSeqCst) volatile PM_NOEXCEPT
+        constexpr T FetchXor(T rhs, MemoryOrder order
+                                    = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
             return AtomicFetchXor<T, T>(m_Value, rhs, order);

@@ -18,7 +18,7 @@ namespace Prism
         constexpr usize Used() const
         {
             auto head = m_Head.Load();
-            auto tail = m_Tail.Load(MemoryOrder::eAtomicRelaxed);
+            auto tail = m_Tail.Load(MemoryOrder::eRelaxed);
             return (tail >= head) ? (tail - head)
                                   : (m_Capacity - (tail - head));
         }
