@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Prism/Containers/Vector.hpp>
+#include <Prism/Core/Core.hpp>
 #include <Prism/Core/Iterator.hpp>
 
 #include <Prism/Debug/Assertions.hpp>
@@ -32,19 +33,6 @@ namespace Prism
     template <typename T>
     class Deque
     {
-        using BlockType                  = Block<T>;
-        using BlockRef                   = Ref<BlockType>;
-
-        static constexpr usize BlockSize = BlockType::BlockSize;
-
-        Vector<BlockRef>       m_Blocks;
-        usize                  m_FrontIndex  = 0;
-        usize                  m_BackIndex   = 0;
-
-        // Offsets for front and back (relative to their block)
-        usize                  m_FrontOffset = BlockSize / 2;
-        usize                  m_BackOffset  = BlockSize / 2;
-
       public:
         constexpr Deque()
         {
@@ -178,6 +166,9 @@ namespace Prism
             friend class Deque<T>;
         };
 
+        using ValueType            = T;
+        using Reference            = T&;
+        using ConstReference       = const T&;
         using ConstIterator        = Iterator<true>;
         using ReverseIterator      = ::Prism::ReverseIterator<Iterator<false>>;
         using ConstReverseIterator = ::Prism::ReverseIterator<Iterator<true>>;
@@ -371,7 +362,33 @@ namespace Prism
                  + (m_BackOffset - m_FrontOffset);
         }
 
-        constexpr bool Empty() const { return Size() == 0; }
+        constexpr bool        Empty() const { return Size() == 0; }
+
+        inline constexpr void Swap(Deque& other)
+        {
+            using Prism::Swap;
+
+            Swap(m_Blocks, other.m_Blocks);
+            Swap(m_FrontIndex, other.m_FrontIndex);
+            Swap(m_BackIndex, other.m_BackIndex);
+
+            Swap(m_FrontOffset, other.m_FrontOffset);
+            Swap(m_BackOffset, other.m_BackOffset);
+        }
+
+      private:
+        using BlockType                  = Block<T>;
+        using BlockRef                   = Ref<BlockType>;
+
+        static constexpr usize BlockSize = BlockType::BlockSize;
+
+        Vector<BlockRef>       m_Blocks;
+        usize                  m_FrontIndex  = 0;
+        usize                  m_BackIndex   = 0;
+
+        // Offsets for front and back (relative to their block)
+        usize                  m_FrontOffset = BlockSize / 2;
+        usize                  m_BackOffset  = BlockSize / 2;
     };
 }; // namespace Prism
 
