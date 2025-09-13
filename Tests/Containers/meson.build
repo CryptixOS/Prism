@@ -6,8 +6,9 @@
 #*/
 
 container_tests = [
-  'IntrusiveList', 'Deque', 'DoublyLinkedList', 'Queue',
-  'RingBuffer', 'RedBlackTree', 'UnorderedMap', 'Vector',
+  'IntrusiveList', 'Deque', 'DoublyLinkedList', 
+  'Queue', 'RingBuffer', 'RedBlackTree', 
+  'Stack', 'UnorderedMap', 'Vector',
 ]
 
 foreach name : container_tests
