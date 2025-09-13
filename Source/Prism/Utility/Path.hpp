@@ -87,37 +87,37 @@ namespace Prism
         //--------------------------------------------------------------------------
         // Iterators
         //--------------------------------------------------------------------------
-        [[nodiscard]] constexpr ConstIterator begin() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstIterator begin() const PM_NOEXCEPT
         {
             return m_Path.begin();
         }
-        [[nodiscard]] constexpr ConstIterator end() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstIterator end() const PM_NOEXCEPT
         {
             return m_Path.end();
         }
-        [[nodiscard]] constexpr ConstIterator cbegin() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstIterator cbegin() const PM_NOEXCEPT
         {
             return m_Path.cbegin();
         }
 
-        [[nodiscard]] constexpr ConstIterator cend() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstIterator cend() const PM_NOEXCEPT
         {
             return m_Path.cend();
         }
-        [[nodiscard]] constexpr ConstReverseIterator rbegin() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstReverseIterator rbegin() const PM_NOEXCEPT
         {
             return ConstReverseIterator(end());
         }
-        [[nodiscard]] constexpr ConstReverseIterator rend() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstReverseIterator rend() const PM_NOEXCEPT
         {
             return ConstReverseIterator(begin());
         }
 
-        [[nodiscard]] constexpr ConstReverseIterator crbegin() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstReverseIterator crbegin() const PM_NOEXCEPT
         {
             return ConstReverseIterator(end());
         }
-        [[nodiscard]] constexpr ConstReverseIterator crend() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstReverseIterator crend() const PM_NOEXCEPT
         {
             return ConstReverseIterator(begin());
         }
@@ -125,33 +125,33 @@ namespace Prism
         //--------------------------------------------------------------------------
         // Element Access
         //--------------------------------------------------------------------------
-        [[nodiscard]] constexpr ConstReferenceType
+        PM_NODISCARD constexpr ConstReferenceType
         operator[](usize pos) const PM_NOEXCEPT
         {
             return m_Path[pos];
         }
-        [[nodiscard]] constexpr ConstReferenceType
+        PM_NODISCARD constexpr ConstReferenceType
         At(usize pos) const PM_NOEXCEPT
         {
             return m_Path.At(pos);
         }
-        [[nodiscard]] constexpr ConstReferenceType Front() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstReferenceType Front() const PM_NOEXCEPT
         {
             return m_Path.Front();
         }
-        [[nodiscard]] constexpr ConstReferenceType Back() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstReferenceType Back() const PM_NOEXCEPT
         {
             return m_Path.Back();
         }
-        [[nodiscard]] constexpr ConstPointerType Raw() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ConstPointerType Raw() const PM_NOEXCEPT
         {
             return m_Path.Raw();
         }
-        [[nodiscard]] constexpr ViewType View() const PM_NOEXCEPT
+        PM_NODISCARD constexpr ViewType View() const PM_NOEXCEPT
         {
             return PathView(Raw(), Size());
         }
-        [[nodiscard]] constexpr StringView StrView() const PM_NOEXCEPT
+        PM_NODISCARD constexpr StringView StrView() const PM_NOEXCEPT
         {
             return m_Path.View();
         }
@@ -161,16 +161,16 @@ namespace Prism
         //--------------------------------------------------------------------------
         // Capacity
         //--------------------------------------------------------------------------
-        [[nodiscard]] constexpr usize Size() const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize Size() const PM_NOEXCEPT
         {
             return m_Path.Size();
         }
-        [[nodiscard]] constexpr usize MaxSize() const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize MaxSize() const PM_NOEXCEPT
         {
             return m_Path.MaxSize();
         }
 
-        [[nodiscard]] constexpr bool Empty() const PM_NOEXCEPT
+        PM_NODISCARD constexpr bool Empty() const PM_NOEXCEPT
         {
             return m_Path.Empty();
         }
@@ -207,69 +207,76 @@ namespace Prism
         }
 
         Vector<String> Split(ValueType delimiter = '/') const;
-        [[nodiscard]] constexpr StringView
+        PM_NODISCARD constexpr StringView
         Substr(usize pos = 0, usize count = NPos) const PM_NOEXCEPT
         {
             return m_Path.Substr(pos, count);
         }
-        [[nodiscard]] constexpr i32 Compare(const Path& other) const PM_NOEXCEPT
+        PM_NODISCARD constexpr i32 Compare(const Path& other) const PM_NOEXCEPT
         {
             return m_Path.Compare(other.m_Path);
         }
-        [[nodiscard]] constexpr i32 Compare(usize pos, usize count,
-                                            StringView str) const
+        PM_NODISCARD constexpr i32 Compare(usize pos, usize count,
+                                           StringView str) const
         {
             return m_Path.Compare(pos, count, str);
         }
-        [[nodiscard]] constexpr i32 Compare(usize pos1, usize count1,
-                                            StringView str, usize pos2,
-                                            usize count2) const
+        PM_NODISCARD constexpr i32 Compare(usize pos1, usize count1,
+                                           StringView str, usize pos2,
+                                           usize count2) const
         {
             return m_Path.Compare(pos1, count1, str, pos2, count2);
         }
-        [[nodiscard]] constexpr i32
+        PM_NODISCARD constexpr i32
         Compare(const ValueType* str) const PM_NOEXCEPT
         {
             return m_Path.Compare(str);
         }
-        [[nodiscard]] constexpr i32 Compare(usize pos, usize count,
-                                            const ValueType* str) const
+        PM_NODISCARD constexpr i32 Compare(usize pos, usize count,
+                                           const ValueType* str) const
 
         {
             return m_Path.Compare(pos, count, str);
         }
-        [[nodiscard]] constexpr i32 Compare(usize pos, usize count1,
-                                            const ValueType* str,
-                                            usize count2) const PM_NOEXCEPT
+        PM_NODISCARD constexpr i32 Compare(usize pos, usize count1,
+                                           const ValueType* str,
+                                           usize count2) const PM_NOEXCEPT
         {
             return m_Path.Compare(pos, count1, str, count2);
         }
-        [[nodiscard]] constexpr bool
-        StartsWith(StringView str) const PM_NOEXCEPT
+        PM_NODISCARD constexpr bool StartsWith(StringView str) const PM_NOEXCEPT
         {
             return m_Path.StartsWith(str);
         }
-        [[nodiscard]] constexpr bool
+        PM_NODISCARD constexpr bool StartsWith(char c) const PM_NOEXCEPT
+        {
+            return m_Path.StartsWith(c);
+        }
+        PM_NODISCARD constexpr bool
         StartsWith(const ValueType* str) const PM_NOEXCEPT
         {
             return m_Path.StartsWith(str);
         }
 
-        [[nodiscard]] constexpr bool EndsWith(StringView str) const PM_NOEXCEPT
+        PM_NODISCARD constexpr bool EndsWith(StringView str) const PM_NOEXCEPT
         {
             return m_Path.EndsWith(str);
         }
-        [[nodiscard]] constexpr bool
+        PM_NODISCARD constexpr bool EndsWith(char c) const PM_NOEXCEPT
+        {
+            return m_Path.EndsWith(c);
+        }
+        PM_NODISCARD constexpr bool
         EndsWith(const ValueType* str) const PM_NOEXCEPT
         {
             return m_Path.EndsWith(str);
         }
 
-        [[nodiscard]] constexpr bool Contains(StringView str) const PM_NOEXCEPT
+        PM_NODISCARD constexpr bool Contains(StringView str) const PM_NOEXCEPT
         {
             return View().Contains(str);
         }
-        [[nodiscard]] constexpr bool Contains(ValueType ch) const PM_NOEXCEPT
+        PM_NODISCARD constexpr bool Contains(ValueType ch) const PM_NOEXCEPT
         {
             return View().Contains(ch);
         }
@@ -279,62 +286,62 @@ namespace Prism
             return View().Contains(ch);
         }
 
-        [[nodiscard]] constexpr usize Find(StringView pattern,
-                                           usize      pos = 0) const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize Find(StringView pattern,
+                                          usize      pos = 0) const PM_NOEXCEPT
         {
             return View().Find(pattern, pos);
         }
-        [[nodiscard]] constexpr usize Find(const ValueType* pattern, usize pos,
-                                           usize count) const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize Find(const ValueType* pattern, usize pos,
+                                          usize count) const PM_NOEXCEPT
         {
             return m_Path.Find(pattern, pos, count);
         }
-        [[nodiscard]] constexpr usize Find(const ValueType* pattern,
-                                           usize pos = 0) const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize Find(const ValueType* pattern,
+                                          usize pos = 0) const PM_NOEXCEPT
         {
             return m_Path.Find(pattern, pos);
         }
 
-        [[nodiscard]] constexpr usize Find(ValueType ch,
-                                           usize     pos = 0) const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize Find(ValueType ch,
+                                          usize     pos = 0) const PM_NOEXCEPT
         {
             return m_Path.Find(ch, pos);
         }
-        [[nodiscard]] constexpr usize RFind(const ValueType* pattern, usize pos,
-                                            usize count) const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize RFind(const ValueType* pattern, usize pos,
+                                           usize count) const PM_NOEXCEPT
         {
             return m_Path.RFind(pattern, pos, count);
         }
-        [[nodiscard]] constexpr usize RFind(const ValueType* pattern,
-                                            usize pos = NPos) const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize RFind(const ValueType* pattern,
+                                           usize pos = NPos) const PM_NOEXCEPT
         {
             return m_Path.RFind(pattern, pos);
         }
-        [[nodiscard]] constexpr usize RFind(ValueType ch,
-                                            usize pos = NPos) const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize RFind(ValueType ch,
+                                           usize pos = NPos) const PM_NOEXCEPT
         {
             return m_Path.RFind(ch, pos);
         }
         template <typename StringViewLike>
-        [[nodiscard]] constexpr usize RFind(const StringViewLike& pattern,
-                                            usize pos = 0) const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize RFind(const StringViewLike& pattern,
+                                           usize pos = 0) const PM_NOEXCEPT
         {
             return m_Path.RFind(pattern, pos);
         }
 
-        [[nodiscard]] constexpr usize
+        PM_NODISCARD constexpr usize
         FindFirstOf(StringView chars, usize pos = 0) const PM_NOEXCEPT
         {
             return m_Path.FindFirstOf(chars, pos);
         }
-        [[nodiscard]] constexpr usize
+        PM_NODISCARD constexpr usize
         FindFirstOf(ValueType ch, usize pos = 0) const PM_NOEXCEPT
         {
             return m_Path.FindFirstOf(ch, pos);
         }
-        [[nodiscard]] constexpr usize FindFirstOf(const ValueType* chars,
-                                                  usize            pos,
-                                                  usize count) const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize FindFirstOf(const ValueType* chars,
+                                                 usize            pos,
+                                                 usize count) const PM_NOEXCEPT
         {
             return m_Path.FindFirstOf(chars, pos, count);
         }
@@ -343,19 +350,19 @@ namespace Prism
         {
             return m_Path.FindFirstOf(chars, pos);
         }
-        [[nodiscard]] constexpr usize
+        PM_NODISCARD constexpr usize
         FindLastOf(StringView chars, usize pos = NPos) const PM_NOEXCEPT
         {
             return m_Path.FindLastOf(chars, pos);
         }
-        [[nodiscard]] constexpr usize
+        PM_NODISCARD constexpr usize
         FindLastOf(ValueType c, usize pos = NPos) const PM_NOEXCEPT
         {
             return m_Path.FindLastOf(c, pos);
         }
-        [[nodiscard]] constexpr usize FindLastOf(const ValueType* chars,
-                                                 usize            pos,
-                                                 usize count) const PM_NOEXCEPT
+        PM_NODISCARD constexpr usize FindLastOf(const ValueType* chars,
+                                                usize            pos,
+                                                usize count) const PM_NOEXCEPT
         {
             return m_Path.FindLastOf(chars, pos, count);
         }
@@ -365,18 +372,18 @@ namespace Prism
             return m_Path.FindLastOf(chars, pos);
         }
 
-        [[nodiscard]] constexpr usize
+        PM_NODISCARD constexpr usize
         FindFirstNotOf(StringView chars, usize pos = 0) const PM_NOEXCEPT
         {
             return m_Path.FindFirstNotOf(chars, pos);
         }
-        [[nodiscard]] constexpr usize
+        PM_NODISCARD constexpr usize
         FindFirstNotOf(ValueType ch, usize pos = 0) const PM_NOEXCEPT
         {
             return m_Path.FindFirstNotOf(ch, pos);
         }
 
-        [[nodiscard]] constexpr usize
+        PM_NODISCARD constexpr usize
         FindFirstNotOf(const ValueType* chars, usize pos,
                        usize count) const PM_NOEXCEPT
         {
@@ -388,19 +395,19 @@ namespace Prism
         {
             return m_Path.FindFirstNotOf(chars, pos);
         }
-        [[nodiscard]] constexpr usize
+        PM_NODISCARD constexpr usize
         FindLastNotOf(StringView chars, usize pos = NPos) const PM_NOEXCEPT
         {
             return m_Path.FindLastNotOf(chars, pos);
         }
 
-        [[nodiscard]] constexpr usize
+        PM_NODISCARD constexpr usize
         FindLastNotOf(ValueType ch, usize pos = NPos) const PM_NOEXCEPT
         {
             return m_Path.FindLastNotOf(ch, pos);
         }
 
-        [[nodiscard]] constexpr usize
+        PM_NODISCARD constexpr usize
         FindLastNotOf(const ValueType* chars, usize pos,
                       usize count) const PM_NOEXCEPT
         {

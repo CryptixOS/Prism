@@ -112,44 +112,38 @@ namespace Prism
         //--------------------------------------------------------------------------
         /** @name Iterators */
         ///@{
-        [[nodiscard]]
-        constexpr ConstIterator begin() const PM_NOEXCEPT
-        {
-            return m_Data;
-        }
-        [[nodiscard]]
+        PM_NODISCARD
+        constexpr ConstIterator begin() const PM_NOEXCEPT { return m_Data; }
+        PM_NODISCARD
         constexpr ConstIterator end() const PM_NOEXCEPT
         {
             return m_Data + m_Size;
         }
-        [[nodiscard]]
-        constexpr ConstIterator cbegin() const PM_NOEXCEPT
-        {
-            return m_Data;
-        }
+        PM_NODISCARD
+        constexpr ConstIterator cbegin() const PM_NOEXCEPT { return m_Data; }
 
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr ConstIterator cend() const PM_NOEXCEPT
         {
             return m_Data + m_Size;
         }
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr ConstReverseIterator rbegin() const PM_NOEXCEPT
         {
             return ConstReverseIterator(end());
         }
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr ConstReverseIterator rend() const PM_NOEXCEPT
         {
             return ConstReverseIterator(begin());
         }
 
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr ConstReverseIterator crbegin() const PM_NOEXCEPT
         {
             return ConstReverseIterator(end());
         }
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr ConstReverseIterator crend() const PM_NOEXCEPT
         {
             return ConstReverseIterator(begin());
@@ -167,7 +161,7 @@ namespace Prism
          * @return Reference to character.
          * @note Asserts if `pos >= Size()`.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr ConstReferenceType operator[](SizeType pos) const PM_NOEXCEPT
         {
             assert(pos < m_Size);
@@ -178,19 +172,19 @@ namespace Prism
          * @param pos Position within the view.
          * @return Reference to character.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr ConstReferenceType At(SizeType pos) const PM_NOEXCEPT
         {
             assert(pos < m_Size);
             return Raw()[pos];
         }
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr ConstReferenceType Front() const PM_NOEXCEPT
         {
             assert(m_Size > 0);
             return m_Data[0];
         }
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr ConstReferenceType Back() const PM_NOEXCEPT
         {
             assert(m_Size > 0);
@@ -200,11 +194,8 @@ namespace Prism
          * @brief Raw pointer to the first character.
          * @return Pointer to underlying data.
          */
-        [[nodiscard]]
-        constexpr ConstPointerType Raw() const PM_NOEXCEPT
-        {
-            return m_Data;
-        }
+        PM_NODISCARD
+        constexpr ConstPointerType Raw() const PM_NOEXCEPT { return m_Data; }
         ///@}
 
         //--------------------------------------------------------------------------
@@ -212,23 +203,17 @@ namespace Prism
         //--------------------------------------------------------------------------
         /** @name Capacity */
         ///@{
-        [[nodiscard]]
-        constexpr SizeType Size() const PM_NOEXCEPT
-        {
-            return m_Size;
-        }
-        [[nodiscard]]
+        PM_NODISCARD
+        constexpr SizeType Size() const PM_NOEXCEPT { return m_Size; }
+        PM_NODISCARD
         constexpr SizeType MaxSize() const PM_NOEXCEPT
         {
             return (NPos - sizeof(SizeType) - sizeof(void*))
                  / sizeof(ValueType);
         }
 
-        [[nodiscard]]
-        constexpr bool Empty() const PM_NOEXCEPT
-        {
-            return m_Size == 0;
-        }
+        PM_NODISCARD
+        constexpr bool Empty() const PM_NOEXCEPT { return m_Size == 0; }
         ///@}
 
         //--------------------------------------------------------------------------
@@ -323,7 +308,7 @@ namespace Prism
          * @param count Number of characters (default = remainder).
          * @return New BasicStringView of substring.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr BasicStringView
         Substr(SizeType pos = 0, SizeType count = NPos) const PM_NOEXCEPT
         {
@@ -347,7 +332,7 @@ namespace Prism
          * in length. Matches `std::basic_string_view::compare(...)` semantics.
          * :contentReference[oaicite:0]{index=0}
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr i32 Compare(BasicStringView other) const PM_NOEXCEPT
         {
             const SizeType count = Min(Size(), other.Size());
@@ -366,7 +351,7 @@ namespace Prism
          *
          * Equivalent to `substr(pos, count).Compare(str)`.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr i32 Compare(SizeType pos, SizeType count,
                               BasicStringView str) const
         {
@@ -381,7 +366,7 @@ namespace Prism
          * @param count2  Length from other view.
          * @return Lexicographical comparison result.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr i32 Compare(SizeType pos1, SizeType count1,
                               BasicStringView str, SizeType pos2,
                               SizeType count2) const
@@ -391,7 +376,7 @@ namespace Prism
         /**
          * @brief Compare this view with a C-string.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr i32 Compare(const C* str) const PM_NOEXCEPT
         {
             return Compare(BasicStringView(str));
@@ -399,7 +384,7 @@ namespace Prism
         /**
          * @brief Compare a substring of this view with a C-string.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr i32 Compare(SizeType pos, SizeType count, const C* str) const
 
         {
@@ -409,7 +394,7 @@ namespace Prism
          * @brief Compare a substring of this view with a C-string of fixed
          * length.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr i32 Compare(SizeType pos, SizeType count1, const C* str,
                               SizeType count2) const PM_NOEXCEPT
         {
@@ -425,7 +410,7 @@ namespace Prism
          * Matches `std::basic_string_view::starts_with(...)`.
          * :contentReference[oaicite:2]{index=2}
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr bool StartsWith(BasicStringView str) const PM_NOEXCEPT
         {
             return m_Size >= str.m_Size
@@ -434,15 +419,15 @@ namespace Prism
         /**
          * @brief Check if the first char equals `c`.
          */
-        [[nodiscard]]
-        constexpr bool StartsWith(C* c) const PM_NOEXCEPT
+        PM_NODISCARD
+        constexpr bool StartsWith(C c) const PM_NOEXCEPT
         {
             return !Empty() && TraitsType::Equal(Front(), c);
         }
         /**
          * @brief Check if this view starts with the C-string.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr bool StartsWith(const C* str) const PM_NOEXCEPT
         {
             return StartsWith(BasicStringView(str));
@@ -456,7 +441,7 @@ namespace Prism
          * Matches `std::basic_string_view::ends_with(...)`.
          * :contentReference[oaicite:3]{index=3}
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr bool EndsWith(BasicStringView str) const PM_NOEXCEPT
         {
             const SizeType size      = Size();
@@ -469,15 +454,15 @@ namespace Prism
         /**
          * @brief Check if last character equals `c`.
          */
-        [[nodiscard]]
-        constexpr bool EndsWith(C* c) const PM_NOEXCEPT
+        PM_NODISCARD
+        constexpr bool EndsWith(C c) const PM_NOEXCEPT
         {
             return !Empty() && TraitsType::Equal(Back(), c);
         }
         /**
          * @brief Check if last character equals `c`.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr bool EndsWith(const C* str) const PM_NOEXCEPT
         {
             return EndsWith(BasicStringView(str));
@@ -491,7 +476,7 @@ namespace Prism
          * Same as `std::basic_string_view::contains` (C++23).
          * :contentReference[oaicite:4]{index=4}
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr bool Contains(BasicStringView str) const PM_NOEXCEPT
         {
             return Find(str) != NPos;
@@ -499,7 +484,7 @@ namespace Prism
         /**
          * @brief Search for a character.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr bool Contains(C ch) const PM_NOEXCEPT
         {
             return Find(ch) != NPos;
@@ -523,7 +508,7 @@ namespace Prism
          * @param pos     Start index.
          * @return Position of first match or NPos.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType Find(BasicStringView pattern,
                                 SizeType        pos = 0) const PM_NOEXCEPT
         {
@@ -537,7 +522,7 @@ namespace Prism
         /**
          * @brief Search for a C-string slice.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType Find(const C* pattern, SizeType pos,
                                 SizeType count) const PM_NOEXCEPT
         {
@@ -546,7 +531,7 @@ namespace Prism
         /**
          * @brief Search for a null-terminated C-string.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType Find(const C* pattern,
                                 SizeType pos = 0) const PM_NOEXCEPT
         {
@@ -555,7 +540,7 @@ namespace Prism
         /**
          * @brief Find a single char.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType Find(ValueType ch,
                                 SizeType  pos = 0) const PM_NOEXCEPT
         {
@@ -565,7 +550,7 @@ namespace Prism
         /**
          * @brief Reverse search for a C-string slice.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType RFind(const C* pattern, SizeType pos,
                                  SizeType count) const PM_NOEXCEPT
         {
@@ -574,7 +559,7 @@ namespace Prism
         /**
          * @brief Reverse search for a null-terminated C-string.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType RFind(const C* pattern,
                                  SizeType pos = NPos) const PM_NOEXCEPT
         {
@@ -583,7 +568,7 @@ namespace Prism
         /**
          * @brief Reverse search for a single char.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType RFind(C ch, SizeType pos = NPos) const PM_NOEXCEPT
         {
             return RFind(BasicStringView(AddressOf(ch), 1), pos);
@@ -593,9 +578,8 @@ namespace Prism
          * @tparam StringViewLike Supports `.Size()` and KMP search.
          */
         template <typename StringViewLike>
-        [[nodiscard]]
-        constexpr SizeType RFind(const StringViewLike& pattern,
-                                 SizeType pos = 0) const PM_NOEXCEPT
+        PM_NODISCARD constexpr SizeType
+        RFind(const StringViewLike& pattern, SizeType pos = 0) const PM_NOEXCEPT
         {
             if (pattern.Size() > Size()) return NPos;
 
@@ -614,7 +598,7 @@ namespace Prism
         /**
          * @brief Search for any of the characters.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr usize FindFirstOf(BasicStringView chars,
                                     usize           pos = 0) const PM_NOEXCEPT
         {
@@ -629,7 +613,7 @@ namespace Prism
         /**
          * @brief Search for a single character among `chars`.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr usize FindFirstOf(C ch, usize pos = 0) const PM_NOEXCEPT
         {
             return Find(ch, pos);
@@ -637,7 +621,7 @@ namespace Prism
         /**
          * @brief Search for any of the characters in a C-string slice.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType FindFirstOf(const C* chars, SizeType pos,
                                        SizeType count) const PM_NOEXCEPT
         {
@@ -657,7 +641,7 @@ namespace Prism
         /**
          * @brief Reverse search for any of the characters.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType FindLastOf(BasicStringView chars,
                                       SizeType pos = NPos) const PM_NOEXCEPT
         {
@@ -675,7 +659,7 @@ namespace Prism
         /**
          * @brief Reverse search for a character among `chars`.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType FindLastOf(C        c,
                                       SizeType pos = NPos) const PM_NOEXCEPT
         {
@@ -684,7 +668,7 @@ namespace Prism
         /**
          * @brief Reverse search for any of the characters in a C-string slice.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType FindLastOf(const C* chars, SizeType pos,
                                       SizeType count) const PM_NOEXCEPT
         {
@@ -703,7 +687,7 @@ namespace Prism
         /**
          * @brief Search for first character **not** in `chars`.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType FindFirstNotOf(BasicStringView chars,
                                           SizeType pos = 0) const PM_NOEXCEPT
         {
@@ -715,7 +699,7 @@ namespace Prism
         /**
          * @brief Search for first character **not** equal to `ch`.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType FindFirstNotOf(C        ch,
                                           SizeType pos = 0) const PM_NOEXCEPT
         {
@@ -724,7 +708,7 @@ namespace Prism
         /**
          * @brief Search for first character **not** in a C-string slice.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType FindFirstNotOf(const C* chars, SizeType pos,
                                           SizeType count) const PM_NOEXCEPT
         {
@@ -743,7 +727,7 @@ namespace Prism
         /**
          * @brief Reverse search for character **not** in `chars`.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType FindLastNotOf(BasicStringView chars,
                                          SizeType pos = NPos) const PM_NOEXCEPT
         {
@@ -762,7 +746,7 @@ namespace Prism
         /**
          * @brief Reverse search for character **not** equal to `ch`.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType FindLastNotOf(C        ch,
                                          SizeType pos = NPos) const PM_NOEXCEPT
         {
@@ -772,7 +756,7 @@ namespace Prism
         /**
          * @brief Reverse search for character **not** in a C-string slice.
          */
-        [[nodiscard]]
+        PM_NODISCARD
         constexpr SizeType FindLastNotOf(const C* chars, SizeType pos,
                                          SizeType count) const PM_NOEXCEPT
         {
@@ -809,18 +793,18 @@ namespace Prism
      * @brief Equality comparison.
      */
     template <typename C, typename Traits>
-    [[nodiscard]]
-    constexpr bool operator==(BasicStringView<C, Traits> lhs,
-                              BasicStringView<C, Traits> rhs) PM_NOEXCEPT
+    PM_NODISCARD constexpr bool
+    operator==(BasicStringView<C, Traits> lhs,
+               BasicStringView<C, Traits> rhs) PM_NOEXCEPT
     {
         return lhs.Size() == rhs.Size() && lhs.Compare(rhs) == 0;
     }
 
     /// Similarly define operator<=> for lexicographical ordering.
     template <typename C, typename Traits>
-    [[nodiscard]]
-    constexpr auto operator<=>(const BasicStringView<C, Traits> lhs,
-                               const BasicStringView<C, Traits> rhs) PM_NOEXCEPT
+    PM_NODISCARD constexpr auto
+    operator<=>(const BasicStringView<C, Traits> lhs,
+                const BasicStringView<C, Traits> rhs) PM_NOEXCEPT
     {
         return lhs.Compare(rhs);
     }
@@ -867,7 +851,7 @@ namespace Prism
                   typename StringType = BasicString<C, CharTraits<C>>>
         struct StringHashBase
         {
-            [[nodiscard]]
+            PM_NODISCARD
             constexpr usize operator()(const StringType& str) const PM_NOEXCEPT
             {
                 const u8*   key    = reinterpret_cast<const u8*>(str.Raw());
