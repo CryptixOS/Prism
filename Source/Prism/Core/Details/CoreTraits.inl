@@ -79,3 +79,7 @@ namespace Prism
         return {};
     }
 }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+using Prism::DeclVal;
+#endif

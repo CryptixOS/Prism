@@ -24,6 +24,13 @@ extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
     #include <fmt/format.h>
 #endif
 
+#if PrismHasInclude(<compare>)
+    #include <compare>
+#endif
+#if PrismHasInclude(<initializer_list>)
+    #include <initializer_list>
+#endif
+
 #define PrismStringifyInner(x) #x
 #define PrismStringify(x)      PrismStringifyInner(x)
 
