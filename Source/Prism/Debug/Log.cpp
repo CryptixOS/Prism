@@ -20,7 +20,7 @@ namespace Logger
 } // namespace Logger
 #else
     #ifndef STDOUT_FILENO
-constexpr usize STDOUT_FILENO = 1;
+constexpr Prism::isize STDOUT_FILENO = 1;
     #endif
 
 using namespace Prism;
