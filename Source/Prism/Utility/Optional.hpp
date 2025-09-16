@@ -8,6 +8,7 @@
 
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Concepts.hpp>
+#include <Prism/Core/Error.hpp>
 #include <Prism/Memory/Pointer.hpp>
 
 namespace Prism
@@ -23,7 +24,7 @@ namespace Prism
 
     template <typename T>
         requires(!IsLValueReferenceV<T>)
-    class [[nodiscard]] Optional<T>
+    class PM_NODISCARD Optional<T>
     {
         static_assert(!IsLValueReferenceV<T> && !IsRValueReferenceV<T>);
 
@@ -198,9 +199,9 @@ namespace Prism
                         T(Forward<Args>(args)...));
         }
 
-        constexpr bool HasValue() const { return m_HasValue; }
+        constexpr bool                   HasValue() const { return m_HasValue; }
 
-        [[nodiscard]] PM_ALWAYS_INLINE T& Value() &
+        PM_NODISCARD PM_ALWAYS_INLINE T& Value() &
         {
             assert(m_HasValue);
             return *Launder(reinterpret_cast<T*>(&m_Storage));
@@ -244,8 +245,228 @@ namespace Prism
         };
         bool m_HasValue = false;
     };
+
+    template <typename T>
+        requires(IsLValueReferenceV<T>)
+    class PM_NODISCARD Optional<T>
+    {
+        template <typename>
+        friend class Optional;
+
+        template <typename U>
+        constexpr static bool OptionalCompatible
+            = IsSameV<RemoveReferenceType<T>,
+                      RemoveReferenceType<AddConstType<U>>>
+           && (IsBaseOfV<RemoveCvRefType<T>, RemoveCvRefType<U>>
+               || IsSameV<RemoveCvRefType<T>, RemoveCvRefType<U>>);
+
+      public:
+        using ValueType                       = T;
+
+        PM_ALWAYS_INLINE constexpr Optional() = default;
+
+        template <SameAs<NullOptType> V>
+        PM_ALWAYS_INLINE constexpr Optional(V)
+        {
+        }
+
+        template <SameAs<NullOptType> V>
+        PM_ALWAYS_INLINE constexpr Optional& operator=(V)
+        {
+            Clear();
+            return *this;
+        }
+
+        template <typename U = T>
+        PM_ALWAYS_INLINE constexpr Optional(U& value)
+            requires(OptionalCompatible<U&>)
+            : m_Pointer(&value)
+        {
+        }
+
+        PM_ALWAYS_INLINE constexpr Optional(RemoveReferenceType<T>& value)
+            : m_Pointer(&value)
+        {
+        }
+
+        PM_ALWAYS_INLINE constexpr Optional(Optional const& other) = default;
+
+        PM_ALWAYS_INLINE constexpr Optional(Optional&& other)
+            : m_Pointer(other.m_Pointer)
+        {
+            other.m_Pointer = nullptr;
+        }
+
+        template <typename U>
+        PM_ALWAYS_INLINE constexpr Optional(Optional<U> const& other)
+            requires(OptionalCompatible<U>)
+            : m_Pointer(other.m_Pointer)
+        {
+        }
+
+        template <typename U>
+        PM_ALWAYS_INLINE constexpr Optional(Optional<U>&& other)
+            requires(OptionalCompatible<U>)
+            : m_Pointer(other.m_Pointer)
+        {
+            other.m_Pointer = nullptr;
+        }
+
+        PM_ALWAYS_INLINE constexpr Optional& operator=(Optional const& other)
+            = default;
+        PM_ALWAYS_INLINE constexpr Optional& operator=(Optional&& other)
+        {
+            m_Pointer       = other.m_Pointer;
+            other.m_Pointer = nullptr;
+            return *this;
+        }
+
+        template <typename U>
+        PM_ALWAYS_INLINE constexpr Optional& operator=(Optional<U> const& other)
+            requires(OptionalCompatible<U>)
+        {
+            m_Pointer = other.m_Pointer;
+            return *this;
+        }
+
+        template <typename U>
+        PM_ALWAYS_INLINE constexpr Optional& operator=(Optional<U>&& other)
+            requires(OptionalCompatible<U>)
+        {
+            m_Pointer       = other.m_Pointer;
+            other.m_Pointer = nullptr;
+            return *this;
+        }
+
+        template <typename U>
+            requires(!IsSameV<NullOptType, RemoveCvRefType<U>>)
+        PM_ALWAYS_INLINE constexpr Optional& operator=(U&& value)
+            requires(OptionalCompatible<U> && IsLValueReferenceV<U>)
+        {
+            m_Pointer = &value;
+            return *this;
+        }
+
+        PM_ALWAYS_INLINE constexpr void Clear() { m_Pointer = nullptr; }
+
+        PM_NODISCARD PM_ALWAYS_INLINE constexpr bool HasValue() const
+        {
+            return m_Pointer != nullptr;
+        }
+
+        PM_NODISCARD PM_ALWAYS_INLINE constexpr T Value()
+        {
+            assert(m_Pointer);
+            return *m_Pointer;
+        }
+
+        PM_NODISCARD PM_ALWAYS_INLINE constexpr AddConstType<T> Value() const
+        {
+            assert(m_Pointer);
+            return *m_Pointer;
+        }
+
+        template <typename U>
+            requires(IsBaseOfV<RemoveCvRefType<T>, U>)
+        PM_NODISCARD PM_ALWAYS_INLINE constexpr AddConstType<T>
+                     ValueOr(U& fallback) const
+        {
+            if (m_Pointer) return Value();
+            return fallback;
+        }
+
+        PM_NODISCARD PM_ALWAYS_INLINE constexpr RemoveCvRefType<T>
+                     value_or(RemoveCvRefType<T> fallback) const
+        {
+            if (m_Pointer) return Value();
+            return fallback;
+        }
+
+        PM_NODISCARD PM_ALWAYS_INLINE constexpr T ReleaseValue()
+        {
+            return *Exchange(m_Pointer, nullptr);
+        }
+
+        template <typename U>
+        PM_ALWAYS_INLINE constexpr bool
+        operator==(Optional<U> const& other) const
+        {
+            return HasValue() == other.HasValue()
+                && (!HasValue() || Value() == other.Value());
+        }
+
+        template <typename U>
+        PM_ALWAYS_INLINE constexpr bool operator==(U const& other) const
+        {
+            return HasValue() && Value() == other;
+        }
+
+        PM_ALWAYS_INLINE constexpr AddConstType<T> operator*() const
+        {
+            return Value();
+        }
+        PM_ALWAYS_INLINE constexpr T operator*() { return Value(); }
+
+        PM_ALWAYS_INLINE constexpr AddPointerType<
+            AddConstType<RemoveReferenceType<T>>>
+        operator->() const
+        {
+            return &Value();
+        }
+        PM_ALWAYS_INLINE constexpr AddPointerType<RemoveReferenceType<T>>
+        operator->()
+        {
+            return &Value();
+        }
+
+        PM_ALWAYS_INLINE constexpr explicit
+        operator Optional<RemoveCvRefType<T>>() const
+        {
+            if (HasValue()) return Optional<RemoveCvRefType<T>>(Value());
+            return {};
+        }
+        PM_ALWAYS_INLINE constexpr Optional<RemoveCvRefType<T>> Copy() const
+        {
+            return static_cast<Optional<RemoveCvRefType<T>>>(*this);
+        }
+
+        template <typename Callback>
+        PM_NODISCARD PM_ALWAYS_INLINE constexpr T
+        ValueOrLazyEvaluated(Callback callback) const
+        {
+            if (!m_Pointer) return Value();
+            return callback();
+        }
+
+        template <typename Callback>
+        PM_NODISCARD PM_ALWAYS_INLINE constexpr Optional<T>
+                     ValueOrLazyEvaluatedOptional(Callback callback) const
+        {
+            if (!m_Pointer) return Value();
+            return callback();
+        }
+
+        template <typename Callback>
+        PM_NODISCARD PM_ALWAYS_INLINE constexpr ErrorOr<T>
+                     TryValueOrLazyEvaluated(Callback callback) const
+        {
+            if (!m_Pointer) return Value();
+            return callback();
+        }
+
+        template <typename Callback>
+        PM_NODISCARD PM_ALWAYS_INLINE constexpr ErrorOr<Optional<T>>
+                     TryValueOrLazyEvaluatedOptional(Callback callback) const
+        {
+            if (!m_Pointer) return Value();
+            return callback();
+        }
+
+      private:
+        RemoveReferenceType<T>* m_Pointer{nullptr};
+    };
 }; // namespace Prism
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::NullOpt;
 using Prism::Optional;
 #endif
