@@ -10,8 +10,6 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Memory/Pointer.hpp>
 
-#include <compare>
-
 namespace Prism
 {
     template <typename C>
@@ -32,12 +30,12 @@ namespace Prism
       public:
         struct Symbol
         {
-            char*                          Name;
-            Pointer                        Address;
+            char*                    Name;
+            Pointer                  Address;
 
-            const String                   Demangle() const;
+            const String             Demangle() const;
 
-            constexpr std::strong_ordering operator<=>(const Symbol& rhs) const
+            constexpr StrongOrdering operator<=>(const Symbol& rhs) const
             {
                 return Address <=> rhs.Address;
             }
@@ -48,8 +46,8 @@ namespace Prism
                    usize maxDepth = 32);
 
         bool LoadSymbols(Vector<Symbol>&& symbols,
-                                  PhysAddr lowestSymbolAddress  = 0x0000'0000,
-                                  PhysAddr highestSymbolAddress = 0xffff'ffff)
+                         PhysAddr         lowestSymbolAddress  = 0x0000'0000,
+                         PhysAddr         highestSymbolAddress = 0xffff'ffff)
         {
             m_Symbols              = Move(symbols);
             m_LowestSymbolAddress  = lowestSymbolAddress;
