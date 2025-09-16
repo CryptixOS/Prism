@@ -21,7 +21,7 @@ namespace Prism
     using VirtAddr = pointer;
 
     template <typename T>
-    [[nodiscard]] constexpr T* Launder(T* object) noexcept
+    PM_NODISCARD constexpr T* Launder(T* object) noexcept
     {
         if constexpr (IsSameV<const volatile T, const volatile void>)
             static_assert(!IsSameV<const volatile T, const volatile void>,
@@ -248,11 +248,11 @@ namespace Prism
     {
         return lhs.Raw() & rhs.Raw();
     }
-    inline constexpr Pointer operator<<(Pointer& lhs, uintptr_t rhs)
+    inline constexpr Pointer operator<<(Pointer& lhs, upointer rhs)
     {
         return lhs.Raw() << rhs;
     }
-    inline constexpr Pointer operator>>(Pointer& lhs, uintptr_t rhs)
+    inline constexpr Pointer operator>>(Pointer& lhs, upointer rhs)
     {
         return lhs.Raw() >> rhs;
     }
@@ -261,7 +261,7 @@ namespace Prism
     template <>
     struct Hash<Pointer>
     {
-        [[nodiscard]] usize operator()(const Pointer& pointer) const PM_NOEXCEPT
+        PM_NODISCARD usize operator()(const Pointer& pointer) const PM_NOEXCEPT
         {
             return Hash<Prism::pointer*>{}(pointer.Raw());
         }
@@ -273,7 +273,7 @@ constexpr Prism::Pointer operator""_virt(unsigned long long address)
     return address;
 }
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::Pointer;
 using Prism::PointerHolder;
 using Prism::PointerType;
