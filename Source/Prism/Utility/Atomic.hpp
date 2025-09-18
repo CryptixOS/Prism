@@ -15,6 +15,34 @@
 
 namespace Prism
 {
+    template <typename T, typename = void>
+    struct AtomicArithmetic
+    {
+        static T Add(T lhs, T rhs) { return lhs + rhs; }
+        static T Sub(T lhs, T rhs) { return lhs - rhs; }
+    };
+
+    template <typename E>
+    struct AtomicArithmetic<E, EnableIfType<IsEnumV<E>>>
+    {
+        using U = UnderlyingTypeType<E>;
+        static auto Add(E lhs, E rhs)
+        {
+            return static_cast<E>(static_cast<U>(lhs) + static_cast<U>(rhs));
+        }
+        static auto Add(E lhs, U rhs)
+        {
+            return static_cast<E>(static_cast<U>(lhs) + rhs);
+        }
+        static auto Sub(E lhs, E rhs)
+        {
+            return static_cast<E>(static_cast<U>(lhs) - static_cast<U>(rhs));
+        }
+        static auto Sub(E lhs, U rhs)
+        {
+            return static_cast<E>(static_cast<U>(lhs) - rhs);
+        }
+    };
     template <typename T>
     class Atomic
     {
@@ -66,12 +94,12 @@ namespace Prism
         constexpr T Load(MemoryOrder order
                          = MemoryOrder::eSeqCst) const PM_NOEXCEPT
         {
-            return AtomicLoad<T>(m_Value, order);
+            return AtomicLoad(m_Value, order);
         }
         constexpr T Load(MemoryOrder order = MemoryOrder::eSeqCst) const
             volatile PM_NOEXCEPT
         {
-            return AtomicLoad<T>(m_Value, order);
+            return AtomicLoad(m_Value, order);
         }
         constexpr   operator T() const PM_NOEXCEPT { return Load(); }
         constexpr   operator T() const volatile PM_NOEXCEPT { return Load(); }
@@ -79,20 +107,20 @@ namespace Prism
         constexpr T Exchange(T desired, MemoryOrder order
                                         = MemoryOrder::eSeqCst) PM_NOEXCEPT
         {
-            return AtomicExchange<T, T>(m_Value, desired, order);
+            return AtomicExchange(m_Value, desired, order);
         }
         constexpr T Exchange(T           desired,
                              MemoryOrder order
                              = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
         {
-            return AtomicExchange<T, T>(m_Value, desired, order);
+            return AtomicExchange(m_Value, desired, order);
         }
         constexpr bool CompareExchange(T& expected, T desired, bool weak,
                                        MemoryOrder successOrder,
                                        MemoryOrder failureOrder)
         {
-            return AtomicCompareExchange<T, T>(m_Value, expected, desired, weak,
-                                               successOrder, failureOrder);
+            return AtomicCompareExchange(m_Value, expected, desired, weak,
+                                         successOrder, failureOrder);
         }
 
         constexpr static bool IsAlwaysLockFree() PM_NOEXCEPT
@@ -104,126 +132,152 @@ namespace Prism
         constexpr T FetchAdd(T rhs, MemoryOrder order
                                     = MemoryOrder::eSeqCst) PM_NOEXCEPT
         {
-            return AtomicFetchAdd<T, T>(m_Value, rhs, order);
+            return AtomicFetchAdd(m_Value, rhs, order);
         }
         constexpr T FetchAdd(T rhs, MemoryOrder order
                                     = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
         {
-            return AtomicFetchAdd<T, T>(m_Value, rhs, order);
+            return AtomicFetchAdd(m_Value, rhs, order);
         }
         constexpr T FetchSub(T rhs, MemoryOrder order
                                     = MemoryOrder::eSeqCst) PM_NOEXCEPT
         {
-            return AtomicFetchSub<T, T>(m_Value, rhs, order);
+            return AtomicFetchSub(m_Value, rhs, order);
         }
         constexpr T FetchSub(T rhs, MemoryOrder order
                                     = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
         {
-            return AtomicFetchSub<T, T>(m_Value, rhs, order);
+            return AtomicFetchSub(m_Value, rhs, order);
         }
         constexpr T FetchAnd(T rhs, MemoryOrder order
                                     = MemoryOrder::eSeqCst) PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return AtomicFetchAnd<T, T>(m_Value, rhs, order);
+            return AtomicFetchAnd(m_Value, rhs, order);
         }
         constexpr T FetchAnd(T rhs, MemoryOrder order
                                     = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return AtomicFetchAnd<T, T>(m_Value, rhs, order);
+            return AtomicFetchAnd(m_Value, rhs, order);
         }
         constexpr T FetchOr(T rhs, MemoryOrder order
                                    = MemoryOrder::eSeqCst) PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return AtomicFetchOr<T, T>(m_Value, rhs, order);
+            return AtomicFetchOr(m_Value, rhs, order);
         }
         constexpr T FetchOr(T rhs, MemoryOrder order
                                    = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return AtomicFetchOr<T, T>(m_Value, rhs, order);
+            return AtomicFetchOr(m_Value, rhs, order);
         }
         constexpr T FetchXor(T rhs, MemoryOrder order
                                     = MemoryOrder::eSeqCst) PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return AtomicFetchXor<T, T>(m_Value, rhs, order);
+            return AtomicFetchXor(m_Value, rhs, order);
         }
         constexpr T FetchXor(T rhs, MemoryOrder order
                                     = MemoryOrder::eSeqCst) volatile PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return AtomicFetchXor<T, T>(m_Value, rhs, order);
+            return AtomicFetchXor(m_Value, rhs, order);
         }
 
         constexpr T operator++() PM_NOEXCEPT
         {
-            T increment = static_cast<T>(1);
-            T discarded = FetchAdd(increment);
-
-            (void)discarded;
-            return Load();
+            T old = FetchAdd(T(1));
+            return AtomicArithmetic<T>::Add(old, 1);
+        }
+        constexpr T operator++() volatile PM_NOEXCEPT
+        {
+            T old = FetchAdd(T(1));
+            return AtomicArithmetic<T>::Add(old, 1);
         }
         constexpr T operator++(int) PM_NOEXCEPT
         {
-            T increment = static_cast<T>(1);
-            return FetchAdd(increment);
+            T old = FetchAdd(T(1));
+            return old;
+        }
+        constexpr T operator++(int) volatile PM_NOEXCEPT
+        {
+            T old = FetchAdd(T(1));
+            return old;
         }
         constexpr T operator--() PM_NOEXCEPT
         {
-            T decrement = static_cast<T>(1);
-            FetchSub(decrement);
-            return Load();
+            T old = FetchSub(T(1));
+            return AtomicArithmetic<T>::Sub(old, 1);
+        }
+        constexpr T operator--() volatile PM_NOEXCEPT
+        {
+            T old = FetchSub(T(1));
+            return AtomicArithmetic<T>::Sub(old, 1);
         }
         constexpr T operator--(int) PM_NOEXCEPT
         {
-            T decrement = static_cast<T>(1);
-            return FetchSub(decrement);
+            T old = FetchSub(T(1));
+            return old;
+        }
+        constexpr T operator--(int) volatile PM_NOEXCEPT
+        {
+            T old = FetchSub(T(1));
+            return old;
         }
 
-        constexpr T operator+=(T rhs) PM_NOEXCEPT { return FetchAdd(rhs); }
+        constexpr T operator+=(T rhs) PM_NOEXCEPT
+        {
+            T old = FetchAdd(rhs);
+            return AtomicArithmetic<T>::Add(old, rhs);
+        }
         constexpr T operator+=(T rhs) volatile PM_NOEXCEPT
         {
-            return FetchAdd(rhs);
+            T old = FetchAdd(rhs);
+            return AtomicArithmetic<T>::Add(old, rhs);
         }
-        constexpr T operator-=(T rhs) PM_NOEXCEPT { return FetchSub(rhs); }
+        constexpr T operator-=(T rhs) PM_NOEXCEPT
+        {
+            T old = FetchSub(rhs);
+            return AtomicArithmetic<T>::Sub(old, rhs);
+        }
         constexpr T operator-=(T rhs) volatile PM_NOEXCEPT
         {
-            return FetchSub(rhs);
+            T old = FetchSub(rhs);
+            return AtomicArithmetic<T>::Sub(old, rhs);
         }
 
         constexpr T operator&=(T rhs) PM_NOEXCEPT
 
             requires(IsIntegralV<T>)
         {
-            return FetchAnd(rhs);
+            return FetchAnd(rhs) & rhs;
         }
         constexpr T operator&=(T rhs) volatile PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return FetchAnd(rhs);
+            return FetchAnd(rhs) & rhs;
         }
         constexpr T operator|=(T rhs) PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return FetchOr(rhs);
+            return FetchOr(rhs) | rhs;
         }
         constexpr T operator|=(T rhs) volatile PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return FetchOr(rhs);
+            return FetchOr(rhs) | rhs;
         }
         constexpr T operator^=(T rhs) PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return FetchXor(rhs);
+            return FetchXor(rhs) ^ rhs;
         }
         constexpr T operator^=(T rhs) volatile PM_NOEXCEPT
             requires(IsIntegralV<T>)
         {
-            return FetchXor(rhs);
+            return FetchXor(rhs) ^ rhs;
         }
 
       private:
@@ -248,7 +302,7 @@ namespace Prism
     using AtomicPointer      = Atomic<Pointer>;
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::Atomic;
 
 using Prism::AtomicBool;

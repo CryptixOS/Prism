@@ -71,6 +71,17 @@ namespace Prism
     template <typename T>
     concept FloatingPoint = IsFloatingPointV<T>;
 #endif
+
+    template <typename T>
+    concept PointerType = IsPointerV<T>;
+    template <typename T>
+    concept NullableType = PointerType<T> || IsNullPointerV<T>;
+    template <typename T>
+    concept PointerHolder = requires {
+        requires(PointerType<T>)
+                    || UnsignedIntegral<T> || IsSameV<T, struct Pointer>;
+    };
+
     template <typename LHS, typename RHS>
     concept AssignableFrom
         = IsLValueReferenceV<LHS>

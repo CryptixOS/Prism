@@ -25,39 +25,70 @@ namespace Prism
         eAcqRel  = __ATOMIC_ACQ_REL,
         eSeqCst  = __ATOMIC_SEQ_CST,
     };
-    struct MemoryOrderType
-    {
-        constexpr MemoryOrderType(MemoryOrder order)
-            : Order(order)
-        {
-        }
-        constexpr   operator i32() { return ToUnderlying(Order); }
 
-        MemoryOrder Order;
+    template <typename T>
+    struct AtomicUnderlying
+    {
+        using Type = T;
     };
-    template <typename T, typename U = T>
-    struct EnumCast
+    template <>
+    struct AtomicUnderlying<bool>
     {
-        EnumCast(T value)
-            : Value(value)
-        {
-        }
-        EnumCast(U value)
-            requires(!IsSameV<T, U> && IsEnumV<T>)
-            : Value(static_cast<T>(value))
-        {
-        }
-
-        operator T() { return Value; }
-        operator U()
-            requires(IsEnumV<T> && !IsSameV<T, U>)
-        {
-            return ToUnderlying(Value);
-        }
-
-        T Value;
+        using Type = u8;
+    };
+    template <typename E>
+        requires IsEnumV<E>
+    struct AtomicUnderlying<E>
+    {
+        using Type = UnderlyingTypeType<E>;
     };
 
+    template <typename T>
+    using AtomicUnderlyingType = typename AtomicUnderlying<T>::Type;
+
+    // ------------------------ Normalization helpers ------------------------
+    template <typename T>
+    PM_ALWAYS_INLINE constexpr AtomicUnderlyingType<RemoveCvType<T>>*
+    AtomicAddress(T* p) PM_NOEXCEPT
+    {
+        using Base = AtomicUnderlyingType<RemoveCvType<T>>;
+        return reinterpret_cast<Base*>(p);
+    }
+
+    template <typename T>
+    PM_ALWAYS_INLINE constexpr auto
+    AtomicAddress(const T* p) PM_NOEXCEPT -> ConditionalType<
+        IsVolatileV<T>, const volatile AtomicUnderlyingType<RemoveCvType<T>>*,
+        const AtomicUnderlyingType<RemoveCvType<T>>*>
+    {
+        using Base        = AtomicUnderlyingType<RemoveCvType<T>>;
+        using PointerType = ConditionalType<IsVolatileV<T>,
+                                            const volatile Base*, const Base*>;
+        return reinterpret_cast<PointerType>(p);
+    }
+
+    template <typename T>
+    PM_ALWAYS_INLINE constexpr AtomicUnderlyingType<T>
+    AtomicValue(T v) PM_NOEXCEPT
+    {
+        if constexpr (IsEnumV<T>)
+            return static_cast<AtomicUnderlyingType<T>>(
+                static_cast<UnderlyingTypeType<T>>(v));
+        else if constexpr (IsSameV<T, bool>)
+            return static_cast<AtomicUnderlyingType<T>>(v ? 1u : 0u);
+        else return static_cast<AtomicUnderlyingType<T>>(v);
+    }
+
+    template <typename T>
+    PM_ALWAYS_INLINE constexpr T
+    AtomicCast(AtomicUnderlyingType<T> v) PM_NOEXCEPT
+    {
+        if constexpr (IsEnumV<T>) return static_cast<T>(v);
+        else if constexpr (IsSameV<T, bool>) return static_cast<bool>(v != 0);
+        else return static_cast<T>(v);
+    }
+
+    // ------------------------ Atomic wrappers ------------------------
     /**
      * @brief Performs an atomic load and returns the current value of the
      * atomic variable. Memory is affected according to the value of
@@ -68,53 +99,50 @@ namespace Prism
      *
      * @return The current value of the atomic variable.
      */
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicLoad(const T& source, MemoryOrder memoryOrder)
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicLoad(const T&    source,
+                                            MemoryOrder memoryOrder)
     {
-        return __atomic_load_n(reinterpret_cast<const volatile i32*>(&source),
-                               ToUnderlying(memoryOrder));
+        return AtomicCast<T>(
+            __atomic_load_n(AtomicAddress(&source), ToUnderlying(memoryOrder)));
     }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr void AtomicLoad(const T& source, T& destination,
-                                               MemoryOrder memoryOrder)
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE void AtomicLoad(const T& source, T& destination,
+                                     MemoryOrder memoryOrder)
     {
-        __atomic_load(reinterpret_cast<const volatile u32*>(&source),
-                      reinterpret_cast<u32*>(&destination),
-                      ToUnderlying(memoryOrder));
+        U tmp{};
+        __atomic_load(AtomicAddress(&source), &tmp, ToUnderlying(memoryOrder));
+        destination = AtomicCast<T>(tmp);
     }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr void
-    AtomicStore(T& destination, EnumCast<T, U> value, MemoryOrder memoryOrder)
-    {
-        __atomic_store_n(reinterpret_cast<volatile u32*>(&destination), value,
-                         memoryOrder);
-    }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr void AtomicStore(T& destination, T& source,
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr void AtomicStore(T& destination, T&& source,
                                                 MemoryOrder memoryOrder)
     {
-        __atomic_store(reinterpret_cast<volatile u32*>(&destination),
-                       reinterpret_cast<u32*>(&source),
-                       ToUnderlying(memoryOrder));
+        __atomic_store_n(AtomicAddress(&destination), AtomicValue(source),
+                         ToUnderlying(memoryOrder));
     }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr T
-    AtomicExchange(T& target, EnumCast<T, U> newValue, MemoryOrder memoryOrder)
-    {
-        return T(__atomic_exchange_n(reinterpret_cast<volatile u32*>(&target),
-                                     newValue.operator T(),
-                                     ToUnderlying(memoryOrder)));
-    }
-    /*
-    template<typename T, typename U = u32>
+    template <typename T, typename U = AtomicUnderlyingType<T>>
     PM_ALWAYS_INLINE constexpr void
-    AtomicExchange(T* target, EnumCast<T, U> newValue, T& oldValue,
-                   MemoryOrder memoryOrder)
+    AtomicStore(volatile T& destination, T& source, MemoryOrder memoryOrder)
     {
-        __atomic_exchange(reinterpret_cast<volatile u32*>(target), newValue,
-                          &oldValue, memoryOrder);
-    }*/
+        __atomic_store(AtomicAddress(const_cast<T*>(&destination)),
+                       AtomicAddress(&source), ToUnderlying(memoryOrder));
+    }
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicExchange(volatile T& target, T newValue,
+                                                MemoryOrder memoryOrder)
+    {
+        return AtomicCast<T>(__atomic_exchange_n(
+            AtomicAddress(const_cast<T*>(&target)), AtomicValue(newValue),
+            ToUnderlying(memoryOrder)));
+    }
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr void
+    AtomicExchange(T& target, T& newValue, T& oldValue, MemoryOrder memoryOrder)
+    {
+        __atomic_exchange(AtomicAddress(&target), AtomicAddress(&newValue),
+                          AtomicAddress(&oldValue), ToUnderlying(memoryOrder));
+    }
     /*
      * @brief Compares the contents of <*target> with the contents of
      *  [*expected]. If equal, the operation is a read-modify-write operation
@@ -137,145 +165,179 @@ namespace Prism
      *
      *
      **/
-    template <typename T, typename U = u32>
+    template <typename T, typename U = AtomicUnderlyingType<T>>
     PM_ALWAYS_INLINE constexpr bool
-    AtomicCompareExchange(T& target, T& expected, EnumCast<T, U> desired,
-                          bool weak, MemoryOrder successMemoryOrder,
+    AtomicCompareExchange(T& target, T& expected, T&& desired, bool weak,
+                          MemoryOrder successMemoryOrder,
                           MemoryOrder failureMemoryOrder)
     {
         return __atomic_compare_exchange_n(
-            reinterpret_cast<volatile u32*>(&target),
-            reinterpret_cast<u32*>(&expected), desired, weak,
-            ToUnderlying(successMemoryOrder), ToUnderlying(failureMemoryOrder));
+            AtomicAddress(&target), AtomicAddress(&expected),
+            AtomicValue(desired), weak, ToUnderlying(successMemoryOrder),
+            ToUnderlying(failureMemoryOrder));
     }
-    template <typename T, typename U = u32>
+    template <typename T, typename U = AtomicUnderlyingType<T>>
     PM_ALWAYS_INLINE constexpr bool
     AtomicCompareExchange(T& target, T& expected, T& desired, bool weak,
                           MemoryOrder successMemoryOrder,
                           MemoryOrder failureMemoryOrder)
     {
         return __atomic_compare_exchange(
-            reinterpret_cast<volatile u32*>(&target),
-            reinterpret_cast<u32*>(&expected), reinterpret_cast<u32*>(&desired),
-            weak, ToUnderlying(successMemoryOrder),
+            AtomicAddress(&target), AtomicAddress(&expected),
+            AtomicAddress(&desired), weak, ToUnderlying(successMemoryOrder),
             ToUnderlying(failureMemoryOrder));
     }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicAddFetch(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
-    {
-        return __atomic_add_fetch(reinterpret_cast<volatile u32*>(&target),
-                                  value, ToUnderlying(memoryOrder));
-    }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicSubFetch(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
-    {
-        return __atomic_sub_fetch(reinterpret_cast<volatile u32*>(&target),
-                                  value, ToUnderlying(memoryOrder));
-    }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicAndFetch(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
-    {
-        return __atomic_and_fetch(reinterpret_cast<volatile u32*>(&target),
-                                  value, ToUnderlying(memoryOrder));
-    }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicXorFetch(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
-    {
-        return __atomic_xor_fetch(reinterpret_cast<volatile u32*>(&target),
-                                  value, ToUnderlying(memoryOrder));
-    }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicOrFetch(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
-    {
-        return __atomic_or_fetch(reinterpret_cast<volatile u32*>(&target),
-                                 value, ToUnderlying(memoryOrder));
-    }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicNandFetch(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
-    {
-        return __atomic_nand_fetch(reinterpret_cast<volatile u32*>(&target),
-                                   value, ToUnderlying(memoryOrder));
-    }
-
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr T AtomicFetchAdd(T& target, EnumCast<T, U> value,
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicAddFetch(T&                     target,
+                                                RemoveReferenceType<T> value,
                                                 MemoryOrder memoryOrder)
     {
-        return __atomic_fetch_add(reinterpret_cast<volatile u32*>(&target),
-                                  value, ToUnderlying(memoryOrder));
+        return AtomicCast<T>(__atomic_add_fetch(AtomicAddress(&target),
+                                                AtomicValue(value),
+                                                ToUnderlying(memoryOrder)));
     }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicFetchSub(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicSubFetch(T&                     target,
+                                                RemoveReferenceType<T> value,
+                                                MemoryOrder memoryOrder)
     {
-        return __atomic_fetch_sub(reinterpret_cast<volatile u32*>(&target),
-                                  value, ToUnderlying(memoryOrder));
+        U tmp = __atomic_sub_fetch(AtomicAddress(&target), AtomicValue(value),
+                                   ToUnderlying(memoryOrder));
+        return AtomicCast<T>(tmp);
     }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicFetchAnd(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicAndFetch(T&                     target,
+                                                RemoveReferenceType<T> value,
+                                                MemoryOrder memoryOrder)
     {
-        return __atomic_fetch_and(reinterpret_cast<volatile u32*>(&target),
-                                  value, ToUnderlying(memoryOrder));
+        U tmp = __atomic_and_fetch(AtomicAddress(&target), AtomicValue(value),
+                                   ToUnderlying(memoryOrder));
+        return AtomicCast<T>(tmp);
     }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicFetchXor(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicXorFetch(T&                     target,
+                                                RemoveReferenceType<T> value,
+                                                MemoryOrder memoryOrder)
     {
-        return __atomic_fetch_xor(reinterpret_cast<volatile u32*>(&target),
-                                  value, ToUnderlying(memoryOrder));
+        U tmp = __atomic_xor_fetch(AtomicAddress(&target), AtomicValue(value),
+                                   ToUnderlying(memoryOrder));
+        return AtomicCast<T>(tmp);
     }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicFetchOr(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicOrFetch(T&                     target,
+                                               RemoveReferenceType<T> value,
+                                               MemoryOrder memoryOrder)
     {
-        return __atomic_fetch_or(reinterpret_cast<volatile u32*>(&target),
-                                 value, ToUnderlying(memoryOrder));
+        U tmp = __atomic_or_fetch(AtomicAddress(&target), AtomicValue(value),
+                                  ToUnderlying(memoryOrder));
+        return AtomicCast<T>(tmp);
     }
-    template <typename T, typename U = u32>
-    PM_ALWAYS_INLINE constexpr EnumCast<T, U>
-    AtomicFetchNand(T& target, EnumCast<T, U> value, MemoryOrder memoryOrder)
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicNandFetch(T&                     target,
+                                                 RemoveReferenceType<T> value,
+                                                 MemoryOrder memoryOrder)
     {
-        return __atomic_fetch_nand(reinterpret_cast<volatile u32*>(&target),
-                                   value, ToUnderlying(memoryOrder));
+        U tmp = __atomic_nand_fetch(AtomicAddress(&target), AtomicValue(value),
+                                    ToUnderlying(memoryOrder));
+        return AtomicCast<T>(tmp);
+    }
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicFetchAdd(T&                     target,
+                                                RemoveReferenceType<T> value,
+                                                MemoryOrder memoryOrder)
+    {
+        U tmp = __atomic_fetch_add(AtomicAddress(&target), AtomicValue(value),
+                                   ToUnderlying(memoryOrder));
+        return AtomicCast<T>(tmp);
+    }
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicFetchSub(T&                     target,
+                                                RemoveReferenceType<T> value,
+                                                MemoryOrder memoryOrder)
+    {
+        U tmp = __atomic_fetch_sub(AtomicAddress(&target), AtomicValue(value),
+                                   ToUnderlying(memoryOrder));
+        return AtomicCast<T>(tmp);
+    }
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicFetchAnd(T&                     target,
+                                                RemoveReferenceType<T> value,
+                                                MemoryOrder memoryOrder)
+    {
+        U tmp = __atomic_fetch_and(AtomicAddress(&target), AtomicValue(value),
+                                   ToUnderlying(memoryOrder));
+        return AtomicCast<T>(tmp);
+    }
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicFetchXor(T&                     target,
+                                                RemoveReferenceType<T> value,
+                                                MemoryOrder memoryOrder)
+    {
+        U tmp = __atomic_fetch_xor(AtomicAddress(&target), AtomicValue(value),
+                                   ToUnderlying(memoryOrder));
+        return AtomicCast<T>(tmp);
+    }
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicFetchOr(T&                     target,
+                                               RemoveReferenceType<T> value,
+                                               MemoryOrder memoryOrder)
+    {
+        U tmp = __atomic_fetch_or(AtomicAddress(&target), AtomicValue(value),
+                                  ToUnderlying(memoryOrder));
+        return AtomicCast<T>(tmp);
+    }
+    template <typename T, typename U = AtomicUnderlyingType<T>>
+    PM_ALWAYS_INLINE constexpr T AtomicFetchNand(T&                     target,
+                                                 RemoveReferenceType<T> value,
+                                                 MemoryOrder memoryOrder)
+    {
+        U tmp = __atomic_fetch_nand(AtomicAddress(&target), AtomicValue(value),
+                                    ToUnderlying(memoryOrder));
+        return AtomicCast<T>(value);
     }
 
-    PM_ALWAYS_INLINE bool AtomicTestAndSet(void*       target,
-                                           MemoryOrder memoryOrder)
+    template <Integral T>
+        requires(sizeof(T) == 1)
+    PM_ALWAYS_INLINE bool AtomicTestAndSet(T& target, MemoryOrder memoryOrder)
     {
-        return __atomic_test_and_set(reinterpret_cast<volatile u32*>(target),
+        return __atomic_test_and_set(AtomicAddress(&target),
                                      ToUnderlying(memoryOrder));
     }
-    PM_ALWAYS_INLINE void AtomicClear(bool* target, MemoryOrder memoryOrder)
+    template <Integral T>
+        requires(sizeof(T) == 1)
+    PM_ALWAYS_INLINE void AtomicClear(T& target, MemoryOrder memoryOrder)
     {
-        return __atomic_clear(reinterpret_cast<volatile u32*>(target),
-                              ToUnderlying(memoryOrder));
+        __atomic_clear(AtomicAddress(&target), ToUnderlying(memoryOrder));
     }
-    // #if PRISM_TARGET_CRYPTIX == 0
     PM_ALWAYS_INLINE void AtomicThreadFence(MemoryOrder memoryOrder)
     {
-        return __atomic_thread_fence(ToUnderlying(memoryOrder));
+        __atomic_thread_fence(ToUnderlying(memoryOrder));
     }
     PM_ALWAYS_INLINE void AtomicSignalFence(MemoryOrder memoryOrder)
     {
-        return __atomic_signal_fence(ToUnderlying(memoryOrder));
+        __atomic_signal_fence(ToUnderlying(memoryOrder));
     }
-    // #endif
+
+    template <NullableType T = void*>
     PM_ALWAYS_INLINE constexpr bool AtomicAlwaysLockFree(usize size,
-                                                         void* object)
+                                                         T     object = nullptr)
     {
         return __atomic_always_lock_free(size, object);
     }
-
+    template <NullableType T = void*>
+    PM_ALWAYS_INLINE constexpr bool AtomicIsLockFree(usize size,
+                                                     T     object = nullptr)
+    {
+        return __atomic_is_lock_free(size, object);
+    }
+    PM_ALWAYS_INLINE constexpr void AtomicMemoryBarrier() PM_NOEXCEPT
+    {
+        AtomicSignalFence(MemoryOrder::eAcqRel);
+        AtomicThreadFence(MemoryOrder::eAcqRel);
+    }
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::MemoryOrder;
 
 using Prism::AtomicLoad;
@@ -300,5 +362,8 @@ using Prism::AtomicFetchXor;
 
 using Prism::AtomicAlwaysLockFree;
 using Prism::AtomicClear;
+using Prism::AtomicMemoryBarrier;
+using Prism::AtomicSignalFence;
 using Prism::AtomicTestAndSet;
+using Prism::AtomicThreadFence;
 #endif

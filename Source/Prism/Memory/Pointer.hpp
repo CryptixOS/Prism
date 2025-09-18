@@ -33,14 +33,6 @@ namespace Prism
         return nullptr;
     }
 
-    template <typename T>
-    concept PointerType = IsPointerV<T>;
-    template <typename T>
-    concept PointerHolder = requires {
-        requires(PointerType<T>)
-                    || UnsignedIntegral<T> || IsSameV<T, struct Pointer>;
-    };
-
     struct Pointer
     {
 
@@ -129,7 +121,6 @@ namespace Prism
             else if constexpr (IsSameV<T, Pointer>) return lowerHalf;
             else return static_cast<T>(lowerHalf);
         }
-        template <>
         inline constexpr Pointer FromHigherHalf() const
         {
             return FromHigherHalf<VirtAddr>();

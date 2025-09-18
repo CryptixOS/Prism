@@ -13,6 +13,7 @@ cpp_args = [
   '-Wno-self-assign-overloaded',
   '-lgcc_s',
   '-fmodules-ts',
+  '-DPRISM_DISABLE_FMT=0'
 ]
 link_args = [
   '-lstdc++exp',
@@ -24,6 +25,7 @@ subdir('Containers')
 subdir('Debug')
 subdir('Memory')
 subdir('String')
+subdir('Utility')
 
 extraincs = get_option('extra_incs')
 if extraincs != ''
