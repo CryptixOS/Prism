@@ -12,9 +12,21 @@
 #elifdef __x86_64__
     #define PRISM_TARGET_X86_64
     #define PRISM_TARGET_STRING "x86_64"
+
+    #ifdef __SSE2__
+        #define PRISM_SIMD_SSE2_PRESENT 1
+    #else
+        #define PRISM_SIMD_SSE2_PRESENT 0
+    #endif
 #elifdef __aarch64__
     #define PRISM_TARGET_AARCH64
     #define PRISM_TARGET_STRING "aarch64"
+
+    #if defined(__ARM_NEON) || defined(__ARM_NEON__)
+        #define PRISM_SIMD_NEON_PRESENT 1
+    #else
+        #define PRISM_SIMD_NEON_PRESENT 0
+    #endif
 #elif defined(__riscv) && __riscv_xlen == 64
     #define PRISM_TARGET_RISCV64
     #define PRISM_TARGET_STRING "riscv64"
