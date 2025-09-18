@@ -143,6 +143,6 @@ namespace Prism
         usize m_BitCount       = 0;
     };
 }; // namespace Prism
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::BitStream;
 #endif

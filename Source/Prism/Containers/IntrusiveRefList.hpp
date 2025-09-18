@@ -289,7 +289,7 @@ namespace Prism
 
 #include <Prism/Containers/IntrusiveRefList.inl>
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::IntrusiveRefList;
 using Prism::IntrusiveRefListHook;
 #endif

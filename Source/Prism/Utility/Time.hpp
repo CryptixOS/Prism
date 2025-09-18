@@ -163,7 +163,7 @@ struct fmt::formatter<Prism::Time::DateTime> : fmt::formatter<fmt::string_view>
 };
 #endif
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::Time::DateTime;
 using Prism::Time::DaysInMonth;
 using Prism::Time::IsLeapYear;

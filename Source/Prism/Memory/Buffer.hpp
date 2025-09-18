@@ -92,7 +92,7 @@ namespace Prism
         Vector<Byte> m_Buffer;
     };
 }; // namespace Prism
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::Buffer;
 using Prism::Byte;
 #endif

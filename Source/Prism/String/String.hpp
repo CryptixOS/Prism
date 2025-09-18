@@ -874,7 +874,7 @@ struct fmt::formatter<Prism::String> : fmt::formatter<fmt::string_view>
 };
 #endif
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::BasicString;
 using Prism::String;
 using Prism::U16String;

@@ -6,7 +6,7 @@
  */
 #include <Prism/Utility/PathView.hpp>
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
     #include <API/Limits.hpp>
     #define PRISM_MAX_PATH Limits::MAX_PATH_LENGTH
 #else

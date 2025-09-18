@@ -264,7 +264,7 @@ namespace Prism
          */
         constexpr SizeType Copy(C* str, SizeType count, SizeType pos = 0) const
         {
-            assert(pos < m_Size);
+            assert(pos <= m_Size);
             usize copied = Min(count, Size() - pos);
 
             TraitsType::Copy(str, Raw() + pos, copied);
@@ -947,7 +947,7 @@ struct fmt::formatter<Prism::StringView> : fmt::formatter<fmt::string_view>
 };
 #endif
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::StringView;
 using Prism::StringViewLiterals::operator""_sv;
 #endif

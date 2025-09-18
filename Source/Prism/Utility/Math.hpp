@@ -106,6 +106,6 @@ namespace Prism
     }; // namespace Math
 } // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 namespace Math = Prism::Math;
 #endif

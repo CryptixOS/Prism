@@ -128,6 +128,6 @@ namespace Prism
         usize m_Offset = 0;
     };
 }; // namespace Prism
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::ByteStream;
 #endif

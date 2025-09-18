@@ -307,7 +307,7 @@ namespace Prism
     Span(Range&&)
         -> Span<RemoveReferenceType<std::ranges::range_reference_t<Range&>>>;
 }; // namespace Prism
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 using Prism::DynamicExtent;
 using Prism::Span;
 #endif

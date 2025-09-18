@@ -57,7 +57,7 @@ namespace Prism
         }
     }; // namespace Adler32
 }; // namespace Prism
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_TARGET_CRYPTIX != 0
 namespace CRC32   = Prism::CRC32;
 namespace Adler32 = Prism::Adler32;
 #endif
