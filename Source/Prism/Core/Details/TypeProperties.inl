@@ -76,7 +76,7 @@ namespace Prism
 
     template <typename T>
     struct IsFloatingPoint
-        : public IsFloatingPointHelper<typename RemoveCv<T>::Type>::Type
+        : public IsFloatingPointHelper<typename RemoveCv<T>::Type>
     {
     };
     template <typename T>
@@ -182,9 +182,8 @@ namespace Prism
     template <typename T>
     struct IsFundamental
         : IntegralConstant<
-              bool,
-              IsArithmetic<T>::Value || IsVoid<T>::Value
-                  || IsSame<NullType, typename RemoveCv<T>::Type>::Value>
+              bool, IsArithmetic<T>::Value || IsVoid<T>::Value
+                        || IsSame<NullType, typename RemoveCv<T>::Type>::Value>
     {
     };
     template <typename T>

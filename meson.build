@@ -77,7 +77,7 @@ deps = [
 
 subdir('Source')
 if build_tests
-subdir('Tests')
+  subdir('Tests')
 endif
 
 pkg = import('pkgconfig')
@@ -231,5 +231,5 @@ dep = declare_dependency(
   compile_args: cxx_args,
   include_directories: incs,
   dependencies: prism_dep,
-  link_with: prism
+  link_with: prism,
 )

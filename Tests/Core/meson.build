@@ -5,17 +5,16 @@
 #* SPDX-License-Identifier: GPL-3
 #*/
 
-container_tests = [
-  'IntrusiveList', 'Deque', 'DoublyLinkedList', 
-  'Queue', 'RingBuffer', 'RedBlackTree', 
-  'Stack', 'Tuple', 'UnorderedMap', 'Vector',
+core_tests = [
+  # 'NumericLimits', 
+  'TypeTraits', 
 ]
 
-foreach name : container_tests
+foreach name : core_tests
   test = executable(
     name, [srcs, files(name / 'main.cpp')],
     cpp_args: cpp_args, link_args: link_args,
     include_directories: incs, dependencies: deps
   )
-  test(name, test, suite: 'Containers')
+  test(name, test, suite: 'Core')
 endforeach

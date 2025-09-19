@@ -40,13 +40,31 @@ namespace Prism
     template <typename T, typename = void>
     struct AddRValueReference;
 
+    // template <typename T>
+    // typename AddRValueReference<T>::Type DeclVal() PM_NOEXCEPT
+    // {
+    //     static_assert(false, "declval not allowed in an evaluated context");
+    // }
+    //
+    template <typename T, typename U = T&&>
+    U DoDeclVal(i32);
+
     template <typename T>
-    typename AddRValueReference<T>::Type DeclVal() PM_NOEXCEPT
+    T DoDeclVal(long);
+    template <typename T>
+    auto DeclVal() PM_NOEXCEPT -> decltype(DoDeclVal<T>(0));
+
+    template <typename T>
+    struct DeclValProtector
     {
-        static_assert(false, "declval not allowed in an evaluated context");
-    }
+        static const bool Stop = false;
+    };
     template <typename T>
-    auto declval() -> T;
+    auto DeclVal() PM_NOEXCEPT -> decltype(DoDeclVal<T>(0))
+    {
+        static_assert(DeclValProtector<T>::Stop, "DeclVal() must not be used!");
+        return DoDeclVal<T>(0);
+    }
 
     template <typename T, usize = sizeof(T)>
     constexpr TrueType IsCompleteOrUnbounded(TypeIdentity<T>)

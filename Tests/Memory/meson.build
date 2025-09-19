@@ -5,11 +5,11 @@
 #* SPDX-License-Identifier: GPL-3
 #*/
 
-string_tests = [
-  'Memory', 'SlabAllocator'
+memory_tests = [
+  'Memory', 'Ref', 'SlabAllocator'
 ]
 
-foreach name : string_tests
+foreach name : memory_tests
   test = executable(
     name, [srcs, files(name / 'main.cpp')],
     cpp_args: cpp_args, link_args: link_args,

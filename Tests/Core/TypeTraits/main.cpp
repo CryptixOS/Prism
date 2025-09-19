@@ -11,6 +11,7 @@
 #include <Prism/Core/Details/CoreTraits.inl>
 #include <Prism/Core/Details/TransformationTraits.inl>
 #include <Prism/Core/Details/TypeProperties.inl>
+#include <Prism/Core/Limits.hpp>
 
 using namespace Prism;
 void TypeTraits_TestIsSame()
