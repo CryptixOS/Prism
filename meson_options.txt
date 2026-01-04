@@ -1,2 +1,3 @@
+option('target', type : 'combo', choices : ['cryptix-app', 'app', 'cryptix', 'carbonc'], value : 'cryptix-app')
 option('extra_incs', type: 'string', value: '')
 option('build_tests', type: 'boolean', value: 'false')

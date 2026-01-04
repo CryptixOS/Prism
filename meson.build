@@ -55,8 +55,19 @@ cxx_args = [
 ]
 
 incs = [ include_directories('Source') ]
+target = get_option('target')
 extraincs = get_option('extra_incs')
 build_tests = get_option('build_tests')
+
+if target == 'cryptix' or target == 'carbonc'
+  macros += '-DPRISM_USE_NAMESPACE'
+
+  if target == 'cryptix'
+    macros += '-DPRISM_TARGET_CRYPTIX'
+  else 
+    macros += '-DPRISM_TARGET_CARBONC'
+  endif 
+endif
 
 if extraincs != ''
   cxx_args += '-I' + extraincs
@@ -120,6 +131,7 @@ install_headers(
   'Source/Prism/Containers/RedBlackTree.hpp',
   'Source/Prism/Containers/RedBlackTree.inl',
   'Source/Prism/Containers/RingBuffer.hpp',
+  'Source/Prism/Containers/Set.hpp',
   'Source/Prism/Containers/Span.hpp',
   'Source/Prism/Containers/SplitBuffer.hpp',
   'Source/Prism/Containers/Stack.hpp',
@@ -139,6 +151,7 @@ install_headers(
   'Source/Prism/Core/Config.hpp',
   'Source/Prism/Core/Core.hpp',
   'Source/Prism/Core/Error.hpp',
+  'Source/Prism/Core/Eternal.hpp',
   'Source/Prism/Core/HashTraits.hpp',
   'Source/Prism/Core/Integer128.hpp',
   'Source/Prism/Core/Iterator.hpp',
