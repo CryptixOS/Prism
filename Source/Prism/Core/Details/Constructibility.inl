@@ -244,6 +244,7 @@ namespace Prism
     // {
     // };
     // Swappability (C++17-style detection)
+
     namespace Details
     {
         struct Swappable

@@ -162,17 +162,33 @@ namespace Prism
     };
 
     template <typename T>
+    struct IsPod
+        : public IntegralConstant<bool, __is_pod(T) || IsVoid<T>::Value>
+    {
+    };
+
+    template <typename T>
+    struct HasTrivialDestructor : public IntegralConstant<bool, IsPod<T>::Value>
+    {
+    };
+
+    template <typename T>
     inline constexpr bool IsLValueReferenceV = IsLValueReference<T>::Value;
     template <typename T>
     inline constexpr bool IsRValueReferenceV = IsRValueReference<T>::Value;
     template <typename T>
     inline constexpr bool IsReferenceV = IsReference<T>::Value;
+    template <typename T>
+    inline constexpr bool IsPodV = IsPod<T>::Value;
+    template <typename T>
+    inline constexpr bool HasTrivialDestructorV
+        = HasTrivialDestructor<T>::Value;
 
     template <typename T>
     using RemoveConstType = typename RemoveConst<T>::Type;
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::RemoveConstType;
 using Prism::RemoveCvRefType;
 using Prism::RemoveReference;
