@@ -294,35 +294,33 @@ namespace Prism
             requires(C == R)
         {
             constexpr usize N = R;
-            // determinant of empty matrix defined as 1
+
             if constexpr (N == 0) return T(1);
             else if constexpr (N == 1) return Columns[0][0];
             else if constexpr (N == 2)
             {
-                // | a b |
-                // | c d |  where a = (0,0) etc. with column-major storage
-                // det = a*d - b*c
                 T a = Columns[0][0];
                 T c = Columns[0][1];
                 T b = Columns[1][0];
                 T d = Columns[1][1];
                 return a * d - b * c;
             }
-
-            T det = T(0);
-            for (usize col = 0; col < N; ++col)
+            else // <--- Add this else block!
             {
-                // coefficient = element at row 0, column `col`
-                T    coeff  = Columns[col][0];
-                // sign = (-1)^(0+col)
-                T    sign   = ((col & 1) ? T(-1) : T(1));
-                auto minor  = MinorMatrix<N>(0, col);
-                T    subdet = minor.Determinant();
-                det += sign * coeff * subdet;
-            }
-            return det;
-        }
+                T det = T(0);
+                for (usize col = 0; col < N; ++col)
+                {
+                    T    coeff  = Columns[col][0];
+                    T    sign   = ((col & 1) ? T(-1) : T(1));
 
+                    // Now the compiler knows this only exists for N > 2
+                    auto minor  = MinorMatrix<N>(0, col);
+                    T    subdet = minor.Determinant();
+                    det += sign * coeff * subdet;
+                }
+                return det;
+            }
+        }
         // ------------------------------
         // Cofactor Matrix (matrix of cofactors), used in adjugate/inverse
         // ------------------------------
