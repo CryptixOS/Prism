@@ -9,11 +9,14 @@
 
 #include <Prism/Debug/Log.hpp>
 
-#if PRISM_TARGET_CRYPTIX != 0
-    #include <Library/Stacktrace.hpp>
+#if PRISM_TARGET_CRYPTIX != 0 || PRISM_TARGET_CARBONC != 0
+    #if PRISM_TARGET_CRYPTIX != 0
+        #include <Library/Stacktrace.hpp>
+    #endif
 
 namespace
 {
+    using namespace Prism;
     struct SourceLocation
     {
         const char* File;
@@ -115,7 +118,7 @@ namespace
     };
 } // namespace
 
- static void Warn(const char* message, SourceLocation source)
+static void Warn(const char* message, SourceLocation source)
 {
     Prism::Log::Warn("Ubsan: {} ->\n{}[{}:{}]", message, source.File,
                      source.Line, source.Column);
@@ -124,62 +127,53 @@ namespace
 
 extern "C"
 {
-    PM_USED  void
-    __ubsan_handle_add_overflow(OverflowData* data)
+    PM_USED void __ubsan_handle_add_overflow(OverflowData* data)
     {
         Warn("addition overflow", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_sub_overflow(OverflowData* data)
+    PM_USED void __ubsan_handle_sub_overflow(OverflowData* data)
     {
         Warn("subtraction overflow", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_mul_overflow(OverflowData* data)
+    PM_USED void __ubsan_handle_mul_overflow(OverflowData* data)
     {
         Warn("multiplication overflow", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_divrem_overflow(OverflowData* data)
+    PM_USED void __ubsan_handle_divrem_overflow(OverflowData* data)
     {
         Warn("division overflow", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_negate_overflow(OverflowData* data)
+    PM_USED void __ubsan_handle_negate_overflow(OverflowData* data)
     {
         Warn("negation overflow", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_pointer_overflow(OverflowData* data)
+    PM_USED void __ubsan_handle_pointer_overflow(OverflowData* data)
     {
         Warn("pointer overflow", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_shift_out_of_bounds(ShiftOutOfBoundsData* data)
+    PM_USED void __ubsan_handle_shift_out_of_bounds(ShiftOutOfBoundsData* data)
     {
         Warn("shift out of bounds", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_load_invalid_value(InvalidValueData* data)
+    PM_USED void __ubsan_handle_load_invalid_value(InvalidValueData* data)
     {
         Warn("invalid load value", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_out_of_bounds(ArrayOutOfBoundsData* data)
+    PM_USED void __ubsan_handle_out_of_bounds(ArrayOutOfBoundsData* data)
     {
         Warn("array out of bounds", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_type_mismatch_v1(TypeMismatchV1Data* data, uintptr_t ptr)
+    PM_USED void __ubsan_handle_type_mismatch_v1(TypeMismatchV1Data* data,
+                                                 uintptr_t           ptr)
     {
         if (ptr == 0) Warn("use of nullptr", data->Location);
         else if (ptr & ((1 << data->LogAlignment) - 1))
@@ -187,7 +181,7 @@ extern "C"
         else Warn("no space for object", data->Location);
     }
 
-    PM_USED  void
+    PM_USED void
     __ubsan_handle_function_type_mismatch(FunctionTypeMismatchV1Data* data,
                                           uintptr_t                   ptr)
     {
@@ -195,7 +189,7 @@ extern "C"
              data->Location);
     }
 
-    PM_USED  void __ubsan_handle_function_type_mismatch_v1(
+    PM_USED void __ubsan_handle_function_type_mismatch_v1(
         FunctionTypeMismatchV1Data* data, uintptr_t ptr, uintptr_t calleeRTTI,
         uintptr_t fnRTTI)
     {
@@ -203,55 +197,47 @@ extern "C"
              data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_vla_bound_not_positive(NegativeVlaData* data)
+    PM_USED void __ubsan_handle_vla_bound_not_positive(NegativeVlaData* data)
     {
         Warn("variable-length argument is negative", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_nonnull_return(NonNullReturnData* data)
+    PM_USED void __ubsan_handle_nonnull_return(NonNullReturnData* data)
     {
         Warn("non-null return is null", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_nonnull_return_v1(NonNullReturnData* data)
+    PM_USED void __ubsan_handle_nonnull_return_v1(NonNullReturnData* data)
     {
         Warn("non-null return is null", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_nonnull_arg(NonNullArgdata* data)
+    PM_USED void __ubsan_handle_nonnull_arg(NonNullArgdata* data)
     {
         Warn("non-null argument is null", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_builtin_unreachable(UnreachableData* data)
+    PM_USED void __ubsan_handle_builtin_unreachable(UnreachableData* data)
     {
         Warn("unreachable code reached", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_invalid_builtin(InvalidBuiltinData* data)
+    PM_USED void __ubsan_handle_invalid_builtin(InvalidBuiltinData* data)
     {
         Warn("invalid builtin", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_float_cast_overflow(FloatCastOverflowData* data)
+    PM_USED void __ubsan_handle_float_cast_overflow(FloatCastOverflowData* data)
     {
         Warn("float cast overflow", data->Location);
     }
 
-    PM_USED  void
-    __ubsan_handle_missing_return(MissingReturnData* data)
+    PM_USED void __ubsan_handle_missing_return(MissingReturnData* data)
     {
         Warn("missing return", data->Location);
     }
 
-    PM_USED  void
+    PM_USED void
     __ubsan_handle_alignment_assumption(AlignmentAssumptionData* data)
     {
         Warn("alignment assumption", data->Location);

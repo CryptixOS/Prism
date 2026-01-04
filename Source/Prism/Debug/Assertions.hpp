@@ -34,10 +34,15 @@ namespace Prism
     #define PrismPanic(...) ::panic(fmt::format(__VA_ARGS__).data())
 #endif
 
-#define PrismAssert(expr) PrismAssertMsg(expr, #expr)
+#define PrismAssert(expr...)                                                   \
+    {                                                                          \
+        PM_UNUSED Prism::SourceLocation source                                 \
+            = Prism::SourceLocation::Current();                                \
+        if (!(expr)) PrismAssertionFailed("{}", #expr);                        \
+    }
 #define PrismAssertMsg(expr, msg)                                              \
     {                                                                          \
-        [[maybe_unused]] Prism::SourceLocation source                          \
+        PM_UNUSED Prism::SourceLocation source                                 \
             = Prism::SourceLocation::Current();                                \
         if (!(expr)) PrismAssertionFailed("{}", msg);                          \
     }
