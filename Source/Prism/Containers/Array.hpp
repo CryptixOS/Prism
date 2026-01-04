@@ -126,13 +126,13 @@ namespace Prism
         // Capacity
         //--------------------------------------------------------------------------
         constexpr bool Empty() const PM_NOEXCEPT { return begin() == end(); }
-        constexpr SizeType        Size() const PM_NOEXCEPT { return N; }
-        constexpr SizeType        MaxSize() const PM_NOEXCEPT { return N; }
+        constexpr SizeType       Size() const PM_NOEXCEPT { return N; }
+        constexpr SizeType       MaxSize() const PM_NOEXCEPT { return N; }
 
-        [[nodiscard]] constexpr T Max() const
+        PM_NODISCARD constexpr T Max() const
             requires(requires(T x, T y) { x < y; })
         {
-            static_assert(Size() > 0, "No values to max() over");
+            static_assert(N > 0, "No values to max() over");
 
             T value = Raw()[0];
             for (usize i = 1; i < Size(); ++i)
@@ -140,7 +140,7 @@ namespace Prism
             return value;
         }
 
-        [[nodiscard]] constexpr T Min() const
+        PM_NODISCARD constexpr T Min() const
             requires(requires(T x, T y) { x > y; })
         {
             static_assert(Size() > 0, "No values to min() over");
