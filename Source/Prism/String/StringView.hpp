@@ -586,7 +586,8 @@ namespace Prism
             usize limit = (pos >= Size() ? Size() : pos + 1);
             usize start = limit - pattern.Size();
 
-            do {
+            do
+            {
                 auto substr = Substr(start);
                 if (Algorithm::FindStringKMP(substr, pattern) == 0)
                     return start;
@@ -649,7 +650,8 @@ namespace Prism
             if (len && chars.m_Size)
             {
                 if (--len > pos) len = pos;
-                do {
+                do
+                {
                     if (Traits::Find(chars.m_Data, chars.m_Size, m_Data[len]))
                         return len;
                 } while (len-- != 0);
@@ -735,7 +737,8 @@ namespace Prism
             if (len)
             {
                 if (--len > pos) len = pos;
-                do {
+                do
+                {
                     if (!Traits::Find(chars.m_Data, chars.m_Size, m_Data[len]))
                         return len;
                 } while (len--);
@@ -947,7 +950,7 @@ struct fmt::formatter<Prism::StringView> : fmt::formatter<fmt::string_view>
 };
 #endif
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::StringView;
 using Prism::StringViewLiterals::operator""_sv;
 #endif

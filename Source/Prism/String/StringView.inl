@@ -40,7 +40,7 @@ namespace Prism
 
         // handle last segment
         if (start < Size()) segments.PushBack(Substr(start));
-        return std::move(segments);
+        return Move(segments);
     }
 
     template <typename C, typename Traits>
@@ -85,7 +85,7 @@ namespace Prism
     [[nodiscard]] constexpr usize
     BasicStringView<C, Traits>::Find(C ch, usize pos) const PM_NOEXCEPT
     {
-        return Find(BasicStringView(std::addressof(ch), 1), pos);
+        return Find(BasicStringView(AddressOf(ch), 1), pos);
     }
 
     template <typename C, typename Traits>
@@ -122,7 +122,14 @@ namespace Prism
     [[nodiscard]] constexpr usize
     BasicStringView<C, Traits>::RFind(C ch, SizeType pos) const PM_NOEXCEPT
     {
-        return RFind(BasicStringView(std::addressof(ch), 1), pos);
+        return RFind(BasicStringView(AddressOf(ch), 1), pos);
     }
 
+    template <typename C, typename Traits>
+    template <typename ViewType = BasicStringView<C, Traits>>
+    [[nodiscard, gnu::nonnull]]
+    constexpr ViewType::SizeType  ViewType::FindLastNotOf(const C* chars, SizeType pos)
+    {
+
+    }
 } // namespace Prism
