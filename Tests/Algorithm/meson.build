@@ -6,6 +6,7 @@
 #*/
 
 algorithm_tests = [
+  'Random',
   'SearchString',
   'Sort',
 ]
