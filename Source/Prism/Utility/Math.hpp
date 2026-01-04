@@ -9,6 +9,10 @@
 #include <Prism/Containers/Array.hpp>
 #include <Prism/Core/Core.hpp>
 
+#if PRISM_TARGET_CRYPTIX == 0
+    #include <math.h>
+#endif
+
 namespace Prism
 {
     namespace Math
@@ -16,11 +20,18 @@ namespace Prism
         using Prism::Max;
         using Prism::Min;
 
-        template <typename T, typename UT = MakeUnsigned<T>::Type>
+        template <Integral T, UnsignedIntegral UT = MakeUnsigned<T>::Type>
         constexpr UT Absolute(T value)
         {
             return static_cast<UT>(value < 0 ? -value : value);
         }
+#if PRISM_TARGET_CRYPTIX == 0
+        template <FloatingPoint T>
+        constexpr T Absolute(T value)
+        {
+            return value < 0 ? value * -1 : value;
+        }
+#endif
         constexpr usize AlignDown(usize value, usize alignment)
         {
             return value & ~(alignment - 1);
@@ -103,6 +114,57 @@ namespace Prism
         {
             return Log2(value);
         }
+
+#if PRISM_TARGET_CRYPTIX == 0
+        template <typename T>
+        constexpr T SquareRoot(T value)
+        {
+            if (IsConstantEvaluated())
+            {
+                if (IsSameV<T, long double>) return __builtin_sqrtl(value);
+                if (IsSameV<T, f64>) return __builtin_sqrt(value);
+                if (IsSameV<T, f32>) return __builtin_sqrtf(value);
+            }
+
+    #ifdef PRISM_TARGET_X86_64
+            if constexpr (IsSame<T, f32>)
+            {
+                f32 res;
+                __asm__ volatile("sqrtss %1, %0" : "=x"(res) : "x"(value));
+                return res;
+            }
+            if constexpr (IsSame<T, f64>)
+            {
+                f64 res;
+                __asm__ volatile("sqrtsd %1, %0" : "=x"(res) : "x"(value));
+                return res;
+            }
+
+            T res;
+            __asm__ volatile("fsqrt" : "=t"(res) : "0"(value));
+            return res;
+    #elifdef PRISM_TARGET_AARCH64
+            if constexpr (IsSameV<T, long double>) PrismToDo();
+            if constexpr (IsSameV<T, f64>)
+            {
+                f64 res;
+                __asm__ volatile("fsqrt %d0, %d1" : "=w"(res) : "w"(value));
+                return res;
+            }
+            if constexpr (IsSameV<T, f32>)
+            {
+                f32 res;
+                __asm__ volatile(#instruction " %s0, %s1"
+                                 : "=w"(res)
+                                 : "w"(value));
+                return res;
+            }
+
+    #else
+            return __builtin_sqrt(value);
+    #endif
+        }
+#endif
     }; // namespace Math
 } // namespace Prism
 
