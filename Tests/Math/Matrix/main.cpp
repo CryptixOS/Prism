@@ -6,14 +6,13 @@
  */
 #include <Prism/Debug/Assertions.hpp>
 #include <Prism/Math/Matrix.hpp>
-#include <iostream>
 
 using namespace Prism;
 using Math::Matrix;
 
 void TestMatrixBasicConstruction()
 {
-    std::cout << "[TEST] Basic Matrix construction and indexing\n";
+    PrismDebug("[TEST] Basic Matrix construction and indexing\n");
 
     Matrix<2, 3, f64> m = {
         {1.0, 2.0, 3.0}, // column 0
@@ -33,7 +32,7 @@ void TestMatrixBasicConstruction()
 
 void TestMatrixArithmetic()
 {
-    std::cout << "[TEST] Matrix arithmetic (+,-,*,/ scalar)\n";
+    PrismDebug("[TEST] Matrix arithmetic (+,-,*,/ scalar)\n");
 
     Matrix<2, 2, f64> a   = {{1.0, 2.0}, {3.0, 4.0}};
 
@@ -57,7 +56,7 @@ void TestMatrixArithmetic()
 
 void TestMatrixVectorMultiplication()
 {
-    std::cout << "[TEST] Matrix × Vector multiplication\n";
+    PrismDebug("[TEST] Matrix × Vector multiplication\n");
 
     Matrix<2, 3, f64>    m   = {{1.0, 0.0, 0.0}, {0.0, 2.0, 0.0}};
 
@@ -71,7 +70,7 @@ void TestMatrixVectorMultiplication()
 
 void TestMatrixTranspose()
 {
-    std::cout << "[TEST] Transpose\n";
+    PrismDebug("[TEST] Transpose\n");
 
     Matrix<3, 2, f64> m = {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}};
 
@@ -84,7 +83,7 @@ void TestMatrixTranspose()
 
 void TestMatrixDeterminant2x2()
 {
-    std::cout << "[TEST] Determinant 2x2\n";
+    PrismDebug("[TEST] Determinant 2x2\n");
 
     Matrix<2, 2, f64> m   = {{1.0, 2.0}, {3.0, 4.0}};
 
@@ -94,7 +93,7 @@ void TestMatrixDeterminant2x2()
 
 void TestMatrixDeterminant3x3()
 {
-    std::cout << "[TEST] Determinant 3x3\n";
+    PrismDebug("[TEST] Determinant 3x3\n");
 
     Matrix<3, 3, f64> m = {{1.0, 2.0, 3.0}, {0.0, 1.0, 4.0}, {5.0, 6.0, 0.0}};
 
@@ -105,7 +104,7 @@ void TestMatrixDeterminant3x3()
 
 void TestMatrixInverse2x2()
 {
-    std::cout << "[TEST] Inverse 2x2\n";
+    PrismDebug("[TEST] Inverse 2x2\n");
 
     Matrix<2, 2, f64> m   = {{4.0, 7.0}, {2.0, 6.0}};
 
@@ -120,7 +119,7 @@ void TestMatrixInverse2x2()
 
 void TestMatrixInverse3x3()
 {
-    std::cout << "[TEST] Inverse 3x3\n";
+    PrismDebug("[TEST] Inverse 3x3\n");
 
     Matrix<3, 3, f64> m   = {{1.0, 2.0, 3.0}, {0.0, 1.0, 4.0}, {5.0, 6.0, 0.0}};
 
@@ -136,7 +135,7 @@ void TestMatrixInverse3x3()
 
 void TestMatrixEquality()
 {
-    std::cout << "[TEST] Equality and inequality\n";
+    PrismDebug("[TEST] Equality and inequality\n");
 
     Matrix<2, 2, int> a = {{1, 2}, {3, 4}};
     Matrix<2, 2, int> b = {{1, 2}, {3, 4}};
@@ -158,6 +157,6 @@ int main()
     TestMatrixInverse3x3();
     TestMatrixEquality();
 
-    std::cout << "✅ All Matrix tests passed!\n";
+    PrismDebug("✅ All Matrix tests passed!\n");
     return 0;
 }
