@@ -11,6 +11,8 @@
 
 #if PRISM_TARGET_CRYPTIX != 0
     #include <cerrno>
+#elif PRISM_TARGET_CARBONC != 0
+    #include <errno.h>
 #endif
 
 namespace Prism
