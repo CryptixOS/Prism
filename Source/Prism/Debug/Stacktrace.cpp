@@ -8,14 +8,20 @@
 #include <Prism/String/String.hpp>
 #include <Prism/Utility/Math.hpp>
 
-#include <demangler/Demangle.h>
+#if PRISM_TARGET_CARBONC == 0
+    #include <demangler/Demangle.h>
+#endif
 
 namespace Prism
 {
 
     const String Stacktrace::Symbol::Demangle() const
     {
+#if PRISM_TARGET_CARBONC == 0
         return llvm::demangle(Name).data();
+#else
+        return Name;
+#endif
     }
 
     Stacktrace::Stacktrace(Pointer frameAddress, usize skipFrames,
