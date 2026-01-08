@@ -13,8 +13,6 @@
 
 #include <Prism/Memory/Memory.hpp>
 
-#include <cassert>
-
 namespace Prism
 {
     /**
@@ -122,9 +120,11 @@ namespace Prism
         /** @brief Destructor. Releases allocated memory. */
         constexpr ~Vector()
         {
+            for (usize i = 0; i < Size(); i++) Raw()[i].~T();
             delete[] m_Data;
+
             m_Data = nullptr;
-            m_Size = 0;
+            m_Size = m_Capacity = 0;
         }
 
         /**
@@ -160,7 +160,7 @@ namespace Prism
         }
 
         /** @brief Checks if the Vector is empty. */
-        [[nodiscard]] constexpr bool Empty() const PM_NOEXCEPT
+        PM_NODISCARD constexpr bool Empty() const PM_NOEXCEPT
         {
             return m_Size == 0;
         }
@@ -512,8 +512,8 @@ namespace Prism
         }
 
         /** @brief Equality comparison. */
-        [[nodiscard]] friend constexpr bool operator==(const Vector<T>& lhs,
-                                                       const Vector<T>& rhs)
+        PM_NODISCARD friend constexpr bool operator==(const Vector<T>& lhs,
+                                                      const Vector<T>& rhs)
         {
             if (lhs.Size() != rhs.Size()) return false;
 
@@ -523,15 +523,15 @@ namespace Prism
             return true;
         }
         /** @brief Inequality comparison. */
-        [[nodiscard]] friend constexpr bool operator!=(const Vector<T>& lhs,
-                                                       const Vector<T>& rhs)
+        PM_NODISCARD friend constexpr bool operator!=(const Vector<T>& lhs,
+                                                      const Vector<T>& rhs)
         {
             return !(operator==(lhs, rhs));
         }
 
         /** @brief Three-way comparison (by address). */
-        [[nodiscard]] friend constexpr auto operator<=>(const Vector<T>& lhs,
-                                                        const Vector<T>& rhs)
+        PM_NODISCARD friend constexpr auto operator<=>(const Vector<T>& lhs,
+                                                       const Vector<T>& rhs)
         {
             return lhs.m_Data <=> rhs.m_Data;
         }
