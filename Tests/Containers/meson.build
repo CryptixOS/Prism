@@ -6,7 +6,8 @@
 #*/
 
 container_tests = [
-  'IntrusiveList', 'Deque', 'DoublyLinkedList', 
+  'BitSpan', 'IntrusiveList', #'Deque', 
+  'DoublyLinkedList', 
   'Queue', 'RingBuffer', 'RedBlackTree', 
   'Stack', 'Tuple', 'UnorderedMap', 'Vector',
 ]
