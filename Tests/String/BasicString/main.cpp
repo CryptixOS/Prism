@@ -4,8 +4,8 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/Utility/Path.hpp>
 #include <Prism/String/String.hpp>
+#include <Prism/Utility/Path.hpp>
 #include <cassert>
 #include <ctime> // time
 #include <iomanip>
@@ -545,6 +545,36 @@ void String_MegaFuzzTestBasicString()
         if (iteration % 1000 == 0) pool.clear();
     }
 }
+void String_Trim()
+{
+    String basic = "   hello world   ";
+    assert(basic.Trim() == "hello world"_sv);
+
+    String left = "   hello";
+    assert(left.Trim(TrimMode::eLeft) == "hello");
+    assert(left.Trim(TrimMode::eRight) == "   hello");
+
+    String right = "hello   ";
+    assert(right.Trim(TrimMode::eRight) == "hello");
+    assert(right.Trim(TrimMode::eLeft) == "hello   ");
+
+    String both = "   hello   ";
+    assert(both.Trim(TrimMode::eBoth) == "hello");
+
+    String nowhitespace = "hello";
+    assert(nowhitespace.Trim() == "hello");
+
+    String allwhitespace = "     ";
+    assert(allwhitespace.Trim().Empty());
+    assert(allwhitespace.Trim(TrimMode::eLeft).Empty());
+    assert(allwhitespace.Trim(TrimMode::eRight).Empty());
+
+    String empty;
+    assert(empty.Trim().Empty());
+
+    String sso = "  a  ";
+    assert(sso.Trim() == "a");
+}
 
 int main()
 {
@@ -562,6 +592,7 @@ int main()
     String_FuzzTestBasicString();
     String_FuzzTestBasicString2();
     String_MegaFuzzTestBasicString();
+    String_Trim();
 
     return 0;
 }

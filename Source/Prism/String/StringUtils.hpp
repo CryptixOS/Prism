@@ -18,6 +18,11 @@ namespace Prism
 {
     namespace StringUtils
     {
+        constexpr usize Length(const char* str)
+        {
+            return StringView(str).Size();
+        }
+
         template <ArithmeticType T>
         constexpr usize GetDigitCount(T value)
         {

@@ -14,6 +14,12 @@
 
 namespace Prism
 {
+    enum class TrimMode
+    {
+        eLeft  = 1,
+        eRight = 2,
+        eBoth  = 3,
+    };
     template <typename C, typename Traits = CharTraits<C>>
     class BasicString
     {
@@ -261,6 +267,25 @@ namespace Prism
         {
             if (!IsLong()) return;
             Reallocate(Size(), true);
+        }
+        constexpr BasicString Trim(TrimMode mode = TrimMode::eBoth) const
+        {
+            if (Empty()) return BasicString<C, Traits>();
+
+            usize start   = 0;
+            usize end     = Size();
+
+            auto  isSpace = [](C ch) constexpr { return ch == C(' '); };
+            while ((mode == TrimMode::eLeft || mode == TrimMode::eBoth)
+                   && start < end && isSpace(Raw()[start]))
+                ++start;
+
+            while ((mode == TrimMode::eRight || mode == TrimMode::eBoth)
+                   && end > start && isSpace(Raw()[end - 1]))
+                --end;
+
+            return start >= Size() ? BasicString<C, Traits>("")
+                                   : Substr(start, end - start);
         }
 
         constexpr void Clear() PM_NOEXCEPT
@@ -624,7 +649,7 @@ namespace Prism
         {
             struct [[gnu::packed]]
             {
-                usize IsLong : 1;
+                usize IsLong   : 1;
                 usize Capacity : sizeof(usize) * __CHAR_BIT__ - 1;
             };
             usize Size = 0;
