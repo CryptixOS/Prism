@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#pragma once
-
 #include <Prism/Core/Concepts.hpp>
 
 #include <Prism/Core/Compiler.hpp>
@@ -330,7 +328,7 @@ namespace Prism
     {
         return __atomic_is_lock_free(size, object);
     }
-    PM_ALWAYS_INLINE constexpr void AtomicMemoryBarrier() PM_NOEXCEPT
+    PM_ALWAYS_INLINE void AtomicMemoryBarrier() PM_NOEXCEPT
     {
         AtomicSignalFence(MemoryOrder::eAcqRel);
         AtomicThreadFence(MemoryOrder::eAcqRel);
