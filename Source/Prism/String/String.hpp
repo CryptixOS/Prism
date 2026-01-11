@@ -10,10 +10,16 @@
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
+#include <Prism/String/CodePoints.hpp>
 #include <Prism/String/StringView.hpp>
 
 namespace Prism
 {
+    namespace StringUtils
+    {
+
+    };
+
     enum class TrimMode
     {
         eLeft  = 1,
@@ -272,20 +278,21 @@ namespace Prism
         {
             if (Empty()) return BasicString<C, Traits>();
 
-            usize start   = 0;
-            usize end     = Size();
+            usize start = 0;
+            usize end   = Size();
 
-            auto  isSpace = [](C ch) constexpr { return ch == C(' '); };
-            while ((mode == TrimMode::eLeft || mode == TrimMode::eBoth)
-                   && start < end && isSpace(Raw()[start]))
+            using CodePoints::IsSpace;
+            while ((mode != TrimMode::eRight) && start < end
+                   && IsSpace(Raw()[start]))
                 ++start;
 
-            while ((mode == TrimMode::eRight || mode == TrimMode::eBoth)
-                   && end > start && isSpace(Raw()[end - 1]))
+            while ((mode != TrimMode::eLeft) && end > start
+                   && IsSpace(Raw()[end - 1]))
                 --end;
+            auto newSize = end - start;
 
             return start >= Size() ? BasicString<C, Traits>("")
-                                   : Substr(start, end - start);
+                                   : Substr(start, newSize);
         }
 
         constexpr void Clear() PM_NOEXCEPT

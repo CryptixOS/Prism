@@ -6,189 +6,31 @@
  */
 #pragma once
 
+#include <Prism/Core/TypeTraits.hpp>
+#include <Prism/String/FormatHandler.hpp>
+#include <Prism/String/FormatString.hpp>
 #include <Prism/String/StringBuilder.hpp>
 
 namespace Prism
 {
-    enum class Alignment
+    template <bool ConstExpr, typename T, typename S = const T*>
+    constexpr auto Find(S first, S last, T value, S& out) -> bool
     {
-        eNone,
-        eLeft,
-        eRight,
-        eCenter,
-    };
-    struct FormatSpec
-    {
-        Alignment Align           = Alignment::eNone;
-        char      PaddingChar     = ' ';
-        usize     Width           = 0;
-        bool      PrintBasePrefix = false;
-        bool      UpperCase       = false;
-        bool      PrintAsAscii    = false;
-
-        enum Base
+        for (out = first; out != last; ++out)
         {
-            eBinary      = 2,
-            eOctal       = 8,
-            eDecimal     = 10,
-            eHexadecimal = 16,
-        } Base
-            = eDecimal;
-    };
-
-    struct FormatSpecParser
-    {
-        enum class State
-        {
-            eBegin,
-            eAlign,
-            eSign,
-            eHash,
-            eZero,
-            eWidth,
-            ePrecision,
-            eEnd,
-        };
-
-        inline constexpr Alignment ParseAlign(char c)
-        {
-            switch (c)
-            {
-                case '<': return Alignment::eLeft;
-                case '>': return Alignment::eRight;
-                case '^': return Alignment::eCenter;
-                default: break;
-            }
-
-            return Alignment::eNone;
+            if (*out == value) return true;
         }
-        inline constexpr usize ParseWidth(const char*& fmt)
-        {
-            usize width = 0;
-            while (StringUtils::IsDigit(*fmt))
-            {
-                width = width * 10 + (*fmt - '0');
-                ++fmt;
-            }
-
-            return width;
-        }
-        constexpr FormatSpec operator()(const char*& fmt)
-        {
-            struct
-            {
-                enum State     State = State::eBegin;
-
-                constexpr void operator()(enum State state)
-                {
-                    if (State >= state) assert("invalid format specifier");
-                    State = state;
-                }
-            } enterState;
-            FormatSpec spec;
-
-            for (;;)
-            {
-                switch (*fmt)
-                {
-                    case ':':
-                        enterState(State::eBegin);
-                        ++fmt;
-                        break;
-                    case '}': ++fmt; return spec;
-                    case '<':
-                    case '>':
-                    case '^':
-                        enterState(State::eAlign);
-                        spec.Align = ParseAlign(*fmt);
-                        ++fmt;
-                        break;
-                    case '0':
-                        enterState(State::eZero);
-                        spec.PaddingChar = '0';
-                        ++fmt;
-                        break;
-                    case '1' ... '9':
-                        enterState(State::eWidth);
-                        spec.Width = ParseWidth(fmt);
-                        break;
-                    case '#':
-                        enterState(State::eHash);
-                        spec.PrintBasePrefix = true;
-                        ++fmt;
-                        break;
-
-                    case 'c':
-                        enterState(State::eEnd);
-                        spec.PrintAsAscii = true;
-                        ++fmt;
-                        break;
-
-                    case 'b':
-                        enterState(State::eEnd);
-                        spec.Base = FormatSpec::eBinary;
-                        ++fmt;
-                        break;
-                    case 'o':
-                        enterState(State::eEnd);
-                        spec.Base = FormatSpec::eOctal;
-                        ++fmt;
-                        break;
-                    case 'X': spec.UpperCase = true; [[fallthrough]];
-                    case 'x':
-                        enterState(State::eEnd);
-                        spec.Base = FormatSpec::eHexadecimal;
-                        ++fmt;
-                        break;
-
-                    default: assert("Invalid format specifier");
-                }
-            }
-
-            return spec;
-        }
-    };
-
-    template <typename Context>
+        return false;
+    }
+    template <typename OutContext>
     class Formatter
     {
       public:
-        constexpr Formatter(Context& builder)
+        constexpr Formatter(OutContext& builder)
             : m_Builder(builder)
         {
         }
 
-        constexpr void Parse(const char* fmt)
-        {
-            while (*fmt)
-            {
-                if (*fmt == '{' && fmt[1] == '}')
-                {
-                    // Too few arguments
-                    m_Builder << "<?>";
-                    fmt += 2;
-                }
-                else m_Builder.Append(*fmt++);
-            }
-        }
-        template <typename T, typename... Rest>
-        constexpr void Parse(const char* fmt, T&& value, Rest&&... rest)
-        {
-            while (*fmt)
-            {
-                if (*fmt == '{')
-                {
-                    FormatSpec spec;
-                    ++fmt;
-                    fmt = ParseFormatSpec(fmt, spec);
-                    VisitArgument(Forward<T>(value), spec);
-                    continue;
-                }
-
-                m_Builder << *fmt++;
-            }
-            // Extra args ignored
-        }
         template <typename T>
         constexpr void VisitArgument(const T& value, const FormatSpec& spec)
         {
@@ -234,45 +76,126 @@ namespace Prism
             m_Builder << string;
         }
 
-        constexpr const char* ParseFormatSpec(const char* fmt, FormatSpec& spec)
-        {
-            FormatSpecParser parser;
-            spec = parser(fmt);
-
-            return fmt;
-        }
+        OutContext& Context() { return m_Builder; }
 
       private:
-        Context& m_Builder;
+        OutContext& m_Builder;
     };
 
-    template <typename Context, typename... Args>
-    void FormatTo(Context& context, const char* fmt, Args&&... args)
+    template <typename Char, typename Handler, typename... Args>
+    constexpr auto ParseReplacementField(const Char* begin, const Char* end,
+                                         Handler&& handler, Args&&... args)
+        -> const Char*
     {
-        const char* current = fmt;
-        Formatter   formatter(context);
-        formatter.Parse(current, Forward<Args>(args)...);
+        ++begin;
+        if (begin == end) handler.OnError("Invalid format string");
+        if (*begin == '{') handler.OnText(begin, begin + 1);
+        // if (*begin == '}')
+        //     handler.OnReplacementField(handler.OnArgID(), begin);
+        else {
+            Char c = begin != end ? *begin : Char();
+            if (c == ':')
+            {
+                begin = handler.OnFormatSpecs(begin + 1, end,
+                                              Forward<Args>(args)...);
+                if (begin == end || *begin != '}')
+                    return handler.OnError("Unknown format specifier"), end;
+            }
+            else return handler.OnError("Missing '}' in format string"), end;
+        }
+
+        return begin + 1;
+
+        FormatSpec spec;
+        begin = ParseFormatSpec(begin, spec);
+        handler.Formatter.VisitArgument(Forward<Args>(args)..., spec);
+        return begin;
+    }
+    template <bool IsConstExpr, typename Char, typename Handler,
+              typename... Args>
+    constexpr inline void ParseFormatString(BasicStringView<Char> formatString,
+                                            Handler&& handler, Args&&... args)
+    {
+        auto begin = formatString.Raw();
+        auto end   = begin + formatString.Size();
+
+        struct Writer
+        {
+            constexpr void operator()(const Char* from, const Char* to)
+            {
+                if (from == to) return;
+                for (;;)
+                {
+                    const Char* p = nullptr;
+                    if (!Find<IsConstExpr>(from, to, Char('}'), p))
+                        return Dispatcher.OnText(from, to);
+                    ++p;
+                    if (p == to || *p != '}')
+                        return Dispatcher.OnError(
+                            "unmatched '}' in format string");
+                    Dispatcher.OnText(from, p);
+                    from = p + 1;
+                }
+            }
+            Handler& Dispatcher;
+        } write = {handler};
+        while (begin != end)
+        {
+            const char* p = begin;
+            if (*p != '{'
+                && !Find<IsConstantEvaluated()>(begin + 1, end, '{', p))
+                return write(begin, p);
+            write(begin, p);
+
+            begin = ParseReplacementField(p, end, handler,
+                                          Forward<Args>(args)...);
+        }
+    }
+    template <typename Context, typename... Args>
+    void FormatTo(Context& context, StringView fmt, Args&&... args)
+    {
+        Formatter     formatter(context);
+        FormatHandler handler(formatter, fmt, Forward<Args>(args)...);
+        ParseFormatString<false>(fmt, handler, Forward<Args>(args)...);
     }
 
     template <typename... Args>
-    String FormatString(const char* fmt, Args&&... args)
+    String Format1(StringView fmt, Args&&... args)
     {
         StringBuilder<char> context;
         Formatter           formatter(context);
 
-        FormatTo(formatter, fmt, Forward<Args>(args)...);
+        FormatTo(formatter, fmt.begin(), Forward<Args>(args)...);
         return context;
     }
 
     template <typename... Args>
-    [[nodiscard]] inline auto Format(fmt::format_string<Args...> fmt,
+    void Print(FormatString<Args...>&& fmt, Args const&... parameters)
+    {
+    }
+
+    template <typename... Args>
+    consteval FormatString<Args...> MakeFormatString(StringView fmt, Args&&...)
+    {
+        return FormatString<Args...>(fmt);
+    }
+    template <typename... Args>
+    PM_NODISCARD inline constexpr String DoFormat(StringView fmt,
+                                                   Args&&... args)
+    {
+        constexpr auto checked = MakeFormatString(fmt, args...);
+        return Format1(fmt, Forward<Args>(args)...);
+    }
+
+    template <typename... Args>
+    PM_NODISCARD inline auto Format(fmt::format_string<Args...> fmt,
                                      Args&&... args)
     {
         return fmt::format(fmt, Forward<Args>(args)...);
     }
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX == 1
+#if PRISM_USE_NAMESPACE != 0
 using Prism::Format;
 using Prism::Formatter;
 #endif

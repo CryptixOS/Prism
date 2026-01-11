@@ -9,6 +9,7 @@
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
+#include <Prism/String/CodePoints.hpp>
 #include <Prism/String/String.hpp>
 #include <Prism/String/StringView.hpp>
 
@@ -18,6 +19,21 @@ namespace Prism
 {
     namespace StringUtils
     {
+        using CodePoints::IsAlpha;
+        using CodePoints::IsAlphanumeric;
+        using CodePoints::IsBlank;
+        using CodePoints::IsControl;
+        using CodePoints::IsDigit;
+        using CodePoints::IsGraph;
+        using CodePoints::IsHexDigit;
+        using CodePoints::IsLower;
+        using CodePoints::IsPrintable;
+        using CodePoints::IsPunctuation;
+        using CodePoints::IsSpace;
+        using CodePoints::IsUpper;
+        using CodePoints::ToDigit;
+        using CodePoints::ToLower;
+        using CodePoints::ToUpper;
         constexpr usize Length(const char* str)
         {
             return StringView(str).Size();
@@ -92,86 +108,6 @@ namespace Prism
             return StringView(str.data(), str.size());
         }
 
-        constexpr u64 ToLower(u64 c)
-        {
-            return c >= 'A' && c <= 'Z' ? c + 32 : c;
-        }
-        constexpr u64 ToUpper(u64 c)
-        {
-            return c >= 'a' && c <= 'z' ? c - 32 : c;
-        }
-
-        constexpr bool IsDigit(u64 c) { return c >= '0' && c <= '9'; }
-        constexpr bool IsHexDigit(u64 c)
-        {
-            c = ToLower(c);
-
-            return IsDigit(c) || (c >= 'a' && c <= 'f');
-        }
-
-        template <typename T>
-        constexpr bool IsLower(T c)
-        {
-            return c >= 'a' && c <= 'z';
-        }
-        template <typename T>
-        constexpr bool IsUpper(T c)
-        {
-            return c >= 'A' && c <= 'Z';
-        }
-        template <typename T>
-        constexpr bool IsAlpha(T c)
-        {
-            return IsLower(c) || IsUpper(c);
-        }
-        template <typename T>
-        constexpr bool IsAlphanumeric(T c)
-        {
-            return IsAlpha(c) || IsDigit(c);
-        }
-        template <typename T>
-        constexpr bool IsControl(T c)
-        {
-            return c < 32 || c == '\x7f';
-        }
-        template <typename T>
-        constexpr bool IsBlank(T c);
-        template <typename T>
-        constexpr bool IsSpace(T c)
-        {
-            return (c >= '\n' && c <= '\r') || IsBlank(c);
-        }
-        template <typename T>
-        constexpr bool IsBlank(T c)
-        {
-            return c == ' ' || c == '\t';
-        }
-        template <typename T>
-        constexpr bool IsPunctuation(T c)
-        {
-            return (c >= '!' && c <= '/') || (c >= ':' && c <= '@')
-                || (c >= '[' && c <= '`') || (c >= '{' && c <= '~');
-        }
-        template <typename T>
-        constexpr bool IsGraph(T c)
-        {
-            return c >= '!' && c <= '~';
-        }
-        template <typename T>
-        constexpr bool IsPrintable(T c)
-        {
-            return IsAlphanumeric(c) || IsSpace(c) || IsPunctuation(c);
-        }
-
-        template <ArithmeticType T>
-        constexpr T ToDigit(u64 c)
-        {
-            if (IsDigit(c)) return c - '0';
-
-            c = ToLower(c);
-            return IsHexDigit(c) ? 10 + c - 'a' : 0;
-        }
-
         template <ArithmeticType T>
         constexpr T ToNumber(StringView string, usize base = 10)
         {
@@ -197,20 +133,6 @@ namespace Prism
 namespace StringUtils = Prism::StringUtils;
 
 using Prism::StringUtils::GetDigitCount;
-using Prism::StringUtils::IsAlpha;
-using Prism::StringUtils::IsAlphanumeric;
-using Prism::StringUtils::IsBlank;
-using Prism::StringUtils::IsControl;
-using Prism::StringUtils::IsGraph;
-using Prism::StringUtils::IsHexDigit;
-using Prism::StringUtils::IsLower;
-using Prism::StringUtils::IsPrintable;
-using Prism::StringUtils::IsPunctuation;
-using Prism::StringUtils::IsSpace;
-using Prism::StringUtils::IsUpper;
-using Prism::StringUtils::ToDigit;
-using Prism::StringUtils::ToLower;
 using Prism::StringUtils::ToNumber;
 using Prism::StringUtils::ToString;
-using Prism::StringUtils::ToUpper;
 #endif
