@@ -213,8 +213,11 @@ install_headers(
 
 install_headers(
   'Source/Prism/String/CharTraits.hpp',
-  #'Source/Prism/String/FormatString.hpp',
+  'Source/Prism/String/CodePoints.hpp',
+  'Source/Prism/String/FormatHandler.hpp',
+  'Source/Prism/String/FormatString.hpp',
   'Source/Prism/String/Formatter.hpp',
+  'Source/Prism/String/FormatterContext.hpp',
   'Source/Prism/String/Printf.hpp',
   'Source/Prism/String/String.hpp',
   'Source/Prism/String/StringBuilder.hpp',
