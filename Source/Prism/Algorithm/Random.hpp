@@ -829,3 +829,7 @@ namespace Prism::Algorithm
             while (f != t) *f++ = UCType(urng()) - urngMin + parameter.A();
     }
 }; // namespace Prism::Algorithm
+
+#if PRISM_USE_NAMESPACE != 0
+namespace Algorithm = Prism::Algorithm;
+#endif
