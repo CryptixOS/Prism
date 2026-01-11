@@ -32,7 +32,7 @@ static void   TestLog2CompileTime()
 static void TestDefaultSeedSequence()
 {
     mt19937 engine; // default seed 5489
-    for (size_t i = 0; i < 3; ++i)
+    for (usize i = 0; i < 3; ++i)
     {
         auto val = engine();
         assert(val == KnownOutputs[i]
