@@ -23,6 +23,6 @@ namespace Prism
     };
 }; // namespace Prism
 
-#ifdef PRISM_TARGET_CRYPTIX
+#ifdef PRISM_USE_NAMESPACE
 using Prism::NonCopyable;
 #endif
