@@ -240,6 +240,7 @@ install_headers(
   'Source/Prism/Utility/Path.hpp',
   'Source/Prism/Utility/PathView.hpp',
   'Source/Prism/Utility/Time.hpp',
+  'Source/Prism/Utility/Variant.hpp',
   subdir: 'Prism/Utility'
 )
 
