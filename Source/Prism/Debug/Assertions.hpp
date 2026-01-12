@@ -13,12 +13,20 @@
 
 #include <Prism/String/StringView.hpp>
 
+#if PRISM_DISABLE_FMT == 0
+    #include <fmt/format.h>
+    #define PrismFmtFormat(...) fmt::format(__VA_ARGS__)
+#else
+    #include <Prism/String/Formatter.hpp>
+    #define PrismFmtFormat(fmt, ...) Format1(__VA_ARGS__)
+#endif
+
 #if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
 namespace Prism
 {
 #endif
     extern void earlyPanic(Prism::StringView msg);
-    [[noreturn]]
+    PM_NORETURN
     extern void panic(Prism::StringView msg);
 #if PRISM_TARGET_CRYPTIX == 0
 }; // namespace Prism
@@ -27,11 +35,11 @@ namespace Prism
 #if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
     #define PrismEarlyPanic(fmt, ...)                                          \
         Prism::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
-    #define PrismPanic(...) Prism::panic(fmt::format(__VA_ARGS__).data())
+    #define PrismPanic(...) Prism::panic(PrismFmtFormat(__VA_ARGS__).data())
 #else
     #define PrismEarlyPanic(fmt, ...)                                          \
         ::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
-    #define PrismPanic(...) ::panic(fmt::format(__VA_ARGS__).data())
+    #define PrismPanic(...) ::panic(PrismFmtFormat(__VA_ARGS__).data())
 #endif
 
 #define PrismAssert(expr...)                                                   \
@@ -72,7 +80,7 @@ namespace Prism
         PM_UNUSED Prism::SourceLocation source                                 \
             = Prism::SourceLocation::Current();                                \
         PrismPanic("{}: ==>\nAssertion Failed: {}", source,                    \
-                   fmt::format(__VA_ARGS__));                                  \
+                   PrismFmtFormat(__VA_ARGS__));                               \
     }
 
 #if PRISM_PREFIXLESS_MACROS != 0 || PRISM_TARGET_CRYPTIX != 0

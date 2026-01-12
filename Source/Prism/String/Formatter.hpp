@@ -11,6 +11,11 @@
 #include <Prism/String/FormatString.hpp>
 #include <Prism/String/StringBuilder.hpp>
 
+#if PRISM_DISABLE_FMT != 0
+    #include <fmt/format.h>
+#else
+#endif
+
 namespace Prism
 {
     template <bool ConstExpr, typename T, typename S = const T*>
@@ -181,18 +186,19 @@ namespace Prism
     }
     template <typename... Args>
     PM_NODISCARD inline constexpr String DoFormat(StringView fmt,
-                                                   Args&&... args)
+                                                  Args&&... args)
     {
         constexpr auto checked = MakeFormatString(fmt, args...);
         return Format1(fmt, Forward<Args>(args)...);
     }
-
+#if PRISM_DISABLE_FMT == 0
     template <typename... Args>
     PM_NODISCARD inline auto Format(fmt::format_string<Args...> fmt,
-                                     Args&&... args)
+                                    Args&&... args)
     {
         return fmt::format(fmt, Forward<Args>(args)...);
     }
+#endif
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
