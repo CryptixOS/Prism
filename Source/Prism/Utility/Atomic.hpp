@@ -302,7 +302,7 @@ namespace Prism
     using AtomicPointer      = Atomic<Pointer>;
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::Atomic;
 
 using Prism::AtomicBool;
