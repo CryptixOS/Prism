@@ -18,7 +18,7 @@ namespace Prism
     };
 
     template <typename T, typename U>
-    [[nodiscard]] PM_ALWAYS_INLINE constexpr T BitCast(U const& a)
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr T BitCast(U const& a)
         requires(sizeof(T) == sizeof(U))
              && IsTriviallyCopyableV<T> && IsTriviallyCopyableV<U>
     {
@@ -34,7 +34,7 @@ namespace Prism
     }
 
     template <Integral T>
-    [[nodiscard]]
+    PM_NODISCARD
     constexpr T ByteSwap(T valueue) PM_NOEXCEPT
     {
         if constexpr (sizeof(T) == 1) return valueue;
