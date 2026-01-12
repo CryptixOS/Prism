@@ -28,14 +28,12 @@ namespace Prism
     {
         struct Type
         {
-            __attribute__((__always_inline__, __noreturn__)) T&
-            operator[](usize) const PM_NOEXCEPT
+            PM_NORETURN PM_ALWAYS_INLINE T& operator[](usize) const PM_NOEXCEPT
             {
-                PrismNotReached();
+                __builtin_unreachable();
             }
 
-            __attribute__((__always_inline__)) constexpr explicit
-            operator T*() const PM_NOEXCEPT
+            PM_ALWAYS_INLINE constexpr explicit operator T*() const PM_NOEXCEPT
             {
                 return nullptr;
             }
