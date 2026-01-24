@@ -79,7 +79,7 @@ Prism is integrated with CryptixOS, but it can be used in any freestanding or em
   - subprojects => **meson subprojects**
   - Tests => **Unit Tests**
   - meson.build => **Main Build Script**
-  - typos.toml => => **typos configuration**
+  - typos.toml => **typos configuration**
 
 ---
 
