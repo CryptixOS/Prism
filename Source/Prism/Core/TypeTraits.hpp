@@ -55,11 +55,15 @@ namespace Prism
     // consteval bool IsWithinLifetime(const T* ptr) PM_NOEXCEPT
     // {
     // }
+
+    template <typename T>
+    constexpr bool IsTupleLikeV = IsTupleLike<T>::Value;
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::Conditional;
 using Prism::Forward;
 using Prism::IsSameV;
+using Prism::IsTupleLikeV;
 using Prism::Move;
 #endif
