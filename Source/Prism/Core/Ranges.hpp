@@ -14,6 +14,234 @@
 namespace Prism
 {
     /**
+     *  @brief  Return an iterator pointing to the first element of
+     *          the container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto Begin(Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(container.begin()))
+            -> decltype(container.begin())
+    {
+        return container.begin();
+    }
+    /**
+     *  @brief  Return an iterator pointing to the first element of
+     *          the const container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto
+    Begin(const Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(container.begin()))
+            -> decltype(container.begin())
+    {
+        return container.begin();
+    }
+    /**
+     *  @brief  Return an iterator pointing to one past the last element of
+     *          the container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto End(Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(container.end())) -> decltype(container.end())
+    {
+        return container.end();
+    }
+    /**
+     *  @brief  Return an iterator pointing to one past the last element of
+     *          the const container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto End(const Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(container.end())) -> decltype(container.end())
+    {
+        return container.end();
+    }
+    /**
+     *  @brief  Return an iterator pointing to the first element of the array.
+     *  @param  arr  Array.
+     */
+    template <typename T, usize Count>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr T*
+    Begin(T (&arr)[Count]) PM_NOEXCEPT
+    {
+        return arr;
+    }
+    /**
+     *  @brief  Return an iterator pointing to one past the last element
+     *          of the array.
+     *  @param  arr  Array.
+     */
+    template <typename T, usize Count>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr T* End(T (&arr)[Count]) PM_NOEXCEPT
+    {
+        return arr + Count;
+    }
+
+    template <typename T>
+    class ValueArray;
+    // These overloads must be declared for cbegin and cend to use them.
+    template <typename T>
+    T* Begin(ValueArray<T>&) PM_NOEXCEPT;
+    template <typename T>
+    const T* Begin(const ValueArray<T>&) PM_NOEXCEPT;
+    template <typename T>
+    T* End(ValueArray<T>&) PM_NOEXCEPT;
+    template <typename T>
+    const T* End(const ValueArray<T>&) PM_NOEXCEPT;
+
+    /**
+     *  @brief  Return an iterator pointing to the first element of
+     *          the const container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto
+    ConstBegin(const Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(Prism::Begin(container)))
+            -> decltype(Prism::Begin(container))
+    {
+        return Begin(container);
+    }
+    /**
+     *  @brief  Return an iterator pointing to one past the last element of
+     *          the const container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto
+    ConstEnd(const Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(Prism::End(container)))
+            -> decltype(Prism::End(container))
+    {
+        return Prism::End(container);
+    }
+    /**
+     *  @brief  Return a reverse iterator pointing to the last element of
+     *          the container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto
+    ReverseBegin(Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(container.rbegin()))
+            -> decltype(container.rbegin())
+    {
+        return container.rbegin();
+    }
+    /**
+     *  @brief  Return a reverse iterator pointing to the last element of
+     *          the const container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto
+    ReverseBegin(const Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(container.rbegin()))
+            -> decltype(container.rbegin())
+    {
+        return container.rbegin();
+    }
+    /**
+     *  @brief  Return a reverse iterator pointing one past the first element of
+     *          the container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto
+    ReverseEnd(Container& container) PM_NOEXCEPT(PM_NOEXCEPT(container.rend()))
+        -> decltype(container.rend())
+    {
+        return container.rend();
+    }
+
+    /**
+     *  @brief  Return a reverse iterator pointing one past the first element of
+     *          the const container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto
+    ReverseEnd(const Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(container.rend())) -> decltype(container.rend())
+    {
+        return container.rend();
+    }
+    /**
+     *  @brief  Return a reverse iterator pointing to the last element of
+     *          the array.
+     *  @param  arr  Array.
+     */
+    template <typename T, usize Count>
+    PM_NODISCARD inline constexpr ReverseIterator<T*>
+    ReverseBegin(T (&arr)[Count]) PM_NOEXCEPT
+    {
+        return ReverseIterator<T*>(arr + Count);
+    }
+    /**
+     *  @brief  Return a reverse iterator pointing one past the first element of
+     *          the array.
+     *  @param  arr  Array.
+     */
+    template <typename T, usize Count>
+    PM_NODISCARD inline constexpr ReverseIterator<T*>
+    ReverseEnd(T (&arr)[Count]) PM_NOEXCEPT
+    {
+        return ReverseIterator<T*>(arr);
+    }
+    /**
+     *  @brief  Return a reverse iterator pointing to the last element of
+     *          the InitializerList.
+     *  @param  ilist  InitializerList.
+     */
+    template <typename T>
+    PM_NODISCARD inline constexpr ReverseIterator<const T*>
+    ReverseBegin(InitializerList<T> ilist) PM_NOEXCEPT
+    {
+        return ReverseIterator<const T*>(ilist.end());
+    }
+    /**
+     *  @brief  Return a reverse iterator pointing one past the first element of
+     *          the InitializerList.
+     *  @param  ilist  InitializerList.
+     */
+    template <typename T>
+    PM_NODISCARD inline constexpr ReverseIterator<const T*>
+    ReverseEnd(InitializerList<T> ilist) PM_NOEXCEPT
+    {
+        return ReverseIterator<const T*>(ilist.begin());
+    }
+    /**
+     *  @brief  Return a reverse iterator pointing to the last element of
+     *          the const container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto
+    ReverseConstBegin(const Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(ReverseBegin(container)))
+            -> decltype(ReverseBegin(container))
+    {
+        return ReverseBegin(container);
+    }
+    /**
+     *  @brief  Return a reverse iterator pointing one past the first element of
+     *          the const container.
+     *  @param  container  Container.
+     */
+    template <typename Container>
+    PM_NODISCARD PM_ALWAYS_INLINE constexpr auto
+    ReverseConstEnd(const Container& container)
+        PM_NOEXCEPT(PM_NOEXCEPT(ReverseEnd(container)))
+            -> decltype(ReverseEnd(container))
+    {
+        return ReverseEnd(container);
+    }
+
+    /**
      *  @brief  Return the Size of a container.
      *  @param  container  Container.
      */
