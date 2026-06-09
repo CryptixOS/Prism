@@ -11,8 +11,7 @@
 namespace Prism
 {
     template <typename T>
-    [[nodiscard]]
-    inline constexpr T* AddressOf(T& object) PM_NOEXCEPT
+    PM_NODISCARD inline constexpr T* AddressOf(T& object) PM_NOEXCEPT
     {
         return __builtin_addressof(object);
     }
@@ -76,14 +75,13 @@ namespace Prism
             if constexpr (isAddingConst) return AsConst(x);
             else return static_cast<U&>(x);
         }
-        else
-        {
+        else {
             if constexpr (isAddingConst) return Move(AsConst(x));
             else return Move(x);
         }
     }
 
-    [[noreturn]]
+    PM_NORETURN
     PM_ALWAYS_INLINE void Unreachable()
     {
 #ifdef PM_DEBUG
@@ -140,8 +138,8 @@ namespace Prism
 
     template <typename T, typename... Args>
     constexpr auto ConstructAt(T* location, Args&&... args)
-        PM_NOEXCEPT(PM_NOEXCEPT(::new((void*)0) T(DeclVal<Args>()...)))
-            -> decltype(::new((void*)0) T(DeclVal<Args>()...))
+        PM_NOEXCEPT(PM_NOEXCEPT(::new ((void*)0) T(DeclVal<Args>()...)))
+            -> decltype(::new ((void*)0) T(DeclVal<Args>()...))
     {
         assert(location);
         return ::new (reinterpret_cast<void*>(location))
@@ -156,7 +154,7 @@ namespace Prism
     }
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::AddConstType;
 using Prism::AddressOf;
 using Prism::AsConst;

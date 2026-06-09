@@ -91,3 +91,7 @@ struct fmt::formatter<Prism::SourceLocation> : fmt::formatter<fmt::string_view>
     }
 };
 #endif
+
+#if PRISM_USE_NAMESPACE != 0
+using Prism::SourceLocation;
+#endif

@@ -48,6 +48,6 @@ namespace Prism
         T* m_Instance = nullptr;
     };
 }; // namespace Prism
-#ifdef PRISM_TARGET_CRYPTIX
+#if PRISM_USE_NAMESPACE != 0
 using Prism::WeakRef;
 #endif

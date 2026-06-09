@@ -466,7 +466,7 @@ namespace Prism
         RemoveReferenceType<T>* m_Pointer{nullptr};
     };
 }; // namespace Prism
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::NullOpt;
 using Prism::Optional;
 #endif

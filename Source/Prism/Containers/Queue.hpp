@@ -62,7 +62,7 @@ namespace Prism
         requires(IsSwappableV<Container>);
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::Queue;
 #endif
 

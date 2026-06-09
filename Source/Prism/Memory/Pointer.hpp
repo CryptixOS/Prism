@@ -254,7 +254,7 @@ namespace Prism
     {
         PM_NODISCARD usize operator()(const Pointer& pointer) const PM_NOEXCEPT
         {
-            return Hash<Prism::pointer*>{}(pointer.Raw());
+            return Hash<Prism::pointer>{}(pointer.Raw());
         }
     };
 }; // namespace Prism

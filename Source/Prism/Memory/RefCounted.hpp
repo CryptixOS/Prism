@@ -14,7 +14,7 @@ namespace Prism
     class RefCounted
     {
       public:
-        virtual ~RefCounted() { PrismAssert(m_RefCount == 0); }
+        virtual ~RefCounted() { assert(m_RefCount == 0); }
 
         usize RefCount() const { return m_RefCount.Load(); }
 
@@ -26,6 +26,6 @@ namespace Prism
     };
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::RefCounted;
 #endif

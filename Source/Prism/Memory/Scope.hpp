@@ -133,7 +133,7 @@ namespace Prism
 
         T* operator->() const PM_NOEXCEPT
         {
-            Assert(m_Instance);
+            PrismAssert(m_Instance);
             return m_Instance;
         }
 
@@ -224,10 +224,7 @@ namespace Prism
         template <typename U>
         Scope(WeakRef<U> const&) = delete;
 
-        ~Scope()
-        {
-            Reset();
-        }
+        ~Scope() { Reset(); }
 
         T*   Release() PM_NOEXCEPT { return Exchange(m_Instance, nullptr); }
         void Reset(T* instance = nullptr) PM_NOEXCEPT
@@ -321,7 +318,7 @@ namespace Prism
     }
 }; // namespace Prism
 
-#ifdef PRISM_TARGET_CRYPTIX
+#ifdef PRISM_USE_NAMESPACE
 using Prism::CreateScope;
 using Prism::Scope;
 #endif

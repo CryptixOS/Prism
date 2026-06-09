@@ -121,10 +121,7 @@ namespace Prism
             IteratorType tmp = m_Current;
             return *--tmp;
         }
-        constexpr Pointer operator->() const
-        {
-            return AddressOf(operator*());
-        }
+        constexpr Pointer operator->() const { return AddressOf(operator*()); }
 
         constexpr ReverseIterator& operator++()
         {
@@ -231,8 +228,7 @@ namespace Prism
 
         auto dist = typename IteratorTraits<It>::DifferenceType(n);
         if constexpr (IsBaseOfV<RandomAccessIteratorTag, Category>) it += dist;
-        else
-        {
+        else {
             while (dist > 0)
             {
                 --dist;
@@ -261,8 +257,7 @@ namespace Prism
 
         if constexpr (IsBaseOfV<RandomAccessIteratorTag, Category>)
             return last - first;
-        else
-        {
+        else {
             typename IteratorTraits<It>::DifferenceType result = 0;
             while (first != last)
             {
@@ -279,7 +274,7 @@ namespace Prism
     }
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::Advance;
 using Prism::BidirectionalIteratorTag;
 using Prism::DefaultSentinelType;

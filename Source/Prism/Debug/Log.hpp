@@ -92,7 +92,7 @@ namespace Prism
     }; // namespace Log
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX
+#if PRISM_USE_NAMESPACE
 namespace Log = Prism::Log;
 #endif
 

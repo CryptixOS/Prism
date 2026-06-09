@@ -104,6 +104,15 @@ namespace Prism
             m_Instance = instance;
         }
 
+        PM_NODISCARD T* Leak() { return Exchange(m_Instance, nullptr); }
+
+        Ref<T>          Release()
+        {
+            auto* ptr = Leak();
+            assert(ptr);
+            return Ref<T>(*ptr);
+        }
+
         template <typename U>
         constexpr Ref<U> As() const
         {
@@ -130,7 +139,7 @@ namespace Prism
         friend class Ref;
         mutable T*     m_Instance = nullptr;
 
-        constexpr void IncRef()
+        constexpr void IncRef() const
         {
             if (!m_Instance) return;
             m_Instance->Ref();
@@ -155,7 +164,7 @@ namespace Prism
     }
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::CreateRef;
 using Prism::Ref;
 #endif

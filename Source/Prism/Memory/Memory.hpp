@@ -74,7 +74,7 @@ namespace Prism
     }; // namespace Memory
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 namespace Memory = Prism::Memory;
 using Prism::operator""_kib;
 using Prism::operator""_mib;

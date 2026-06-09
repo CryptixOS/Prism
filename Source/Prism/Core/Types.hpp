@@ -180,7 +180,7 @@ namespace Prism
     };
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::PhysAddr;
 
 using Prism::isize;
@@ -211,6 +211,10 @@ using Prism::Min;
 using Prism::StrongOrdering;
 using Prism::VaList;
 using Prism::WeakOrdering;
+    #if PRISM_TARGET_CRYPTIX == 0
+using Prism::f32;
+using Prism::f64;
+    #endif
 
     #define VaStart(args, format) PrismVaStart(args, format)
     #define VaEnd(args)           PrismVaEnd(args)

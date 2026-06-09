@@ -48,5 +48,6 @@ namespace Prism
     };
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
+using Prism::Logger;
 #endif
