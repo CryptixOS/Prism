@@ -14,8 +14,18 @@
 namespace Prism
 {
     template <typename It, typename Compare>
+    void MedianOfThree(It first, It mid, It last, Compare comp)
+    {
+        if (comp(*mid, *first)) IteratorSwap(first, mid);
+        if (comp(*last, *first)) IteratorSwap(first, last);
+        if (comp(*last, *mid)) IteratorSwap(mid, last);
+    }
+
+    template <typename It, typename Compare>
     void InsertionSort(It first, It last, Compare comparator)
     {
+        if (first == last) return;
+
         for (It it = first + 1; it < last; ++it)
         {
             auto key     = Move(*it);
@@ -32,36 +42,15 @@ namespace Prism
     template <typename It, typename Compare>
     void Heapify(It first, isize size, isize root, Compare comp)
     {
-        isize largest   = root;
-        isize left      = 2 * root + 1;
-        isize right     = 2 * root + 2;
+        isize largest = root;
+        isize left    = 2 * root + 1;
+        isize right   = 2 * root + 2;
 
-        It    largestIt = Next(first, largest);
-
-        if (left < size)
-        {
-            It leftIt = Next(first, left);
-            if (comp(*largestIt, *leftIt))
-            {
-                largest   = left;
-                largestIt = leftIt;
-            }
-        }
-
-        if (right < size)
-        {
-            It rightIt = Next(first, right);
-            if (comp(*largestIt, *rightIt))
-            {
-                largest   = right;
-                largestIt = rightIt;
-            }
-        }
-
+        if (left < size && comp(first[largest], first[left])) largest = left;
+        if (right < size && comp(first[largest], first[right])) largest = right;
         if (largest != root)
         {
-            It rootIt = Next(first, root);
-            IteratorSwap(rootIt, largestIt);
+            IteratorSwap(first + root, first + largest);
             Heapify(first, size, largest, comp);
         }
     }
@@ -69,14 +58,14 @@ namespace Prism
     template <typename It, typename Compare>
     void HeapSort(It first, It last, Compare comp)
     {
-        isize size = Distance(first, last);
+        isize size = last - first;
         if (size <= 1) return;
 
         for (isize i = size / 2 - 1; i >= 0; --i) Heapify(first, size, i, comp);
 
         for (isize i = size - 1; i > 0; --i)
         {
-            IteratorSwap(first, Next(first, i));
+            IteratorSwap(first, first + i);
             Heapify(first, i, 0, comp);
         }
     }
@@ -114,63 +103,92 @@ namespace Prism
         Merge(first, mid, last, comp);
     }
 
-    template <typename It, typename Compare>
-    It Partition(It first, It last, Compare comp)
+    /**
+     * @brief Reorders elements such that all elements matching the predicate
+     *        precede elements that do not.
+     *
+     * @tparam It Forward Iterator type.
+     * @tparam Predicate Unary function returning bool.
+     * @return It Iterator pointing to the first element of the second group.
+     */
+    template <typename It, typename Predicate>
+    constexpr It Partition(It first, It last, Predicate pred)
     {
-        auto pivot = *(last - 1);
-        auto i     = first;
+        first = FindFirstOf(first, last, pred);
+        if (first == last) return first;
 
-        for (auto j = first; j < last - 1; ++j)
+        for (It i = Next(first); i != last; ++i)
         {
-            if (comp(*j, pivot))
+            if (pred(*i))
             {
-                Swap(*i, *j);
-                ++i;
+                IteratorSwap(i, first);
+                ++first;
             }
         }
 
-        Swap(*i, *(last - 1));
-        return i;
+        return first;
+    }
+
+    template <typename It, typename Compare>
+    It HoarePartition(It first, It last, Compare comp)
+    {
+        It mid = first + (last - first) / 2;
+        MedianOfThree(first, mid, last - 1, comp);
+        IteratorSwap(mid, last - 1);
+
+        auto pivot = *(last - 1);
+        It   i     = first - 1;
+        It   j     = last;
+
+        while (true)
+        {
+            do { ++i; } while (comp(*i, pivot));
+            do { --j; } while (comp(pivot, *j));
+
+            if (i >= j) return i;
+            IteratorSwap(i, j);
+        }
     }
 
     template <typename It, typename Compare>
     void QuickSort(It first, It last, Compare comp)
     {
-        if (last - first <= 1) return;
-
-        It pivot = Partition(first, last, comp);
-        QuickSort(first, pivot, comp);
-        QuickSort(pivot + 1, last, comp);
+        while (last - first > 1)
+        {
+            It pivot = HoarePartition(first, last, comp);
+            QuickSort(pivot, last, comp);
+            last = pivot;
+        }
     }
 
     template <typename It, typename Compare>
-    void IntroSort(It first, It last, isize depthLimit, Compare comp)
+    void DoIntroSort(It first, It last, isize depthLimit, Compare comp)
     {
         constexpr usize InsertionSortThreshold = 16;
-        usize           size                   = last - first;
 
-        if (size <= InsertionSortThreshold)
+        while (static_cast<usize>(last - first) > InsertionSortThreshold)
         {
-            InsertionSort(first, last, comp);
-            return;
-        }
+            if (depthLimit == 0)
+            {
+                HeapSort(first, last, comp);
+                return;
+            }
+            --depthLimit;
 
-        if (depthLimit == 0)
-        {
-            HeapSort(first, last, comp);
-            return;
+            It pivot = HoarePartition(first, last, comp);
+            DoIntroSort(pivot, last, depthLimit, comp);
+            last = pivot;
         }
-
-        return QuickSort(first, last, comp);
     }
-
     template <typename It, typename Compare>
     void IntroSort(It first, It last, Compare comp)
     {
         if (first == last) return;
 
         isize depthLimit = 2 * static_cast<isize>(Math::Log2(last - first));
-        IntroSort(first, last, depthLimit, comp);
+        DoIntroSort(first, last, depthLimit, comp);
+
+        InsertionSort(first, last, comp);
     }
 
     template <typename It, typename Compare = Less<>>
