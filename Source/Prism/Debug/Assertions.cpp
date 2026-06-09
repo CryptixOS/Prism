@@ -21,14 +21,16 @@ namespace Prism
 #if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
     void earlyPanic(StringView msg)
     {
+        IgnoreUnused(msg);
         PrismFatal("Panic! =>\n{}", msg);
-        __builtin_trap();
+        PmTrap();
     }
-    [[noreturn]]
+    PM_NORETURN
     void panic(StringView msg)
     {
+        IgnoreUnused(msg);
         PrismFatal("Panic! =>\n{}", msg);
-        __builtin_trap();
+        PmTrap();
     }
 #endif
 }; // namespace Prism
