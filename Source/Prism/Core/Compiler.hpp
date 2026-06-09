@@ -57,6 +57,9 @@
     #if __has_builtin(__builtin_launder)
         #define PmLaunder __builtin_launder
     #endif
+    #if __has_builtin(__builtin_trap)
+        #define PmTrap() __builtin_trap()
+    #endif
 #endif
 
 #ifndef PM_LINE
@@ -75,6 +78,9 @@
 #ifndef PrismGetFrameAddress
     #define PrismGetFrameAddress 0
 #endif
+#ifndef PmTrap
+    #define PmTrap() ((void)0)
+#endif
 
 namespace Prism
 {
@@ -84,6 +90,6 @@ namespace Prism
     }
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::IgnoreUnused;
 #endif
