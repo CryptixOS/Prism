@@ -138,6 +138,52 @@ void Vector_TestEmplaceBack()
     assert(v[0] == "hello");
     assert(v[1] == "aaaaa");
 }
+void Vector_TestEmplace()
+{
+    Vector<std::string> v;
+
+    // 1. Emplace into an empty vector (acts like end())
+    auto                it1 = v.Emplace(v.cbegin(), "middle");
+    assert(v.Size() == 1);
+    assert(*it1 == "middle");
+    assert(v[0] == "middle");
+
+    // 2. Emplace at the beginning
+    auto it2 = v.Emplace(v.cbegin(), "start");
+    assert(v.Size() == 2);
+    assert(*it2 == "start");
+    assert(v[0] == "start");
+    assert(v[1] == "middle");
+
+    // 3. Emplace at the end
+    auto it3 = v.Emplace(v.cend(), "end");
+    assert(v.Size() == 3);
+    assert(*it3 == "end");
+    assert(v[2] == "end");
+
+    // 4. Emplace in the middle with constructor arguments forwarding
+    auto it4 = v.Emplace(v.cbegin() + 1, 3, 'x');
+    assert(v.Size() == 4);
+    assert(*it4 == "xxx");
+    assert(v[0] == "start");
+    assert(v[1] == "xxx");
+    assert(v[2] == "middle");
+    assert(v[3] == "end");
+
+    // 5. Emplace triggering capacity reallocation
+    // Shrink capacity down to current size to force a reallocation on next
+    // insertion
+    v.ShrinkToFit();
+    size_t oldCapacity = v.Capacity();
+    assert(v.Size() == oldCapacity);
+
+    auto it5 = v.Emplace(v.cbegin() + 2, "realloc");
+    assert(v.Size() == 5);
+    assert(v.Capacity() > oldCapacity);
+    assert(*it5 == "realloc");
+    assert(v[2] == "realloc");
+    assert(v[3] == "middle");
+}
 
 void Vector_TestCapacityAndReserve()
 {
@@ -162,6 +208,7 @@ int main()
     Vector_TestIterators();
     Vector_TestRawPointer();
     Vector_TestEmplaceBack();
+    Vector_TestEmplace();
     Vector_TestCapacityAndReserve();
     return 0;
 }
