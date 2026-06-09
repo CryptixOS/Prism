@@ -16,16 +16,26 @@ namespace Prism
     class StringBuilder
     {
       public:
-        constexpr explicit StringBuilder(usize segmentCapacity = 100)
+        inline constexpr static usize DEFAULT_SEGMENT_CAPACITY = 100;
+
+        constexpr explicit StringBuilder(usize segmentCapacity
+                                         = DEFAULT_SEGMENT_CAPACITY)
             : m_Length(0)
         {
-            m_Segments.PushBack(String{""});
-            auto& segment = m_Segments.Tail();
-            segment.Reserve(segmentCapacity);
+            Reset();
         }
         constexpr ~StringBuilder() {}
 
         constexpr bool Empty() const { return m_Length == 0; }
+        inline void    Reset()
+        {
+            m_Segments.Clear();
+            m_Length = 0;
+
+            m_Segments.PushBack(String{""});
+            auto& segment = m_Segments.Tail();
+            segment.Reserve(DEFAULT_SEGMENT_CAPACITY);
+        }
 
         constexpr void Append(C c)
         {
@@ -114,6 +124,6 @@ namespace Prism
     };
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::StringBuilder;
 #endif
