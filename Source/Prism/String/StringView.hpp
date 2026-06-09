@@ -12,12 +12,19 @@
 #include <Prism/Core/Core.hpp>
 #include <Prism/Core/HashTraits.hpp>
 #include <Prism/String/CharTraits.hpp>
+#include <Prism/String/CodePoints.hpp>
 
 #include <cassert>
 #include <ranges>
 
 namespace Prism
 {
+    enum class TrimMode
+    {
+        eLeft  = 1,
+        eRight = 2,
+        eBoth  = 3,
+    };
     template <typename C, typename Traits>
     class BasicString;
 
@@ -300,6 +307,49 @@ namespace Prism
             // handle last segment
             if (start < Size()) segments.PushBack(Substr(start));
             return Move(segments);
+        }
+        /**
+         * @brief Trims whitespace characters from the string view.
+         *
+         * This function returns a new string view with leading and/or trailing
+         * whitespace removed, depending on the specified `TrimMode`.
+         *
+         * @tparam C The character type of the string view.
+         * @tparam Traits The character traits type used for the string view.
+         *
+         * @param mode Specifies which side(s) of the string to trim:
+         *             - `TrimMode::eLeft`  - Trim leading whitespace only.
+         *             - `TrimMode::eRight` - Trim trailing whitespace only.
+         *             - `TrimMode::eBoth`  - Trim both leading and trailing
+         * whitespace. Default is `TrimMode::eBoth`.
+         *
+         * @return A `BasicStringView<C, Traits>` representing the trimmed
+         * portion of the original string view. If the string view is empty or
+         * consists only of whitespace, an empty string view is returned.
+         *
+         * @note Whitespace detection is performed using `CodePoints::IsSpace`.
+         *       This function does not modify the original string view.
+         */
+        constexpr BasicStringView<C, Traits> Trim(TrimMode mode
+                                                  = TrimMode::eBoth) const
+        {
+            if (Empty()) return BasicString<C, Traits>();
+
+            usize start = 0;
+            usize end   = Size();
+
+            using CodePoints::IsSpace;
+            while ((mode != TrimMode::eRight) && start < end
+                   && IsSpace(Raw()[start]))
+                ++start;
+
+            while ((mode != TrimMode::eLeft) && end > start
+                   && IsSpace(Raw()[end - 1]))
+                --end;
+            auto newSize = end - start;
+
+            return start >= Size() ? BasicStringView<C, Traits>("")
+                                   : Substr(start, newSize);
         }
         /**
          * @brief Creates a substring view starting at `pos` up to `count`
@@ -801,6 +851,13 @@ namespace Prism
                BasicStringView<C, Traits> rhs) PM_NOEXCEPT
     {
         return lhs.Size() == rhs.Size() && lhs.Compare(rhs) == 0;
+    }
+    template <typename C, typename Traits>
+    PM_NODISCARD constexpr bool operator==(BasicStringView<C, Traits> lhs,
+                                           const char* rhs) PM_NOEXCEPT
+    {
+        StringView rhsv(rhs);
+        return lhs.Size() == rhsv.Size() && lhs.Compare(rhsv) == 0;
     }
 
     /// Similarly define operator<=> for lexicographical ordering.

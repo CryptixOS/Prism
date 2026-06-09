@@ -7,25 +7,10 @@
 #pragma once
 
 #include <Prism/Containers/Vector.hpp>
-#include <Prism/Core/Compiler.hpp>
-#include <Prism/Core/Types.hpp>
-
-#include <Prism/String/CodePoints.hpp>
 #include <Prism/String/StringView.hpp>
 
 namespace Prism
 {
-    namespace StringUtils
-    {
-
-    };
-
-    enum class TrimMode
-    {
-        eLeft  = 1,
-        eRight = 2,
-        eBoth  = 3,
-    };
     template <typename C, typename Traits = CharTraits<C>>
     class BasicString
     {
@@ -259,6 +244,46 @@ namespace Prism
 
             return *this;
         }
+        constexpr BasicString& Erase(SizeType index = 0, SizeType count = NPos)
+        {
+            assert(index <= Size());
+
+            if (count == 0 || index == Size()) return *this;
+
+            if (count == NPos || index + count > Size()) count = Size() - index;
+
+            C*    data = Raw();
+            usize tail = Size() - (index + count);
+
+            // Move tail left
+            if (tail > 0)
+                TraitsType::Move(data + index, data + index + count, tail);
+
+            SetSize(Size() - count);
+            data[Size()] = 0;
+
+            return *this;
+        }
+        constexpr Iterator Erase(ConstIterator position)
+        {
+            assert(position >= begin() && position < end());
+
+            SizeType index = position - begin();
+            Erase(index, 1);
+            return begin() + index;
+        }
+        constexpr Iterator Erase(ConstIterator first, ConstIterator last)
+        {
+            assert(first >= begin());
+            assert(last <= end());
+            assert(first <= last);
+
+            SizeType index = first - begin();
+            SizeType count = last - first;
+
+            Erase(index, count);
+            return begin() + index;
+        }
 
         constexpr void Reserve(usize newCapacity)
         {
@@ -273,26 +298,6 @@ namespace Prism
         {
             if (!IsLong()) return;
             Reallocate(Size(), true);
-        }
-        constexpr BasicString Trim(TrimMode mode = TrimMode::eBoth) const
-        {
-            if (Empty()) return BasicString<C, Traits>();
-
-            usize start = 0;
-            usize end   = Size();
-
-            using CodePoints::IsSpace;
-            while ((mode != TrimMode::eRight) && start < end
-                   && IsSpace(Raw()[start]))
-                ++start;
-
-            while ((mode != TrimMode::eLeft) && end > start
-                   && IsSpace(Raw()[end - 1]))
-                --end;
-            auto newSize = end - start;
-
-            return start >= Size() ? BasicString<C, Traits>("")
-                                   : Substr(start, newSize);
         }
 
         constexpr void Clear() PM_NOEXCEPT
@@ -593,6 +598,52 @@ namespace Prism
         {
             assert(pos <= Size());
             return View().Copy(str, count, pos);
+        }
+        /**
+         * @brief Splits the view by a delimiter character.
+         * @param delimiter Character to split on.
+         * @return Vector of BasicString segments (may be empty).
+         */
+        inline Vector<BasicString<C, Traits>> Split(C delimiter) const
+        {
+            return View().Split(delimiter);
+        }
+        /**
+         * @brief Trims leading and/or trailing whitespace characters from the
+         * string.
+         *
+         * Removes whitespace code points from the beginning, the end, or both
+         * ends of the string, depending on the specified @p mode. Whitespace
+         * detection is performed using @c CodePoints::IsSpace.
+         *
+         * The original string is not modified. The function returns a new
+         * @c BasicString instance containing the trimmed view of the original
+         * contents.
+         *
+         * @param mode
+         *        Specifies which side(s) of the string should be trimmed:
+         *        - @c TrimMode::eLeft  : Trim leading whitespace only
+         *        - @c TrimMode::eRight : Trim trailing whitespace only
+         *        - @c TrimMode::eBoth  : Trim both leading and trailing
+         * whitespace
+         *
+         * @return
+         * A new @c BasicString containing the trimmed string. If the string
+         * consists entirely of whitespace, or if trimming removes all
+         * characters, an empty string is returned.
+         *
+         * @note
+         * This function is @c constexpr and can be evaluated at compile time
+         * when the underlying string storage permits it.
+         *
+         * @note
+         * Whitespace classification depends on @c CodePoints::IsSpace and may
+         * include more than ASCII space characters, depending on its
+         * implementation.
+         */
+        constexpr BasicString Trim(TrimMode mode = TrimMode::eBoth) const
+        {
+            return View().Trim(mode);
         }
 
         inline constexpr BasicString<C, Traits>&
@@ -906,7 +957,7 @@ struct fmt::formatter<Prism::String> : fmt::formatter<fmt::string_view>
 };
 #endif
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::BasicString;
 using Prism::String;
 using Prism::U16String;
