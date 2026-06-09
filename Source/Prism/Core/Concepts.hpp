@@ -130,6 +130,54 @@ namespace Prism
         { !Forward<T>(t) } -> BooleanTestableImpl;
     };
 
+    namespace Details
+    {
+        template <typename T>
+        using ConstRef = const RemoveReferenceType<T>&;
+        template <typename T, typename U>
+        concept WeaklyEqualityComparableWith
+            = requires(Details::ConstRef<T> t, Details::ConstRef<U> u) {
+                  { t == u } -> BooleanTestable;
+                  { t != u } -> BooleanTestable;
+                  { u == t } -> BooleanTestable;
+                  { u != t } -> BooleanTestable;
+              };
+
+        template <typename T, typename U>
+        concept PartiallyOrderedWith = requires(
+            const RemoveReferenceType<T>& t, const RemoveReferenceType<U>& u) {
+            { t < u } -> BooleanTestable;
+            { t > u } -> BooleanTestable;
+            { t <= u } -> BooleanTestable;
+            { t >= u } -> BooleanTestable;
+            { u < t } -> BooleanTestable;
+            { u > t } -> BooleanTestable;
+            { u <= t } -> BooleanTestable;
+            { u >= t } -> BooleanTestable;
+        };
+    } // namespace Details
+    template <typename T>
+    concept EqualityComparable = Details::WeaklyEqualityComparableWith<T, T>;
+
+    template <typename T, typename U>
+    concept EqualityComparableWith
+        = EqualityComparable<T> && EqualityComparable<U>
+       && CommonReferenceWith<Details::ConstRef<T>, Details::ConstRef<U>>
+       && EqualityComparable<
+              CommonReference<Details::ConstRef<T>, Details::ConstRef<U>>>
+       && Details::WeaklyEqualityComparableWith<T, U>;
+
+    template <typename T>
+    concept TotallyOrdered
+        = EqualityComparable<T> && Details::PartiallyOrderedWith<T, T>;
+
+    template <typename T, typename U>
+    concept TotallyOrderedWith
+        = TotallyOrdered<T> && TotallyOrdered<U> && EqualityComparableWith<T, U>
+       && TotallyOrdered<
+              CommonReference<Details::ConstRef<T>, Details::ConstRef<U>>>
+       && Details::PartiallyOrderedWith<T, U>;
+
     template <typename T>
     concept Movable = IsObjectV<T> && MoveConstructible<T>
                    && AssignableFrom<T&, T> && Swappable<T>;
@@ -140,7 +188,7 @@ namespace Prism
     template <typename T>
     concept SemiRegular = Copyable<T> && DefaultInitializable<T>;
     template <typename T>
-    concept Regular = SemiRegular<T> && std::equality_comparable<T>;
+    concept Regular = SemiRegular<T> && EqualityComparable<T>;
 
     namespace Ranges
     {
@@ -154,7 +202,7 @@ namespace Prism
                 = (Details::ClassOrEnum<RemoveReferenceType<T>>
                    || Details::ClassOrEnum<RemoveReferenceType<U>>)
                && requires(T&& t, U&& u) {
-                      Swap(static_cast<T &&>(t), static_cast<U &&>(u));
+                      Swap(static_cast<T&&>(t), static_cast<U&&>(u));
                   };
 
             struct SwapType
@@ -183,8 +231,7 @@ namespace Prism
                 {
                     if constexpr (AdlSwap<T, U>)
                         Swap(static_cast<T&&>(t), static_cast<U&&>(u));
-                    else
-                    {
+                    else {
                         auto tmp = static_cast<RemoveReferenceType<T>&&>(t);
                         t        = static_cast<RemoveReferenceType<T>&&>(u);
                         u        = static_cast<RemoveReferenceType<T>&&>(tmp);
@@ -338,9 +385,12 @@ namespace Prism
             DeclVal<T>().begin()
         } -> IteratorPairWith<decltype(DeclVal<T>().end())>;
     };
+
+    template <typename T>
+    concept TupleLikeType = IsTupleLikeV<RemoveCvRefType<T>>;
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::ArithmeticEnum;
 using Prism::ConvertibleTo;
 using Prism::DerivedFrom;
@@ -354,4 +404,7 @@ using Prism::PrimitiveOrEnum;
 using Prism::SameAs;
 using Prism::SignedIntegral;
 using Prism::UnsignedIntegral;
+    #if PRISM_TARGET_CRYPTIX == 0
+using Prism::FloatingPoint;
+    #endif
 #endif
