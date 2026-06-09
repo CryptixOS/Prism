@@ -50,11 +50,11 @@ namespace Prism
     }
 
     template <typename T, Endian E>
-    struct [[gnu::packed]] EndianStorage
+    struct PM_PACKED EndianStorage
     {
         inline constexpr EndianStorage() = default;
         inline constexpr EndianStorage(T value)
-            : Value(value)
+            : Value(ConvertEndian<E>(value))
         {
         }
 
@@ -68,6 +68,17 @@ namespace Prism
             Value = ConvertEndian<E, Endian::eNative>(value);
         }
 
+        inline constexpr T    operator*() const { return Load(); }
+        friend constexpr bool operator==(const EndianStorage& lhs,
+                                         const EndianStorage  rhs)
+        {
+            return lhs.Value == rhs.Value;
+        }
+        friend constexpr bool operator!=(const EndianStorage& lhs,
+                                         const EndianStorage  rhs)
+        {
+            return !(lhs == rhs);
+        }
         constexpr auto operator<=>(const usize other) const
         {
             return ConvertEndian<E, Endian::eNative>(Value) <=> other;
@@ -100,9 +111,11 @@ struct fmt::formatter<Prism::EndianStorage<T, E>>
 };
 #endif
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::BigEndian;
 using Prism::ConvertEndian;
+using Prism::Endian;
 using Prism::EndianStorage;
 using Prism::LittleEndian;
+using Prism::ToEndian;
 #endif
