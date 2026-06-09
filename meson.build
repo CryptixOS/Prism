@@ -4,12 +4,14 @@
 #*
 #* SPDX-License-Identifier: GPL-3
 #*/
-project('prism', ['c', 'cpp'],  license: 'GPL-3', default_options: [
-  'c_std=c17',
-  'cpp_std=c++23',
-  'warning_level=2',
-  'werror=true',
-  'default_library=static',
+project('prism', ['c', 'cpp'],
+  version: 'v0.0.1', license: 'GPL-3', 
+  default_options: [
+    'c_std=c17',
+    'cpp_std=c++23',
+    'warning_level=2',
+    'werror=true',
+    'default_library=static',
 ],)
 
 if not meson.get_compiler('cpp').has_argument('-std=gnu++23')
@@ -75,6 +77,27 @@ if extraincs != ''
 else 
   message('no extra incs\n\n\n\n')
 endif
+git_tag = run_command('git', 'rev-parse', 'HEAD').stdout().strip()
+
+version = meson.project_version().substring(1).split('.')
+versionConf = configuration_data()
+versionConf.set('library_name', 'prism')
+versionConf.set('PM_VERSION_MAJOR', version[0])
+versionConf.set('PM_VERSION_MINOR', version[1])
+versionConf.set('PM_VERSION_PATCH', version[2])
+versionConf.set('git_tag', git_tag)
+versionConf.set('arch', host_machine.cpu_family())
+cxx = meson.get_compiler('cpp')
+versionConf.set('compiler', cxx.get_id())
+versionConf.set('compiler_version', cxx.version())
+
+library_version_string_template = '@0@.@1@.@2@-@3@'
+versionConf.set('library_version_string', library_version_string_template.format(version[0], version[1], version[2], git_tag))
+
+configure_file(
+  input: 'Source/Prism/Core/Version.hpp.in', 
+  output: 'Version.hpp',
+  configuration: versionConf)
 
 # ==============================================================================
 ### Dependencies
@@ -116,6 +139,7 @@ install_headers(
   subdir: 'Prism/Algorithm'
 )
 install_headers(
+  'Source/Prism/Containers/Any.hpp',
   'Source/Prism/Containers/Array.hpp',
   'Source/Prism/Containers/Bitmap.hpp',
   'Source/Prism/Containers/CircularQueue.hpp',
@@ -160,11 +184,13 @@ install_headers(
   'Source/Prism/Core/NonMovable.hpp',
   'Source/Prism/Core/ParameterPack.hpp',
   'Source/Prism/Core/Platform.hpp',
+  'Source/Prism/Core/Ranges.hpp',
   'Source/Prism/Core/Singleton.hpp',
   'Source/Prism/Core/Types.hpp',
   'Source/Prism/Core/TypeTraits.hpp',
   'Source/Prism/Core/TypeTraitsForward.hpp',
   'Source/Prism/Core/UUID.hpp',
+  meson.build_root() / 'Version.hpp',
 
   subdir: 'Prism/Core'
 )
