@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Prism/Core/Concepts.hpp>
 #include <Prism/Core/Core.hpp>
 
 namespace Prism
@@ -216,6 +217,40 @@ namespace Prism
     Tuple<RemoveReferenceType<Types>...> MakeTuple(Types&&... args)
     {
         return Tuple<RemoveReferenceType<Types>...>(Forward<Types>(args)...);
+    }
+
+    template <template <typename...> class Trait, typename T,
+              typename TupleLike>
+    inline constexpr bool UnpackTuple = false;
+    template <template <typename...> class Trait, typename T, typename... U>
+    inline constexpr bool UnpackTuple<Trait, T, Tuple<U...>>
+        = Trait<T, U...>::Value;
+    template <template <typename...> class Trait, typename T, typename... U>
+    inline constexpr bool UnpackTuple<Trait, T, Tuple<U...>&>
+        = Trait<T, U&...>::Value;
+    template <template <typename...> class Trait, typename T, typename... U>
+    inline constexpr bool UnpackTuple<Trait, T, const Tuple<U...>>
+        = Trait<T, const U...>::Value;
+    template <template <typename...> class Trait, typename T, typename... U>
+    inline constexpr bool UnpackTuple<Trait, T, const Tuple<U...>&>
+        = Trait<T, const U&...>::Value;
+
+    // template <typename Fn, typename TupleLike, usize... Index>
+    // constexpr decltype(auto) ApplyImpl(Fn&& fn, TupleLike&& t,
+    //                                    IndexSequence<Index...>)
+    // {
+    //     return std::__invoke(Forward<Fn>(fn),
+    //                         Gget<Index>(Forward<TupleLike>(t))...);
+    // }
+    //
+    template <typename Fn, TupleLikeType TupleLike>
+    constexpr decltype(auto) Apply(Fn&& fn, TupleLike&& t)
+        PM_NOEXCEPT(UnpackTuple<IsNoThrowInvocable, Fn, TupleLike>)
+    {
+        using Indices
+            = MakeIndexSequence<TupleSizeV<RemoveReferenceType<TupleLike>>>;
+        return std::__apply_impl(Forward<Fn>(fn), Forward<TupleLike>(t),
+                                 Indices{});
     }
 
     template <typename F, typename... Args, usize... I>
