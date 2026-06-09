@@ -11,7 +11,6 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
 
-#include <iterator>
 #include <magic_enum/magic_enum.hpp>
 
 namespace Prism
@@ -119,22 +118,28 @@ namespace Prism
             Node* m_Prev = nullptr;
         };
 
-        using Iterator      = BaseIterator<V>;
-        using ConstIterator = BaseIterator<const V>;
+        using Iterator           = BaseIterator<V>;
+        using ConstIterator      = BaseIterator<const V>;
 
-        RedBlackTree()      = default;
-        ~RedBlackTree();
+        constexpr RedBlackTree() = default;
+        constexpr RedBlackTree(const RedBlackTree& other);
+        constexpr RedBlackTree(RedBlackTree&& other);
 
-        V&                                   At(const K& key);
-        const V&                             At(const K& key) const;
+        constexpr RedBlackTree& operator=(const RedBlackTree& other);
+        constexpr RedBlackTree& operator=(RedBlackTree&& other);
 
-        V&                                   operator[](const K& key);
-        V&                                   operator[](K&& key);
+        constexpr ~RedBlackTree();
 
-        Iterator                             begin();
-        ConstIterator                        begin() const;
-        Iterator                             end();
-        ConstIterator                        end() const;
+        V&                                    At(const K& key);
+        const V&                              At(const K& key) const;
+
+        V&                                    operator[](const K& key);
+        V&                                    operator[](K&& key);
+
+        Iterator                              begin();
+        ConstIterator                         begin() const;
+        Iterator                              end();
+        ConstIterator                         end() const;
         Prism::ReverseIterator<Iterator>      rbegin();
         Prism::ReverseIterator<ConstIterator> rbegin() const;
         Prism::ReverseIterator<Iterator>      rend();
@@ -145,6 +150,7 @@ namespace Prism
 
         void            Clear();
         Iterator        Insert(K key, V& value);
+        Iterator        Insert(K key, V&& value);
         Iterator        Insert(Node* node);
         bool            Erase(const K& key);
         bool            Erase(Node* node);
@@ -179,9 +185,12 @@ namespace Prism
         void  RotateRight(Node* node);
 
         void  RecursiveDelete(Node* node);
+
+        Node* CloneSubtree(Node* parent, Node* other);
+        Node* FindLeftMost(Node* node);
     };
 }; // namespace Prism
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::RedBlackTree;
 #endif
 

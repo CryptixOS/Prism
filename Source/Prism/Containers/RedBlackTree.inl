@@ -8,11 +8,57 @@
 
 namespace Prism
 {
+    template <typename K, typename V>
+    constexpr RedBlackTree<K, V>::RedBlackTree(const RedBlackTree& other)
+    {
+        if (!other.m_Root) return;
+
+        m_Root      = CloneSubtree(nullptr, other.m_Root);
+        m_Size      = other.m_Size;
+
+        m_LeastNode = FindLeftmost(m_Root);
+        m_Least     = m_LeastNode;
+    }
+    template <typename K, typename V>
+    constexpr RedBlackTree<K, V>::RedBlackTree(RedBlackTree&& other)
+    {
+        m_Root            = other.m_Root;
+        m_Size            = other.m_Size;
+        m_Least           = other.m_Least;
+        m_LeastNode       = other.m_LeastNode;
+
+        other.m_Root      = nullptr;
+        other.m_Size      = 0;
+        other.m_Least     = nullptr;
+        other.m_LeastNode = nullptr;
+    }
 
     template <typename K, typename V>
-    RedBlackTree<K, V>::~RedBlackTree()
+    constexpr RedBlackTree<K, V>::~RedBlackTree()
     {
         Clear();
+    }
+
+    template <typename K, typename V>
+    constexpr RedBlackTree<K, V>&
+    RedBlackTree<K, V>::operator=(const RedBlackTree& other)
+    {
+        return (*this = other);
+    }
+    template <typename K, typename V>
+    constexpr RedBlackTree<K, V>&
+    RedBlackTree<K, V>::operator=(RedBlackTree&& other)
+    {
+        m_Root            = Move(other.m_Root);
+        m_Size            = Move(other.m_Size);
+        m_Least           = Move(other.m_Least);
+        m_LeastNode       = Move(other.m_LeastNode);
+
+        other.m_Root      = nullptr;
+        other.m_Size      = 0;
+        other.m_Least     = nullptr;
+        other.m_LeastNode = nullptr;
+        return *this;
     }
 
     template <typename K, typename V>
@@ -103,6 +149,7 @@ namespace Prism
         m_Least = nullptr;
         m_Size  = 0;
     }
+
     template <typename K, typename V>
     RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Insert(K key, V& value)
     {
@@ -115,6 +162,19 @@ namespace Prism
 
         return Insert(new Node(key, value));
     }
+    template <typename K, typename V>
+    RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Insert(K key, V&& value)
+    {
+        auto* node = Find(m_Root, key);
+        if (node)
+        {
+            node->Data.Value = Move(value);
+            return Iterator(node);
+        }
+
+        return Insert(new Node(key, Move(value)));
+    }
+
     template <typename K, typename V>
     RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Insert(Node* node)
     {
@@ -192,8 +252,7 @@ namespace Prism
                 successorNode->Parent = node->Parent;
                 node->Parent          = successorNode;
             }
-            else
-            {
+            else {
                 if (successorNode->Parent)
                 {
                     if (successorNode->Parent->LeftChild == successorNode)
@@ -427,8 +486,7 @@ namespace Prism
                     sibling->SetRed();
                     node = parent;
                 }
-                else
-                {
+                else {
                     if (!sibling->RightChild || sibling->RightChild->IsBlack())
                     {
                         sibling->LeftChild->SetBlack();
@@ -459,8 +517,7 @@ namespace Prism
                 sibling->SetRed();
                 node = parent;
             }
-            else
-            {
+            else {
                 if (!sibling->LeftChild || sibling->LeftChild->IsBlack())
                 {
                     sibling->RightChild->SetBlack();
@@ -541,5 +598,29 @@ namespace Prism
         RecursiveDelete(node->RightChild);
 
         delete node;
+    }
+
+    template <typename K, typename V>
+    typename RedBlackTree<K, V>::Node*
+    RedBlackTree<K, V>::CloneSubtree(Node* parent, Node* other)
+    {
+        if (!other) return nullptr;
+
+        Node* node       = new Node(other->Data.Key, other->Data.Value);
+        node->Color      = other->Color;
+        node->Parent     = parent;
+
+        node->LeftChild  = CloneSubtree(node, other->LeftChild);
+        node->RightChild = CloneSubtree(node, other->RightChild);
+
+        return node;
+    }
+    template <typename K, typename V>
+    typename RedBlackTree<K, V>::Node*
+    RedBlackTree<K, V>::FindLeftMost(Node* node)
+    {
+        if (!node) return nullptr;
+        while (node->LeftChild) node = node->LeftChild;
+        return node;
     }
 }; // namespace Prism
