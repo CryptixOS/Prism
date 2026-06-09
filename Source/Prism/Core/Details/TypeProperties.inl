@@ -563,7 +563,7 @@ namespace Prism
     constexpr usize ExtentV = Extent<T, N>::Value;
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::IsAbstractV;
 using Prism::IsAggregateV;
 using Prism::IsArithmeticV;

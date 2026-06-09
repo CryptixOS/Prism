@@ -605,7 +605,7 @@ namespace Prism
     using RemovePointerType = typename RemovePointer<T>::Type;
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::RemovePointer;
 using Prism::RemovePointerType;
 using Prism::ToUnderlying;

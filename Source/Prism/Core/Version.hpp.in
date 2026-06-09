@@ -1,0 +1,78 @@
+/*
+ * Created by v1tr10l7 on 14.01.2026.
+ * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
+#pragma once
+
+#include <Prism/String/String.hpp>
+
+#mesondefine PM_VERSION_MAJOR
+#mesondefine PM_VERSION_MINOR
+#mesondefine PM_VERSION_PATCH
+
+namespace Prism
+{
+    struct Version
+    {
+        u16 Major           = 0;
+        u16 Minor           = 0;
+        u16 Patch           = 0;
+
+        constexpr Version() = default;
+        constexpr Version(u16 major, u16 minor, u16 patch)
+            : Major(major)
+            , Minor(minor)
+            , Patch(patch)
+        {
+        }
+
+        constexpr operator u64() const
+        {
+            return (static_cast<u64>(Major) << 48)
+                 | (static_cast<u64>(Minor) << 32)
+                 | (static_cast<u64>(Patch) << 16ull);
+        }
+#if PRISM_DISABLE_FMT == 0
+        constexpr explicit operator String() const
+        {
+            // FIXME(v1tr107): shouldnt depend on fmt
+            return fmt::format("{}.{}.{}", Major, Minor, Patch).data();
+        }
+#endif
+    };
+
+    constexpr StringView LIBRARY_NAME = "@library_name@";
+
+    constexpr Version    VERSION
+        = {PM_VERSION_MAJOR, PM_VERSION_MINOR, PM_VERSION_PATCH};
+    constexpr StringView GIT_TAG          = "@git_tag@";
+
+    constexpr StringView BUILD_DATE       = __DATE__;
+    constexpr StringView BUILD_TIME       = __TIME__;
+
+    constexpr StringView ARCH_STRING      = "@arch@";
+    constexpr StringView COMPILER         = "@compiler@";
+    constexpr StringView COMPILER_VERSION = "@compiler_version@";
+
+    constexpr StringView VERSION_STRING   = "@library_version_string@";
+}; // namespace Prism
+
+template <>
+struct fmt::formatter<Prism::Version> : fmt::formatter<std::string>
+{
+    template <typename FormatContext>
+    auto format(const Prism::Version& version, FormatContext& ctx) const
+    {
+
+        return fmt::formatter<std::string>::format(
+            fmt::format("{}.{}.{}", version.Major, version.Minor,
+                        version.Patch),
+            ctx);
+    }
+};
+
+#if PRISM_USE_NAMESPACE != 0
+using Prism::Version;
+#endif
