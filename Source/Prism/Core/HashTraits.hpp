@@ -49,9 +49,9 @@ namespace Prism
     template <typename T>
     struct Hash<T*> : HashBase<usize, T*>
     {
-        usize operator()(T value) const PM_NOEXCEPT
+        usize operator()(T* value) const PM_NOEXCEPT
         {
-            return static_cast<usize>(value);
+            return reinterpret_cast<usize>(value);
         }
     };
 
