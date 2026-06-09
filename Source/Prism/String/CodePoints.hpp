@@ -95,18 +95,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::CodePoints::IsAlpha;
-using Prism::CodePoints::IsAlphanumeric;
-using Prism::CodePoints::IsBlank;
-using Prism::CodePoints::IsControl;
-using Prism::CodePoints::IsGraph;
-using Prism::CodePoints::IsHexDigit;
-using Prism::CodePoints::IsLower;
-using Prism::CodePoints::IsPrintable;
-using Prism::CodePoints::IsPunctuation;
-using Prism::CodePoints::IsSpace;
-using Prism::CodePoints::IsUpper;
-using Prism::CodePoints::ToDigit;
-using Prism::CodePoints::ToLower;
-using Prism::CodePoints::ToUpper;
+namespace CodePoints = Prism::CodePoints;
 #endif

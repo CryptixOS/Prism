@@ -48,6 +48,13 @@ namespace Prism
 
             return result;
         }
+        constexpr bool IsNumber(StringView input)
+        {
+
+            for (const auto c : input)
+                if (!CodePoints::IsDigit(c)) return false;
+            return true;
+        }
 
         template <ArithmeticType T>
         constexpr StringView ToString(T value, char* dest, i32 base = 10)
@@ -129,7 +136,7 @@ namespace Prism
     }; // namespace StringUtils
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 namespace StringUtils = Prism::StringUtils;
 
 using Prism::StringUtils::GetDigitCount;
