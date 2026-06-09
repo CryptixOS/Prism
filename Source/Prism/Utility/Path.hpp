@@ -207,6 +207,43 @@ namespace Prism
         }
 
         Vector<String> Split(ValueType delimiter = '/') const;
+        /**
+         * @brief Trims leading and/or trailing whitespace characters from the
+         * string.
+         *
+         * Removes whitespace code points from the beginning, the end, or both
+         * ends of the string, depending on the specified @p mode. Whitespace
+         * detection is performed using @c CodePoints::IsSpace.
+         *
+         * The original string is not modified. The function returns a new
+         * @c BasicString instance containing the trimmed view of the original
+         * contents.
+         *
+         * @param mode
+         *        Specifies which side(s) of the string should be trimmed:
+         *        - @c TrimMode::eLeft  : Trim leading whitespace only
+         *        - @c TrimMode::eRight : Trim trailing whitespace only
+         *        - @c TrimMode::eBoth  : Trim both leading and trailing
+         * whitespace
+         *
+         * @return
+         * A new @c BasicString containing the trimmed string. If the string
+         * consists entirely of whitespace, or if trimming removes all
+         * characters, an empty string is returned.
+         *
+         * @note
+         * This function is @c constexpr and can be evaluated at compile time
+         * when the underlying string storage permits it.
+         *
+         * @note
+         * Whitespace classification depends on @c CodePoints::IsSpace and may
+         * include more than ASCII space characters, depending on its
+         * implementation.
+         */
+        constexpr Path Trim(TrimMode mode = TrimMode::eBoth) const
+        {
+            return View().Trim(mode);
+        }
         PM_NODISCARD constexpr StringView
         Substr(usize pos = 0, usize count = NPos) const PM_NOEXCEPT
         {
@@ -429,6 +466,12 @@ namespace Prism
         {
             return m_Path += ch, *this;
         }
+        inline constexpr Path& operator/=(PathView rhs)
+        {
+            if (!Empty() && !EndsWith('/')) m_Path += '/';
+
+            return m_Path += rhs.StrView(), *this;
+        }
 
         friend constexpr Path operator+(const Path& lhs, const Path& rhs)
         {
@@ -440,6 +483,13 @@ namespace Prism
             path += rhs;
 
             return path;
+        }
+        friend constexpr Path operator/(const Path& lhs, const Path& rhs)
+        {
+            Path path = lhs.m_Path;
+            if (!path.Empty() && !path.EndsWith('/')) path += '/';
+
+            return path += rhs.StrView();
         }
 
       private:
@@ -511,7 +561,7 @@ namespace Prism
 
 }; // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::Path;
 using namespace Prism::PathLiterals;
 #endif
