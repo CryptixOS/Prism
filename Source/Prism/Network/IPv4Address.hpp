@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Prism/Containers/Array.hpp>
+#include <Prism/Core/Platform.hpp>
 #include <Prism/Memory/Endian.hpp>
 
 #include <Prism/String/Formatter.hpp>
@@ -14,7 +15,38 @@
 
 namespace Prism
 {
-    class [[gnu::packed]] IPv4Address
+    constexpr bool ParseIPv4(StringView str, NetworkOrdered<u32>& out)
+    {
+        u32   octets[4] = {};
+        usize index     = 0;
+        u32   current   = 0;
+
+        for (char c : str)
+        {
+            if (c >= '0' && c <= '9')
+            {
+                current = current * 10 + (c - '0');
+                if (current > 255) return false;
+            }
+            else if (c == '.')
+            {
+                if (index >= 4) return false;
+                octets[index++] = current;
+                current         = 0;
+            }
+            else return false;
+        }
+
+        if (index != 3) return false;
+        octets[3]      = current;
+
+        const u32 host = (octets[0] << 24) | (octets[1] << 16)
+                       | (octets[2] << 8) | (octets[3]);
+
+        out.Store(host);
+        return true;
+    }
+    class PM_PACKED IPv4Address
     {
       public:
         constexpr IPv4Address() = default;
@@ -24,28 +56,32 @@ namespace Prism
         {
         }
         constexpr IPv4Address(Array<u32, 4> segments)
-            : IPv4Address((segments[3] << 24) | (segments[2] << 16)
-                          | (segments[1] << 8) | segments[0])
+            : IPv4Address((segments[0] << 24) | (segments[1] << 16)
+                          | (segments[2] << 8) | segments[3])
         {
         }
-        constexpr IPv4Address(StringView ip)
-            : IPv4Address(StringUtils::ToNumber<u32>(ip))
+        constexpr explicit IPv4Address(StringView ip)
         {
+            NetworkOrdered<u32> parsed{};
+            m_Address = NetworkOrdered<u32>{0};
+            if (ParseIPv4(ip, parsed)) m_Address = parsed;
         }
         constexpr IPv4Address(NetworkOrdered<u32> address)
             : m_Address(address)
         {
         }
 
-        constexpr IPv4Address& operator=(Array<u32, 4> segments)
+        constexpr IPv4Address& operator=(const Array<u32, 4>& segments)
         {
-            return (*this = (segments[3] << 24) | (segments[2] << 16)
-                          | segments[1] << 8 | segments[0]),
-                 *this;
+            m_Address.Store((segments[0] << 24) | (segments[1] << 16)
+                            | (segments[2] << 8) | (segments[3]));
+            return *this;
         }
         constexpr IPv4Address& operator=(StringView ip)
         {
-            return (*this = StringUtils::ToNumber<u32>(ip)), *this;
+            NetworkOrdered<u32> parsed{};
+            if (ParseIPv4(ip, parsed)) m_Address = parsed;
+            return *this;
         }
 
         constexpr IPv4Address& operator=(NetworkOrdered<u32> ip)
@@ -56,21 +92,21 @@ namespace Prism
         constexpr NetworkOrdered<u32> Raw() const { return m_Address; }
         constexpr    operator NetworkOrdered<u32>() const { return m_Address; }
 
-        constexpr u8 operator[](isize index) const
+        constexpr u8 operator[](usize index) const
         {
-            assert(index >= 0 && index < 4);
+            assert(index < 4);
 
-            constexpr usize BitsPerByte = 8;
-            const u32       bitsToShift = BitsPerByte * index;
+            const u32 net   = m_Address.Load();
+            const u32 shift = 24 - (index * 8);
 
-            return (m_Address >> bitsToShift) & 0xff;
+            return (net >> shift) & 0xff;
         }
 
-        String ToString() const
+        constexpr String ToString() const
         {
-            auto str = Format(
-                "{:.4}.{:.4}.{:.4}.{:.4}",
-                operator[](0), operator[](1), operator[](2), operator[](3));
+            auto str = fmt::format(
+                "{}.{}.{}.{}", operator[](0), operator[](1), operator[](2),
+                                                             operator[](3));
 
             return String(str.data(), str.size());
         }
@@ -84,7 +120,7 @@ namespace Prism
             = default;
 
       private:
-        u32 m_Address = 0;
+        NetworkOrdered<u32> m_Address = 0;
     };
 
     static_assert(sizeof(IPv4Address) == 4);
@@ -104,26 +140,25 @@ struct fmt::formatter<Prism::IPv4Address> : fmt::formatter<fmt::string_view>
 
 // hash support
 template <>
-struct Hash<Prism::IPv4Address>
+struct Prism::Hash<Prism::IPv4Address>
 {
-    [[nodiscard]] Prism::usize
-    operator()(const Prism::IPv4Address& ip) const PM_NOEXCEPT
+    PM_NODISCARD Prism::usize
+                 operator()(const Prism::IPv4Address& ip) const PM_NOEXCEPT
     {
         using namespace Prism;
         u32 key = ip.Raw().Load();
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PM_CONTEXT_KERNEL != 0
         return Hash<Prism::u32>{}(key);
 #else
         usize       length = sizeof(key);
         const usize seed   = 0xc70f6907ul;
 
-        return Hash::MurmurHash2(reinterpret_cast<const char*>(&key), length,
-                                 seed);
+        return Prism::Murmur::Hash2(reinterpret_cast<u8*>(&key), length, seed);
 #endif
     }
 };
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::IPv4Address;
 #endif
