@@ -100,7 +100,7 @@ namespace Prism
                     --m_BlockIndex;
                     m_Offset = Block<T>::BlockSize - 1;
                 }
-                else { --m_Offset; }
+                else --m_Offset;
                 return *this;
             }
             constexpr Iterator operator--(int)
@@ -201,6 +201,19 @@ namespace Prism
 
             (*m_Blocks[m_BackIndex])[m_BackOffset++] = value;
         }
+        constexpr void PushBack(T&& value)
+        {
+            if (m_BackOffset == BlockSize)
+            {
+                if (m_BackIndex + 1 >= m_Blocks.Size())
+                    m_Blocks.PushBack(BlockRef::Create());
+                ++m_BackIndex;
+                m_BackOffset = 0;
+            }
+
+            (*m_Blocks[m_BackIndex])[m_BackOffset++] = Move(value);
+        }
+
         template <typename... Args>
         constexpr void EmplaceBack(Args&&... args)
         {
@@ -225,7 +238,7 @@ namespace Prism
                     m_Blocks.Insert(m_Blocks.begin(), BlockRef::Create());
                     ++m_BackIndex;
                 }
-                else { --m_FrontIndex; }
+                else --m_FrontIndex;
                 m_FrontOffset = BlockSize;
             }
 
@@ -242,7 +255,7 @@ namespace Prism
                     m_Blocks.Insert(m_Blocks.begin(), BlockRef::Create());
                     ++m_BackIndex;
                 }
-                else { --m_FrontIndex; }
+                else --m_FrontIndex;
                 m_FrontOffset = BlockSize;
             }
 
