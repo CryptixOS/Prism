@@ -14,6 +14,10 @@ namespace Prism
     class UUID
     {
       public:
+        constexpr UUID()
+            : m_UUID(0)
+        {
+        }
         constexpr UUID(u128 uuid)
             : m_UUID(uuid)
         {
@@ -96,10 +100,10 @@ namespace Prism
 
 // hash support
 template <>
-struct Hash<Prism::UUID>
+struct Prism::Hash<Prism::UUID>
 {
-    [[nodiscard]] Prism::usize
-    operator()(const Prism::UUID& uuid) const PM_NOEXCEPT
+    PM_NODISCARD Prism::usize
+                 operator()(const Prism::UUID& uuid) const PM_NOEXCEPT
     {
         using namespace Prism;
         u64 high = uuid[0];
@@ -112,12 +116,11 @@ struct Hash<Prism::UUID>
         usize       length = sizeof(key);
         const usize seed   = 0xc70f6907ul;
 
-        return Hash::MurmurHash2(reinterpret_cast<const char*>(&key), length,
-                                 seed);
+        return Murmur::Hash2(reinterpret_cast<u8*>(&key), length, seed);
 #endif
     }
 };
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::UUID;
 #endif
