@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Concepts.hpp>
+#include <Prism/Core/Ranges.hpp>
 
 namespace Prism
 {
@@ -479,6 +480,51 @@ namespace Prism
             return Pred(&value); // assuming Pred expects an iterator
         }
     };
+
+    /**
+     * @brief Checks whether a value exists in a container or array.
+     *
+     * This function performs a linear search over the container or array and
+     * returns `true` if the specified value is found, otherwise `false`.
+     * It works with built-in arrays, STL containers, and any type that
+     * supports `Prism::Begin` and `Prism::End`.
+     *
+     * @tparam T The type of the value to search for.
+     * @tparam Container The type of the container or array.
+     *
+     * @param c The container or array to search in.
+     * @param value The value to look for.
+     *
+     * @return `true` if the value exists in the container, `false` otherwise.
+     *
+     * @note This function performs a linear search using `operator==`.
+     *       For associative containers like `Set` or `UnorderedSet`,
+     *       using the container's `Find` method may be more efficient.
+     */
+    template <typename T, typename Container>
+    constexpr bool MatchIn(const T& value, Container& c)
+    {
+        // For built-in arrays
+        if constexpr (IsArrayV<Container>)
+            return Find(Begin(c), End(c), value) != End(c);
+        // For any container with iterators
+        return Find(Begin(c), End(c), value) != End(c);
+    }
+
+    template <typename It, typename T, typename Compare = Less<>>
+    constexpr It BinarySearch(It first, It last, const T& value,
+                              Compare comp = Compare{})
+    {
+        It originalLast = last;
+        while (first < last)
+        {
+            It mid = first + (last - first) / 2;
+            if (!comp(*mid, value) && !comp(value, *mid)) return mid;
+            else if (comp(*mid, value)) first = mid + 1;
+            else last = mid;
+        }
+        return originalLast;
+    }
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
@@ -486,6 +532,7 @@ using Prism::AllOf;
 using Prism::AllOfIter;
 using Prism::AnyOf;
 using Prism::AnyOfIter;
+using Prism::BinarySearch;
 using Prism::Count;
 using Prism::CountIf;
 using Prism::CountIfIter;
@@ -501,6 +548,7 @@ using Prism::FindIteratorIter;
 using Prism::FindLastIf;
 using Prism::FindValueIter;
 using Prism::IteratorPredicateAdapter;
+using Prism::MatchIn;
 using Prism::NoneOf;
 using Prism::NoneOfIter;
 using Prism::RemoveIf;
