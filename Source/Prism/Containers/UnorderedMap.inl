@@ -39,6 +39,16 @@ namespace Prism
         return it->Value;
     }
     template <typename K, typename V, typename H>
+    constexpr const V&
+    UnorderedMap<K, V, H>::operator[](const KeyType& key) const
+    {
+        auto it = Find(key);
+        if (it != end()) return it->Value;
+
+        it = InsertOrAssign(key, V());
+        return it->Value;
+    }
+    template <typename K, typename V, typename H>
     constexpr V& UnorderedMap<K, V, H>::operator[](KeyType&& k)
     {
         auto key = Move(k);

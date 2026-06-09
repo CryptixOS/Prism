@@ -337,6 +337,7 @@ namespace Prism
          * not found.
          */
         constexpr ValueType&       operator[](const KeyType& key);
+        constexpr const ValueType& operator[](const KeyType& key) const;
         /// @copydoc operator[](const KeyType&)
         constexpr ValueType&       operator[](KeyType&& key);
 
@@ -467,7 +468,7 @@ namespace Prism
     };
 } // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::UnorderedMap;
 #endif
 #include <Prism/Containers/UnorderedMap.inl>
