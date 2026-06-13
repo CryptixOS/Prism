@@ -9,7 +9,7 @@
 #include <Prism/Utility/Math.hpp>
 
 #if PRISM_TARGET_CARBONC == 0
-    #include <demangler/Demangle.h>
+    #include <demangler/demangler.h>
 #endif
 
 namespace Prism
@@ -18,7 +18,9 @@ namespace Prism
     const String Stacktrace::Symbol::Demangle() const
     {
 #if PRISM_TARGET_CARBONC == 0
-        return llvm::demangle(Name).data();
+        String str;
+        str.Resize(128);
+        return absl::debugging_internal::Demangle(Name, str.Raw(), str.Size());
 #else
         return Name;
 #endif
