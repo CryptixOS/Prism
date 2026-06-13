@@ -9,7 +9,7 @@
 #include <Prism/Utility/Math.hpp>
 
 #if PRISM_TARGET_CARBONC == 0
-    #include <demangler/demangler.h>
+    #include <demangler.h>
 #endif
 
 namespace Prism
