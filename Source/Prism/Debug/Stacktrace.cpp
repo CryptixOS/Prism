@@ -20,7 +20,9 @@ namespace Prism
 #if PRISM_TARGET_CARBONC == 0
         String str;
         str.Resize(128);
-        return absl::debugging_internal::Demangle(Name, str.Raw(), str.Size());
+        if (absl::debugging_internal::Demangle(Name, str.Raw(), str.Size()))
+            return str;
+        return "";
 #else
         return Name;
 #endif
