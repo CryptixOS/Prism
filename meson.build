@@ -139,7 +139,7 @@ install_headers(
   subdir: 'Prism/Algorithm'
 )
 install_headers(
-  'Source/Prism/Containers/Any.hpp',
+  # 'Source/Prism/Containers/Any.hpp',
   'Source/Prism/Containers/Array.hpp',
   'Source/Prism/Containers/Bitmap.hpp',
   'Source/Prism/Containers/CircularQueue.hpp',
@@ -190,7 +190,7 @@ install_headers(
   'Source/Prism/Core/TypeTraits.hpp',
   'Source/Prism/Core/TypeTraitsForward.hpp',
   'Source/Prism/Core/UUID.hpp',
-  meson.build_root() / 'Version.hpp',
+  # meson.build_root() / 'Version.hpp',
 
   subdir: 'Prism/Core'
 )
