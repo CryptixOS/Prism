@@ -9,13 +9,13 @@
 
 namespace Prism
 {
-    Logger::Logger(StringView name, bool endl)
+    NamedLogger::NamedLogger(StringView name, bool endl)
         : m_Name(name)
         , m_PrintNewLine(endl)
     {
     }
 
-    void Logger::operator<<(StringView message) const
+    void NamedLogger::operator<<(StringView message) const
     {
         Log::Print(LogLevel::eNone, "[{}{}\e]: ", m_LabelColor, m_Name);
         Log::Print(LogLevel::eNone, "{}{}\e", m_TextColor, message);

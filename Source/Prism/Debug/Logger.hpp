@@ -6,14 +6,47 @@
  */
 #pragma once
 
+#include <Prism/Debug/LogSink.hpp>
+#include <Prism/Memory/Ref.hpp>
 #include <Prism/String/String.hpp>
 
 namespace Prism
 {
+    template <typename LockingPolicy>
     class Logger
     {
       public:
-        Logger(StringView name, bool endl = false);
+        Logger(StringView name, bool enableStdOut = true)
+            : m_Name(name)
+        {
+            m_StdOut = CreateRef<StdOutSink>();
+            AddSink(m_StdOut.Raw());
+        }
+
+        void Log(LogLevel level, StringView payload)
+        {
+            LogMessage message;
+            message.Level   = level;
+            message.Payload = payload;
+            for (auto sink : m_Sinks) sink->Log(message);
+        }
+        void AddSink(LogSinkBase* sink)
+        {
+            m_Lock.Lock();
+            m_Sinks.PushBack(sink);
+            m_Lock.Unlock();
+        }
+
+      private:
+        String               m_Name;
+        Ref<StdOutSink>      m_StdOut;
+        Vector<LogSinkBase*> m_Sinks;
+        LockingPolicy        m_Lock;
+    };
+    class NamedLogger
+    {
+      public:
+        NamedLogger(StringView name, bool endl = false);
 
         constexpr inline StringView Name() const PM_NOEXCEPT { return m_Name; }
 
