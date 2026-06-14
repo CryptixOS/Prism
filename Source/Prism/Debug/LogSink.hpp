@@ -8,6 +8,7 @@
 
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
+#include <Prism/Memory/RefCounted.hpp>
 #include <Prism/Utility/Atomic.hpp>
 #include <Prism/Utility/Time.hpp>
 
@@ -22,7 +23,7 @@ namespace Prism
         usize          ThreadID;
     };
 
-    class LogSinkBase
+    class LogSinkBase : public RefCounted
     {
       public:
         virtual ~LogSinkBase()                      = default;
@@ -46,6 +47,7 @@ namespace Prism
     class LogSink : public LogSinkBase
     {
       public:
+        inline LogSink()                          = default;
         virtual ~LogSink() override               = default;
 
         inline LogSink(const LogSink&)            = delete;
@@ -115,9 +117,16 @@ namespace Prism
         LockingPolicy m_Lock;
         Atomic<bool>  m_Enabled = true;
     };
+
+    class StdOutSink final : public LogSinkBase
+    {
+        virtual void Log(const LogMessage& message) override final;
+        virtual void Flush() override final;
+        virtual void SetPattern(StringView pattern) override final;
+    };
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::LogSinkBase;
 using Prism::LogSink;
+using Prism::LogSinkBase;
 #endif
