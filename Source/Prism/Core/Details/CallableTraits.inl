@@ -132,7 +132,7 @@ namespace Prism
     };
 
     template <typename F, typename... Args>
-    constexpr auto GetInvokeTag(F&& f, Args&&...)
+    constexpr auto GetInvokeTag(F&&, Args&&...)
     {
         if constexpr (IsMemberFunctionPointer<DecayType<F>>::Value)
             return InvokeMemFunRef{};
