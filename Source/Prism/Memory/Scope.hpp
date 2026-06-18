@@ -58,6 +58,8 @@ namespace Prism
     class Scope
     {
       public:
+        using ElementType = T;
+
         constexpr Scope()
             : m_Instance(nullptr)
         {
@@ -66,7 +68,7 @@ namespace Prism
             : m_Instance(nullptr)
         {
         }
-        constexpr Scope(T* instance)
+        constexpr Scope(T* instance, Deleter deleter = {})
             : m_Instance(instance)
         {
         }
@@ -76,13 +78,18 @@ namespace Prism
         {
             other.m_Instance = nullptr;
         }
-
         template <typename U>
         Scope(Scope<U>&& other)
-            : m_Instance(other.Release())
+            : m_Instance(static_cast<T*>(other.Release()))
         {
-            other.m_Instance = nullptr;
         }
+
+        // template <typename U>
+        // Scope(Scope<U>&& other)
+        //     : m_Instance(other.Release())
+        // {
+        //     other.m_Instance = nullptr;
+        // }
 
         Scope(Scope const&) = delete;
         template <typename U>
@@ -144,18 +151,15 @@ namespace Prism
         template <typename U>
         Scope& operator=(WeakRef<U> const&) = delete;
 
-        Scope& operator=(Scope&& other)
-        {
-            m_Instance       = Move(other.m_Instance);
-            other.m_Instance = nullptr;
-
-            return *this;
-        }
-
         template <typename U>
         Scope& operator=(Scope<U>&& other)
         {
-            m_Instance       = reinterpret_cast<T*>(Move(other.m_Instance));
+            Reset(static_cast<T*>(other.Release()));
+            return *this;
+        }
+        Scope& operator=(Scope&& other)
+        {
+            m_Instance       = Move(other.m_Instance);
             other.m_Instance = nullptr;
 
             return *this;
@@ -169,7 +173,7 @@ namespace Prism
             return *this;
         }
 
-        [[nodiscard]]
+        PM_NODISCARD
         T* Leak()
         {
             T* leaked  = m_Instance;
@@ -187,6 +191,8 @@ namespace Prism
     class Scope<T[], Deleter>
     {
       public:
+        using ElementType = T;
+
         constexpr Scope()
             : m_Instance(nullptr)
         {
@@ -199,6 +205,13 @@ namespace Prism
             : m_Instance(instance)
         {
         }
+        template <typename U, typename D>
+            requires IsConvertibleV<typename Scope<U[], D>::ElementType*,
+                                    ElementType*>
+        Scope(Scope<U[], D>&& other) PM_NOEXCEPT : m_Instance(other.Release())
+        {
+        }
+
         Scope(Scope&& other)
             : m_Instance(other.Release())
         {
@@ -272,6 +285,12 @@ namespace Prism
         template <typename U>
         Scope& operator=(WeakRef<U> const&) = delete;
 
+        template <typename U, typename D>
+        Scope& operator=(Scope<U[], D>&& other) PM_NOEXCEPT
+        {
+            Reset(static_cast<T*>(other.Release()));
+            return *this;
+        }
         Scope& operator=(Scope&& other)
         {
             m_Instance       = Move(other.m_Instance);
@@ -279,7 +298,6 @@ namespace Prism
 
             return *this;
         }
-
         template <typename U>
         Scope& operator=(Scope<U>&& other)
         {
@@ -297,7 +315,7 @@ namespace Prism
             return *this;
         }
 
-        [[nodiscard]]
+        PM_NODISCARD
         T* Leak()
         {
             T* leaked  = m_Instance;
@@ -309,12 +327,25 @@ namespace Prism
 
       private:
         T* m_Instance = nullptr;
+
+        // Grants mutual access to all Scope variants
+        template <typename U, typename D>
+        friend class Scope;
     };
 
     template <typename T, typename... Args>
+        requires(!IsArrayV<T>)
     constexpr Scope<T> CreateScope(Args&&... args)
     {
         return Scope<T>(new T(Forward<Args>(args)...));
+    }
+
+    template <typename T>
+        requires IsArrayV<T> && (ExtentV<T> == 0)
+    constexpr Scope<T> CreateScope(usize size)
+    {
+        using ElementType = RemoveExtentType<T>;
+        return Scope<T>(new ElementType[size]);
     }
 }; // namespace Prism
 
