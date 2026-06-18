@@ -264,7 +264,7 @@ constexpr Prism::Pointer operator""_virt(unsigned long long address)
     return address;
 }
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::Pointer;
 using Prism::PointerHolder;
 using Prism::PointerType;
