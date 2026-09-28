@@ -16,7 +16,7 @@
 namespace Prism
 {
     template <typename T>
-    class Block : public RefCounted
+    class Block : public RefCounted<Block<T>>
     {
       public:
         static constexpr usize BlockSize = 64;

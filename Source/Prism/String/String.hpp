@@ -705,7 +705,7 @@ namespace Prism
       private:
         struct LongData
         {
-            struct [[gnu::packed]]
+            struct PM_PACKED
             {
                 usize IsLong   : 1;
                 usize Capacity : sizeof(usize) * __CHAR_BIT__ - 1;
@@ -720,7 +720,7 @@ namespace Prism
                 : 2;
         struct ShortData
         {
-            struct [[gnu::packed]]
+            struct PM_PACKED
             {
                 unsigned char IsLong : 1;
                 unsigned char Size   : 7;

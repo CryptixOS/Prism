@@ -30,7 +30,7 @@ namespace Prism
         {
         }
         constexpr PathView(const ValueType* path, usize size)
-            : PathView(StringView(path))
+            : PathView(StringView(path, size))
         {
         }
         constexpr PathView(const String& path)
@@ -421,7 +421,7 @@ namespace Prism
         }
 
       private:
-        StringView m_Path;
+        StringView m_Path{};
     };
 
     PM_NODISCARD constexpr bool operator==(PathView lhs,

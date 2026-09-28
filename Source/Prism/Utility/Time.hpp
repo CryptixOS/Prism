@@ -8,6 +8,14 @@
 
 #include <Prism/Core/Types.hpp>
 
+namespace Prism
+{
+    template <typename C>
+    struct CharTraits;
+    template <typename C, typename Traits>
+    class BasicString;
+} // namespace Prism
+
 namespace Prism::Time
 {
     constexpr usize SECONDS_PER_MINUTE = 60;
@@ -66,6 +74,11 @@ namespace Prism::Time
             m_NanoSeconds = 0;
             return *this;
         }
+
+        static BasicString<char, CharTraits<char>>
+        ToUtcDateString(const Timestep& timestep);
+        static BasicString<char, CharTraits<char>>
+        ToTimeString(const Timestep& timestep);
 
       private:
         u64 m_NanoSeconds = 0;

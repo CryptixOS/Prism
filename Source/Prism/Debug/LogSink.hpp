@@ -17,13 +17,35 @@ namespace Prism
     struct LogMessage
     {
         StringView     LoggerName;
+        StringView     Tag;
         LogLevel       Level;
         StringView     Payload;
         Time::Timestep Timestamp;
         usize          ThreadID;
+
+        StringView     SourceFile;
+        usize          SourceLine;
     };
 
-    class LogSinkBase : public RefCounted
+    // FIXME(v1tr10l7): Move it somewhere else
+    template <typename Lockable>
+    struct ScopeLock
+    {
+        ScopeLock(Lockable& lock)
+            : m_Lock(lock)
+        {
+            m_Lock.Lock();
+        }
+        ~ScopeLock() { m_Lock.Unlock(); }
+
+        ScopeLock(const ScopeLock&)            = delete;
+        ScopeLock& operator=(const ScopeLock&) = delete;
+
+      private:
+        Lockable& m_Lock;
+    };
+
+    class LogSinkBase : public RefCounted<LogSinkBase>
     {
       public:
         virtual ~LogSinkBase()                      = default;
@@ -32,8 +54,11 @@ namespace Prism
         virtual void Flush()                        = 0;
         virtual void SetPattern(StringView pattern) = 0;
 
-        inline void  SetLevelFilter(LogLevel level) { m_LevelFilter = level; }
-        inline LogLevel LevelFilter() const { return m_LevelFilter; }
+        inline void  SetLevelFilter(LogLevel level)
+        {
+            m_LevelFilter.Store(level);
+        }
+        inline LogLevel LevelFilter() const { return m_LevelFilter.Load(); }
         inline bool     ShouldLog(LogLevel level) const
         {
             return level >= m_LevelFilter.Load();
@@ -58,75 +83,90 @@ namespace Prism
 
         inline void     Log(const LogMessage& message) override final
         {
-            m_Lock.Lock();
-            Write(message);
-            m_Lock.Unlock();
+            if (!m_Enabled.Load() || !ShouldLog(message.Level)) return;
+
+            ScopeLock<LockingPolicy> guard(m_Lock);
+            SinkIt(message);
         }
+
         inline void Flush() override final
         {
-            m_Lock.Lock();
+            ScopeLock<LockingPolicy> guard(m_Lock);
             FlushIt();
-            m_Lock.Unlock();
         }
-        inline void SetPattern(StringView) override final
+
+        inline void SetPattern(StringView pattern) override final
         {
-            m_Lock.Lock();
-            SetPatternNoLock(StringView());
-            m_Lock.Unlock();
+            ScopeLock<LockingPolicy> guard(m_Lock);
+            SetPatternNoLock(pattern);
         }
 
         isize Write(const LogMessage& message)
         {
-            isize nwritten = 0;
-            m_Lock.Lock();
-            if (message.Level >= m_LevelFilter) nwritten = SinkIt(message);
-
-            m_Lock.Unlock();
+            ScopeLock<LockingPolicy> guard(m_Lock);
+            isize                    nwritten = WriteNoLock(message.Payload);
+            nwritten += WriteNoLock("\n");
             return nwritten;
         }
-        isize Write(StringView message)
+
+        void PutChar(u64 c)
         {
-            m_Lock.Lock();
-            isize nwritten = 0;
-
-            nwritten += WriteNoLock(message);
-            EndOfLine();
-            ++nwritten;
-
-            m_Lock.Unlock();
-            return nwritten;
+            ScopeLock<LockingPolicy> guard(m_Lock);
+            WriteNoLock(StringView(reinterpret_cast<const char*>(&c), 1));
         }
-        void PutChar(u64 c) { WriteNoLock(reinterpret_cast<const char*>(&c)); }
-
-        virtual isize WriteNoLock(StringView str) = 0;
-        virtual isize SinkIt(const LogMessage& message)
+        virtual isize WriteNoLock(StringView str)
         {
-            return Write(message.Payload);
+            LogMessage message;
+            message.Payload = str;
+
+            return SinkIt(message);
         }
-        virtual void   FlushIt() {}
-        virtual void   SetPatternNoLock(StringView) {}
+        virtual isize SinkIt(const LogMessage& message) = 0;
+        virtual void  FlushIt() {}
+        virtual void  SetPatternNoLock(StringView pattern)
+        {
+            IgnoreUnused(pattern);
+        }
 
         void           EndOfLine() { WriteNoLock("\n"); }
 
-        constexpr bool IsEnabled() const { return m_Enabled; }
+        constexpr bool IsEnabled() const { return m_Enabled.Load(); }
 
-        bool           Enable() { return m_Enabled.Exchange(true); }
-        bool           Disable() { return m_Enabled.Exchange(false); }
+        inline bool    Enable() { return m_Enabled.Exchange(true); }
+        inline bool    Disable() { return m_Enabled.Exchange(false); }
 
       protected:
         LockingPolicy m_Lock;
         Atomic<bool>  m_Enabled = true;
     };
 
-    class StdOutSink final : public LogSinkBase
+    class __attribute__((visibility("default"))) StdOutSink final
+        : public LogSinkBase
     {
+      public:
+        virtual ~StdOutSink() override;
+
+#if 1
         virtual void Log(const LogMessage& message) override final;
         virtual void Flush() override final;
         virtual void SetPattern(StringView pattern) override final;
+#else
+        virtual void Log(const LogMessage& message) override final
+        {
+            IgnoreUnused(message);
+        }
+        virtual void Flush() override final {}
+        virtual void SetPattern(StringView pattern) override final
+        {
+            IgnoreUnused(pattern);
+        }
+#endif
     };
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
+using Prism::LogMessage;
 using Prism::LogSink;
 using Prism::LogSinkBase;
+using Prism::StdOutSink;
 #endif

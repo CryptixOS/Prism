@@ -10,14 +10,14 @@
 
 using namespace Prism;
 
-struct Dummy : public Prism::RefCounted
+struct Dummy : public Prism::RefCounted<Dummy>
 {
     int value = 42;
 };
 
 void TestRefBasic()
 {
-    Prism::Ref<Dummy> ref1(new Dummy);
+    auto ref1 = Prism::CreateRef<Dummy>();
     assert(ref1->value == 42);
     assert(ref1->RefCount() == 1);
 
@@ -38,10 +38,10 @@ void TestRefBasic()
 
 void TestRefMove()
 {
-    Prism::Ref<Dummy> ref1(new Dummy);
+    auto ref1 = Prism::CreateRef<Dummy>();
     assert(ref1->RefCount() == 1);
 
-    Prism::Ref<Dummy> ref2 = std::move(ref1);
+    Prism::Ref<Dummy> ref2 = Move(ref1);
     assert(ref1.Raw() == nullptr);
     assert(ref2->value == 42);
     assert(ref2->RefCount() == 1);
@@ -50,7 +50,7 @@ void TestRefMove()
 void TestRefDeleteOnZero()
 {
     bool deleted = false;
-    struct Track : Prism::RefCounted
+    struct Track : Prism::RefCounted<Track>
     {
         bool* del;
         Track(bool* d)
@@ -61,10 +61,10 @@ void TestRefDeleteOnZero()
     };
 
     {
-        Prism::Ref<Track> ref(new Track(&deleted));
+        Prism::Ref<Track> ref(AdoptRef, new Track(&deleted));
         assert(!deleted);
     }
-    assert(deleted); // Ensure destructor was called
+    assert(deleted);
 }
 
 void TestRefCreateHelper()

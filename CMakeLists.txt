@@ -31,7 +31,7 @@ set (SOURCES
     subprojects/demangler/source/demangler.cpp
 )
 
-add_library(${PROJECT_NAME} STATIC ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC Source subprojects/demangler/include)
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DFMT_STATIC_THOUSANDS_SEPARATOR=1
     -DFMT_USE_LONG_DOUBLE=0

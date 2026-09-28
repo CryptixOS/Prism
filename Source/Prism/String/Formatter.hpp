@@ -202,6 +202,8 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
+    #if PRISM_DISABLE_FMT == 0
 using Prism::Format;
+    #endif
 using Prism::Formatter;
 #endif

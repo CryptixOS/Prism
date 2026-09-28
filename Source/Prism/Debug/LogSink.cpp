@@ -7,8 +7,10 @@
 #include <Prism/Debug/Log.hpp>
 #include <Prism/Debug/LogSink.hpp>
 
+#if 1
 namespace Prism
 {
+    StdOutSink::~StdOutSink() = default;
 
     void StdOutSink::Log(const LogMessage& message)
     {
@@ -20,3 +22,4 @@ namespace Prism
     }
     void StdOutSink::SetPattern(StringView pattern) { IgnoreUnused(pattern); }
 }; // namespace Prism
+#endif

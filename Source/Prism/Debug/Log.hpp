@@ -28,6 +28,8 @@ namespace Prism
         isize Print(StringView string);
         isize Printv(const char* format, VaList* args);
         isize Log(LogLevel logLevel, StringView string, bool endl = true);
+        isize Log(LogLevel logLevel, StringView tag, StringView string,
+                  bool endl = true);
         isize Logf(LogLevel logLevel, const char* fmt, ...);
         isize Logv(LogLevel logLevel, const char* fmt, VaList& args,
                    bool endl = true);

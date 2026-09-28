@@ -3,3 +3,5 @@ subprojects/*/
 subprojects/*.wraplock
 !subprojects/packagefiles/
 *.xbstrap
+
+nohup.out

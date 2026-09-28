@@ -6,48 +6,177 @@
  */
 #pragma once
 
+#include <Prism/Core/Config.hpp>
+#include <Prism/Core/TypeTraits.hpp>
 #include <Prism/Memory/Ref.hpp>
 
 namespace Prism
 {
     template <typename T>
-    class WeakRef
+    class WeakRef;
+
+    template <typename T>
+    class Weakable;
+
+    class WeakLink : public RefCounted<WeakLink>
     {
+        template <typename T>
+        friend class Weakable;
+        template <typename T>
+        friend class WeakRef;
+
       public:
-        constexpr WeakRef() = default;
-        WeakRef(const WeakRef& ref) PM_NOEXCEPT : m_Instance(ref.m_Instance) {}
-        WeakRef(WeakRef&& ref) PM_NOEXCEPT : m_Instance(ref.m_Instance)
+        template <typename T>
+        T* UnsafeRaw() const
         {
-            ref.m_Instance = nullptr;
+            return static_cast<T*>(m_Ptr);
         }
 
-        WeakRef(Ref<T> ref) { m_Instance = ref.Raw(); }
-        WeakRef(T* instance) { m_Instance = instance; }
+        bool IsNull() const { return m_Ptr == nullptr; }
+        void Revoke() { m_Ptr = nullptr; }
 
-        constexpr WeakRef&  operator=(const WeakRef& ref) PM_NOEXCEPT = default;
-        constexpr WeakRef&  operator=(WeakRef&& ref) PM_NOEXCEPT      = default;
+      private:
+        explicit WeakLink(void* ptr)
+            : m_Ptr(ptr)
+        {
+        }
 
-        inline constexpr T* Raw() const { return m_Instance; }
+        mutable void* m_Ptr{nullptr};
+    };
 
-        T*                  operator->() { return m_Instance; }
-        const T*            operator->() const { return m_Instance; }
+    template <typename T>
+    class Weakable
+    {
+      public:
+        template <typename U = T>
+        WeakRef<U> MakeWeakRef() const
+        {
+            if (!m_Link)
+                m_Link = Ref<WeakLink>(
+                    AdoptRef,
+                    *new WeakLink(const_cast<T*>(static_cast<const T*>(this))));
+            return WeakRef<U>(m_Link);
+        }
 
-        T&                  operator*() { return &m_Instance; }
-        const T&            operator*() const { return &m_Instance; }
+      protected:
+        Weakable() = default;
 
-        operator bool() const { return m_Instance != nullptr; }
+        ~Weakable() { RevokeWeakRefs(); }
+
+        void RevokeWeakRefs()
+        {
+            if (m_Link)
+            {
+                m_Link->Revoke();
+                m_Link = nullptr;
+            }
+        }
+
+      private:
+        mutable Ref<WeakLink> m_Link;
+    };
+
+    template <typename T>
+    class WeakRef
+    {
+        template <typename U>
+        friend class WeakRef;
+
+        template <typename U>
+        friend class Weakable;
+
+      public:
+        constexpr WeakRef() = default;
+
+        constexpr WeakRef(NullType) PM_NOEXCEPT : m_Link(nullptr) {}
+
+        template <typename U,
+                  typename
+                  = EnableIfType<IsBaseOfV<T, U> && IsBaseOfV<Weakable<U>, U>
+                                 && !IsSameV<RemoveCvRef<U>, NullType>>>
+        WeakRef(const U& object)
+            : m_Link(object.template MakeWeakRef<U>().m_Link)
+        {
+        }
+
+        template <typename U,
+                  typename
+                  = EnableIfType<IsBaseOfV<T, U> && IsBaseOfV<Weakable<U>, U>>>
+        WeakRef(const U* object)
+        {
+            if (object) m_Link = object->template MakeWeakRef<U>().m_Link;
+        }
+
+        template <typename U,
+                  typename
+                  = EnableIfType<IsBaseOfV<T, U> && IsBaseOfV<Weakable<U>, U>>>
+        WeakRef(const Ref<U>& ref)
+        {
+            if (ref) m_Link = ref->template MakeWeakRef<U>().m_Link;
+        }
+
+        template <typename U, typename = EnableIfType<IsBaseOfV<T, U>>>
+        WeakRef(const WeakRef<U>& other)
+            : m_Link(other.m_Link)
+        {
+        }
+
+        template <typename U, typename = EnableIfType<IsBaseOfV<T, U>>>
+        WeakRef(WeakRef<U>&& other) PM_NOEXCEPT : m_Link(Move(other.m_Link))
+        {
+        }
+
+        WeakRef(const WeakRef& ref) PM_NOEXCEPT            = default;
+        WeakRef(WeakRef&& ref) PM_NOEXCEPT                 = default;
+
+        WeakRef& operator=(const WeakRef& ref) PM_NOEXCEPT = default;
+        WeakRef& operator=(WeakRef&& ref) PM_NOEXCEPT      = default;
+
+        WeakRef& operator=(NullType) PM_NOEXCEPT
+        {
+            Clear();
+            return *this;
+        }
+
+        inline T* Raw() const
+        {
+            return m_Link ? m_Link->template UnsafeRaw<T>() : nullptr;
+        }
+
+        T*       operator->() { return Raw(); }
+        const T* operator->() const { return Raw(); }
+
+        T&       operator*() { return *Raw(); }
+        const T& operator*() const { return *Raw(); }
+
+        operator bool() const { return m_Link ? !m_Link->IsNull() : false; }
+        bool IsNull() const { return !m_Link || m_Link->IsNull(); }
+
+        void Clear() { m_Link = nullptr; }
 
         template <typename U>
         WeakRef<U> As() const
         {
-            return WeakRef<U>(reinterpret_cast<U*>(m_Instance));
+            return WeakRef<U>(m_Link);
         }
-        constexpr Ref<T> Promote() const { return Ref<T>(m_Instance); }
+
+        Ref<T> Promote() const
+        {
+            T* ptr = Raw();
+            return ptr ? Ref<T>(ptr) : Ref<T>();
+        }
 
       private:
-        T* m_Instance = nullptr;
+        explicit WeakRef(Ref<WeakLink> link)
+            : m_Link(Move(link))
+        {
+        }
+
+        Ref<WeakLink> m_Link;
     };
-}; // namespace Prism
+} // namespace Prism
+
 #if PRISM_USE_NAMESPACE != 0
+using Prism::Weakable;
 using Prism::WeakRef;
 #endif

@@ -18,11 +18,15 @@ namespace Prism
     const String Stacktrace::Symbol::Demangle() const
     {
 #if PRISM_TARGET_CARBONC == 0
-        String str;
-        str.Resize(128);
-        if (absl::debugging_internal::Demangle(Name, str.Raw(), str.Size()))
-            return str;
-        return "";
+        String          demangled   = "";
+
+        constexpr usize BUFFER_SIZE = 256;
+        char*           buffer      = new char[BUFFER_SIZE];
+        if (absl::debugging_internal::Demangle(Name, buffer, BUFFER_SIZE))
+            demangled = buffer;
+
+        delete[] buffer;
+        return demangled;
 #else
         return Name;
 #endif

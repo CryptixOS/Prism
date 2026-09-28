@@ -10,16 +10,21 @@
 #include <Prism/Core/NonMovable.hpp>
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
+#include <Prism/Utility/Compare.hpp>
 
 #include <magic_enum/magic_enum.hpp>
 
 namespace Prism
 {
-    template <typename K, typename V>
-    class RedBlackTree : public NonCopyable<RedBlackTree<K, V>>,
-                         public NonMovable<RedBlackTree<K, V>>
+    template <typename K, typename V, typename CompareOp = Less<K>>
+    class RedBlackTree : public NonCopyable<RedBlackTree<K, V, CompareOp>>,
+                         public NonMovable<RedBlackTree<K, V, CompareOp>>
     {
       public:
+        using KeyType    = K;
+        using ValueType  = V;
+        using KeyCompare = CompareOp;
+
         enum class Color : bool
         {
             eRed,
@@ -73,7 +78,27 @@ namespace Prism
         template <typename ValueType>
         struct BaseIterator
         {
+            using ReferenceType
+                = ConditionalType<IsConstV<ValueType>, const KeyValuePair&,
+                                  KeyValuePair&>;
+            using PointerType
+                = ConditionalType<IsConstV<ValueType>, const KeyValuePair*,
+                                  KeyValuePair*>;
+
             BaseIterator() = default;
+
+            template <typename U,
+                      EnableIfType<IsSameV<ValueType, const U>, i32> = 0>
+            BaseIterator(const BaseIterator<U>& other)
+                : m_Node(other.m_Node)
+                , m_Prev(other.m_Prev)
+            {
+            }
+
+            constexpr bool operator==(const BaseIterator& other) const
+            {
+                return m_Node == other.m_Node;
+            }
             constexpr bool operator!=(const BaseIterator& other) const
             {
                 return m_Node != other.m_Node;
@@ -98,8 +123,8 @@ namespace Prism
                 return *this;
             }
 
-            inline KeyValuePair& operator*() { return m_Node->Data; }
-            inline KeyValuePair* operator->() { return &m_Node->Data; }
+            inline KeyValuePair& operator*() const { return m_Node->Data; }
+            inline KeyValuePair* operator->() const { return &m_Node->Data; }
 
             inline bool          IsFirst() const { return !m_Prev; }
             inline bool          IsLast() const { return !m_Node; }
@@ -124,6 +149,10 @@ namespace Prism
         constexpr RedBlackTree() = default;
         constexpr RedBlackTree(const RedBlackTree& other);
         constexpr RedBlackTree(RedBlackTree&& other);
+        explicit constexpr RedBlackTree(const CompareOp& comp)
+            : m_Comparator(comp)
+        {
+        }
 
         constexpr RedBlackTree& operator=(const RedBlackTree& other);
         constexpr RedBlackTree& operator=(RedBlackTree&& other);
@@ -158,6 +187,7 @@ namespace Prism
         Iterator        FindLargestNotAbove(const K& key);
         Iterator        Find(const K& key);
         ConstIterator   Find(const K& key) const;
+        Node*           Find(Node* node, const K& key, const CompareOp& comp);
 
         bool            Contains(const K& key) const;
 
@@ -171,15 +201,22 @@ namespace Prism
         static Node* GetPredecessor(Node* node);
 
       private:
-        Node* m_Root      = nullptr;
-        usize m_Size      = 0;
+        CompareOp m_Comparator{};
+        Node*     m_Root      = nullptr;
+        usize     m_Size      = 0;
 
-        Node* m_Least     = nullptr;
-        Node* m_LeastNode = nullptr;
+        Node*     m_Least     = nullptr;
+        Node*     m_LeastNode = nullptr;
 
-        void  InsertFix(Node* node);
-        void  RemoveFix(Node* node, Node* parent);
-        i32   Compare(const K& lhs, const K& rhs) const;
+        void      InsertFix(Node* node);
+        void      RemoveFix(Node* node, Node* parent);
+        i32       Compare(const K& lhs, const K& rhs) const;
+        i32       CompareKeys(const K& lhs, const K& rhs) const
+        {
+            if (m_Comparator(lhs, rhs)) return -1;
+            if (m_Comparator(rhs, lhs)) return 1;
+            return 0;
+        }
 
         void  RotateLeft(Node* node);
         void  RotateRight(Node* node);

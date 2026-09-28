@@ -178,6 +178,17 @@ namespace Prism
     };
 
     template <typename T>
+    struct IsFunctionReference : FalseType
+    {
+    };
+
+    template <typename T>
+        requires IsReferenceV<T> && IsFunction<RemoveReferenceType<T>>::Value
+    struct IsFunctionReference<T> : TrueType
+    {
+    };
+
+    template <typename T>
     struct IsArithmetic;
     template <typename T>
     struct IsFundamental
@@ -484,6 +495,8 @@ namespace Prism
         = IsMemberFunctionPointer<T>::Value;
     template <typename T>
     inline constexpr bool IsFunctionPointerV = IsFunctionPointer<T>::Value;
+    template <typename T>
+    inline constexpr bool IsFunctionReferenceV = IsFunctionReference<T>::Value;
 
     template <typename T>
     inline constexpr bool IsFundamentalV = IsFundamental<T>::Value;

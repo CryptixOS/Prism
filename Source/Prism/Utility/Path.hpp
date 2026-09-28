@@ -10,6 +10,145 @@
 
 namespace Prism
 {
+    class PathIterator
+    {
+      public:
+        using IteratorCategory   = std::bidirectional_iterator_tag;
+        using ValueType          = PathView;
+        using DifferenceType     = ptrdiff;
+        using Pointer            = const PathView*;
+        using Reference          = const PathView&;
+
+        constexpr PathIterator() = default;
+
+        constexpr PathIterator(PathView totalPath, usize pos)
+            : m_TotalPath(totalPath)
+            , m_Pos(pos)
+        {
+            if (m_Pos < m_TotalPath.Size()) Next();
+        }
+
+        PM_NODISCARD constexpr Reference operator*() const PM_NOEXCEPT
+        {
+            return m_Current;
+        }
+        PM_NODISCARD constexpr Pointer operator->() const PM_NOEXCEPT
+        {
+            return &m_Current;
+        }
+
+        // Forward Traversal
+        constexpr PathIterator& operator++() PM_NOEXCEPT
+        {
+            m_Pos = m_NextPos;
+            Next();
+            return *this;
+        }
+
+        constexpr PathIterator operator++(int) PM_NOEXCEPT
+        {
+            PathIterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+        constexpr PathIterator& operator--() PM_NOEXCEPT
+        {
+            Prev();
+            return *this;
+        }
+
+        constexpr PathIterator operator--(int) PM_NOEXCEPT
+        {
+            PathIterator tmp = *this;
+            --(*this);
+            return tmp;
+        }
+
+        PM_NODISCARD friend constexpr bool
+        operator==(const PathIterator& lhs, const PathIterator& rhs) PM_NOEXCEPT
+        {
+            return lhs.m_Pos == rhs.m_Pos
+                && lhs.m_TotalPath.Raw() == rhs.m_TotalPath.Raw();
+        }
+
+      private:
+        constexpr void Next() PM_NOEXCEPT
+        {
+            usize size = m_TotalPath.Size();
+            if (m_Pos >= size)
+            {
+                m_Pos     = size;
+                m_Current = PathView();
+                m_NextPos = size;
+                return;
+            }
+
+            if (m_Pos == 0 && m_TotalPath.StartsWith('/'))
+            {
+                m_Current = PathView(m_TotalPath.Raw(), 1);
+                m_NextPos = 1;
+                return;
+            }
+
+            while (m_Pos < size && m_TotalPath[m_Pos] == '/') { m_Pos++; }
+
+            if (m_Pos >= size)
+            {
+                m_Pos     = size;
+                m_Current = PathView();
+                m_NextPos = size;
+                return;
+            }
+
+            usize end = m_Pos;
+            while (end < size && m_TotalPath[end] != '/') { end++; }
+
+            m_Current = PathView(m_TotalPath.Raw() + m_Pos, end - m_Pos);
+            m_NextPos = end;
+        }
+
+        constexpr void Prev() PM_NOEXCEPT
+        {
+            if (m_Pos == 0) return;
+
+            usize start = m_Pos;
+
+            while (start > 0 && m_TotalPath[start - 1] == '/')
+            {
+                start--;
+                if (start == 0 && m_TotalPath.StartsWith('/'))
+                {
+                    m_Pos     = 0;
+                    m_Current = PathView(m_TotalPath.Raw(), 1);
+                    m_NextPos = 1;
+                    return;
+                }
+            }
+
+            // Find the start of the word component
+            usize end = start;
+            while (start > 0 && m_TotalPath[start - 1] != '/') { start--; }
+
+            if (start == 1 && m_TotalPath.StartsWith('/'))
+            {
+                // This component is separate from the root slash
+                m_Pos     = 1;
+                m_Current = PathView(m_TotalPath.Raw() + 1, end - 1);
+                m_NextPos = end;
+                return;
+            }
+
+            m_Pos     = start;
+            m_Current = PathView(m_TotalPath.Raw() + start, end - start);
+            m_NextPos = end;
+        }
+
+        PathView m_TotalPath{};
+        usize    m_Pos{0};
+        usize    m_NextPos{0};
+        PathView m_Current{};
+    };
     class Path
     {
       public:
@@ -22,11 +161,10 @@ namespace Prism
         using ConstReferenceType    = const ViewType::ValueType&;
         using PointerType           = ViewType::ValueType*;
         using ConstPointerType      = const ViewType::ValueType*;
-        using Iterator              = ViewType::ValueType*;
-        using ConstIterator         = const ViewType::ValueType*;
+        using Iterator              = PathIterator;
+        using ConstIterator         = PathIterator;
         using ReverseIterator       = Prism::ReverseIterator<Iterator>;
         using ConstReverseIterator  = Prism::ReverseIterator<ConstIterator>;
-
         constexpr static usize NPos = PathView::NPos;
 
         constexpr Path()            = default;
@@ -63,15 +201,18 @@ namespace Prism
 
         constexpr Path& operator=(const Path& other)
         {
-            return m_Path = other.m_Path, *this;
+            m_Path = other.m_Path;
+            return *this;
         }
         constexpr Path& operator=(Path&& str)
         {
-            return m_Path = Move(str.m_Path), *this;
+            m_Path = Move(str.m_Path);
+            return *this;
         }
         constexpr Path& operator=(const ValueType* str)
         {
-            return m_Path = Move(str), *this;
+            m_Path = str;
+            return *this;
         }
 
         template <typename View>
@@ -89,21 +230,21 @@ namespace Prism
         //--------------------------------------------------------------------------
         PM_NODISCARD constexpr ConstIterator begin() const PM_NOEXCEPT
         {
-            return m_Path.begin();
+            return ConstIterator(View(), 0);
         }
         PM_NODISCARD constexpr ConstIterator end() const PM_NOEXCEPT
         {
-            return m_Path.end();
+            return ConstIterator(View(), Size());
         }
         PM_NODISCARD constexpr ConstIterator cbegin() const PM_NOEXCEPT
         {
-            return m_Path.cbegin();
+            return begin();
         }
-
         PM_NODISCARD constexpr ConstIterator cend() const PM_NOEXCEPT
         {
-            return m_Path.cend();
+            return end();
         }
+
         PM_NODISCARD constexpr ConstReverseIterator rbegin() const PM_NOEXCEPT
         {
             return ConstReverseIterator(end());
@@ -112,7 +253,6 @@ namespace Prism
         {
             return ConstReverseIterator(begin());
         }
-
         PM_NODISCARD constexpr ConstReverseIterator crbegin() const PM_NOEXCEPT
         {
             return ConstReverseIterator(end());
@@ -142,6 +282,15 @@ namespace Prism
         PM_NODISCARD constexpr ConstReferenceType Back() const PM_NOEXCEPT
         {
             return m_Path.Back();
+        }
+        PM_NODISCARD constexpr BasicString<char>& String() PM_NOEXCEPT
+        {
+            return m_Path;
+        }
+        PM_NODISCARD constexpr const BasicString<char>&
+        String() const PM_NOEXCEPT
+        {
+            return m_Path;
         }
         PM_NODISCARD constexpr ConstPointerType Raw() const PM_NOEXCEPT
         {
@@ -206,7 +355,7 @@ namespace Prism
             return m_Path.Copy(str, count, pos);
         }
 
-        Vector<String> Split(ValueType delimiter = '/') const;
+        Vector<Prism::String> Split(ValueType delimiter = '/') const;
         /**
          * @brief Trims leading and/or trailing whitespace characters from the
          * string.
@@ -240,7 +389,7 @@ namespace Prism
          * include more than ASCII space characters, depending on its
          * implementation.
          */
-        constexpr Path Trim(TrimMode mode = TrimMode::eBoth) const
+        constexpr Path        Trim(TrimMode mode = TrimMode::eBoth) const
         {
             return View().Trim(mode);
         }
@@ -493,7 +642,7 @@ namespace Prism
         }
 
       private:
-        String m_Path;
+        ::Prism::String m_Path;
     };
 
     constexpr bool operator==(const Path& lhs, const Path& rhs) PM_NOEXCEPT
@@ -552,6 +701,25 @@ namespace Prism
     template <>
     struct Hash<Path> : public Detail::StringHashBase<char>
     {
+        PM_NODISCARD constexpr usize
+        operator()(const Path& path) const PM_NOEXCEPT
+        {
+            if (path.Empty()) return 0;
+
+            usize                        seed = 0;
+
+            Detail::StringHashBase<char> stringHasher;
+
+            for (auto it = path.begin(); it != path.end(); ++it)
+            {
+                PathView component     = *it;
+
+                usize    componentHash = stringHasher(component.StrView());
+                seed ^= componentHash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            }
+
+            return seed;
+        }
     };
     template <>
     struct IsFastHash<Hash<Path>> : FalseType

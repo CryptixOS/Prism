@@ -8,8 +8,9 @@
 
 namespace Prism
 {
-    template <typename K, typename V>
-    constexpr RedBlackTree<K, V>::RedBlackTree(const RedBlackTree& other)
+    template <typename K, typename V, typename CompareOp>
+    constexpr RedBlackTree<K, V, CompareOp>::RedBlackTree(
+        const RedBlackTree& other)
     {
         if (!other.m_Root) return;
 
@@ -19,8 +20,8 @@ namespace Prism
         m_LeastNode = FindLeftmost(m_Root);
         m_Least     = m_LeastNode;
     }
-    template <typename K, typename V>
-    constexpr RedBlackTree<K, V>::RedBlackTree(RedBlackTree&& other)
+    template <typename K, typename V, typename CompareOp>
+    constexpr RedBlackTree<K, V, CompareOp>::RedBlackTree(RedBlackTree&& other)
     {
         m_Root            = other.m_Root;
         m_Size            = other.m_Size;
@@ -33,21 +34,21 @@ namespace Prism
         other.m_LeastNode = nullptr;
     }
 
-    template <typename K, typename V>
-    constexpr RedBlackTree<K, V>::~RedBlackTree()
+    template <typename K, typename V, typename CompareOp>
+    constexpr RedBlackTree<K, V, CompareOp>::~RedBlackTree()
     {
         Clear();
     }
 
-    template <typename K, typename V>
-    constexpr RedBlackTree<K, V>&
-    RedBlackTree<K, V>::operator=(const RedBlackTree& other)
+    template <typename K, typename V, typename CompareOp>
+    constexpr RedBlackTree<K, V, CompareOp>&
+    RedBlackTree<K, V, CompareOp>::operator=(const RedBlackTree& other)
     {
         return (*this = other);
     }
-    template <typename K, typename V>
-    constexpr RedBlackTree<K, V>&
-    RedBlackTree<K, V>::operator=(RedBlackTree&& other)
+    template <typename K, typename V, typename CompareOp>
+    constexpr RedBlackTree<K, V, CompareOp>&
+    RedBlackTree<K, V, CompareOp>::operator=(RedBlackTree&& other)
     {
         m_Root            = Move(other.m_Root);
         m_Size            = Move(other.m_Size);
@@ -61,16 +62,16 @@ namespace Prism
         return *this;
     }
 
-    template <typename K, typename V>
-    V& RedBlackTree<K, V>::At(const K& key)
+    template <typename K, typename V, typename CompareOp>
+    V& RedBlackTree<K, V, CompareOp>::At(const K& key)
     {
         auto node = Find(m_Root, key);
         assert(node);
 
         return node->Value();
     }
-    template <typename K, typename V>
-    const V& RedBlackTree<K, V>::At(const K& key) const
+    template <typename K, typename V, typename CompareOp>
+    const V& RedBlackTree<K, V, CompareOp>::At(const K& key) const
     {
         auto node = Find(m_Root, key);
         assert(node);
@@ -78,16 +79,16 @@ namespace Prism
         return node;
     }
 
-    template <typename K, typename V>
-    V& RedBlackTree<K, V>::operator[](const K& key)
+    template <typename K, typename V, typename CompareOp>
+    V& RedBlackTree<K, V, CompareOp>::operator[](const K& key)
     {
         Node* node = Find(key);
         if (node) return node->Value();
 
         return (*Insert(new Node(key))).Value;
     }
-    template <typename K, typename V>
-    V& RedBlackTree<K, V>::operator[](K&& key)
+    template <typename K, typename V, typename CompareOp>
+    V& RedBlackTree<K, V, CompareOp>::operator[](K&& key)
     {
         Node* node = Find(key);
         if (node) return node->Value();
@@ -95,53 +96,58 @@ namespace Prism
         return (*Insert(new Node(Move(key)))).Value;
     }
 
-    template <typename K, typename V>
-    RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::begin()
+    template <typename K, typename V, typename CompareOp>
+    RedBlackTree<K, V, CompareOp>::Iterator
+    RedBlackTree<K, V, CompareOp>::begin()
     {
         return Iterator(m_LeastNode);
     }
-    template <typename K, typename V>
-    RedBlackTree<K, V>::ConstIterator RedBlackTree<K, V>::begin() const
+    template <typename K, typename V, typename CompareOp>
+    RedBlackTree<K, V, CompareOp>::ConstIterator
+    RedBlackTree<K, V, CompareOp>::begin() const
     {
         return ConstIterator(m_LeastNode);
     }
-    template <typename K, typename V>
-    RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::end()
+    template <typename K, typename V, typename CompareOp>
+    RedBlackTree<K, V, CompareOp>::Iterator RedBlackTree<K, V, CompareOp>::end()
     {
         return {};
     }
-    template <typename K, typename V>
-    RedBlackTree<K, V>::ConstIterator RedBlackTree<K, V>::end() const
+    template <typename K, typename V, typename CompareOp>
+    RedBlackTree<K, V, CompareOp>::ConstIterator
+    RedBlackTree<K, V, CompareOp>::end() const
     {
         return {};
     }
-    template <typename K, typename V>
-    Prism::ReverseIterator<typename RedBlackTree<K, V>::Iterator>
-    RedBlackTree<K, V>::rbegin()
+    template <typename K, typename V, typename CompareOp>
+    Prism::ReverseIterator<typename RedBlackTree<K, V, CompareOp>::Iterator>
+    RedBlackTree<K, V, CompareOp>::rbegin()
     {
         return {};
     }
-    template <typename K, typename V>
-    Prism::ReverseIterator<typename RedBlackTree<K, V>::ConstIterator>
-    RedBlackTree<K, V>::rbegin() const
+    template <typename K, typename V, typename CompareOp>
+    Prism::ReverseIterator<
+        typename RedBlackTree<K, V, CompareOp>::ConstIterator>
+    RedBlackTree<K, V, CompareOp>::rbegin() const
     {
         return {};
     }
-    template <typename K, typename V>
-    Prism::ReverseIterator<typename RedBlackTree<K, V>::Iterator>
-    RedBlackTree<K, V>::rend()
+    template <typename K, typename V, typename CompareOp>
+    Prism::ReverseIterator<typename RedBlackTree<K, V, CompareOp>::Iterator>
+    RedBlackTree<K, V, CompareOp>::rend()
     {
         return Iterator(m_LeastNode);
     }
-    template <typename K, typename V>
-    Prism::ReverseIterator<typename RedBlackTree<K, V>::ConstIterator>
-    RedBlackTree<K, V>::rend() const
+    template <typename K, typename V, typename CompareOp>
+    Prism::ReverseIterator<
+        typename RedBlackTree<K, V, CompareOp>::ConstIterator>
+    RedBlackTree<K, V, CompareOp>::rend() const
     {
         return ConstIterator(m_LeastNode);
     }
 
-    template <typename K, typename V>
-    void RedBlackTree<K, V>::Clear()
+    template <typename K, typename V, typename CompareOp>
+    void RedBlackTree<K, V, CompareOp>::Clear()
     {
         RecursiveDelete(m_Root);
 
@@ -150,8 +156,9 @@ namespace Prism
         m_Size  = 0;
     }
 
-    template <typename K, typename V>
-    RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Insert(K key, V& value)
+    template <typename K, typename V, typename CompareOp>
+    RedBlackTree<K, V, CompareOp>::Iterator
+    RedBlackTree<K, V, CompareOp>::Insert(K key, V& value)
     {
         auto* node = Find(m_Root, key);
         if (node)
@@ -162,8 +169,9 @@ namespace Prism
 
         return Insert(new Node(key, value));
     }
-    template <typename K, typename V>
-    RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Insert(K key, V&& value)
+    template <typename K, typename V, typename CompareOp>
+    RedBlackTree<K, V, CompareOp>::Iterator
+    RedBlackTree<K, V, CompareOp>::Insert(K key, V&& value)
     {
         auto* node = Find(m_Root, key);
         if (node)
@@ -175,16 +183,18 @@ namespace Prism
         return Insert(new Node(key, Move(value)));
     }
 
-    template <typename K, typename V>
-    RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Insert(Node* node)
+    template <typename K, typename V, typename CompareOp>
+    RedBlackTree<K, V, CompareOp>::Iterator
+    RedBlackTree<K, V, CompareOp>::Insert(Node* node)
     {
         Node* parent  = nullptr;
         Node* current = m_Root;
         while (current)
         {
             parent  = current;
-            current = (node->Key() < current->Key()) ? current->LeftChild
-                                                     : current->RightChild;
+            current = m_Comparator(node->Key(), current->Key())
+                        ? current->LeftChild
+                        : current->RightChild;
         }
 
         if (!parent)
@@ -196,19 +206,20 @@ namespace Prism
             return Iterator(m_Root);
         }
 
-        if (node->Key() < parent->Key()) parent->LeftChild = node;
+        if (m_Comparator(node->Key(), parent->Key())) parent->LeftChild = node;
         else parent->RightChild = node;
         node->Parent = parent;
 
         if (node->Parent->Parent) InsertFix(node);
         ++m_Size;
 
-        if (m_LeastNode->LeftChild == node) m_LeastNode = node;
+        if (m_LeastNode && m_Comparator(node->Key(), m_LeastNode->Key()))
+            m_LeastNode = node;
         return Iterator(node);
     }
 
-    template <typename K, typename V>
-    bool RedBlackTree<K, V>::Erase(const K& key)
+    template <typename K, typename V, typename CompareOp>
+    bool RedBlackTree<K, V, CompareOp>::Erase(const K& key)
     {
         Node* node = Find(m_Root, key);
         if (!node) return false;
@@ -218,8 +229,8 @@ namespace Prism
         delete node;
         return removed;
     }
-    template <typename K, typename V>
-    bool RedBlackTree<K, V>::Erase(Node* node)
+    template <typename K, typename V, typename CompareOp>
+    bool RedBlackTree<K, V, CompareOp>::Erase(Node* node)
     {
         assert(node);
 
@@ -289,8 +300,8 @@ namespace Prism
         return true;
     }
 
-    template <typename K, typename V>
-    void RedBlackTree<K, V>::PrintTree()
+    template <typename K, typename V, typename CompareOp>
+    void RedBlackTree<K, V, CompareOp>::PrintTree()
     {
         PrismInfo("RedBlackTree: Dump ->");
         PrismMessage("----------------\n");
@@ -300,9 +311,10 @@ namespace Prism
         PrismMessage("\n");
         PrismMessage("----------------\n");
     }
-    template <typename K, typename V>
-    void RedBlackTree<K, V>::PrintNode(const fmt::string_view& prefix,
-                                       const Node* node, bool isLeft)
+    template <typename K, typename V, typename CompareOp>
+    void
+    RedBlackTree<K, V, CompareOp>::PrintNode(const fmt::string_view& prefix,
+                                             const Node* node, bool isLeft)
     {
         if (node)
         {
@@ -323,9 +335,9 @@ namespace Prism
         }
     }
 
-    template <typename K, typename V>
-    typename RedBlackTree<K, V>::Iterator
-    RedBlackTree<K, V>::FindLargestNotAbove(const K& key)
+    template <typename K, typename V, typename CompareOp>
+    typename RedBlackTree<K, V, CompareOp>::Iterator
+    RedBlackTree<K, V, CompareOp>::FindLargestNotAbove(const K& key)
     {
         auto  node      = m_Root;
         Node* candidate = nullptr;
@@ -343,39 +355,53 @@ namespace Prism
 
         return Iterator(candidate, key);
     }
-    template <typename K, typename V>
-    typename RedBlackTree<K, V>::Iterator RedBlackTree<K, V>::Find(const K& key)
+    template <typename K, typename V, typename CompareOp>
+    typename RedBlackTree<K, V, CompareOp>::Iterator
+    RedBlackTree<K, V, CompareOp>::Find(const K& key)
     {
         return Iterator(Find(m_Root, key));
     }
-    template <typename K, typename V>
-    typename RedBlackTree<K, V>::ConstIterator
-    RedBlackTree<K, V>::Find(const K& key) const
+    template <typename K, typename V, typename CompareOp>
+    typename RedBlackTree<K, V, CompareOp>::ConstIterator
+    RedBlackTree<K, V, CompareOp>::Find(const K& key) const
     {
         return ConstIterator(Find(m_Root, key));
     }
 
-    template <typename K, typename V>
-    typename RedBlackTree<K, V>::Node* RedBlackTree<K, V>::Find(Node* node,
-                                                                K     key)
+    template <typename K, typename V, typename CompareOp>
+    typename RedBlackTree<K, V, CompareOp>::Node*
+    RedBlackTree<K, V, CompareOp>::Find(Node* node, K key)
     {
         while (node && node->Key() != key)
             node = key < node->Key() ? node->LeftChild : node->RightChild;
 
         return node;
     }
+    template <typename K, typename V, typename CompareOp>
+    typename RedBlackTree<K, V, CompareOp>::Node*
+    RedBlackTree<K, V, CompareOp>::Find(Node* node, const K& key,
+                                        const CompareOp& comp)
+    {
+        while (node)
+        {
+            if (comp(key, node->Key())) node = node->LeftChild;
+            else if (comp(node->Key(), key)) node = node->RightChild;
+            else return node;
+        }
+        return nullptr;
+    }
 
-    template <typename K, typename V>
-    bool RedBlackTree<K, V>::Contains(const K& key) const
+    template <typename K, typename V, typename CompareOp>
+    bool RedBlackTree<K, V, CompareOp>::Contains(const K& key) const
     {
         Node* node = Find(m_Root, key);
 
         return node != nullptr;
     }
 
-    template <typename K, typename V>
-    typename RedBlackTree<K, V>::Node*
-    RedBlackTree<K, V>::GetSuccessor(Node* node)
+    template <typename K, typename V, typename CompareOp>
+    typename RedBlackTree<K, V, CompareOp>::Node*
+    RedBlackTree<K, V, CompareOp>::GetSuccessor(Node* node)
     {
         assert(node);
         if (node->RightChild)
@@ -392,9 +418,9 @@ namespace Prism
         }
         return temp;
     }
-    template <typename K, typename V>
-    typename RedBlackTree<K, V>::Node*
-    RedBlackTree<K, V>::GetPredecessor(Node* node)
+    template <typename K, typename V, typename CompareOp>
+    typename RedBlackTree<K, V, CompareOp>::Node*
+    RedBlackTree<K, V, CompareOp>::GetPredecessor(Node* node)
     {
         assert(node);
         if (node->LeftChild)
@@ -412,8 +438,8 @@ namespace Prism
         return temp;
     }
 
-    template <typename K, typename V>
-    void RedBlackTree<K, V>::InsertFix(Node* node)
+    template <typename K, typename V, typename CompareOp>
+    void RedBlackTree<K, V, CompareOp>::InsertFix(Node* node)
     {
         assert(node && node->IsRed());
 
@@ -464,8 +490,8 @@ namespace Prism
 
         m_Root->SetBlack();
     }
-    template <typename K, typename V>
-    void RedBlackTree<K, V>::RemoveFix(Node* node, Node* parent)
+    template <typename K, typename V, typename CompareOp>
+    void RedBlackTree<K, V, CompareOp>::RemoveFix(Node* node, Node* parent)
     {
         for (; node != m_Root && (!node || node->IsBlack());
              parent = node->Parent)
@@ -536,8 +562,8 @@ namespace Prism
         node->SetBlack();
     }
 
-    template <typename K, typename V>
-    i32 RedBlackTree<K, V>::Compare(const K& lhs, const K& rhs) const
+    template <typename K, typename V, typename CompareOp>
+    i32 RedBlackTree<K, V, CompareOp>::Compare(const K& lhs, const K& rhs) const
     {
         if (lhs < rhs) return -1;
         if (rhs < lhs) return 1;
@@ -545,8 +571,8 @@ namespace Prism
         return 0;
     }
 
-    template <typename K, typename V>
-    void RedBlackTree<K, V>::RotateLeft(Node* node)
+    template <typename K, typename V, typename CompareOp>
+    void RedBlackTree<K, V, CompareOp>::RotateLeft(Node* node)
     {
         assert(node);
         auto* pivot = node->RightChild;
@@ -567,8 +593,8 @@ namespace Prism
         else if (parent->LeftChild == node) parent->LeftChild = pivot;
         else parent->RightChild = pivot;
     }
-    template <typename K, typename V>
-    void RedBlackTree<K, V>::RotateRight(Node* node)
+    template <typename K, typename V, typename CompareOp>
+    void RedBlackTree<K, V, CompareOp>::RotateRight(Node* node)
     {
         assert(node);
         auto* pivot = node->LeftChild;
@@ -590,8 +616,8 @@ namespace Prism
         else parent->RightChild = pivot;
     }
 
-    template <typename K, typename V>
-    void RedBlackTree<K, V>::RecursiveDelete(Node* node)
+    template <typename K, typename V, typename CompareOp>
+    void RedBlackTree<K, V, CompareOp>::RecursiveDelete(Node* node)
     {
         if (!node) return;
         RecursiveDelete(node->LeftChild);
@@ -600,9 +626,9 @@ namespace Prism
         delete node;
     }
 
-    template <typename K, typename V>
-    typename RedBlackTree<K, V>::Node*
-    RedBlackTree<K, V>::CloneSubtree(Node* parent, Node* other)
+    template <typename K, typename V, typename CompareOp>
+    typename RedBlackTree<K, V, CompareOp>::Node*
+    RedBlackTree<K, V, CompareOp>::CloneSubtree(Node* parent, Node* other)
     {
         if (!other) return nullptr;
 
@@ -615,9 +641,9 @@ namespace Prism
 
         return node;
     }
-    template <typename K, typename V>
-    typename RedBlackTree<K, V>::Node*
-    RedBlackTree<K, V>::FindLeftMost(Node* node)
+    template <typename K, typename V, typename CompareOp>
+    typename RedBlackTree<K, V, CompareOp>::Node*
+    RedBlackTree<K, V, CompareOp>::FindLeftMost(Node* node)
     {
         if (!node) return nullptr;
         while (node->LeftChild) node = node->LeftChild;

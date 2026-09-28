@@ -21,23 +21,92 @@ namespace Prism
     {
       public:
         // Member types
-        using KeyType              = Key;
-        using ValueType            = Key;
-        using SizeType             = usize;
-        using DifferenceType       = isize;
-        using KeyCompare           = Compare;
-        using ValueCompare         = Compare;
+        using KeyType        = Key;
+        using ValueType      = Key;
+        using SizeType       = usize;
+        using DifferenceType = isize;
+        using KeyCompare     = Compare;
+        using ValueCompare   = Compare;
 
-        using Reference            = ValueType&;
-        using ConstReference       = const ValueType&;
+        using Reference      = ValueType&;
+        using ConstReference = const ValueType&;
 
-        using Pointer              = ValueType*;
-        using ConstPointer         = const ValueType*;
+        using Pointer        = ValueType*;
+        using ConstPointer   = const ValueType*;
 
-        using TreeType             = RedBlackTree<Key, Key>;
+        using TreeType       = RedBlackTree<Key, Key>;
 
-        using Iterator             = typename TreeType::Iterator;
-        using ConstIterator        = typename TreeType::ConstIterator;
+        template <bool IsConst>
+        struct BaseIterator;
+        template <bool IsConst>
+        struct BaseIterator
+        {
+            using ValueType        = Key;
+            using ReferenceType    = const Key&;
+            using PointerType      = const Key*;
+            using DifferenceType   = isize;
+            using IteratorCategory = BidirectionalIteratorTag;
+            using UnderlyingIterator
+                = ConditionalType<IsConst, typename TreeType::ConstIterator,
+                                  typename TreeType::Iterator>;
+
+            UnderlyingIterator Implementation;
+
+            BaseIterator() = default;
+            explicit BaseIterator(UnderlyingIterator it)
+                : Implementation(it)
+            {
+            }
+
+            template <bool B = IsConst, EnableIfType<B, i32> = 0>
+            BaseIterator(const BaseIterator<false>& other)
+                : Implementation(other.Implementation)
+            {
+            }
+
+            ReferenceType operator*() const { return Implementation->Key; }
+            PointerType   operator->() const { return &Implementation->Key; }
+
+            BaseIterator& operator++()
+            {
+                ++Implementation;
+                return *this;
+            }
+            BaseIterator operator++(int)
+            {
+                BaseIterator temp = *this;
+                ++Implementation;
+                return temp;
+            }
+
+            BaseIterator& operator--()
+            {
+                --Implementation;
+                return *this;
+            }
+            BaseIterator operator--(int)
+            {
+                BaseIterator temp = *this;
+                --Implementation;
+                return temp;
+            }
+
+            constexpr bool operator==(const BaseIterator& other) const
+            {
+                return Implementation == other.Implementation;
+            }
+            constexpr bool operator!=(const BaseIterator& other) const
+            {
+                return Implementation != other.Implementation;
+            }
+
+            constexpr operator typename TreeType::Node*() const
+            {
+                return static_cast<typename TreeType::Node*>(Implementation);
+            }
+        };
+        using Iterator             = BaseIterator<false>;
+        using ConstIterator        = BaseIterator<true>;
         using ReverseIterator      = Prism::ReverseIterator<Iterator>;
         using ConstReverseIterator = Prism::ReverseIterator<ConstIterator>;
 
@@ -64,30 +133,109 @@ namespace Prism
             NodeType Node;
         };
 
-        Set()           = default;
-        Set(const Set&) = default;
+        Set() = default;
+        Set(const Set& other) { m_Tree = other.m_Tree; }
+        Set(Set&& other) { m_Tree = Move(other.m_Tree); }
 
         explicit Set(const Compare& comp)
             : m_Compare(comp)
         {
         }
+        template <typename It>
+        Set(It first, It last, const Compare& comp = Compare())
+            : m_Compare(comp)
+        {
+            for (auto it = first; it != last; it = Next(it)) Insert(*it);
+        }
+        Set(InitializerList<ValueType> ilist, const Compare& comp = Compare())
+            : m_Compare(comp)
+        {
+            Insert(ilist.begin(), ilist.end());
+        }
 
-        bool     IsEmpty() const { return m_Tree.IsEmpty(); }
-        SizeType GetSize() const { return m_Tree.GetSize(); }
+        constexpr Set& operator=(const Set& other)
+        {
+            m_Tree = other.m_Tree;
+            return *this;
+        }
+        constexpr Set& operator=(Set&& other)
+        {
+            m_Tree = Move(other.m_Tree);
+            return *this;
+        }
 
-        SizeType MaxSize() const { return NumericLimits<SizeType>::Max(); }
+        constexpr bool     Empty() const { return m_Tree.IsEmpty(); }
+        constexpr SizeType Size() const { return m_Tree.GetSize(); }
 
-        void     Clear() { m_Tree.Clear(); }
+        constexpr SizeType MaxSize() const
+        {
+            return NumericLimits<SizeType>::Max();
+        }
 
-        KeyValuePair<Iterator, bool> Insert(const ValueType& value)
+        void                                   Clear() { m_Tree.Clear(); }
+
+        constexpr KeyValuePair<Iterator, bool> Insert(const ValueType& value)
         {
             auto it = m_Tree.Find(value);
             if (it != m_Tree.end()) return {it, false};
 
             return {m_Tree.Insert(value, const_cast<ValueType&>(value)), true};
         }
+        constexpr KeyValuePair<Iterator, bool> Insert(ValueType&& value)
+        {
+            auto treeIt = m_Tree.Insert(value, Move(value));
+            return {Iterator(treeIt), true};
+        }
+        constexpr Iterator Insert(ConstIterator, const ValueType& value)
+        {
+            auto result = Insert(value);
+            return result.First;
+        }
+        constexpr Iterator Insert(ConstIterator, ValueType&& value)
+        {
+            auto result = Insert(Move(value));
+            return result.First;
+        }
+        template <typename InputIt>
+        constexpr void Insert(InputIt first, InputIt last)
+        {
+            for (; first != last; ++first) Insert(*first);
+        }
+        constexpr void Insert(InitializerList<ValueType> ilist)
+        {
+            Insert(ilist.begin(), ilist.end());
+        }
+        constexpr InsertReturnValue Insert(NodeType&& nh)
+        {
+            if (!nh) return {end(), false, {}};
+
+            auto it = m_Tree.Find(nh.Node->Key());
+            if (it != end()) return {it, false, Move(nh)};
+
+            auto pos = m_Tree.Insert(nh.Node);
+            nh.Node  = nullptr;
+            return {pos, true, {}};
+        }
+        constexpr Iterator Insert(ConstIterator, NodeType&& nh)
+        {
+            auto result = Insert(Move(nh));
+            return result.Position;
+        }
+        template <typename K>
+        constexpr KeyValuePair<Iterator, bool> Insert(K&& x)
+        {
+            ValueType value(Forward<K>(x));
+            return Insert(Move(value));
+        }
+        template <typename K>
+        constexpr Iterator Insert(ConstIterator, K&& x)
+        {
+            auto result = Insert(Forward<K>(x));
+            return result.First;
+        }
+
         template <typename... Args>
-        KeyValuePair<Iterator, bool> Emplace(Args&&... args)
+        constexpr KeyValuePair<Iterator, bool> Emplace(Args&&... args)
         {
             ValueType value(Forward<Args>(args)...);
             return Insert(value);
@@ -112,17 +260,7 @@ namespace Prism
             m_Tree.Erase(node);
             return node_type(node);
         }
-        InsertReturnValue Insert(NodeType&& nh)
-        {
-            if (!nh) return {end(), false, {}};
 
-            auto it = m_Tree.Find(nh.Node->Key());
-            if (it != end()) return {it, false, Move(nh)};
-
-            auto pos = m_Tree.Insert(nh.Node);
-            nh.Node  = nullptr;
-            return {pos, true, {}};
-        }
         void Merge(Set& other)
         {
             for (auto it = other.begin(); it != other.end();)
@@ -158,15 +296,15 @@ namespace Prism
             return it;
         }
 
-        Iterator             begin() { return m_Tree.begin(); }
-        ConstIterator        begin() const { return m_Tree.begin(); }
-        ConstIterator        cbegin() const { return m_Tree.begin(); }
+        Iterator        begin() { return Iterator(m_Tree.begin()); }
+        ConstIterator   begin() const { return ConstIterator(m_Tree.begin()); }
+        ConstIterator   cbegin() const { return ConstIterator(m_Tree.begin()); }
 
-        Iterator             end() { return m_Tree.end(); }
-        ConstIterator        end() const { return m_Tree.end(); }
-        ConstIterator        cend() const { return m_Tree.end(); }
+        Iterator        end() { return Iterator(m_Tree.end()); }
+        ConstIterator   end() const { return ConstIterator(m_Tree.end()); }
+        ConstIterator   cend() const { return ConstIterator(m_Tree.end()); }
 
-        ReverseIterator      rbegin() { return ReverseIterator(end()); }
+        ReverseIterator rbegin() { return ReverseIterator(end()); }
         ConstReverseIterator rbegin() const
         {
             return ConstReverseIterator(end());
@@ -183,3 +321,7 @@ namespace Prism
         Compare  m_Compare;
     };
 }; // namespace Prism
+
+#if PRISM_USE_NAMESPACE != 0
+using Prism::Set;
+#endif

@@ -457,8 +457,7 @@ namespace Prism
         constexpr T& Emplace(Args&&... args) noexcept
         {
             if (m_HasValue) DestroyAt(AddressOf(m_Value));
-            else
-            {
+            else {
                 DestroyAt(AddressOf(m_Unexpected));
                 m_HasValue = true;
             }
@@ -470,8 +469,7 @@ namespace Prism
         constexpr T& Emplace(InitializerList<U> ilist, Args&&... args) noexcept
         {
             if (m_HasValue) DestroyAt(AddressOf(m_Value));
-            else
-            {
+            else {
                 DestroyAt(AddressOf(m_Unexpected));
                 m_HasValue = true;
             }
@@ -488,8 +486,7 @@ namespace Prism
                 if (lhs.m_HasValue) Swap(m_Value, lhs.m_Value);
                 else SwapValueWithUnexpected(lhs);
             }
-            else
-            {
+            else {
                 if (lhs.m_HasValue) lhs.SwapValueWithUnexpected(*this);
                 else Swap(m_Unexpected, lhs.m_Unexpected);
             }
@@ -1001,8 +998,7 @@ namespace Prism
         constexpr void AssignValue(V&& value)
         {
             if (m_HasValue) m_Value = Forward<V>(value);
-            else
-            {
+            else {
                 Detail::Reinitialize(AddressOf(m_Value),
                                      AddressOf(m_Unexpected),
                                      Forward<V>(value));
@@ -1034,8 +1030,7 @@ namespace Prism
                 ConstructAt(AddressOf(m_Unexpected), __guard.release());
                 m_HasValue = false;
             }
-            else
-            {
+            else {
                 Detail::Guard<T> guard(m_Value);
                 ConstructAt(AddressOf(m_Unexpected), Move(rhs.m_Unexpected));
                 m_HasValue = false;
@@ -1259,8 +1254,7 @@ namespace Prism
                     lhs.m_HasValue = true;
                 }
             }
-            else
-            {
+            else {
                 if (lhs.m_HasValue)
                 {
                     ConstructAt(AddressOf(lhs.m_Unexpected),
@@ -1648,7 +1642,7 @@ namespace Prism
     };
 } // namespace Prism
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::Expected;
 using Prism::Unexpected;
 #endif

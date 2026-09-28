@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <Prism/Core/Types.hpp>
+#include <Prism/Core/Core.hpp>
 
 namespace Prism
 {
@@ -54,13 +54,32 @@ namespace Prism
         }
     };
 
-    template <typename T1, typename T2>
-    using synth3way_t = std::__detail::__synth3way_t<T1, T2>;
+    struct SynthThreeWay
+    {
+        template <typename T, typename U>
+        constexpr auto operator()(const T& t, const U& u) const
+        {
+            if constexpr (std::three_way_comparable_with<T, U>)
+            {
+                return t <=> u;
+            }
+            else {
+                if (t < u) return std::weak_ordering::less;
+                if (u < t) return std::weak_ordering::greater;
+                return std::weak_ordering::equivalent;
+            }
+        }
+    };
+
+    inline constexpr SynthThreeWay synth_three_way{};
+
     template <typename T1, typename T2, typename U1, typename U2>
-    constexpr std::common_comparison_category_t<synth3way_t<T1, U1>,
-                                                synth3way_t<T2, U2>>
-    operator<=>(const KeyValuePair<T1, T2>& lhs,
-                const KeyValuePair<U1, U2>& rhs);
+    constexpr auto operator<=>(const KeyValuePair<T1, T2>& lhs,
+                               const KeyValuePair<U1, U2>& rhs)
+    {
+        if (auto cmp = synth_three_way(lhs.Key, rhs.Key); cmp != 0) return cmp;
+        return synth_three_way(lhs.Value, rhs.Value);
+    }
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0

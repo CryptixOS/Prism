@@ -147,7 +147,7 @@ int main()
     DelegateTest_MoveConstructor();
 
     // 9. Assignment operator (copy)
-    // DelegateTest_CopyAssignment();
+    DelegateTest_CopyAssignment();
 
     // 10. Assignment operator (move)
     DelegateTest_MoveAssignment();
@@ -162,7 +162,7 @@ int main()
     }
 
     // 12. Void return type
-    // DelegateTest_VoidReturn();
+    DelegateTest_VoidReturn();
 
     printf("All Delegate unit tests passed!\n");
 }

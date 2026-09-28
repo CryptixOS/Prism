@@ -106,11 +106,16 @@ namespace Prism::Log
             return nwritten;
         }
 
-        isize PrintLogLevel(LogLevel logLevel)
+        isize PrintLogLevelTagged(LogLevel logLevel, StringView tag)
         {
             isize nwritten = 0;
             if (logLevel == LogLevel::eNone) return nwritten;
             nwritten += Print("[");
+            if (!tag.Empty())
+            {
+                nwritten += Print(tag);
+                nwritten += Print("] ");
+            }
 
             LogChar(s_LogForegroundColors[ToUnderlying(logLevel)]);
             ++nwritten;
@@ -126,7 +131,8 @@ namespace Prism::Log
             LogChar(BACKGROUND_COLOR_BLACK);
             LogChar(RESET_COLOR);
 
-            nwritten += Print("]:") + 3;
+            if (tag.Empty()) nwritten += Print("]");
+            nwritten += Print(":") + 3;
 
             for (usize i = 0; i < 8 - logLevelString.Size(); i++, nwritten++)
                 LogChar(' ');
@@ -149,14 +155,18 @@ namespace Prism::Log
         return Logv(LogLevel::eNone, format, *args);
     }
 
-    isize Log(LogLevel logLevel, StringView str, bool endl)
+    isize Log(LogLevel logLevel, StringView tag, StringView str, bool endl)
     {
         // FIXME(v1tr10l7): locking
-        isize nwritten = PrintLogLevel(logLevel);
+        isize nwritten = PrintLogLevelTagged(logLevel, tag);
         nwritten += Print(str);
 
         if (endl && logLevel != LogLevel::eNone) LogChar('\n');
         return nwritten;
+    }
+    isize Log(LogLevel logLevel, StringView str, bool endl)
+    {
+        return Log(logLevel, "", str, endl);
     }
 
     isize Logf(LogLevel logLevel, const char* fmt, ...)
@@ -242,7 +252,7 @@ namespace Prism::Log
     isize Logv(LogLevel level, const char* fmt, VaList& args, bool printNewline)
     {
         // FIXME(v1tr10l7): ScopedLock guard(s_Lock, true);
-        PrintLogLevel(level);
+        PrintLogLevelTagged(level, "");
 
         isize nwritten = 0;
         auto  it       = fmt;

@@ -5,8 +5,18 @@
  * SPDX-License-Identifier: GPL-3
  */
 #include <Prism/Debug/Log.hpp>
+#include <Prism/Debug/Logger.hpp>
 
 using namespace Prism;
+
+#include <mutex>
+struct Policy
+{
+    std::mutex  Mutex;
+
+    inline void Lock() { Mutex.lock(); }
+    inline void Unlock() { Mutex.unlock(); }
+};
 
 int main(int argc, char** argv)
 {
@@ -19,6 +29,9 @@ int main(int argc, char** argv)
     Log::Log(LogLevel::eWarn, "Hello");
     Log::Log(LogLevel::eError, "Hello");
     Log::Log(LogLevel::eFatal, "Hello");
+
+    Logger<Policy> logger("TestLogger");
+    logger.Log(LogLevel::eDebug, "TestPayload");
 
     return EXIT_SUCCESS;
 }
