@@ -8,14 +8,17 @@
 
 #if PRISM_TARGET_CRYPTIX != 0
     #include <API/Limits.hpp>
-    #define PRISM_MAX_PATH Limits::MAX_PATH_LENGTH
-#else
-    #define PRISM_MAX_PATH 255
 #endif
 
 namespace Prism
 {
-    bool PathView::ValidateLength() { return m_Path.Size() < PRISM_MAX_PATH; }
+#if PRISM_TARGET_CRYPTIX != 0
+    inline constexpr usize MAX_PATH = Limits::MAX_PATH_LENGTH;
+#else
+    inline constexpr usize MAX_PATH = 255;
+#endif
+
+    bool PathView::ValidateLength() { return m_Path.Size() < MAX_PATH; }
 
     StringView PathView::BaseName() const
     {

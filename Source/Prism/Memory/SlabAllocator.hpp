@@ -95,7 +95,7 @@ namespace Prism
             m_Frame->NextFree = previous;
             return {};
         }
-        virtual void    Shutdown() { PrismToDoWarn(); }
+        virtual void    Shutdown() { NotImplementedWarn(); }
 
         virtual Pointer Allocate()
         {

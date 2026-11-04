@@ -15,10 +15,8 @@
 
 #if PRISM_DISABLE_FMT == 0
     #include <fmt/format.h>
-    #define PrismFmtFormat(...) fmt::format(__VA_ARGS__)
 #else
     #include <Prism/String/Formatter.hpp>
-    #define PrismFmtFormat(fmt, ...) Format1(__VA_ARGS__)
 #endif
 
 #if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
@@ -32,67 +30,64 @@ namespace Prism
 }; // namespace Prism
 #endif
 
-#if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
-    #define PrismEarlyPanic(fmt, ...)                                          \
-        Prism::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
-    #define PrismPanic(...) Prism::panic(PrismFmtFormat(__VA_ARGS__).data())
+namespace Prism
+{
+    /// Formats a message and panics. Replaces the PrismPanic() macro (kept
+    /// as an alias in Prism/Macros.hpp).
+#if PRISM_DISABLE_FMT == 0
+    template <typename... Args>
+    PM_NORETURN void FormattedPanic(fmt::format_string<Args...> format,
+                                    Args&&... args)
+    {
+        auto message = fmt::format(format, Forward<Args>(args)...);
+    #if PRISM_TARGET_CRYPTIX == 0
+        ::Prism::panic(StringView(message.data(), message.size()));
+    #else
+        ::panic(StringView(message.data(), message.size()));
+    #endif
+    }
 #else
-    #define PrismEarlyPanic(fmt, ...)                                          \
-        ::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
-    #define PrismPanic(...) ::panic(PrismFmtFormat(__VA_ARGS__).data())
+    template <typename... Args>
+    PM_NORETURN void FormattedPanic(StringView format, Args&&... args)
+    {
+        auto message = Format1(format, Forward<Args>(args)...);
+    #if PRISM_TARGET_CRYPTIX == 0
+        ::Prism::panic(message);
+    #else
+        ::panic(message);
+    #endif
+    }
 #endif
 
-#define PrismAssert(expr...)                                                   \
-    {                                                                          \
-        PM_UNUSED Prism::SourceLocation source                                 \
-            = Prism::SourceLocation::Current();                                \
-        if (!(expr)) PrismAssertionFailed("{}", #expr);                        \
+    /// Panics reporting that the calling function isn't implemented.
+    /// Replaces PrismToDo().
+    PM_NORETURN inline void
+    NotImplemented(SourceLocation location = SourceLocation::Current())
+    {
+        FormattedPanic("{}: ==>\nAssertion Failed: {} is not implemented!",
+                       location, location.FunctionName());
     }
-#define PrismAssertMsg(expr, msg)                                              \
-    {                                                                          \
-        PM_UNUSED Prism::SourceLocation source                                 \
-            = Prism::SourceLocation::Current();                                \
-        if (!(expr)) PrismAssertionFailed("{}", msg);                          \
+    /// Warns that the calling function isn't implemented. Replaces
+    /// PrismToDoWarn().
+    inline void
+    NotImplementedWarn(SourceLocation location = SourceLocation::Current())
+    {
+        IgnoreUnused(location);
+        PrismWarn("{}[{}:{}]: {} is not implemented!", location.FileName(),
+                  location.Line(), location.Column(), location.FunctionName());
     }
-
-#define PrismAssertFmt(expr, fmt, ...)                                         \
-    {                                                                          \
-        if (!(expr)) PrismAssertionFailed(fmt, __VA_ARGS__);                   \
+    /// Logs `message` as a warning when `condition` holds. Replaces
+    /// PrismWarnAssert().
+    inline void WarnIf(bool condition, StringView message)
+    {
+        IgnoreUnused(message);
+        if (condition) { PrismWarn("{}", message); }
     }
-#define PrismWarnAssert(cond, msg)                                             \
-    {                                                                          \
-        if ((cond)) PrismWarn(msg);                                            \
-    }
-#define PrismNotReached() __builtin_unreachable();
+}; // namespace Prism
 
-#define PrismToDo()                                                            \
-    PrismAssertFmt(false, "{} is not implemented!", __PRETTY_FUNCTION__)
-#define PrismToDoWarn()                                                        \
-    {                                                                          \
-        PM_UNUSED Prism::SourceLocation source                                 \
-            = Prism::SourceLocation::Current();                                \
-        PrismWarn("{}[{}:{}]: {} is not implemented!", source.FileName(),      \
-                  source.Line(), source.Column(), source.FunctionName());      \
-    }
-
-#define PrismAssertionFailed(...)                                              \
-    {                                                                          \
-        PM_UNUSED Prism::SourceLocation source                                 \
-            = Prism::SourceLocation::Current();                                \
-        PrismPanic("{}: ==>\nAssertion Failed: {}", source,                    \
-                   PrismFmtFormat(__VA_ARGS__));                               \
-    }
-
-#if PRISM_PREFIXLESS_MACROS != 0 || PRISM_TARGET_CRYPTIX != 0
-    #define Assert(expr)              PrismAssert(expr)
-    #define AssertMsg(expr, msg)      PrismAssertMsg(expr, msg)
-    #define AssertFmt(expr, fmt, ...) PrismAssertFmt(expr, fmt, __VA_ARGS__)
-    #define AssertNotReached          PrismNotReached
-
-    #define ToDo                      PrismToDo
-    #define ToDoWarn                  PrismToDoWarn
-    #define DebugWarnIf               PrismWarnAssert
-
-    #define EarlyPanic                PrismEarlyPanic
-    #define Panic                     PrismPanic
+#if PRISM_USE_NAMESPACE != 0
+using Prism::FormattedPanic;
+using Prism::NotImplemented;
+using Prism::NotImplementedWarn;
+using Prism::WarnIf;
 #endif

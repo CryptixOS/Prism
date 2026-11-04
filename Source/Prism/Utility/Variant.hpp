@@ -200,7 +200,7 @@ namespace Prism
                 if constexpr ((CurrentIndex + 1) < sizeof...(Args))
                     return Visit<Self, Visitor, CurrentIndex + 1>(
                         self, id, data, Forward<Visitor>(visitor));
-                else PrismNotReached();
+                else Unreachable();
             }
         };
 

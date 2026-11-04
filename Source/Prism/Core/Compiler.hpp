@@ -54,12 +54,6 @@
     #if __has_builtin(__builtin_frame_address)
         #define PrismGetFrameAddress(n) __builtin_frame_address(n)
     #endif
-    #if __has_builtin(__builtin_launder)
-        #define PmLaunder __builtin_launder
-    #endif
-    #if __has_builtin(__builtin_trap)
-        #define PmTrap() __builtin_trap()
-    #endif
 #endif
 
 #ifndef PM_LINE
@@ -77,19 +71,4 @@
 #endif
 #ifndef PrismGetFrameAddress
     #define PrismGetFrameAddress 0
-#endif
-#ifndef PmTrap
-    #define PmTrap() ((void)0)
-#endif
-
-namespace Prism
-{
-    template <typename... T>
-    constexpr void IgnoreUnused(const T&...)
-    {
-    }
-}; // namespace Prism
-
-#if PRISM_USE_NAMESPACE != 0
-using Prism::IgnoreUnused;
 #endif

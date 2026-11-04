@@ -6,20 +6,8 @@
  */
 #pragma once
 
-#include <Prism/Core/Compiler.hpp>
-#include <Prism/Core/Config.hpp>
+#include <Prism/Macros.hpp>
 
-#if PrismHasInclude(<assert.h>)
-    #include <assert.h>
-#else
-extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
-                                          unsigned int line,
-                                          const char*  function);
-    #define assert(expr)                                                       \
-        (__builtin_expect(!(expr), 0)                                          \
-             ? __assert_fail(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__)   \
-             : (void)0)
-#endif
 #if PRISM_DISABLE_FMT == 0
     #include <fmt/format.h>
 #endif
@@ -31,13 +19,23 @@ extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
     #include <initializer_list>
 #endif
 
-#define PrismStringifyInner(x) #x
-#define PrismStringify(x)      PrismStringifyInner(x)
-
-#define Stringify(x)           PrismStringify(x)
-
 namespace Prism
 {
+    template <typename... T>
+    constexpr void IgnoreUnused(const T&...)
+    {
+    }
+
+    /// Aborts execution immediately (a trap instruction where available).
+    PM_NORETURN inline void Trap() PM_NOEXCEPT
+    {
+#if PrismHasBuiltin(__builtin_trap)
+        __builtin_trap();
+#else
+        for (;;);
+#endif
+    }
+
     template <typename T>
     struct MakeSigned
     {
@@ -142,9 +140,6 @@ namespace Prism
     template <typename T>
     using InitializerList = std::initializer_list<T>;
     using VaList          = __builtin_va_list;
-#define PrismVaStart(args, format) __builtin_va_start(args, format)
-#define PrismVaEnd(args)           __builtin_va_end(args)
-#define PrismVaArg(args, type...)  __builtin_va_arg(args, type)
 
     template <typename T>
     constexpr const T& Min(InitializerList<T> ilist)
@@ -216,7 +211,6 @@ using Prism::f32;
 using Prism::f64;
     #endif
 
-    #define VaStart(args, format) PrismVaStart(args, format)
-    #define VaEnd(args)           PrismVaEnd(args)
-    #define VaArg(args, type...)  PrismVaArg(args, type)
+using Prism::IgnoreUnused;
+using Prism::Trap;
 #endif

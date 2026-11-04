@@ -12,7 +12,8 @@ extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
                                           unsigned int line,
                                           const char*  function)
 {
-    PrismAssert("Assertion Failed({}::{}:{}): {}", file, function, line, expr);
+    Prism::FormattedPanic("Assertion Failed({}::{}:{}): {}", file, function,
+                          line, expr);
 }
 #endif
 
@@ -23,14 +24,14 @@ namespace Prism
     {
         IgnoreUnused(msg);
         PrismFatal("Panic! =>\n{}", msg);
-        PmTrap();
+        Trap();
     }
     PM_NORETURN
     void panic(StringView msg)
     {
         IgnoreUnused(msg);
         PrismFatal("Panic! =>\n{}", msg);
-        PmTrap();
+        Trap();
     }
 #endif
 }; // namespace Prism

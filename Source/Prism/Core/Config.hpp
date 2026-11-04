@@ -6,10 +6,6 @@
  */
 #pragma once
 
-namespace Prism
-{
-};
-
 #ifndef PRISM_TARGET_CRYPTIX
     #define PRISM_TARGET_CRYPTIX 0
 #endif
