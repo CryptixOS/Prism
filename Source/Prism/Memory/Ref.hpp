@@ -104,14 +104,6 @@ namespace Prism
             other.m_Instance = tmp;
         }
 
-        template <typename U, typename = EnableIfType<IsConvertibleV<U*, T*>>>
-        constexpr void Swap(Ref<U>& other) PM_NOEXCEPT
-        {
-            T* tmp           = m_Instance;
-            m_Instance       = other.m_Instance;
-            other.m_Instance = tmp;
-        }
-
         constexpr Ref& operator=(NullType) PM_NOEXCEPT
         {
             Clear();
@@ -162,17 +154,19 @@ namespace Prism
             return *this;
         }
 
+        /// Takes `other` only if this Ref is currently null.
+        /// @return true if the assignment happened.
         constexpr bool AssignIfNull(Ref&& other)
         {
-            if (this == &other) return IsNull();
+            if (!IsNull() || this == &other) return false;
             *this = Move(other);
             return true;
         }
 
-        template <typename U>
+        template <typename U, typename = EnableIfType<IsConvertibleV<U*, T*>>>
         constexpr bool AssignIfNull(Ref<U>&& other)
         {
-            if (this == &other) return IsNull();
+            if (!IsNull()) return false;
             *this = Move(other);
             return true;
         }
@@ -255,9 +249,8 @@ namespace Prism
         T* m_Instance{nullptr};
     };
 
-    template <typename T, typename U,
-              typename = EnableIfType<IsConvertibleV<U*, T*>>>
-    inline void Swap(Ref<T>& a, Ref<U>& b) PM_NOEXCEPT
+    template <typename T>
+    inline void Swap(Ref<T>& a, Ref<T>& b) PM_NOEXCEPT
     {
         a.Swap(b);
     }

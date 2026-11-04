@@ -44,51 +44,71 @@ namespace Prism
         mutable Atomic<usize> m_RefCount{1};
     };
 
-#if 0
-    template <typename T>
-    class RefCounted : public RefCountedBase
-    {
-      public:
-        void Unref() const
-        {
-            auto* self = const_cast<T*>(static_cast<T const*>(this));
-
-            if (DerefBase() == 0)
-            {
-                if constexpr (requires { self->WillBeDestroyed(); })
-                    self->WillBeDestroyed();
-                delete self;
-            }
-        }
-    };
-#else
     template <typename T>
     class Ref;
+
+    /**
+     * @brief Intrusive reference count, Serenity-style.
+     *
+     * A new object starts with a count of 1, owned by whoever created it.
+     * Hand it to a Ref with AdoptRef (Ref::Create / CreateRef do this). The
+     * last Unref() deletes the object, calling T::WillBeDestroyed() first if
+     * T has one. Objects managed this way must be heap-allocated with `new`.
+     */
     template <typename T>
     class RefCounted
     {
       public:
-        virtual ~RefCounted() { assert(m_RefCount == 0); }
+        using RefCountType = usize;
 
-        usize               RefCount() const { return m_RefCount.Load(); }
+        RefCounted(const RefCounted&)            = delete;
+        RefCounted& operator=(const RefCounted&) = delete;
 
-        void                Ref() { ++m_RefCount; }
-        void                Unref() { --m_RefCount; }
+        PM_NODISCARD usize RefCount() const PM_NOEXCEPT
+        {
+            return m_RefCount.Load();
+        }
+
+        void Ref() const PM_NOEXCEPT
+        {
+            assert(m_RefCount.Load() > 0 && "Ref() on a dead object");
+            ++m_RefCount;
+        }
+        /// @return true if this call destroyed the object.
+        bool Unref() const
+        {
+            assert(m_RefCount.Load() > 0 && "Unref() underflow");
+            if (--m_RefCount != 0) return false;
+
+            auto* self = const_cast<T*>(static_cast<const T*>(this));
+            if constexpr (requires { self->RevokeWeakRefs(); })
+                self->RevokeWeakRefs();
+            if constexpr (requires { self->WillBeDestroyed(); })
+                self->WillBeDestroyed();
+            delete self;
+            return true;
+        }
 
         class Prism::Ref<T> RefFromThis()
         {
             return Prism::Ref<T>(static_cast<T*>(this));
         }
-
         class Prism::Ref<const T> RefFromThis() const
         {
             return Prism::Ref<const T>(static_cast<const T*>(this));
         }
 
       protected:
-        mutable Atomic<usize> m_RefCount = 0;
+        RefCounted() PM_NOEXCEPT = default;
+        // Virtual so a Ref<Base> can delete a Derived.
+        virtual ~RefCounted()
+        {
+            assert(m_RefCount.Load() == 0
+                   && "Destroying an object that still has references");
+        }
+
+        mutable Atomic<usize> m_RefCount{1};
     };
-#endif
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0

@@ -147,6 +147,8 @@ install_headers(
   'Source/Prism/Containers/DoublyLinkedList.hpp',
   'Source/Prism/Containers/IntrusiveList.hpp',
   'Source/Prism/Containers/IntrusiveList.inl',
+  'Source/Prism/Containers/IntrusiveListV3.hpp',
+  'Source/Prism/Containers/IntrusiveListV3.inl',
   'Source/Prism/Containers/IntrusiveRefList.hpp',
   'Source/Prism/Containers/IntrusiveRefList.inl',
   'Source/Prism/Containers/KeyValuePair.hpp',

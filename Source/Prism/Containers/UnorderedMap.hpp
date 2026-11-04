@@ -33,7 +33,7 @@ namespace Prism
          * @param key The key to hash.
          * @return usize The resulting hash value.
          */
-        constexpr usize operator()(K key)
+        constexpr usize operator()(const K& key) const
         {
             auto hash = Hash<K>{}(key);
 
@@ -151,7 +151,7 @@ namespace Prism
             using EntryRefType
                 = ConditionalType<Const, const KeyValuePair&, KeyValuePair&>;
             using EntryPointerType
-                = ConditionalType<Const, KeyValuePair* const, KeyValuePair*>;
+                = ConditionalType<Const, const KeyValuePair*, KeyValuePair*>;
 
             constexpr Iterator(MapPointerType map, bool end)
                 : m_Map(map)
@@ -164,7 +164,8 @@ namespace Prism
                 }
 
                 m_BucketIndex = 0;
-                ListIt        = map->m_Buckets[m_BucketIndex].begin();
+                if (map->Capacity() == 0) return;
+                ListIt = map->m_Buckets[m_BucketIndex].begin();
                 while (ListIt == BucketType::Iterator::UniversalEnd()
                        && ++m_BucketIndex < map->Capacity())
                     ListIt = map->m_Buckets[m_BucketIndex].begin();
@@ -217,9 +218,8 @@ namespace Prism
              */
             constexpr inline void AdvanceToValid()
             {
-                if (m_BucketIndex >= m_Map->Capacity()) return;
-
-                while (ListIt == m_Map->m_Buckets[m_BucketIndex].end())
+                while (ListIt == BucketType::Iterator::UniversalEnd()
+                       && m_BucketIndex < m_Map->Capacity())
                 {
                     ++m_BucketIndex;
                     if (m_BucketIndex >= m_Map->Capacity()) break;
@@ -229,7 +229,7 @@ namespace Prism
             }
 
             /// @brief Dereference operator.
-            constexpr EntryRefType operator*()
+            constexpr EntryRefType operator*() const
             {
 #define PRISM_USE_INTRUSIVE_HASH_MAP 1
 #if PRISM_USE_INTRUSIVE_HASH_MAP == 0
@@ -239,7 +239,7 @@ namespace Prism
 #endif
             }
             /// @brief Arrow operator.
-            constexpr EntryPointerType operator->()
+            constexpr EntryPointerType operator->() const
             {
 #if PRISM_USE_INTRUSIVE_HASH_MAP == 0
                 auto node = *ListIt;
@@ -258,11 +258,6 @@ namespace Prism
                     ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
 
                 return *this;
-
-                ++ListIt;
-                AdvanceToValid();
-
-                return *this;
             }
             /// @brief Postfix increment operator.
             constexpr Iterator operator++(int)
@@ -270,11 +265,6 @@ namespace Prism
                 Iterator copy(*this);
                 operator++();
                 return copy;
-
-                auto it = *this;
-                ++*this;
-
-                return it;
             }
 
             /// @brief Equality operator.
@@ -301,8 +291,6 @@ namespace Prism
                 = BucketType::Iterator::UniversalEnd();
         };
         using ConstIterator        = Iterator<true>;
-        using ReverseIterator      = ::Prism::ReverseIterator<Iterator<false>>;
-        using ConstReverseIterator = ::Prism::ReverseIterator<Iterator<true>>;
 
         /**
          * @brief Constructs the unordered map with optional initial capacity.
@@ -310,6 +298,12 @@ namespace Prism
          * @param initialCapacity Number of buckets to preallocate.
          */
         constexpr UnorderedMap(usize initialCapacity = 8);
+        /// @brief Deep copy.
+        constexpr UnorderedMap(const UnorderedMap& other);
+        /// @brief Takes other's nodes; other is left empty but usable.
+        constexpr UnorderedMap(UnorderedMap&& other) PM_NOEXCEPT;
+        constexpr UnorderedMap& operator=(const UnorderedMap& other);
+        constexpr UnorderedMap& operator=(UnorderedMap&& other) PM_NOEXCEPT;
         /// @brief Destructor.
         constexpr ~UnorderedMap();
 
@@ -337,6 +331,7 @@ namespace Prism
          * not found.
          */
         constexpr ValueType&       operator[](const KeyType& key);
+        /// @brief Const access can't insert: the key must exist (like At()).
         constexpr const ValueType& operator[](const KeyType& key) const;
         /// @copydoc operator[](const KeyType&)
         constexpr ValueType&       operator[](KeyType&& key);
@@ -368,15 +363,8 @@ namespace Prism
         constexpr ConstIterator        end() const;
         constexpr ConstIterator        cend() const PM_NOEXCEPT;
 
-        // TODO(v1tr10l7): Reverse iterators
-
-        constexpr ReverseIterator      rbegin();
-        constexpr ConstReverseIterator rbegin() const;
-        constexpr ConstReverseIterator crbegin() const PM_NOEXCEPT;
-
-        constexpr ReverseIterator      rend();
-        constexpr ConstReverseIterator rend() const;
-        constexpr ConstReverseIterator crend() const PM_NOEXCEPT;
+        // TODO(v1tr10l7): Reverse iterators (needs a bidirectional
+        // Iterator; the previous stubs could never compile).
         /// @}
 
         /// @brief Removes all elements from the map.

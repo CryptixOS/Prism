@@ -59,44 +59,33 @@ namespace Prism
     {
       public:
         using ElementType = T;
+        using DeleterType = Deleter;
 
-        constexpr Scope()
-            : m_Instance(nullptr)
-        {
-        }
-        constexpr Scope(NullType)
-            : m_Instance(nullptr)
-        {
-        }
-        constexpr Scope(T* instance, Deleter deleter = {})
-            : m_Instance(instance)
+        constexpr Scope() PM_NOEXCEPT = default;
+        constexpr Scope(NullType) PM_NOEXCEPT {}
+        constexpr Scope(T* instance) PM_NOEXCEPT : m_Instance(instance) {}
+        constexpr Scope(T* instance, Deleter deleter) PM_NOEXCEPT
+            : m_Instance(instance),
+              m_Deleter(Move(deleter))
         {
         }
 
-        Scope(Scope&& other)
-            : m_Instance(other.Release())
+        constexpr Scope(Scope&& other) PM_NOEXCEPT
+            : m_Instance(other.Release()),
+              m_Deleter(Move(other.m_Deleter))
         {
-            other.m_Instance = nullptr;
         }
-        template <typename U>
-        Scope(Scope<U>&& other)
-            : m_Instance(static_cast<T*>(other.Release()))
+        template <typename U, typename E>
+            requires(!IsArrayV<U> && IsConvertibleV<U*, T*>
+                     && IsConvertibleV<E, Deleter>)
+        constexpr Scope(Scope<U, E>&& other) PM_NOEXCEPT
+            : m_Instance(other.Release()),
+              m_Deleter(Move(other.GetDeleter()))
         {
         }
 
-        // template <typename U>
-        // Scope(Scope<U>&& other)
-        //     : m_Instance(other.Release())
-        // {
-        //     other.m_Instance = nullptr;
-        // }
-
-        Scope(Scope const&) = delete;
-        template <typename U>
-        Scope(Scope<U> const&)         = delete;
+        Scope(Scope const&)            = delete;
         Scope& operator=(Scope const&) = delete;
-        template <typename U>
-        Scope& operator=(Scope<U> const&) = delete;
 
         template <typename U>
         Scope(Ref<U> const&) = delete;
@@ -105,86 +94,90 @@ namespace Prism
 
         ~Scope() { Reset(); }
 
-        T*   Release() PM_NOEXCEPT { return Exchange(m_Instance, nullptr); }
-        void Reset(T* instance = nullptr) PM_NOEXCEPT
+        PM_NODISCARD constexpr T* Release() PM_NOEXCEPT
         {
-            auto ptr = Exchange(m_Instance, instance);
-            Deleter{}(ptr);
+            return Exchange(m_Instance, nullptr);
+        }
+        constexpr void Reset(T* instance = nullptr) PM_NOEXCEPT
+        {
+            T* old = Exchange(m_Instance, instance);
+            if (old) m_Deleter(old);
         }
 
-        void Swap(Scope& other) PM_NOEXCEPT
-        {
-            Prism::Swap(m_Instance, other.m_Instance);
-        }
-        template <typename U>
-        void Swap(Scope<U>& other)
+        constexpr void Swap(Scope& other) PM_NOEXCEPT
         {
             Prism::Swap(m_Instance, other.m_Instance);
+            Prism::Swap(m_Deleter, other.m_Deleter);
         }
 
-        T*                 Raw() const PM_NOEXCEPT { return m_Instance; }
+        constexpr T*       Raw() const PM_NOEXCEPT { return m_Instance; }
 
-        constexpr Deleter& GetDeleter() PM_NOEXCEPT { return Deleter(); }
-        constexpr Deleter& GetDeleter() const PM_NOEXCEPT { return Deleter(); }
+        constexpr Deleter& GetDeleter() PM_NOEXCEPT { return m_Deleter; }
+        constexpr const Deleter& GetDeleter() const PM_NOEXCEPT
+        {
+            return m_Deleter;
+        }
 
-        explicit           operator bool() const PM_NOEXCEPT
+        constexpr explicit operator bool() const PM_NOEXCEPT
         {
             return m_Instance != nullptr;
         }
 
-        AddLValueReferenceType<T> operator*() const
+        constexpr AddLValueReferenceType<T> operator*() const
             PM_NOEXCEPT(PM_NOEXCEPT(*DeclVal<T*>()))
         {
+            assert(m_Instance);
             return *m_Instance;
         }
-
-        T* operator->() const PM_NOEXCEPT
+        constexpr T* operator->() const PM_NOEXCEPT
         {
-            PrismAssert(m_Instance);
+            assert(m_Instance);
             return m_Instance;
         }
-
-        T& operator[](usize i) const { return m_Instance[i]; }
+        constexpr T& operator[](usize i) const { return m_Instance[i]; }
 
         template <typename U>
         Scope& operator=(Ref<U> const&) = delete;
         template <typename U>
         Scope& operator=(WeakRef<U> const&) = delete;
+        Scope& operator=(T* ptr)            = delete;
 
-        template <typename U>
-        Scope& operator=(Scope<U>&& other)
+        constexpr Scope& operator=(Scope&& other) PM_NOEXCEPT
         {
-            Reset(static_cast<T*>(other.Release()));
+            if (this != &other)
+            {
+                Reset(other.Release());
+                m_Deleter = Move(other.m_Deleter);
+            }
             return *this;
         }
-        Scope& operator=(Scope&& other)
+        template <typename U, typename E>
+            requires(!IsArrayV<U> && IsConvertibleV<U*, T*>
+                     && IsConvertibleV<E, Deleter>)
+        constexpr Scope& operator=(Scope<U, E>&& other) PM_NOEXCEPT
         {
-            m_Instance       = Move(other.m_Instance);
-            other.m_Instance = nullptr;
-
+            Reset(other.Release());
+            m_Deleter = Move(other.GetDeleter());
             return *this;
         }
-
-        Scope& operator=(T* ptr) = delete;
-
-        Scope& operator=(NullType)
+        constexpr Scope& operator=(NullType) PM_NOEXCEPT
         {
             Reset();
             return *this;
         }
 
-        PM_NODISCARD
-        T* Leak()
+        constexpr bool operator==(NullType) const PM_NOEXCEPT
         {
-            T* leaked  = m_Instance;
-            m_Instance = nullptr;
-            return leaked;
+            return m_Instance == nullptr;
         }
 
-        static Scope Lift(T* other) { return Scope{other}; }
+        PM_NODISCARD constexpr T* Leak() PM_NOEXCEPT { return Release(); }
+
+        static Scope               Lift(T* other) { return Scope{other}; }
 
       private:
-        T* m_Instance = nullptr;
+        T*                         m_Instance = nullptr;
+        PM_NO_UNIQUE_ADDRESS Deleter m_Deleter{};
     };
 
     template <typename T, typename Deleter>
@@ -192,45 +185,30 @@ namespace Prism
     {
       public:
         using ElementType = T;
+        using DeleterType = Deleter;
 
-        constexpr Scope()
-            : m_Instance(nullptr)
-        {
-        }
-        constexpr Scope(NullType)
-            : m_Instance(nullptr)
-        {
-        }
-        constexpr Scope(T* instance)
-            : m_Instance(instance)
-        {
-        }
-        template <typename U, typename D>
-            requires IsConvertibleV<typename Scope<U[], D>::ElementType*,
-                                    ElementType*>
-        Scope(Scope<U[], D>&& other) PM_NOEXCEPT : m_Instance(other.Release())
-        {
-        }
+        constexpr Scope() PM_NOEXCEPT = default;
+        constexpr Scope(NullType) PM_NOEXCEPT {}
+        constexpr Scope(T* instance) PM_NOEXCEPT : m_Instance(instance) {}
 
-        Scope(Scope&& other)
-            : m_Instance(other.Release())
+        constexpr Scope(Scope&& other) PM_NOEXCEPT
+            : m_Instance(other.Release()),
+              m_Deleter(Move(other.m_Deleter))
         {
-            other.m_Instance = nullptr;
+        }
+        // Only qualification conversions (e.g. T[] -> const T[]) are safe for
+        // arrays: indexing a Derived[] through a Base* is undefined behavior.
+        template <typename U, typename E>
+            requires(IsConvertibleV<U (*)[], T (*)[]>
+                     && IsConvertibleV<E, Deleter>)
+        constexpr Scope(Scope<U[], E>&& other) PM_NOEXCEPT
+            : m_Instance(other.Release()),
+              m_Deleter(Move(other.GetDeleter()))
+        {
         }
 
-        template <typename U>
-        Scope(Scope<U>& other)
-            : m_Instance(other.Release())
-        {
-            other.m_Instance = nullptr;
-        }
-
-        Scope(Scope const&) = delete;
-        template <typename U>
-        Scope(Scope<U> const&)         = delete;
+        Scope(Scope const&)            = delete;
         Scope& operator=(Scope const&) = delete;
-        template <typename U>
-        Scope& operator=(Scope<U> const&) = delete;
 
         template <typename U>
         Scope(Ref<U> const&) = delete;
@@ -239,98 +217,83 @@ namespace Prism
 
         ~Scope() { Reset(); }
 
-        T*   Release() PM_NOEXCEPT { return Exchange(m_Instance, nullptr); }
-        void Reset(T* instance = nullptr) PM_NOEXCEPT
+        PM_NODISCARD constexpr T* Release() PM_NOEXCEPT
         {
-            auto ptr = Exchange(m_Instance, instance);
-            Deleter{}(ptr);
+            return Exchange(m_Instance, nullptr);
+        }
+        constexpr void Reset(T* instance = nullptr) PM_NOEXCEPT
+        {
+            T* old = Exchange(m_Instance, instance);
+            if (old) m_Deleter(old);
         }
 
-        void Swap(Scope& other) PM_NOEXCEPT
-        {
-            Prism::Swap(m_Instance, other.m_Instance);
-        }
-        template <typename U>
-        void Swap(Scope<U>& other)
+        constexpr void Swap(Scope& other) PM_NOEXCEPT
         {
             Prism::Swap(m_Instance, other.m_Instance);
+            Prism::Swap(m_Deleter, other.m_Deleter);
         }
 
-        T*                 Raw() const PM_NOEXCEPT { return m_Instance; }
+        constexpr T*       Raw() const PM_NOEXCEPT { return m_Instance; }
 
-        constexpr Deleter& GetDeleter() PM_NOEXCEPT { return Deleter(); }
-        constexpr Deleter& GetDeleter() const PM_NOEXCEPT { return Deleter(); }
+        constexpr Deleter& GetDeleter() PM_NOEXCEPT { return m_Deleter; }
+        constexpr const Deleter& GetDeleter() const PM_NOEXCEPT
+        {
+            return m_Deleter;
+        }
 
-        explicit           operator bool() const PM_NOEXCEPT
+        constexpr explicit operator bool() const PM_NOEXCEPT
         {
             return m_Instance != nullptr;
         }
 
-        AddLValueReferenceType<T> operator*() const
-            PM_NOEXCEPT(PM_NOEXCEPT(*DeclVal<T*>()))
+        constexpr T& operator[](usize i) const
         {
-            return *m_Instance;
+            assert(m_Instance);
+            return m_Instance[i];
         }
-
-        T* operator->() const PM_NOEXCEPT
-        {
-            Assert(m_Instance);
-            return m_Instance;
-        }
-
-        T& operator[](usize i) const { return m_Instance[i]; }
 
         template <typename U>
         Scope& operator=(Ref<U> const&) = delete;
         template <typename U>
         Scope& operator=(WeakRef<U> const&) = delete;
+        Scope& operator=(T* ptr)            = delete;
 
-        template <typename U, typename D>
-        Scope& operator=(Scope<U[], D>&& other) PM_NOEXCEPT
+        constexpr Scope& operator=(Scope&& other) PM_NOEXCEPT
         {
-            Reset(static_cast<T*>(other.Release()));
+            if (this != &other)
+            {
+                Reset(other.Release());
+                m_Deleter = Move(other.m_Deleter);
+            }
             return *this;
         }
-        Scope& operator=(Scope&& other)
+        template <typename U, typename E>
+            requires(IsConvertibleV<U (*)[], T (*)[]>
+                     && IsConvertibleV<E, Deleter>)
+        constexpr Scope& operator=(Scope<U[], E>&& other) PM_NOEXCEPT
         {
-            m_Instance       = Move(other.m_Instance);
-            other.m_Instance = nullptr;
-
+            Reset(other.Release());
+            m_Deleter = Move(other.GetDeleter());
             return *this;
         }
-        template <typename U>
-        Scope& operator=(Scope<U>&& other)
-        {
-            m_Instance       = reinterpret_cast<T*>(Move(other.m_Instance));
-            other.m_Instance = nullptr;
-
-            return *this;
-        }
-
-        Scope& operator=(T* ptr) = delete;
-
-        Scope& operator=(NullType)
+        constexpr Scope& operator=(NullType) PM_NOEXCEPT
         {
             Reset();
             return *this;
         }
 
-        PM_NODISCARD
-        T* Leak()
+        constexpr bool operator==(NullType) const PM_NOEXCEPT
         {
-            T* leaked  = m_Instance;
-            m_Instance = nullptr;
-            return leaked;
+            return m_Instance == nullptr;
         }
 
-        static Scope Lift(T* other) { return Scope{other}; }
+        PM_NODISCARD constexpr T* Leak() PM_NOEXCEPT { return Release(); }
+
+        static Scope               Lift(T* other) { return Scope{other}; }
 
       private:
-        T* m_Instance = nullptr;
-
-        // Grants mutual access to all Scope variants
-        template <typename U, typename D>
-        friend class Scope;
+        T*                         m_Instance = nullptr;
+        PM_NO_UNIQUE_ADDRESS Deleter m_Deleter{};
     };
 
     template <typename T, typename... Args>
@@ -349,7 +312,7 @@ namespace Prism
     }
 }; // namespace Prism
 
-#ifdef PRISM_USE_NAMESPACE
+#if PRISM_USE_NAMESPACE != 0
 using Prism::CreateScope;
 using Prism::Scope;
 #endif

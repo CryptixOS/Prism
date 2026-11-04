@@ -6,7 +6,8 @@
 #*/
 
 container_tests = [
-  'BitSpan', 'IntrusiveList', 'IntrusiveRedBlackTree',
+  'BitSpan', 'IntrusiveList', 'IntrusiveListV3', 'IntrusiveRefList',
+  'IntrusiveRedBlackTree',
   #'Deque', 
   'DoublyLinkedList', 
   'Queue', 'RingBuffer', 'RedBlackTree', 

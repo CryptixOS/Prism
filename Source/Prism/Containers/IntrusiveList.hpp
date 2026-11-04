@@ -65,8 +65,16 @@ namespace Prism
          */
         struct Iterator
         {
+            using IteratorCategory = BidirectionalIteratorTag;
+            using ValueType        = T;
+            using DifferenceType   = ptrdiff;
+            using Pointer          = T*;
+            using Reference        = T&;
+
             ///> Current node.
-            T* Current;
+            T*                   Current = nullptr;
+            ///> Owning list, needed to step back from end().
+            const IntrusiveList* List    = nullptr;
 
             /// @brief Default constructor.
             constexpr Iterator() = default;
@@ -75,8 +83,10 @@ namespace Prism
              *
              * @param node Pointer to the node.
              */
-            constexpr explicit Iterator(T* node)
+            constexpr explicit Iterator(T* node, const IntrusiveList* list
+                                                 = nullptr)
                 : Current(node)
+                , List(list)
             {
             }
 
@@ -99,6 +109,10 @@ namespace Prism
             constexpr Iterator& operator++();
             /// @brief Postfix increment.
             constexpr Iterator  operator++(int);
+            /// @brief Prefix decrement (from end() goes to the tail).
+            constexpr Iterator& operator--();
+            /// @brief Postfix decrement.
+            constexpr Iterator  operator--(int);
 
             /// @brief Equality comparison.
             constexpr bool      operator==(const Iterator& other) const
@@ -118,16 +132,16 @@ namespace Prism
         /// @brief Default constructor.
         constexpr IntrusiveList() = default;
 
-        /// @brief Copy constructor.
-        constexpr IntrusiveList(const IntrusiveList& other);
+        /// @brief Not copyable: an intrusive list does not own its nodes.
+        IntrusiveList(const IntrusiveList& other) = delete;
         /// @brief Move constructor.
         constexpr IntrusiveList(IntrusiveList&& other);
 
         /// @brief Destructor.
         constexpr ~IntrusiveList();
 
-        /// @brief Copy assignment.
-        constexpr IntrusiveList& operator=(const IntrusiveList& other);
+        /// @brief Not copyable: an intrusive list does not own its nodes.
+        IntrusiveList& operator=(const IntrusiveList& other) = delete;
         /// @brief Move assignment.
         constexpr IntrusiveList& operator=(IntrusiveList&& other);
 
@@ -178,24 +192,6 @@ namespace Prism
          */
         constexpr void                                Clear();
 
-        /**
-         * @brief Constructs and inserts a node at the front.
-         *
-         * @tparam Args Constructor argument types.
-         * @param args Arguments forwarded to node constructor.
-         * @return Iterator Iterator to the inserted node.
-         */
-        template <typename... Args>
-        inline constexpr Iterator EmplaceFront(Args&&... args);
-        /**
-         * @brief Constructs and inserts a node at the back.
-         *
-         * @tparam Args Constructor argument types.
-         * @param args Arguments forwarded to node constructor.
-         * @return Iterator Iterator to the inserted node.
-         */
-        template <typename... Args>
-        inline constexpr Iterator EmplaceBack(Args&&... args);
 
         /**
          * @brief Inserts a node at the front of the list.
@@ -260,7 +256,7 @@ namespace Prism
 
 #include <Prism/Containers/IntrusiveList.inl>
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::IntrusiveList;
 using Prism::IntrusiveListHook;
 #endif

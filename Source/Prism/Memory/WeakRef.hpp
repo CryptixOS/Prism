@@ -58,12 +58,10 @@ namespace Prism
             return WeakRef<U>(m_Link);
         }
 
-      protected:
-        Weakable() = default;
-
-        ~Weakable() { RevokeWeakRefs(); }
-
-        void RevokeWeakRefs()
+        /// Invalidates every WeakRef to this object. RefCounted::Unref calls
+        /// this before the destructor runs, so a WeakRef can never see a
+        /// half-destroyed object.
+        void RevokeWeakRefs() const
         {
             if (m_Link)
             {
@@ -71,6 +69,16 @@ namespace Prism
                 m_Link = nullptr;
             }
         }
+
+      protected:
+        Weakable() = default;
+        // A copy is a different object: it must not share the original's
+        // link, or its WeakRefs would point at (and its destruction would
+        // revoke) the original.
+        Weakable(const Weakable&) {}
+        Weakable& operator=(const Weakable&) { return *this; }
+
+        ~Weakable() { RevokeWeakRefs(); }
 
       private:
         mutable Ref<WeakLink> m_Link;

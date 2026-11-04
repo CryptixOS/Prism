@@ -94,8 +94,16 @@ namespace Prism
          */
         struct Iterator
         {
+            using IteratorCategory = BidirectionalIteratorTag;
+            using ValueType        = T;
+            using DifferenceType   = ptrdiff;
+            using Pointer          = T*;
+            using Reference        = PointerType;
+
             ///> Current node.
-            PointerType Current;
+            PointerType             Current = nullptr;
+            ///> Owning list, needed to step back from end().
+            const IntrusiveRefList* List    = nullptr;
 
             /// @brief Default constructor.
             constexpr Iterator() = default;
@@ -104,8 +112,10 @@ namespace Prism
              *
              * @param node Pointer to the node.
              */
-            constexpr explicit Iterator(PointerType node)
+            constexpr explicit Iterator(PointerType             node,
+                                        const IntrusiveRefList* list = nullptr)
                 : Current(node)
+                , List(list)
             {
             }
 
@@ -120,15 +130,18 @@ namespace Prism
             }
 
             /// @brief Dereference operator.
-            constexpr PointerType operator*() { return Current; }
+            constexpr PointerType operator*() const { return Current; }
             /// @brief Arrow operator.
-            constexpr T&          operator->() { return *Current; }
-            constexpr const T&    operator->() const { return *Current; }
+            constexpr T*          operator->() const { return Current.Raw(); }
 
             /// @brief Prefix increment.
             constexpr Iterator&   operator++();
             /// @brief Postfix increment.
-            constexpr Iterator    operator++(int);
+            constexpr Iterator  operator++(int);
+            /// @brief Prefix decrement (from end() goes to the tail).
+            constexpr Iterator& operator--();
+            /// @brief Postfix decrement.
+            constexpr Iterator  operator--(int);
 
             /// @brief Equality comparison.
             constexpr bool        operator==(const Iterator& other) const
@@ -148,16 +161,16 @@ namespace Prism
         /// @brief Default constructor.
         constexpr IntrusiveRefList() = default;
 
-        /// @brief Copy constructor.
-        constexpr IntrusiveRefList(const IntrusiveRefList& other);
+        /// @brief Not copyable: an intrusive list does not own its nodes.
+        IntrusiveRefList(const IntrusiveRefList& other) = delete;
         /// @brief Move constructor.
         constexpr IntrusiveRefList(IntrusiveRefList&& other);
 
         /// @brief Destructor.
         constexpr ~IntrusiveRefList();
 
-        /// @brief Copy assignment.
-        constexpr IntrusiveRefList& operator=(const IntrusiveRefList& other);
+        /// @brief Not copyable: an intrusive list does not own its nodes.
+        IntrusiveRefList& operator=(const IntrusiveRefList& other) = delete;
         /// @brief Move assignment.
         constexpr IntrusiveRefList& operator=(IntrusiveRefList&& other);
 
@@ -207,24 +220,6 @@ namespace Prism
          */
         constexpr void                         Clear();
 
-        /**
-         * @brief Constructs and inserts a node at the front.
-         *
-         * @tparam Args Constructor argument types.
-         * @param args Arguments forwarded to node constructor.
-         * @return Iterator Iterator to the inserted node.
-         */
-        template <typename... Args>
-        inline constexpr Iterator EmplaceFront(Args&&... args);
-        /**
-         * @brief Constructs and inserts a node at the back.
-         *
-         * @tparam Args Constructor argument types.
-         * @param args Arguments forwarded to node constructor.
-         * @return Iterator Iterator to the inserted node.
-         */
-        template <typename... Args>
-        inline constexpr Iterator    EmplaceBack(Args&&... args);
 
         /**
          * @brief Inserts a node at the front of the list.
@@ -289,7 +284,7 @@ namespace Prism
 
 #include <Prism/Containers/IntrusiveRefList.inl>
 
-#if PRISM_TARGET_CRYPTIX != 0
+#if PRISM_USE_NAMESPACE != 0
 using Prism::IntrusiveRefList;
 using Prism::IntrusiveRefListHook;
 #endif

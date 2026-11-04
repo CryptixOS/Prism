@@ -396,7 +396,9 @@ namespace Prism
         PM_NODISCARD constexpr StringView
         Substr(usize pos = 0, usize count = NPos) const PM_NOEXCEPT
         {
-            return m_Path.Substr(pos, count);
+            // Slice a view: String::Substr returns a temporary String, and a
+            // view into it would dangle.
+            return StringView(m_Path).Substr(pos, count);
         }
         PM_NODISCARD constexpr i32 Compare(const Path& other) const PM_NOEXCEPT
         {

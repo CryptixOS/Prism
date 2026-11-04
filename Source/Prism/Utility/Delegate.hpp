@@ -107,20 +107,32 @@ namespace Prism
     InvokeAsType(Functor&& fn, Args&&... args) noexcept(
         IsNoThrowInvocableR<ResultType, Functor, Args...>::Value)
     {
-        using Result = InvokeResult<Functor, Args...>;
-        using Type   = typename Result::Type;
-        using Tag    = typename Result::InvokeResultType;
         if constexpr (IsVoidV<ResultType>)
-            Details::InvokeFunction<Type>(Tag{}, Forward<Functor>(fn),
-                                          Forward<Args>(args)...);
+            ::Prism::Invoke(Forward<Functor>(fn), Forward<Args>(args)...);
         else
-            return Details::InvokeFunction<Type>(Tag{}, Forward<Functor>(fn),
-                                                 Forward<Args>(args)...);
+            return ::Prism::Invoke(Forward<Functor>(fn),
+                                   Forward<Args>(args)...);
     }
 
     template <typename Ret>
     class Delegate;
 
+    /**
+     * @brief Type-erased callable with small-buffer optimization.
+     *
+     * A delegate can hold:
+     *  - a free function, bound at compile time (Bind<&Fn>()) or at runtime
+     *    (a function pointer),
+     *  - a member function plus a non-owning object pointer
+     *    (Bind<&Class::Method>(object)),
+     *  - an owned callable (lambda/functor). It lives inline when it fits in
+     *    SBO_SIZE, is suitably aligned and is nothrow-movable, and on the heap
+     *    otherwise.
+     *
+     * Equality: free functions and member bindings compare by
+     * (object, function). Owned callables only compare equal to themselves,
+     * because captured state can't be compared in general.
+     */
     template <typename Ret, typename... Args>
     class Delegate<Ret(Args...)>
     {
@@ -129,263 +141,132 @@ namespace Prism
         using FunctionType = Ret (*)(ObjectType, Args...);
         using ReturnValue  = Ret;
 
-        struct Functor
-        {
-            Functor() = default;
-            Functor(NullType)
-                : Object(nullptr)
-                , Stub(nullptr)
-                , Destroy(nullptr)
-                , Clone(nullptr)
-                , MoveObj(nullptr)
-            {
-            }
-            Functor(ObjectType thisObject, FunctionType stub,
-                    void (*destroy)(void*)        = nullptr,
-                    void* (*clone)(void*)         = nullptr,
-                    void (*moveObj)(void*, void*) = nullptr)
-                : Object(thisObject)
-                , Stub(stub)
-                , Destroy(destroy)
-                , Clone(clone)
-                , MoveObj(moveObj)
-            {
-            }
-            ~Functor()
-            {
-                if (Destroy) Destroy(Object);
-            }
+        static constexpr usize SBO_SIZE      = 32;
+        static constexpr usize SBO_ALIGNMENT = alignof(void*) * 2;
 
-            Functor& operator=(NullType)
-            {
-                if (Destroy) Destroy(Object);
+        constexpr Delegate() PM_NOEXCEPT = default;
+        constexpr Delegate(NullType) PM_NOEXCEPT {}
 
-                Object  = nullptr;
-                Stub    = nullptr;
-                Destroy = nullptr;
-                Clone   = nullptr;
-
-                return *this;
-            }
-
-            void Reset()
-            {
-                if (Destroy) Destroy(Object);
-                Object  = nullptr;
-                Stub    = nullptr;
-                Destroy = nullptr;
-                Clone   = nullptr;
-            }
-
-                 operator bool() const { return Object != nullptr; }
-            bool operator==(const Functor& other) const
-            {
-                return Object == other.Object && Stub == other.Stub;
-            }
-            bool operator!=(const Functor& other) const
-            {
-                return Object != other.Object || Stub != other.Stub;
-            }
-
-            ObjectType   Object           = nullptr;
-            FunctionType Stub             = nullptr;
-            void (*Destroy)(void*)        = nullptr;
-            void* (*Clone)(void*)         = nullptr;
-            void (*MoveObj)(void*, void*) = nullptr;
-        };
-
-        constexpr Delegate() PM_NOEXCEPT {}
-        constexpr Delegate(NullType) PM_NOEXCEPT
-            : m_Functor(nullptr, nullptr, nullptr)
-        {
-        }
         Delegate(const Delegate& other) { CopyFrom(other); }
-
-        Delegate(Delegate&& other) noexcept { MoveFrom(Move(other)); }
+        Delegate(Delegate&& other) PM_NOEXCEPT { MoveFrom(other); }
 
         template <typename F>
-        Delegate(F f)
             requires(IsFunctionPointerV<DecayType<F>>
-                     && !IsSameV<RemoveCvRefType<F>, Delegate>)
+                     && IsInvocableR<Ret, DecayType<F>, Args...>::Value)
+        Delegate(F f)
         {
-            using FnPtr = DecayType<F>;
-            Assign(reinterpret_cast<ObjectType>(f),
-                   &FunctionPointerStub<FnPtr>);
+            BindFunctionPointer(f);
         }
         template <typename F>
-        Delegate(F&& f)
             requires(!IsSameV<RemoveCvRefType<F>, Delegate>
+                     && !IsSameV<RemoveCvRefType<F>, NullType>
                      && !IsFunctionV<RemoveReferenceType<F>>
-                     && !IsFunctionPointerV<DecayType<F>>)
+                     && !IsFunctionPointerV<DecayType<F>>
+                     && IsInvocableR<Ret, DecayType<F>&, Args...>::Value)
+        Delegate(F&& f)
         {
             BindLambda(Forward<F>(f));
         }
+
         ~Delegate() { Reset(); }
 
-        Delegate& operator=(NullType) PM_NOEXCEPT { Reset(); }
-
+        Delegate& operator=(NullType) PM_NOEXCEPT
+        {
+            Reset();
+            return *this;
+        }
         Delegate& operator=(const Delegate& other)
         {
             if (this != &other)
             {
+                Delegate copy(other);
                 Reset();
-                CopyFrom(other);
+                MoveFrom(copy);
             }
             return *this;
         }
-        Delegate& operator=(Delegate&& other)
+        Delegate& operator=(Delegate&& other) PM_NOEXCEPT
         {
             if (this != &other)
             {
                 Reset();
-                MoveFrom(Move(other));
+                MoveFrom(other);
             }
             return *this;
         }
         template <typename F>
+            requires(!IsSameV<RemoveCvRefType<F>, Delegate>
+                     && !IsSameV<RemoveCvRefType<F>, NullType>
+                     && IsInvocableR<Ret, DecayType<F>&, Args...>::Value)
         Delegate& operator=(F&& f)
-            requires(IsFunctionPointerV<F>
-                     && !IsSameV<RemoveCvRefType<F>, Delegate>)
         {
-            Delegate(Move(f));
+            Delegate tmp(Forward<F>(f));
+            Reset();
+            MoveFrom(tmp);
             return *this;
         }
 
         bool operator==(const Delegate& other) const
         {
-            return m_Functor == other.m_Functor;
+            return m_Stub == other.m_Stub && m_Object == other.m_Object;
         }
         bool operator!=(const Delegate& other) const
         {
-            return m_Functor != other.m_Functor;
+            return !(*this == other);
         }
 
-        inline void Swap(Delegate& other) PM_NOEXCEPT
+        void Swap(Delegate& other) PM_NOEXCEPT
         {
-            Swap(m_Functor.Object, other.m_Functor.Object);
-            Swap(m_Functor.Stub, other.m_Functor.Stub);
-            Swap(m_Functor.Destroy, other.m_Functor.Destroy);
-            Swap(m_Functor.Clone, other.m_Functor.Clone);
+            if (this == &other) return;
+            Delegate tmp(Move(other));
+            other = Move(*this);
+            *this = Move(tmp);
         }
 
         template <Ret (*Function)(Args...)>
         void Bind()
         {
-            Assign(nullptr, FreeFunctionStub<Function>);
+            Reset();
+            m_Stub = &FreeFunctionStub<Function>;
+        }
+
+        /// Binds a member function. `object` is not owned and must outlive
+        /// the delegate. Works with const objects for const methods and
+        /// with methods inherited from a base class.
+        template <auto Method, typename Class>
+        void Bind(Class* object)
+        {
+            static_assert(IsMemberFunctionPointerV<decltype(Method)>,
+                          "Bind<Method>(object) expects a member function");
+            // Convert to the class that declares Method now, while the static
+            // type is known, so the stub casts void* back to the exact type
+            // that was stored.
+            using Owner  = typename MemberClassOf<decltype(Method)>::Type;
+            using Target = ConditionalType<IsConstV<Class>, const Owner, Owner>;
+            Target* target = object;
+
+            Reset();
+            m_Object = const_cast<Owner*>(target);
+            m_Stub   = &MethodStub<Method, Target>;
         }
 
         template <typename Lambda>
         void BindLambda(Lambda&& lambda)
         {
             using Decayed = DecayType<Lambda>;
+            Reset();
 
-            if constexpr (sizeof(Decayed) <= SBO_SIZE)
+            if constexpr (FitsInline<Decayed>())
             {
-                new (m_Storage) Decayed(Forward<Lambda>(lambda));
-                Assign(m_Storage, LambdaStub<Decayed>, &DestroyLambda<Decayed>,
-                       &CloneLambda<Decayed>,
-                       [](void* dst, void* src)
-                       {
-                           new (dst) Decayed(Move(*static_cast<Decayed*>(src)));
-                           static_cast<Decayed*>(src)->~Decayed();
-                       });
-                return;
+                m_Object = new (m_Storage) Decayed(Forward<Lambda>(lambda));
+                m_Manager = &InlineManager<Decayed>;
             }
-
-            Decayed* heapAllocated = new Decayed(Forward<Lambda>(lambda));
-            Assign(heapAllocated, &LambdaStub<Decayed>,
-                   &DestroyLambdaHeap<Decayed>, &CloneLambda<Decayed>, nullptr);
-        }
-
-        template <auto Function, typename Class>
-        void Bind(Class* object)
-        {
-            using MemberFunction      = ReturnValue (Class::*)(Args...);
-            using MemberFunctionConst = ReturnValue (Class::*)(Args...) const;
-
-            if constexpr (IsSameV<decltype(Function), MemberFunctionConst>)
-                Assign(const_cast<Class*>(object),
-                       ConstMemberFunctionStub<Class, Function>);
-            else {
-                static_assert(IsSameV<decltype(Function), MemberFunction>);
-                Assign(reinterpret_cast<ObjectType>(object),
-                       MemberFunctionStub<Class, Function>);
-            }
-        }
-
-        bool        IsBound() const { return m_Functor.Stub; }
-                    operator bool() const { return IsBound(); }
-
-        ReturnValue Invoke(Args... args) const
-        {
-            assert(IsBound() && "Trying to invoke unbound delegate.");
-            return /*::Prism::Invoke*/ std::invoke(
-                m_Functor.Stub, m_Functor.Object, Forward<Args>(args)...);
-        }
-        inline ReturnValue operator()(Args... args)
-        {
-            return Invoke(Forward<Args>(args)...);
-        }
-
-        void Reset()
-        {
-            m_Functor.Reset();
-            Memory::Fill(m_Storage, 0, SBO_SIZE);
-        }
-
-      private:
-        static constexpr usize SBO_SIZE  = 32;
-
-        Functor                m_Functor = nullptr;
-        alignas(void*) u8 m_Storage[SBO_SIZE];
-
-        void Assign(ObjectType object, FunctionType stub,
-                    void (*destroy)(void*)        = nullptr,
-                    void* (*clone)(void*)         = nullptr,
-                    void (*moveObj)(void*, void*) = nullptr)
-        {
-            m_Functor = Functor(object, stub, destroy, clone, moveObj);
-        }
-
-        void CopyFrom(const Delegate& other)
-        {
-            m_Functor.Stub    = other.m_Functor.Stub;
-            m_Functor.Destroy = other.m_Functor.Destroy;
-            m_Functor.Clone   = other.m_Functor.Clone;
-            m_Functor.MoveObj = other.m_Functor.MoveObj;
-
-            if (!other.m_Functor.Object) m_Functor.Object = nullptr;
-            else if (other.m_Functor.Object == other.m_Storage)
+            else
             {
-                // Copy lambda stored in SBO
-                Memory::Copy(m_Storage, other.m_Storage, SBO_SIZE);
-                m_Functor.Object = m_Storage;
+                m_Object  = new Decayed(Forward<Lambda>(lambda));
+                m_Manager = &HeapManager<Decayed>;
             }
-            else if (other.m_Functor.Object)
-            {
-                // Copy heap-allocated lambda
-                m_Functor.Object
-                    = other.m_Functor.Clone
-                        ? other.m_Functor.Clone(other.m_Functor.Object)
-                        : other.m_Functor.Object;
-            }
-        }
-
-        struct CopyMode
-        {
-        }; // Marker type to indicate copy mode
-        void MoveFrom(Delegate&& other)
-        {
-            m_Functor = other.m_Functor;
-            if (other.m_Functor.Object == other.m_Storage)
-            {
-                if (other.m_Functor.MoveObj)
-                    m_Functor.MoveObj(m_Storage, other.m_Storage);
-                else Memory::Copy(m_Storage, other.m_Storage, SBO_SIZE);
-                m_Functor.Object = m_Storage;
-            }
-            other.m_Functor = Functor();
-            Memory::Fill(other.m_Storage, 0, SBO_SIZE);
+            m_Stub = &LambdaStub<Decayed>;
         }
 
         template <Ret (*Function)(Args...)>
@@ -393,76 +274,181 @@ namespace Prism
         {
             Delegate d;
             d.Bind<Function>();
-
             return d;
         }
-        template <auto ClassMethod, typename Class>
+        template <auto Method, typename Class>
         static Delegate FromMethod(Class* instance)
         {
             Delegate d;
-            d.Bind<ClassMethod>(instance);
-
+            d.Bind<Method>(instance);
             return d;
         }
 
-        template <typename Fn>
-        static ReturnValue FunctionPointerStub(ObjectType objectType,
-                                               Args... args)
+        PM_NODISCARD bool IsBound() const PM_NOEXCEPT
         {
-            auto fn = reinterpret_cast<Fn>(objectType);
+            return m_Stub != nullptr;
+        }
+        operator bool() const PM_NOEXCEPT { return IsBound(); }
+        /// @brief Whether the callable lives in the inline buffer.
+        PM_NODISCARD bool IsInline() const PM_NOEXCEPT
+        {
+            return m_Object == static_cast<const void*>(m_Storage);
+        }
+
+        ReturnValue Invoke(Args... args) const
+        {
+            assert(IsBound() && "Trying to invoke unbound delegate.");
+            return m_Stub(m_Object, Forward<Args>(args)...);
+        }
+        ReturnValue operator()(Args... args) const
+        {
+            return Invoke(Forward<Args>(args)...);
+        }
+
+        void Reset() PM_NOEXCEPT
+        {
+            if (m_Manager) m_Manager(Operation::eDestroy, this, nullptr);
+            m_Object  = nullptr;
+            m_Stub    = nullptr;
+            m_Manager = nullptr;
+        }
+
+      private:
+        template <typename M>
+        struct MemberClassOf;
+        template <typename M, typename C>
+        struct MemberClassOf<M C::*>
+        {
+            using Type = C;
+        };
+
+        enum class Operation
+        {
+            eDestroy,
+            eCopy,
+            eMove,
+        };
+        /// eDestroy: destroys self's callable.
+        /// eCopy/eMove: builds a copy of / steals other's callable into self.
+        /// The manager itself sets self->m_Object.
+        using ManagerType = void (*)(Operation, Delegate* self,
+                                     Delegate* other);
+
+        ObjectType  m_Object  = nullptr;
+        FunctionType m_Stub   = nullptr;
+        ManagerType m_Manager = nullptr;
+        alignas(SBO_ALIGNMENT) u8 m_Storage[SBO_SIZE];
+
+        template <typename F>
+        static constexpr bool FitsInline()
+        {
+            return sizeof(F) <= SBO_SIZE && alignof(F) <= SBO_ALIGNMENT
+                && IsNoThrowMoveConstructibleV<F>;
+        }
+
+        template <typename F>
+        void BindFunctionPointer(F f)
+        {
+            using FnPtr = DecayType<F>;
+            Reset();
+            if (!f) return;
+            m_Object = reinterpret_cast<ObjectType>(f);
+            m_Stub   = &FunctionPointerStub<FnPtr>;
+        }
+
+        void CopyFrom(const Delegate& other)
+        {
+            m_Stub = other.m_Stub;
+            if (other.m_Manager)
+            {
+                m_Manager = other.m_Manager;
+                m_Manager(Operation::eCopy, this,
+                          const_cast<Delegate*>(&other));
+            }
+            else m_Object = other.m_Object;
+        }
+        void MoveFrom(Delegate& other) PM_NOEXCEPT
+        {
+            m_Stub = other.m_Stub;
+            if (other.m_Manager)
+            {
+                m_Manager = other.m_Manager;
+                m_Manager(Operation::eMove, this, &other);
+            }
+            else m_Object = other.m_Object;
+
+            other.m_Object  = nullptr;
+            other.m_Stub    = nullptr;
+            other.m_Manager = nullptr;
+        }
+
+        template <typename F>
+        static void InlineManager(Operation op, Delegate* self,
+                                  Delegate* other)
+        {
+            switch (op)
+            {
+                case Operation::eDestroy:
+                    static_cast<F*>(self->m_Object)->~F();
+                    break;
+                case Operation::eCopy:
+                    if constexpr (IsCopyConstructibleV<F>)
+                        self->m_Object = new (self->m_Storage)
+                            F(*static_cast<const F*>(other->m_Object));
+                    else
+                        assert(false && "Copying a move-only callable");
+                    break;
+                case Operation::eMove:
+                {
+                    F* source      = static_cast<F*>(other->m_Object);
+                    self->m_Object = new (self->m_Storage) F(Move(*source));
+                    source->~F();
+                    break;
+                }
+            }
+        }
+        template <typename F>
+        static void HeapManager(Operation op, Delegate* self, Delegate* other)
+        {
+            switch (op)
+            {
+                case Operation::eDestroy:
+                    delete static_cast<F*>(self->m_Object);
+                    break;
+                case Operation::eCopy:
+                    if constexpr (IsCopyConstructibleV<F>)
+                        self->m_Object
+                            = new F(*static_cast<const F*>(other->m_Object));
+                    else
+                        assert(false && "Copying a move-only callable");
+                    break;
+                case Operation::eMove:
+                    self->m_Object = other->m_Object;
+                    break;
+            }
+        }
+
+        template <typename Fn>
+        static ReturnValue FunctionPointerStub(ObjectType object, Args... args)
+        {
+            auto fn = reinterpret_cast<Fn>(object);
             return fn(Forward<Args>(args)...);
         }
-        template <typename Class, ReturnValue (Class::*Function)(Args...)>
-        static ReturnValue MemberFunctionStub(ObjectType thisObject,
-                                              Args... args)
+        template <auto Method, typename Class>
+        static ReturnValue MethodStub(ObjectType object, Args... args)
         {
-            Class* p = static_cast<Class*>(thisObject);
-            return (p->*Function)(Forward<Args>(args)...);
+            Class* instance = static_cast<Class*>(object);
+            return (instance->*Method)(Forward<Args>(args)...);
         }
-
-        template <typename Class, ReturnValue (Class::*Function)(Args...) const>
-        static ReturnValue ConstMemberFunctionStub(ObjectType objectType,
-                                                   Args... args)
+        template <Ret (*Function)(Args...)>
+        static ReturnValue FreeFunctionStub(ObjectType, Args... args)
         {
-            const Class* p = static_cast<Class*>(objectType);
-            return (p->*Function)(Forward<Args>(args)...);
-        }
-
-        template <ReturnValue (*Function)(Args...)>
-        static ReturnValue FreeFunctionStub(ObjectType objectType, Args... args)
-        {
-            return (Function)(Forward<Args>(args)...);
-        }
-
-        template <typename Lambda>
-        static ReturnValue LambdaStub(ObjectType thisObject, Args... args)
-        {
-            Lambda* p = static_cast<Lambda*>(thisObject);
-            return (p->operator())(Forward<Args>(args)...);
-        }
-
-        template <typename Lambda>
-        static void* DestroyLambda(void* object, CopyMode)
-        {
-            return new Lambda(
-                *static_cast<Lambda*>(object)); // Copy-construct a new lambda
-        }
-
-        template <typename Lambda>
-        static void DestroyLambda(void* object)
-        {
-            reinterpret_cast<Lambda*>(object)->~Lambda();
-        }
-
-        template <typename Lambda>
-        static void DestroyLambdaHeap(void* object)
-        {
-            delete static_cast<Lambda*>(object);
+            return Function(Forward<Args>(args)...);
         }
         template <typename Lambda>
-        static void* CloneLambda(void* object)
+        static ReturnValue LambdaStub(ObjectType object, Args... args)
         {
-            return new Lambda(*static_cast<Lambda*>(object));
+            return (*static_cast<Lambda*>(object))(Forward<Args>(args)...);
         }
     };
 }; // namespace Prism

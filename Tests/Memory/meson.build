@@ -6,7 +6,7 @@
 #*/
 
 memory_tests = [
-  'Memory', 'Ref', 'SlabAllocator'
+  'Memory', 'Ref', 'Scope', 'SlabAllocator', 'WeakRef'
 ]
 
 foreach name : memory_tests
