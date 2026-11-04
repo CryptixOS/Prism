@@ -9,7 +9,7 @@
 #include <Prism/Core/Error.hpp>
 #include <Prism/Memory/Pointer.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     class AllocatorBase
     {
@@ -32,5 +32,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::AllocatorBase;
+PRISM_EXPORT using Prism::AllocatorBase;
 #endif

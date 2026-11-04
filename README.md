@@ -56,6 +56,45 @@ To install Prism you just run this just after you've built it
 ninja -C build install
 ```
 
+## 🧩 C++ Modules
+
+Prism can also be built and consumed as a C++ module (`import Prism;`).
+Meson can't scan module dependencies for GCC, so the module build uses CMake
+(>= 3.28, Ninja generator, GCC 16 / a recent Clang). The meson header build
+above is unchanged and stays the build used for the kernel.
+
+```
+cmake -S . -B build-modules -G Ninja
+cmake --build build-modules
+ctest --test-dir build-modules
+```
+
+Modules can't export macros, so a consumer also includes the macro header.
+Headers have to come before the import:
+
+```cpp
+#include <Prism/Macros.hpp> // PrismAssert, PrismInfo, PM_Try, PM_* attributes...
+import Prism;
+
+int main()
+{
+    Prism::Vector<int> values{1, 2, 3};
+    PrismAssert(values.Size() == 3);
+}
+```
+
+Both builds use the same sources. `Source/Prism/Prism.cppm` includes the
+headers inside the module, where `PRISM_EXPORT` (empty in the header build)
+expands to `export`. When writing headers:
+
+- Every public macro belongs in `Prism/Macros.hpp`. If something can be a
+  function without losing its purpose, make it a function instead.
+- Non-Prism includes (std, fmt, ...) must also be listed in the global module
+  fragment of `Prism.cppm`.
+- Namespace-scope constants have to be `inline constexpr`. `static` or plain
+  `constexpr` gives them internal linkage, which an exported namespace can't
+  contain.
+
 ## 💻 Usage
 
 Prism is integrated with CryptixOS, but it can be used in any freestanding or embedded project. Just add the `Prism` source tree to your build and configure it as a system or static library.

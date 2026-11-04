@@ -10,7 +10,7 @@
 #include <Prism/Debug/Assertions.hpp>
 #include <Prism/Memory/Ref.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Details
     {

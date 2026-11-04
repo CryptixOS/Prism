@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Concepts.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Simd
     {

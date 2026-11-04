@@ -14,7 +14,7 @@
 
 #include <magic_enum/magic_enum.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename K, typename V, typename CompareOp = Less<K>>
     class RedBlackTree : public NonCopyable<RedBlackTree<K, V, CompareOp>>,
@@ -228,7 +228,7 @@ namespace Prism
     };
 }; // namespace Prism
 #if PRISM_USE_NAMESPACE != 0
-using Prism::RedBlackTree;
+PRISM_EXPORT using Prism::RedBlackTree;
 #endif
 
 #include <Prism/Containers/RedBlackTree.inl>

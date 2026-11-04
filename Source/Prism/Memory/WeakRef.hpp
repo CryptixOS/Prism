@@ -10,7 +10,7 @@
 #include <Prism/Core/TypeTraits.hpp>
 #include <Prism/Memory/Ref.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     class WeakRef;
@@ -185,6 +185,6 @@ namespace Prism
 } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Weakable;
-using Prism::WeakRef;
+PRISM_EXPORT using Prism::Weakable;
+PRISM_EXPORT using Prism::WeakRef;
 #endif

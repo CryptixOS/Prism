@@ -9,7 +9,7 @@
 #include <Prism/Core/Core.hpp>
 #include <Prism/Core/TypeTraits.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <usize Size, usize Align>
     struct alignas(Align) AlignedStorage
@@ -55,5 +55,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Eternal;
+PRISM_EXPORT using Prism::Eternal;
 #endif

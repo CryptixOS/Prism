@@ -3,7 +3,7 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Utility/Atomic.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     class RingBuffer
     {
@@ -38,5 +38,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::RingBuffer;
+PRISM_EXPORT using Prism::RingBuffer;
 #endif

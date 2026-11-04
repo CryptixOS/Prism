@@ -4,13 +4,20 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <cassert>
+#include <cstdio>
+#include <cstring>
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
 #include <Prism/Algorithm/Sort.hpp>
 #include <Prism/Containers/Array.hpp>
 #include <Prism/Containers/Vector.hpp>
 #include <Prism/Utility/Compare.hpp>
-#include <cassert>
-#include <cstdio>
-#include <cstring>
+#endif
 
 using namespace Prism;
 

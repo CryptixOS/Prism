@@ -6,9 +6,16 @@
  */
 #include <string>
 
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
 #include <Prism/Debug/Log.hpp>
 #include <Prism/String/String.hpp>
 #include <Prism/String/StringUtils.hpp>
+#endif
+
 
 using namespace Prism;
 using namespace StringUtils;

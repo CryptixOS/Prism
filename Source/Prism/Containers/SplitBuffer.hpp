@@ -12,7 +12,7 @@
 
 #include <Prism/Memory/Ref.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     class SplitBuffer

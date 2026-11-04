@@ -17,7 +17,7 @@
 #include <cassert>
 #include <ranges>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     enum class TrimMode
     {
@@ -1008,6 +1008,6 @@ struct fmt::formatter<Prism::StringView> : fmt::formatter<fmt::string_view>
 #endif
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::StringView;
-using Prism::StringViewLiterals::operator""_sv;
+PRISM_EXPORT using Prism::StringView;
+PRISM_EXPORT using Prism::StringViewLiterals::operator""_sv;
 #endif

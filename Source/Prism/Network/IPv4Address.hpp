@@ -13,7 +13,7 @@
 #include <Prism/String/Formatter.hpp>
 #include <Prism/String/StringUtils.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     constexpr bool ParseIPv4(StringView str, NetworkOrdered<u32>& out)
     {
@@ -160,5 +160,5 @@ struct Prism::Hash<Prism::IPv4Address>
 };
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::IPv4Address;
+PRISM_EXPORT using Prism::IPv4Address;
 #endif

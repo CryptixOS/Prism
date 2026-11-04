@@ -11,7 +11,7 @@
 #include <Prism/Memory/Allocator.hpp>
 #include <Prism/Memory/SlabAllocator.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     struct BigAllocMeta
     {
@@ -160,6 +160,6 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::BigAllocMeta;
-using Prism::SlabPool;
+PRISM_EXPORT using Prism::BigAllocMeta;
+PRISM_EXPORT using Prism::SlabPool;
 #endif

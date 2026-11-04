@@ -10,7 +10,7 @@
 #include <Prism/Core/Details/TransformationTraits.inl>
 #include <Prism/Core/Details/TypeProperties.inl>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, typename U>
     struct ReferenceConvertsFromTemporary;
@@ -302,5 +302,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::Invoke;
+PRISM_EXPORT using Prism::Invoke;
 #endif

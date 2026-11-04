@@ -9,7 +9,7 @@
 #include <Prism/Containers/Vector.hpp>
 #include <Prism/String/StringView.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename C, typename Traits = CharTraits<C>>
     class BasicString
@@ -958,11 +958,11 @@ struct fmt::formatter<Prism::String> : fmt::formatter<fmt::string_view>
 #endif
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::BasicString;
-using Prism::String;
-using Prism::U16String;
-using Prism::U32String;
-using Prism::U8String;
-using Prism::WString;
-using Prism::Literals::operator""_s;
+PRISM_EXPORT using Prism::BasicString;
+PRISM_EXPORT using Prism::String;
+PRISM_EXPORT using Prism::U16String;
+PRISM_EXPORT using Prism::U32String;
+PRISM_EXPORT using Prism::U8String;
+PRISM_EXPORT using Prism::WString;
+PRISM_EXPORT using Prism::Literals::operator""_s;
 #endif

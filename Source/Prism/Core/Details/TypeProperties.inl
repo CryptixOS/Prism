@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Details/Conditional.inl>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     struct IsVoid : IsSame<void, typename RemoveCv<T>::Type>
@@ -444,7 +444,7 @@ namespace Prism
     {
     };
     template <typename T>
-    constexpr usize RankV = Rank<T>::Value;
+    inline constexpr usize RankV = Rank<T>::Value;
 
     template <typename T, usize N = 0>
     struct Extent : IntegralConstant<usize, 0>
@@ -526,83 +526,83 @@ namespace Prism
     constexpr bool HasUniqueObjectRepresentationsV
         = HasUniqueObjectRepresentations<T>::Value;
     template <typename T>
-    constexpr bool IsEmptyV = IsEmpty<T>::Value;
+    inline constexpr bool IsEmptyV = IsEmpty<T>::Value;
     template <typename T>
-    constexpr bool IsPolymorphicV = IsPolymorphic<T>::Value;
+    inline constexpr bool IsPolymorphicV = IsPolymorphic<T>::Value;
     template <typename T>
-    constexpr bool IsAbstractV = IsAbstract<T>::Value;
+    inline constexpr bool IsAbstractV = IsAbstract<T>::Value;
     template <typename T>
-    constexpr bool IsFinalV = IsFinal<T>::Value;
+    inline constexpr bool IsFinalV = IsFinal<T>::Value;
     template <typename T>
-    constexpr bool IsAggregateV = IsAggregate<T>::Value;
+    inline constexpr bool IsAggregateV = IsAggregate<T>::Value;
     // template <typename T>
     // constexpr bool IsImplicitLifetimeV = IsImplicitLifetime<T>::Value;
     template <typename T>
-    constexpr bool IsSignedV = IsSigned<T>::Value;
+    inline constexpr bool IsSignedV = IsSigned<T>::Value;
     template <typename T>
-    constexpr bool IsUnsignedV = IsUnsigned<T>::Value;
+    inline constexpr bool IsUnsignedV = IsUnsigned<T>::Value;
 #if __has_builtin(__is_bounded_array)
     template <typename T>
-    constexpr bool IsBoundedArrayV = IsBoundedArray<T>::Value;
+    inline constexpr bool IsBoundedArrayV = IsBoundedArray<T>::Value;
 #endif
 
 #if __has_builtin(__is_unbounded_array)
     template <typename T>
-    constexpr bool IsUnboundedArrayV = IsUnboundedArray<T>::Value;
+    inline constexpr bool IsUnboundedArrayV = IsUnboundedArray<T>::Value;
 #endif
 
 #if __has_builtin(__is_scoped_enum)
     template <typename T>
-    constexpr bool IsScopedEnumV = IsScopedEnum<T>::Value;
+    inline constexpr bool IsScopedEnumV = IsScopedEnum<T>::Value;
 #endif
 
     template <typename Base, typename Derived>
-    constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::Value;
+    inline constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::Value;
 #ifdef __cpp_lib_is_virtual_base_of
     template <typename Base, typename Derived>
-    constexpr bool IsVirtualBaseOfV = IsVirtualBaseOf<Base, Derived>::Value;
+    inline constexpr bool IsVirtualBaseOfV = IsVirtualBaseOf<Base, Derived>::Value;
 #endif
     template <typename From, typename To>
-    constexpr bool IsConvertibleV = IsConvertible<From, To>::Value;
+    inline constexpr bool IsConvertibleV = IsConvertible<From, To>::Value;
     template <typename From, typename To>
     constexpr bool IsNoThrowConvertibleV
         = IsNoThrowConvertible<From, To>::Value;
 #if __has_builtin(__is_layout_compatible)
     template <typename T, typename U>
-    constexpr bool IsLayoutCompatibleV = IsLayoutCompatible<T, U>::Value;
+    inline constexpr bool IsLayoutCompatibleV = IsLayoutCompatible<T, U>::Value;
 #endif
 
     template <typename T, usize N = 0>
-    constexpr usize ExtentV = Extent<T, N>::Value;
+    inline constexpr usize ExtentV = Extent<T, N>::Value;
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::IsAbstractV;
-using Prism::IsAggregateV;
-using Prism::IsArithmeticV;
-using Prism::IsArrayV;
-using Prism::IsClassV;
-using Prism::IsCompoundV;
-using Prism::IsConstV;
-using Prism::IsConvertibleV;
-using Prism::IsEmptyV;
-using Prism::IsEnumV;
-using Prism::IsFinalV;
-using Prism::IsFunctionV;
-using Prism::IsIntegralV;
-using Prism::IsMemberFunctionPointerV;
-using Prism::IsMemberPointerV;
-using Prism::IsObjectV;
-using Prism::IsPointerV;
-using Prism::IsPolymorphicV;
-using Prism::IsReferenceV;
-using Prism::IsScalarV;
-using Prism::IsSignedV;
-using Prism::IsSpecializationOfV;
-using Prism::IsStandardLayoutV;
-using Prism::IsTriviallyCopyableV;
-using Prism::IsUnionV;
-using Prism::IsUnsignedV;
-using Prism::IsVoidV;
-using Prism::IsVolatileV;
+PRISM_EXPORT using Prism::IsAbstractV;
+PRISM_EXPORT using Prism::IsAggregateV;
+PRISM_EXPORT using Prism::IsArithmeticV;
+PRISM_EXPORT using Prism::IsArrayV;
+PRISM_EXPORT using Prism::IsClassV;
+PRISM_EXPORT using Prism::IsCompoundV;
+PRISM_EXPORT using Prism::IsConstV;
+PRISM_EXPORT using Prism::IsConvertibleV;
+PRISM_EXPORT using Prism::IsEmptyV;
+PRISM_EXPORT using Prism::IsEnumV;
+PRISM_EXPORT using Prism::IsFinalV;
+PRISM_EXPORT using Prism::IsFunctionV;
+PRISM_EXPORT using Prism::IsIntegralV;
+PRISM_EXPORT using Prism::IsMemberFunctionPointerV;
+PRISM_EXPORT using Prism::IsMemberPointerV;
+PRISM_EXPORT using Prism::IsObjectV;
+PRISM_EXPORT using Prism::IsPointerV;
+PRISM_EXPORT using Prism::IsPolymorphicV;
+PRISM_EXPORT using Prism::IsReferenceV;
+PRISM_EXPORT using Prism::IsScalarV;
+PRISM_EXPORT using Prism::IsSignedV;
+PRISM_EXPORT using Prism::IsSpecializationOfV;
+PRISM_EXPORT using Prism::IsStandardLayoutV;
+PRISM_EXPORT using Prism::IsTriviallyCopyableV;
+PRISM_EXPORT using Prism::IsUnionV;
+PRISM_EXPORT using Prism::IsUnsignedV;
+PRISM_EXPORT using Prism::IsVoidV;
+PRISM_EXPORT using Prism::IsVolatileV;
 #endif

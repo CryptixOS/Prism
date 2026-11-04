@@ -4,13 +4,21 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/Containers/Deque.hpp>
 
-using namespace Prism;
 
 #include <cassert>
 #include <string>
 #include <utility>
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
+#include <Prism/Containers/Deque.hpp>
+#endif
+
+using namespace Prism;
 
 void TestBasicOperations()
 {

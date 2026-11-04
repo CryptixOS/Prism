@@ -11,20 +11,20 @@
 #include <Prism/Debug/Log.hpp>
 #include <Prism/Utility/Math.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     struct SlabObject
     {
         SlabObject* Next = nullptr;
     };
 
-    constexpr u64 SLAB_CANARY = 0xdeadbeefcafebabe;
-    constexpr u64 FREE_POISON = 0xdeaddeaddeaddead;
+    inline constexpr u64 SLAB_CANARY = 0xdeadbeefcafebabe;
+    inline constexpr u64 FREE_POISON = 0xdeaddeaddeaddead;
 
 #ifndef PRISM_PAGE_SIZE
     #define PRISM_PAGE_SIZE 0x1000
 #endif
-    constexpr usize PAGE_SIZE = PRISM_PAGE_SIZE;
+    inline constexpr usize PAGE_SIZE = PRISM_PAGE_SIZE;
 
     // TODO(v1tr10l7): Memory poisoning
     // TODO(v1tr10l7): canaries
@@ -172,7 +172,7 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::SlabAllocator;
-using Prism::SlabAllocatorBase;
-using Prism::SlabObject;
+PRISM_EXPORT using Prism::SlabAllocator;
+PRISM_EXPORT using Prism::SlabAllocatorBase;
+PRISM_EXPORT using Prism::SlabObject;
 #endif

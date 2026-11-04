@@ -13,7 +13,7 @@
 #include <Prism/Debug/Assertions.hpp>
 #include <Prism/Memory/Memory.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, usize N>
     struct ArrayTraits
@@ -183,6 +183,6 @@ namespace Prism
     }
 }; // namespace Prism
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Array;
-using Prism::ToArray;
+PRISM_EXPORT using Prism::Array;
+PRISM_EXPORT using Prism::ToArray;
 #endif

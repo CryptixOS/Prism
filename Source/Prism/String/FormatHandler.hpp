@@ -8,7 +8,7 @@
 
 #include <Prism/String/FormatterContext.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     enum class Alignment
     {
@@ -26,14 +26,16 @@ namespace Prism
         bool      UpperCase       = false;
         bool      PrintAsAscii    = false;
 
-        enum Base
+        // The type and the member used to share the name `Base`; GCC can't
+        // stream an enum hidden by a same-named member into a module.
+        enum BaseType
         {
             eBinary      = 2,
             eOctal       = 8,
             eDecimal     = 10,
             eHexadecimal = 16,
-        } Base
-            = eDecimal;
+        };
+        BaseType Base = eDecimal;
     };
 
     struct FormatSpecParser
@@ -81,7 +83,9 @@ namespace Prism
 
                 constexpr void operator()(enum State state)
                 {
-                    if (State >= state) assert("invalid format specifier");
+                    // assert("...") alone is always true; make it fire.
+                    if (State >= state)
+                        assert(false && "invalid format specifier");
                     State = state;
                 }
             } enterState;
@@ -141,7 +145,7 @@ namespace Prism
                         ++fmt;
                         break;
 
-                    default: assert("Invalid format specifier");
+                    default: assert(false && "Invalid format specifier");
                 }
             }
 

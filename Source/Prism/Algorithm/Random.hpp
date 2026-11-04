@@ -12,7 +12,7 @@
 #include <Prism/Core/Limits.hpp>
 #include <Prism/Utility/Math.hpp>
 
-namespace Prism::Algorithm
+PRISM_EXPORT namespace Prism::Algorithm
 {
     template <typename InputIt1, typename InputIt2>
     constexpr bool Equal(InputIt1 first1, InputIt1 last1, InputIt2 first2)
@@ -831,5 +831,5 @@ namespace Prism::Algorithm
 }; // namespace Prism::Algorithm
 
 #if PRISM_USE_NAMESPACE != 0
-namespace Algorithm = Prism::Algorithm;
+PRISM_EXPORT namespace Algorithm = Prism::Algorithm;
 #endif

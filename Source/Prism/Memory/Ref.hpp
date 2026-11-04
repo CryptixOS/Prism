@@ -10,7 +10,7 @@
 #include <Prism/Core/TypeTraits.hpp>
 #include <Prism/Memory/RefCounted.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     struct AdoptRefTag
     {
@@ -276,10 +276,10 @@ namespace Prism
 } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::AdoptRef;
-using Prism::AdoptRefIfNotNonnull;
-using Prism::CreateRef;
-using Prism::Ref;
-using Prism::StaticPtrCast;
-using Prism::Swap;
+PRISM_EXPORT using Prism::AdoptRef;
+PRISM_EXPORT using Prism::AdoptRefIfNotNonnull;
+PRISM_EXPORT using Prism::CreateRef;
+PRISM_EXPORT using Prism::Ref;
+PRISM_EXPORT using Prism::StaticPtrCast;
+PRISM_EXPORT using Prism::Swap;
 #endif

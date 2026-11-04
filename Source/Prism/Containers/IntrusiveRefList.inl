@@ -6,7 +6,7 @@
  */
 #include <Prism/Containers/IntrusiveRefList.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     // IntrusiveRefListHook
     template <typename T, typename Pointer>

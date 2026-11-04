@@ -8,9 +8,9 @@
 
 #include <Prism/Containers/Array.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
-    constexpr usize RADIX_LEAF_COUNT = Bit(6);
+    inline constexpr usize RADIX_LEAF_COUNT = Bit(6);
     template <typename Derived, typename IndexType, typename ValueType>
     struct IntrusiveRadixNode
     {

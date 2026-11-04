@@ -10,7 +10,7 @@
 #include <Prism/Memory/Memory.hpp>
 #include <Prism/Utility/Math.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename PageAllocPolicy, typename LockPolicy>
     class BumpAllocator : public AllocatorBase
@@ -57,6 +57,7 @@ namespace Prism
         virtual Pointer Reallocate(Pointer memory, usize size,
                                    usize alignment = 0) override
         {
+            NotImplemented();
         }
 
         virtual void  Free(Pointer memory) override {}
@@ -83,5 +84,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::BumpAllocator;
+PRISM_EXPORT using Prism::BumpAllocator;
 #endif

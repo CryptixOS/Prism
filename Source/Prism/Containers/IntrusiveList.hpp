@@ -10,7 +10,7 @@
 #include <Prism/Core/Iterator.hpp>
 #include <Prism/Core/Types.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, typename HookType>
     class IntrusiveList;
@@ -257,6 +257,6 @@ namespace Prism
 #include <Prism/Containers/IntrusiveList.inl>
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::IntrusiveList;
-using Prism::IntrusiveListHook;
+PRISM_EXPORT using Prism::IntrusiveList;
+PRISM_EXPORT using Prism::IntrusiveListHook;
 #endif

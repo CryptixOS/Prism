@@ -9,7 +9,7 @@
 #include <Prism/Math/Vector.hpp>
 #include <Prism/Utility/Math.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Math
     {

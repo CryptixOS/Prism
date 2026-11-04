@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Types.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, usize ShortCapacity>
     class SSOStorage
@@ -83,5 +83,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX == 1
-using Prism::SSOStorage;
+PRISM_EXPORT using Prism::SSOStorage;
 #endif

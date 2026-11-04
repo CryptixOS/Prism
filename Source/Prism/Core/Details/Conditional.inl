@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Details/CVRefTraits.inl>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <bool B, typename T, typename F>
     struct Conditional

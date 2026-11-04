@@ -5,10 +5,17 @@
  * SPDX-License-Identifier: GPL-3
  */
 
-#include <Prism/Memory/Ref.hpp>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
+#include <Prism/Memory/Ref.hpp>
+#endif
 
 // Unlike assert(), this still fires when NDEBUG is defined (release builds).
 #define Check(expr)                                                            \

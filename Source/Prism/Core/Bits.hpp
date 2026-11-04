@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Concepts.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     struct IntegerTraits
@@ -267,19 +267,19 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::BitCast;
-using Prism::BitCeil;
-using Prism::BitFloor;
-using Prism::BitWidth;
-using Prism::ByteSwap;
-using Prism::CountLeftOne;
-using Prism::CountLeftZero;
-using Prism::CountRightOne;
-using Prism::CountRightZero;
-using Prism::Endian;
-using Prism::HasSingleBit;
-using Prism::IntegerTraits;
-using Prism::PopCount;
-using Prism::RotateLeft;
-using Prism::RotateRight;
+PRISM_EXPORT using Prism::BitCast;
+PRISM_EXPORT using Prism::BitCeil;
+PRISM_EXPORT using Prism::BitFloor;
+PRISM_EXPORT using Prism::BitWidth;
+PRISM_EXPORT using Prism::ByteSwap;
+PRISM_EXPORT using Prism::CountLeftOne;
+PRISM_EXPORT using Prism::CountLeftZero;
+PRISM_EXPORT using Prism::CountRightOne;
+PRISM_EXPORT using Prism::CountRightZero;
+PRISM_EXPORT using Prism::Endian;
+PRISM_EXPORT using Prism::HasSingleBit;
+PRISM_EXPORT using Prism::IntegerTraits;
+PRISM_EXPORT using Prism::PopCount;
+PRISM_EXPORT using Prism::RotateLeft;
+PRISM_EXPORT using Prism::RotateRight;
 #endif

@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Concepts.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <bool Signed = true>
     class Integer128
@@ -160,6 +160,6 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::i128;
-using Prism::u128;
+PRISM_EXPORT using Prism::i128;
+PRISM_EXPORT using Prism::u128;
 #endif

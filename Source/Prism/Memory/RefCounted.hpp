@@ -11,7 +11,7 @@
 #include <Prism/Debug/Assertions.hpp>
 #include <Prism/Utility/Atomic.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     class RefCountedBase : public NonCopyable<RefCountedBase>,
                            public NonMovable<RefCountedBase>
@@ -112,5 +112,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::RefCounted;
+PRISM_EXPORT using Prism::RefCounted;
 #endif

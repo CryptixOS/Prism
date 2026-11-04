@@ -9,7 +9,7 @@
 #include <Prism/String/String.hpp>
 #include <Prism/String/StringUtils.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename C>
     class BasicFormatterContext

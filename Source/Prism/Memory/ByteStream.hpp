@@ -14,7 +14,7 @@
 
 #include <Prism/Utility/Math.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <Endian E = Endian::eNative>
     class ByteStream
@@ -129,5 +129,5 @@ namespace Prism
     };
 }; // namespace Prism
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::ByteStream;
+PRISM_EXPORT using Prism::ByteStream;
 #endif

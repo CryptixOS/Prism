@@ -4,12 +4,19 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/Core/Error.hpp>
-#include <Prism/Memory/SlabPool.hpp>
 
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <string.h>
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
+#include <Prism/Core/Error.hpp>
+#include <Prism/Memory/SlabPool.hpp>
+#endif
 
 using namespace Prism;
 struct DummyLock

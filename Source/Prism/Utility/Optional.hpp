@@ -11,7 +11,7 @@
 #include <Prism/Core/Error.hpp>
 #include <Prism/Memory/Pointer.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename>
     class Optional;
@@ -467,6 +467,6 @@ namespace Prism
     };
 }; // namespace Prism
 #if PRISM_USE_NAMESPACE != 0
-using Prism::NullOpt;
-using Prism::Optional;
+PRISM_EXPORT using Prism::NullOpt;
+PRISM_EXPORT using Prism::Optional;
 #endif

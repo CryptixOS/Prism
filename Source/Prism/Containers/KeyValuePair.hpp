@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Core.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     // FIXME(v1tr10l7): This currently has been copied from
     // `Prism/Containers/UnorderedMap.hpp`, eventually it will be removed from
@@ -83,5 +83,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::KeyValuePair;
+PRISM_EXPORT using Prism::KeyValuePair;
 #endif

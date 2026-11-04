@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Types.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename C>
     struct CharTraits;
@@ -16,11 +16,11 @@ namespace Prism
     class BasicString;
 } // namespace Prism
 
-namespace Prism::Time
+PRISM_EXPORT namespace Prism::Time
 {
-    constexpr usize SECONDS_PER_MINUTE = 60;
-    constexpr usize SECONDS_PER_HOUR   = 3600;
-    constexpr usize SECONDS_PER_DAY    = 86400;
+    inline constexpr usize SECONDS_PER_MINUTE = 60;
+    inline constexpr usize SECONDS_PER_HOUR   = 3600;
+    inline constexpr usize SECONDS_PER_DAY    = 86400;
 
     constexpr bool  IsLeapYear(u64 year)
     {
@@ -177,12 +177,12 @@ struct fmt::formatter<Prism::Time::DateTime> : fmt::formatter<fmt::string_view>
 #endif
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Time::DateTime;
-using Prism::Time::DaysInMonth;
-using Prism::Time::IsLeapYear;
+PRISM_EXPORT using Prism::Time::DateTime;
+PRISM_EXPORT using Prism::Time::DaysInMonth;
+PRISM_EXPORT using Prism::Time::IsLeapYear;
 using namespace Prism::Time;
-using Prism::Time::Literals::operator""_us;
-using Prism::Time::Literals::operator""_ms;
-using Prism::Time::Literals::operator""_ns;
-using Prism::Time::Timestep;
+PRISM_EXPORT using Prism::Time::Literals::operator""_us;
+PRISM_EXPORT using Prism::Time::Literals::operator""_ms;
+PRISM_EXPORT using Prism::Time::Literals::operator""_ns;
+PRISM_EXPORT using Prism::Time::Timestep;
 #endif

@@ -11,7 +11,7 @@
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     struct Pointer;
     enum class MemoryOrder : u32
@@ -336,32 +336,32 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::MemoryOrder;
+PRISM_EXPORT using Prism::MemoryOrder;
 
-using Prism::AtomicLoad;
-using Prism::AtomicStore;
+PRISM_EXPORT using Prism::AtomicLoad;
+PRISM_EXPORT using Prism::AtomicStore;
 
-using Prism::AtomicCompareExchange;
-using Prism::AtomicExchange;
+PRISM_EXPORT using Prism::AtomicCompareExchange;
+PRISM_EXPORT using Prism::AtomicExchange;
 
-using Prism::AtomicAddFetch;
-using Prism::AtomicAndFetch;
-using Prism::AtomicNandFetch;
-using Prism::AtomicOrFetch;
-using Prism::AtomicSubFetch;
-using Prism::AtomicXorFetch;
+PRISM_EXPORT using Prism::AtomicAddFetch;
+PRISM_EXPORT using Prism::AtomicAndFetch;
+PRISM_EXPORT using Prism::AtomicNandFetch;
+PRISM_EXPORT using Prism::AtomicOrFetch;
+PRISM_EXPORT using Prism::AtomicSubFetch;
+PRISM_EXPORT using Prism::AtomicXorFetch;
 
-using Prism::AtomicFetchAdd;
-using Prism::AtomicFetchAnd;
-using Prism::AtomicFetchNand;
-using Prism::AtomicFetchOr;
-using Prism::AtomicFetchSub;
-using Prism::AtomicFetchXor;
+PRISM_EXPORT using Prism::AtomicFetchAdd;
+PRISM_EXPORT using Prism::AtomicFetchAnd;
+PRISM_EXPORT using Prism::AtomicFetchNand;
+PRISM_EXPORT using Prism::AtomicFetchOr;
+PRISM_EXPORT using Prism::AtomicFetchSub;
+PRISM_EXPORT using Prism::AtomicFetchXor;
 
-using Prism::AtomicAlwaysLockFree;
-using Prism::AtomicClear;
-using Prism::AtomicMemoryBarrier;
-using Prism::AtomicSignalFence;
-using Prism::AtomicTestAndSet;
-using Prism::AtomicThreadFence;
+PRISM_EXPORT using Prism::AtomicAlwaysLockFree;
+PRISM_EXPORT using Prism::AtomicClear;
+PRISM_EXPORT using Prism::AtomicMemoryBarrier;
+PRISM_EXPORT using Prism::AtomicSignalFence;
+PRISM_EXPORT using Prism::AtomicTestAndSet;
+PRISM_EXPORT using Prism::AtomicThreadFence;
 #endif

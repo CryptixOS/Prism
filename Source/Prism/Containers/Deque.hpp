@@ -13,7 +13,7 @@
 #include <Prism/Debug/Assertions.hpp>
 #include <Prism/Memory/Ref.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     class Block : public RefCounted<Block<T>>
@@ -406,5 +406,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::Deque;
+PRISM_EXPORT using Prism::Deque;
 #endif

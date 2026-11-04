@@ -4,6 +4,12 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
 #include <Prism/Core/Details/CVRefTraits.inl>
 #include <Prism/Core/Details/CallableTraits.inl>
 #include <Prism/Core/Details/Conditional.inl>
@@ -12,6 +18,7 @@
 #include <Prism/Core/Details/TransformationTraits.inl>
 #include <Prism/Core/Details/TypeProperties.inl>
 #include <Prism/Core/Limits.hpp>
+#endif
 
 using namespace Prism;
 void TypeTraits_TestIsSame()

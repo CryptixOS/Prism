@@ -11,7 +11,7 @@
 
 #include <cassert>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     class DoublyLinkedList
@@ -286,5 +286,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::DoublyLinkedList;
+PRISM_EXPORT using Prism::DoublyLinkedList;
 #endif

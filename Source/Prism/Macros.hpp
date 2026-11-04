@@ -32,15 +32,6 @@
 #include <Prism/Core/Config.hpp>
 #include <Prism/Core/Platform.hpp>
 
-// ---------------------------------------------------------------- modules
-// Marks the exported API in a module build (see Source/Prism/Prism.cppm);
-// expands to nothing in the header build.
-#if defined(PRISM_MODULE_BUILD) && PRISM_MODULE_BUILD != 0
-    #define PRISM_EXPORT export
-#else
-    #define PRISM_EXPORT
-#endif
-
 // ------------------------------------------------------------------ basics
 #if PrismHasInclude(<assert.h>)
     #include <assert.h>

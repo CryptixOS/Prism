@@ -6,7 +6,9 @@
  */
 #pragma once
 
-namespace Prism
+#include <Prism/Core/Compiler.hpp>
+
+PRISM_EXPORT namespace Prism
 {
     template <typename T = void>
     struct Less
@@ -443,24 +445,24 @@ namespace Prism
 } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::EqualTo;
-using Prism::Greater;
-using Prism::GreaterEqual;
-using Prism::IteratorCompareIterator;
-using Prism::IteratorCompareToIterator;
-using Prism::IteratorCompareToValue;
-using Prism::IteratorCompareValue;
-using Prism::IteratorEqualsIterator;
-using Prism::IteratorEqualsValue;
-using Prism::IteratorEqualToEqualTo;
-using Prism::IteratorEqualToValue;
-using Prism::IteratorLess;
-using Prism::IteratorLessValue;
-using Prism::IteratorNegate;
-using Prism::IteratorPredicate;
-using Prism::Less;
-using Prism::LessEqual;
-using Prism::NegateType;
-using Prism::NotEqualTo;
-using Prism::ValueCompareIterator;
+PRISM_EXPORT using Prism::EqualTo;
+PRISM_EXPORT using Prism::Greater;
+PRISM_EXPORT using Prism::GreaterEqual;
+PRISM_EXPORT using Prism::IteratorCompareIterator;
+PRISM_EXPORT using Prism::IteratorCompareToIterator;
+PRISM_EXPORT using Prism::IteratorCompareToValue;
+PRISM_EXPORT using Prism::IteratorCompareValue;
+PRISM_EXPORT using Prism::IteratorEqualsIterator;
+PRISM_EXPORT using Prism::IteratorEqualsValue;
+PRISM_EXPORT using Prism::IteratorEqualToEqualTo;
+PRISM_EXPORT using Prism::IteratorEqualToValue;
+PRISM_EXPORT using Prism::IteratorLess;
+PRISM_EXPORT using Prism::IteratorLessValue;
+PRISM_EXPORT using Prism::IteratorNegate;
+PRISM_EXPORT using Prism::IteratorPredicate;
+PRISM_EXPORT using Prism::Less;
+PRISM_EXPORT using Prism::LessEqual;
+PRISM_EXPORT using Prism::NegateType;
+PRISM_EXPORT using Prism::NotEqualTo;
+PRISM_EXPORT using Prism::ValueCompareIterator;
 #endif

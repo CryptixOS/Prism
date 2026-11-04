@@ -7,7 +7,7 @@
 #include <Prism/Debug/Log.hpp>
 #include <Prism/String/StringView.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename C, typename Traits>
     Vector<BasicString<C, Traits>>

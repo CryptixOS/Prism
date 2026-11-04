@@ -11,7 +11,7 @@
 #include <Prism/String/FormatHandler.hpp>
 #include <Prism/String/StringView.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename Char, typename... Args>
     class BasicFormatString

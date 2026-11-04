@@ -9,9 +9,9 @@
 #include <Prism/Core/Bits.hpp>
 #include <Prism/Core/Concepts.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
-    constexpr static Endian g_HostEndianness = Endian::eNative;
+    inline constexpr Endian g_HostEndianness = Endian::eNative;
 
     template <typename T>
     concept IntegralOrUnderlyingIntegral
@@ -112,10 +112,10 @@ struct fmt::formatter<Prism::EndianStorage<T, E>>
 #endif
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::BigEndian;
-using Prism::ConvertEndian;
-using Prism::Endian;
-using Prism::EndianStorage;
-using Prism::LittleEndian;
-using Prism::ToEndian;
+PRISM_EXPORT using Prism::BigEndian;
+PRISM_EXPORT using Prism::ConvertEndian;
+PRISM_EXPORT using Prism::Endian;
+PRISM_EXPORT using Prism::EndianStorage;
+PRISM_EXPORT using Prism::LittleEndian;
+PRISM_EXPORT using Prism::ToEndian;
 #endif

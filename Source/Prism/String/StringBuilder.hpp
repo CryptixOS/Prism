@@ -10,7 +10,7 @@
 #include <Prism/String/String.hpp>
 #include <Prism/String/StringUtils.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename C = char, typename Traits = CharTraits<C>>
     class StringBuilder
@@ -125,5 +125,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::StringBuilder;
+PRISM_EXPORT using Prism::StringBuilder;
 #endif

@@ -11,7 +11,7 @@
 
 #include <Prism/Memory/Pointer.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Memory
     {
@@ -132,5 +132,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::CharTraits;
+PRISM_EXPORT using Prism::CharTraits;
 #endif

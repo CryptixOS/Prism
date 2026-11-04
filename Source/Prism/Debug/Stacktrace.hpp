@@ -10,7 +10,7 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Memory/Pointer.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename C>
     struct CharTraits;

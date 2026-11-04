@@ -9,7 +9,7 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Assertions.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     class Bitmap
     {
@@ -94,5 +94,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::Bitmap;
+PRISM_EXPORT using Prism::Bitmap;
 #endif

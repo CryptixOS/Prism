@@ -4,15 +4,22 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/String/Formatter.hpp>
-#include <Prism/String/String.hpp>
-#include <Prism/Utility/Path.hpp>
 #include <cassert>
 #include <ctime>
 #include <gtest/gtest.h>
 #include <iomanip>
 #include <iostream>
 #include <vector>
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
+#include <Prism/String/Formatter.hpp>
+#include <Prism/String/String.hpp>
+#include <Prism/Utility/Path.hpp>
+#endif
 
 using namespace Prism;
 using namespace Prism::Literals;

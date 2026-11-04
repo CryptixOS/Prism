@@ -13,7 +13,7 @@
 #include <Prism/String/StringView.hpp>
 #include <Prism/Utility/Optional.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     class SourceLocation
     {
@@ -93,5 +93,5 @@ struct fmt::formatter<Prism::SourceLocation> : fmt::formatter<fmt::string_view>
 #endif
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::SourceLocation;
+PRISM_EXPORT using Prism::SourceLocation;
 #endif

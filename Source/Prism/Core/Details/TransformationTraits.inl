@@ -10,7 +10,7 @@
 
 #include <functional>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     struct RemovePointer
@@ -606,7 +606,7 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::RemovePointer;
-using Prism::RemovePointerType;
-using Prism::ToUnderlying;
+PRISM_EXPORT using Prism::RemovePointer;
+PRISM_EXPORT using Prism::RemovePointerType;
+PRISM_EXPORT using Prism::ToUnderlying;
 #endif

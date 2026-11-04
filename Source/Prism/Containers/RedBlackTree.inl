@@ -6,7 +6,7 @@
  */
 #include <Prism/Containers/RedBlackTree.hpp> // NOLINT(misc-header-include-cycle)
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename K, typename V, typename CompareOp>
     constexpr RedBlackTree<K, V, CompareOp>::RedBlackTree(

@@ -16,7 +16,7 @@
     #include <unistd.h>
 #endif
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename LockingPolicy>
     class Logger
@@ -230,5 +230,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Logger;
+PRISM_EXPORT using Prism::Logger;
 #endif

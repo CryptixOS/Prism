@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Config.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     class NonCopyable
@@ -24,5 +24,5 @@ namespace Prism
 }; // namespace Prism
 
 #ifdef PRISM_USE_NAMESPACE
-using Prism::NonCopyable;
+PRISM_EXPORT using Prism::NonCopyable;
 #endif

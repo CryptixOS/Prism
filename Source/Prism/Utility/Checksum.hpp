@@ -9,7 +9,7 @@
 #include <Prism/Containers/Array.hpp>
 #include <Prism/Memory/ByteStream.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace CRC32
     {
@@ -59,5 +59,5 @@ namespace Prism
 }; // namespace Prism
 #if PRISM_TARGET_CRYPTIX != 0
 namespace CRC32   = Prism::CRC32;
-namespace Adler32 = Prism::Adler32;
+PRISM_EXPORT namespace Adler32 = Prism::Adler32;
 #endif

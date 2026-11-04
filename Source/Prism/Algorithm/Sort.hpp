@@ -11,7 +11,7 @@
 #include <Prism/Utility/Compare.hpp>
 #include <Prism/Utility/Math.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename It, typename Compare>
     void MedianOfThree(It first, It mid, It last, Compare comp)
@@ -199,10 +199,10 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::HeapSort;
-using Prism::InsertionSort;
-using Prism::IntroSort;
-using Prism::MergeSort;
-using Prism::QuickSort;
-using Prism::Sort;
+PRISM_EXPORT using Prism::HeapSort;
+PRISM_EXPORT using Prism::InsertionSort;
+PRISM_EXPORT using Prism::IntroSort;
+PRISM_EXPORT using Prism::MergeSort;
+PRISM_EXPORT using Prism::QuickSort;
+PRISM_EXPORT using Prism::Sort;
 #endif

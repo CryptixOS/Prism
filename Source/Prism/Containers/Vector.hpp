@@ -13,7 +13,7 @@
 
 #include <Prism/Memory/Memory.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     /**
      * @brief Dynamic array container similar to std::vector.
@@ -694,5 +694,5 @@ namespace Prism
 } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Vector;
+PRISM_EXPORT using Prism::Vector;
 #endif

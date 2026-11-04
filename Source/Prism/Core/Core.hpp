@@ -8,7 +8,7 @@
 
 #include <Prism/Core/TypeTraits.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     PM_NODISCARD inline constexpr T* AddressOf(T& object) PM_NOEXCEPT
@@ -155,18 +155,18 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::AddConstType;
-using Prism::AddressOf;
-using Prism::AsConst;
-using Prism::ConstructAt;
-using Prism::DestroyAt;
-using Prism::Exchange;
-using Prism::IndexSequence;
-using Prism::IndexSequenceFor;
-using Prism::InPlaceT;
-using Prism::IntegerSequence;
-using Prism::MakeIndexSequence;
-using Prism::MakeIntegerSequence;
-using Prism::Swap;
-using Prism::Unreachable;
+PRISM_EXPORT using Prism::AddConstType;
+PRISM_EXPORT using Prism::AddressOf;
+PRISM_EXPORT using Prism::AsConst;
+PRISM_EXPORT using Prism::ConstructAt;
+PRISM_EXPORT using Prism::DestroyAt;
+PRISM_EXPORT using Prism::Exchange;
+PRISM_EXPORT using Prism::IndexSequence;
+PRISM_EXPORT using Prism::IndexSequenceFor;
+PRISM_EXPORT using Prism::InPlaceT;
+PRISM_EXPORT using Prism::IntegerSequence;
+PRISM_EXPORT using Prism::MakeIndexSequence;
+PRISM_EXPORT using Prism::MakeIntegerSequence;
+PRISM_EXPORT using Prism::Swap;
+PRISM_EXPORT using Prism::Unreachable;
 #endif

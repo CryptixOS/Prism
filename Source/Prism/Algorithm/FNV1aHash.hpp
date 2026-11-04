@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Types.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace FNV1a
     {
@@ -40,5 +40,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-namespace FNV1a = Prism::FNV1a;
+PRISM_EXPORT namespace FNV1a = Prism::FNV1a;
 #endif

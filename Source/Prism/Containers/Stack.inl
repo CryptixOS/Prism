@@ -6,7 +6,7 @@
  */
 #include <Prism/Containers/Stack.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, typename Container>
     inline constexpr Stack<T, Container>::Stack(const Container& container)

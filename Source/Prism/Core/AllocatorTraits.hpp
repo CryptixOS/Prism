@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Concepts.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename Definition, template <typename...> typename Alternate,
               typename... _Args>

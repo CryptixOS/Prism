@@ -9,7 +9,7 @@
 #include <Prism/Core/Concepts.hpp>
 #include <Prism/Core/Core.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename... Types>
     struct TupleStorage;
@@ -389,7 +389,7 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::Apply;
-using Prism::Tuple;
-using Prism::TupleConcatenate;
+PRISM_EXPORT using Prism::Apply;
+PRISM_EXPORT using Prism::Tuple;
+PRISM_EXPORT using Prism::TupleConcatenate;
 #endif

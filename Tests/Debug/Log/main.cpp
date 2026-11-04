@@ -4,12 +4,20 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/Debug/Log.hpp>
-#include <Prism/Debug/Logger.hpp>
 
-using namespace Prism;
 
 #include <mutex>
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
+#include <Prism/Debug/Log.hpp>
+#include <Prism/Debug/Logger.hpp>
+#endif
+
+using namespace Prism;
 struct Policy
 {
     std::mutex  Mutex;

@@ -14,7 +14,7 @@
     #error 'You should not use simd inside the kernel'
 #endif
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     using i8x2   = i8 __attribute__((vector_size(2)));
     using i8x4   = i8 __attribute__((vector_size(4)));
@@ -79,7 +79,7 @@ namespace Prism
     static_assert(IsSameV<ElementOfType<f32x4>, f32>);
 
     template <SIMDVector V>
-    constexpr static usize VectorLength = sizeof(V) / sizeof(ElementOfType<V>);
+    inline constexpr usize VectorLength = sizeof(V) / sizeof(ElementOfType<V>);
 
     static_assert(VectorLength<i8x4> == 4);
     static_assert(VectorLength<f32x4> == 4);
@@ -131,7 +131,7 @@ namespace Prism
     constexpr auto  MulFloat(auto a, auto b) { return _mm_mul_ps(a, b); }
     constexpr auto  DivFloat(auto a, auto b) { return _mm_div_ps(a, b); }
     constexpr auto  Set1Float(auto x) { return _mm_set1_ps(x); }
-    constexpr usize FloatWidth = 4;
+    inline constexpr usize FloatWidth = 4;
 #elif PRISM_SIMD_NEON_PRESENT
     #include <arm_neon.h>
     using simd_float = float32x4_t;
@@ -145,7 +145,7 @@ namespace Prism
     constexpr auto  MulFloat(auto a, auto b) { return vmulq_f32(a, b); }
     constexpr auto  DivFloat(auto a, auto b) { return vdivq_f32(a, b); }
     constexpr auto  Set1Float(auto x) { return vdupq_n_f32(x); }
-    constexpr usize FloatWidth = 4;
+    inline constexpr usize FloatWidth = 4;
 #else
     using simd_float = f32;
     constexpr auto  LoadFloat(auto ptr) { return *ptr; }
@@ -155,6 +155,6 @@ namespace Prism
     constexpr auto  MulFloat(auto a, auto b) { return a * b; }
     constexpr auto  DivFloat(auto a, auto b) { return a / b; }
     constexpr auto  Set1Float(auto x) { return x; }
-    constexpr usize FloatWidth = 1;
+    inline constexpr usize FloatWidth = 1;
 #endif
 }; // namespace Prism

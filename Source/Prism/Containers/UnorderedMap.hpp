@@ -17,7 +17,7 @@
 
 #include <Prism/Debug/Log.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     /**
      * @brief Default hasher for keys used in UnorderedMap.
@@ -457,6 +457,6 @@ namespace Prism
 } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::UnorderedMap;
+PRISM_EXPORT using Prism::UnorderedMap;
 #endif
 #include <Prism/Containers/UnorderedMap.inl>

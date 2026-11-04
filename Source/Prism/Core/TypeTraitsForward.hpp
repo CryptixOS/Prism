@@ -9,7 +9,7 @@
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, T V>
     struct IntegralConstant;

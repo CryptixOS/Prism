@@ -12,7 +12,7 @@
 #include <Prism/Memory/Ref.hpp>
 #include <Prism/Memory/WeakRef.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     struct DefaultDelete
@@ -313,6 +313,6 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::CreateScope;
-using Prism::Scope;
+PRISM_EXPORT using Prism::CreateScope;
+PRISM_EXPORT using Prism::Scope;
 #endif

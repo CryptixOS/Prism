@@ -10,7 +10,7 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename P>
     struct IntervalHook

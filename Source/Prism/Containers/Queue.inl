@@ -6,7 +6,7 @@
  */
 #include <Prism/Containers/Queue.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, typename Container>
     inline constexpr Queue<T, Container>::Queue(const Container& container)

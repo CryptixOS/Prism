@@ -10,7 +10,7 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/String.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     class PathView
     {
@@ -460,7 +460,7 @@ namespace Prism
 
 }; // namespace Prism
 #if PRISM_USE_NAMESPACE != 0
-using Prism::PathView;
+PRISM_EXPORT using Prism::PathView;
 using namespace Prism::PathViewLiterals;
 #endif
 

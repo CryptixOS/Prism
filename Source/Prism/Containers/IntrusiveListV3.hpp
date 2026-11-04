@@ -32,7 +32,7 @@
  * Links are always raw T* pointers, so Ref-based lists never form reference
  * cycles and traversal never touches reference counts.
  */
-namespace Prism::V3
+PRISM_EXPORT namespace Prism::V3
 {
     /**
      * @brief Describes how a list takes and gives back ownership of a node.

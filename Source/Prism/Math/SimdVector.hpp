@@ -8,7 +8,7 @@
 
 #include <Prism/Utility/SimdIntrinsics.hpp>
 
-namespace Prism::Math
+PRISM_EXPORT namespace Prism::Math
 {
     template <typename T, usize N>
     class SimdVector;

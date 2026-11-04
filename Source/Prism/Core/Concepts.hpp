@@ -9,7 +9,7 @@
 #include <Prism/Core/TypeTraits.hpp>
 #include <Prism/Core/Types.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Details
     {
@@ -391,20 +391,20 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::ArithmeticEnum;
-using Prism::ConvertibleTo;
-using Prism::DerivedFrom;
-using Prism::EnumType;
-using Prism::Integral;
-using Prism::IntegralOrEnum;
-using Prism::IsImplicitlyDefaultConstructible;
-using Prism::IterableContainer;
-using Prism::IteratorPairWith;
-using Prism::PrimitiveOrEnum;
-using Prism::SameAs;
-using Prism::SignedIntegral;
-using Prism::UnsignedIntegral;
+PRISM_EXPORT using Prism::ArithmeticEnum;
+PRISM_EXPORT using Prism::ConvertibleTo;
+PRISM_EXPORT using Prism::DerivedFrom;
+PRISM_EXPORT using Prism::EnumType;
+PRISM_EXPORT using Prism::Integral;
+PRISM_EXPORT using Prism::IntegralOrEnum;
+PRISM_EXPORT using Prism::IsImplicitlyDefaultConstructible;
+PRISM_EXPORT using Prism::IterableContainer;
+PRISM_EXPORT using Prism::IteratorPairWith;
+PRISM_EXPORT using Prism::PrimitiveOrEnum;
+PRISM_EXPORT using Prism::SameAs;
+PRISM_EXPORT using Prism::SignedIntegral;
+PRISM_EXPORT using Prism::UnsignedIntegral;
     #if PRISM_TARGET_CRYPTIX == 0
-using Prism::FloatingPoint;
+PRISM_EXPORT using Prism::FloatingPoint;
     #endif
 #endif

@@ -8,7 +8,7 @@
 
 #include <Prism/Utility/PathView.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     class PathIterator
     {
@@ -732,7 +732,7 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Path;
+PRISM_EXPORT using Prism::Path;
 using namespace Prism::PathLiterals;
 #endif
 

@@ -9,7 +9,7 @@
 #include <Prism/Core/Concepts.hpp>
 #include <Prism/Core/Ranges.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     /**
      * @brief Finds the first element equal to the given value.
@@ -528,29 +528,29 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::AllOf;
-using Prism::AllOfIter;
-using Prism::AnyOf;
-using Prism::AnyOfIter;
-using Prism::BinarySearch;
-using Prism::Count;
-using Prism::CountIf;
-using Prism::CountIfIter;
-using Prism::EraseIf;
-using Prism::Find;
-using Prism::FindFirstOf;
-using Prism::FindFirstOfIter;
-using Prism::FindIf;
-using Prism::FindIfIter;
-using Prism::FindIfNot;
-using Prism::FindIfProj;
-using Prism::FindIteratorIter;
-using Prism::FindLastIf;
-using Prism::FindValueIter;
-using Prism::IteratorPredicateAdapter;
-using Prism::MatchIn;
-using Prism::NoneOf;
-using Prism::NoneOfIter;
-using Prism::RemoveIf;
-using Prism::RemoveIfIter;
+PRISM_EXPORT using Prism::AllOf;
+PRISM_EXPORT using Prism::AllOfIter;
+PRISM_EXPORT using Prism::AnyOf;
+PRISM_EXPORT using Prism::AnyOfIter;
+PRISM_EXPORT using Prism::BinarySearch;
+PRISM_EXPORT using Prism::Count;
+PRISM_EXPORT using Prism::CountIf;
+PRISM_EXPORT using Prism::CountIfIter;
+PRISM_EXPORT using Prism::EraseIf;
+PRISM_EXPORT using Prism::Find;
+PRISM_EXPORT using Prism::FindFirstOf;
+PRISM_EXPORT using Prism::FindFirstOfIter;
+PRISM_EXPORT using Prism::FindIf;
+PRISM_EXPORT using Prism::FindIfIter;
+PRISM_EXPORT using Prism::FindIfNot;
+PRISM_EXPORT using Prism::FindIfProj;
+PRISM_EXPORT using Prism::FindIteratorIter;
+PRISM_EXPORT using Prism::FindLastIf;
+PRISM_EXPORT using Prism::FindValueIter;
+PRISM_EXPORT using Prism::IteratorPredicateAdapter;
+PRISM_EXPORT using Prism::MatchIn;
+PRISM_EXPORT using Prism::NoneOf;
+PRISM_EXPORT using Prism::NoneOfIter;
+PRISM_EXPORT using Prism::RemoveIf;
+PRISM_EXPORT using Prism::RemoveIfIter;
 #endif

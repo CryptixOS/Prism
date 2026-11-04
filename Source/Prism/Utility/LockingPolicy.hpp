@@ -9,7 +9,7 @@
 #include <Prism/Core/Concepts.hpp>
 #include <Prism/Core/NonCopyable.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     concept LockingPolicy = requires(T lock) {

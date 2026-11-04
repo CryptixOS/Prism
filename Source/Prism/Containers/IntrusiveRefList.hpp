@@ -12,7 +12,7 @@
 
 #include <Prism/Memory/Ref.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     struct PointerTraits
@@ -285,6 +285,6 @@ namespace Prism
 #include <Prism/Containers/IntrusiveRefList.inl>
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::IntrusiveRefList;
-using Prism::IntrusiveRefListHook;
+PRISM_EXPORT using Prism::IntrusiveRefList;
+PRISM_EXPORT using Prism::IntrusiveRefListHook;
 #endif

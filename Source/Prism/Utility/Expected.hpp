@@ -12,7 +12,7 @@
 
 #include <Prism/Core/Core.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, typename E>
     class Expected;
@@ -1643,6 +1643,6 @@ namespace Prism
 } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Expected;
-using Prism::Unexpected;
+PRISM_EXPORT using Prism::Expected;
+PRISM_EXPORT using Prism::Unexpected;
 #endif

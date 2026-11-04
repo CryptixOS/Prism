@@ -12,7 +12,7 @@
 #include <Prism/Utility/Atomic.hpp>
 #include <Prism/Utility/Time.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     struct LogMessage
     {
@@ -165,8 +165,8 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::LogMessage;
-using Prism::LogSink;
-using Prism::LogSinkBase;
-using Prism::StdOutSink;
+PRISM_EXPORT using Prism::LogMessage;
+PRISM_EXPORT using Prism::LogSink;
+PRISM_EXPORT using Prism::LogSinkBase;
+PRISM_EXPORT using Prism::StdOutSink;
 #endif

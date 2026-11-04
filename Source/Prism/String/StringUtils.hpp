@@ -15,7 +15,7 @@
 
 #include <magic_enum/magic_enum.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace StringUtils
     {
@@ -137,9 +137,9 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-namespace StringUtils = Prism::StringUtils;
+PRISM_EXPORT namespace StringUtils = Prism::StringUtils;
 
-using Prism::StringUtils::GetDigitCount;
-using Prism::StringUtils::ToNumber;
-using Prism::StringUtils::ToString;
+PRISM_EXPORT using Prism::StringUtils::GetDigitCount;
+PRISM_EXPORT using Prism::StringUtils::ToNumber;
+PRISM_EXPORT using Prism::StringUtils::ToString;
 #endif

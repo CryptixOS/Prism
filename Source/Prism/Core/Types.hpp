@@ -19,7 +19,7 @@
     #include <initializer_list>
 #endif
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename... T>
     constexpr void IgnoreUnused(const T&...)
@@ -176,41 +176,41 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::PhysAddr;
+PRISM_EXPORT using Prism::PhysAddr;
 
-using Prism::isize;
-using Prism::usize;
+PRISM_EXPORT using Prism::isize;
+PRISM_EXPORT using Prism::usize;
 
-using Prism::u16;
-using Prism::u32;
-using Prism::u64;
-using Prism::u8;
+PRISM_EXPORT using Prism::u16;
+PRISM_EXPORT using Prism::u32;
+PRISM_EXPORT using Prism::u64;
+PRISM_EXPORT using Prism::u8;
 
-using Prism::i16;
-using Prism::i32;
-using Prism::i64;
-using Prism::i8;
+PRISM_EXPORT using Prism::i16;
+PRISM_EXPORT using Prism::i32;
+PRISM_EXPORT using Prism::i64;
+PRISM_EXPORT using Prism::i8;
 
-using Prism::AlignmentType;
-using Prism::ipointer;
-using Prism::pointer;
-using Prism::ptrdiff;
-using Prism::upointer;
+PRISM_EXPORT using Prism::AlignmentType;
+PRISM_EXPORT using Prism::ipointer;
+PRISM_EXPORT using Prism::pointer;
+PRISM_EXPORT using Prism::ptrdiff;
+PRISM_EXPORT using Prism::upointer;
 
-using Prism::symbol;
+PRISM_EXPORT using Prism::symbol;
 
-using Prism::Bit;
-using Prism::InitializerList;
-using Prism::Max;
-using Prism::Min;
-using Prism::StrongOrdering;
-using Prism::VaList;
-using Prism::WeakOrdering;
+PRISM_EXPORT using Prism::Bit;
+PRISM_EXPORT using Prism::InitializerList;
+PRISM_EXPORT using Prism::Max;
+PRISM_EXPORT using Prism::Min;
+PRISM_EXPORT using Prism::StrongOrdering;
+PRISM_EXPORT using Prism::VaList;
+PRISM_EXPORT using Prism::WeakOrdering;
     #if PRISM_TARGET_CRYPTIX == 0
-using Prism::f32;
-using Prism::f64;
+PRISM_EXPORT using Prism::f32;
+PRISM_EXPORT using Prism::f64;
     #endif
 
-using Prism::IgnoreUnused;
-using Prism::Trap;
+PRISM_EXPORT using Prism::IgnoreUnused;
+PRISM_EXPORT using Prism::Trap;
 #endif

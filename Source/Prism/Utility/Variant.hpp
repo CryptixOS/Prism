@@ -10,7 +10,7 @@
 #include <Prism/Core/ParameterPack.hpp>
 #include <Prism/String/FormatString.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Detail
     {
@@ -645,5 +645,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::Variant;
+PRISM_EXPORT using Prism::Variant;
 #endif

@@ -20,7 +20,7 @@
 #endif
 
 #if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
 #endif
     extern void earlyPanic(Prism::StringView msg);
@@ -30,7 +30,7 @@ namespace Prism
 }; // namespace Prism
 #endif
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     /// Formats a message and panics. Replaces the PrismPanic() macro (kept
     /// as an alias in Prism/Macros.hpp).
@@ -86,8 +86,8 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::FormattedPanic;
-using Prism::NotImplemented;
-using Prism::NotImplementedWarn;
-using Prism::WarnIf;
+PRISM_EXPORT using Prism::FormattedPanic;
+PRISM_EXPORT using Prism::NotImplemented;
+PRISM_EXPORT using Prism::NotImplementedWarn;
+PRISM_EXPORT using Prism::WarnIf;
 #endif

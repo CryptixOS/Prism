@@ -6,7 +6,7 @@
  */
 #include <Prism/Containers/IntrusiveList.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     // IntrusiveListHook
     template <typename T>

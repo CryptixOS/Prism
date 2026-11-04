@@ -9,7 +9,7 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/StringView.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     enum class LogLevel
     {
@@ -95,6 +95,6 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE
-namespace Log = Prism::Log;
+PRISM_EXPORT namespace Log = Prism::Log;
 #endif
 

@@ -10,7 +10,7 @@
 #include <Prism/Core/TypeTraits.hpp>
 #include <Prism/Core/Types.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     struct DigitsImpl
@@ -188,5 +188,5 @@ namespace Prism
 } // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::NumericLimits;
+PRISM_EXPORT using Prism::NumericLimits;
 #endif

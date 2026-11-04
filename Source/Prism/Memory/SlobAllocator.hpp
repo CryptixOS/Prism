@@ -13,7 +13,7 @@
 #include <Prism/Memory/Allocator.hpp>
 #include <Prism/Utility/Math.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     struct SlobBlock
     {
@@ -93,9 +93,9 @@ namespace Prism
             m_FreeBlocks = block;
         }
 
-        virtual usize TotalAllocated() const override {}
-        virtual usize TotalFreed() const override {}
-        virtual usize Used() const override {}
+        virtual usize TotalAllocated() const override { NotImplemented(); }
+        virtual usize TotalFreed() const override { NotImplemented(); }
+        virtual usize Used() const override { NotImplemented(); }
 
       private:
         bool       m_Initialized = false;
@@ -106,5 +106,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::SlobAllocator;
+PRISM_EXPORT using Prism::SlobAllocator;
 #endif

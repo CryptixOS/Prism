@@ -8,7 +8,7 @@
 
 #include <Prism/Containers/Array.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     /**
      * @brief Fixed-size bit span with static storage.
@@ -183,5 +183,5 @@ namespace Prism
 } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::BitSpan;
+PRISM_EXPORT using Prism::BitSpan;
 #endif

@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Core.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Math
     {

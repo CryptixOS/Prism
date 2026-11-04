@@ -13,7 +13,7 @@
     #include <math.h>
 #endif
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Math
     {
@@ -443,5 +443,5 @@ namespace Prism
 } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-namespace Math = Prism::Math;
+PRISM_EXPORT namespace Math = Prism::Math;
 #endif

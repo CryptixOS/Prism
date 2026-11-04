@@ -16,7 +16,7 @@
 #else
 #endif
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <bool ConstExpr, typename T, typename S = const T*>
     constexpr auto Find(S first, S last, T value, S& out) -> bool
@@ -110,11 +110,6 @@ namespace Prism
         }
 
         return begin + 1;
-
-        FormatSpec spec;
-        begin = ParseFormatSpec(begin, spec);
-        handler.Formatter.VisitArgument(Forward<Args>(args)..., spec);
-        return begin;
     }
     template <bool IsConstExpr, typename Char, typename Handler,
               typename... Args>
@@ -203,7 +198,7 @@ namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
     #if PRISM_DISABLE_FMT == 0
-using Prism::Format;
+PRISM_EXPORT using Prism::Format;
     #endif
-using Prism::Formatter;
+PRISM_EXPORT using Prism::Formatter;
 #endif

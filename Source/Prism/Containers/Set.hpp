@@ -13,7 +13,7 @@
 #include <Prism/Core/NonMovable.hpp>
 #include <Prism/Utility/Compare.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename Key, typename Compare = Less<Key>>
     class Set : public NonCopyable<Set<Key, Compare>>,
@@ -323,5 +323,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Set;
+PRISM_EXPORT using Prism::Set;
 #endif

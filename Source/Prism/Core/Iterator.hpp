@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Core.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     enum class IterationResult
     {
@@ -275,18 +275,18 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Advance;
-using Prism::BidirectionalIteratorTag;
-using Prism::DefaultSentinelType;
-using Prism::Distance;
-using Prism::ForwardIteratorTag;
-using Prism::InputIteratorTag;
-using Prism::IterationResult;
-using Prism::IteratorReferenceType;
-using Prism::IteratorSwap;
-using Prism::IteratorTraits;
-using Prism::Next;
-using Prism::OutputIteratorTag;
-using Prism::RandomAccessIteratorTag;
-using Prism::ReverseIterator;
+PRISM_EXPORT using Prism::Advance;
+PRISM_EXPORT using Prism::BidirectionalIteratorTag;
+PRISM_EXPORT using Prism::DefaultSentinelType;
+PRISM_EXPORT using Prism::Distance;
+PRISM_EXPORT using Prism::ForwardIteratorTag;
+PRISM_EXPORT using Prism::InputIteratorTag;
+PRISM_EXPORT using Prism::IterationResult;
+PRISM_EXPORT using Prism::IteratorReferenceType;
+PRISM_EXPORT using Prism::IteratorSwap;
+PRISM_EXPORT using Prism::IteratorTraits;
+PRISM_EXPORT using Prism::Next;
+PRISM_EXPORT using Prism::OutputIteratorTag;
+PRISM_EXPORT using Prism::RandomAccessIteratorTag;
+PRISM_EXPORT using Prism::ReverseIterator;
 #endif

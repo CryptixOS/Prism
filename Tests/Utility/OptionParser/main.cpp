@@ -13,7 +13,14 @@
 #include <string.h>
 #include <unistd.h>
 
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
 #include <Prism/Utility/OptionParser.hpp>
+#endif
+
 using namespace Prism;
 
 #define COUNT_OF(x)                                                            \

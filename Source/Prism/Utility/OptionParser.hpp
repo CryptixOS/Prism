@@ -11,7 +11,7 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/StringView.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     class OptionParser
     {

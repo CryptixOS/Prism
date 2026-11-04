@@ -15,7 +15,7 @@
     #include <errno.h>
 #endif
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
 
 #if PRISM_TARGET_CRYPTIX != 0
@@ -169,7 +169,7 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Error;
-using Prism::ErrorCode;
-using Prism::ErrorOr;
+PRISM_EXPORT using Prism::Error;
+PRISM_EXPORT using Prism::ErrorCode;
+PRISM_EXPORT using Prism::ErrorOr;
 #endif

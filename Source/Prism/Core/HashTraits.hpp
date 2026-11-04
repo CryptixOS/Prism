@@ -9,7 +9,7 @@
 #include <Prism/Algorithm/FNV1aHash.hpp>
 #include <Prism/Core/Concepts.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename Result, typename Arg>
     struct HashBase
@@ -20,7 +20,7 @@ namespace Prism
     struct Hash;
 
     template <typename T, typename = void>
-    constexpr bool IsHashEnabledFor = false;
+    inline constexpr bool IsHashEnabledFor = false;
     template <typename T>
     constexpr bool
         IsHashEnabledFor<T, VoidType<decltype(Hash<T>()(DeclVal<T>()))>>
@@ -133,7 +133,7 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::Hash;
-using Prism::IsFastHash;
-using Prism::IsHashEnabledFor;
+PRISM_EXPORT using Prism::Hash;
+PRISM_EXPORT using Prism::IsFastHash;
+PRISM_EXPORT using Prism::IsHashEnabledFor;
 #endif

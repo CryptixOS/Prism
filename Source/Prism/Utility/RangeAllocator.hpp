@@ -9,7 +9,7 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/Utility/Optional.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     class RangeAllocator
     {
@@ -27,5 +27,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::RangeAllocator
+PRISM_EXPORT using Prism::RangeAllocator
 #endif

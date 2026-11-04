@@ -11,7 +11,7 @@
 
 #include <Prism/Utility/Compare.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     /**
      *  @brief  Return an iterator pointing to the first element of
@@ -356,7 +356,7 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::Empty;
-using Prism::LowerBound;
-using Prism::Size;
+PRISM_EXPORT using Prism::Empty;
+PRISM_EXPORT using Prism::LowerBound;
+PRISM_EXPORT using Prism::Size;
 #endif

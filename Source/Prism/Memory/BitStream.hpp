@@ -14,7 +14,7 @@
 #include <Prism/Memory/Pointer.hpp>
 #include <Prism/Memory/Memory.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     // TODO(v1tr10l7): Handle BigEndian reads
     template <Endian E = Endian::eNative>
@@ -144,5 +144,5 @@ namespace Prism
     };
 }; // namespace Prism
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::BitStream;
+PRISM_EXPORT using Prism::BitStream;
 #endif

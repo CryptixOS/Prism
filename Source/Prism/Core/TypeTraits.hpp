@@ -9,7 +9,7 @@
 #include <Prism/Core/Details/CallableTraits.inl>
 #include <Prism/Core/Details/Constructibility.inl>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, bool>
     struct EnumUnderlying
@@ -57,13 +57,13 @@ namespace Prism
     // }
 
     template <typename T>
-    constexpr bool IsTupleLikeV = IsTupleLike<T>::Value;
+    inline constexpr bool IsTupleLikeV = IsTupleLike<T>::Value;
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Conditional;
-using Prism::Forward;
-using Prism::IsSameV;
-using Prism::IsTupleLikeV;
-using Prism::Move;
+PRISM_EXPORT using Prism::Conditional;
+PRISM_EXPORT using Prism::Forward;
+PRISM_EXPORT using Prism::IsSameV;
+PRISM_EXPORT using Prism::IsTupleLikeV;
+PRISM_EXPORT using Prism::Move;
 #endif

@@ -11,7 +11,7 @@
 #include <Prism/Core/Iterator.hpp>
 #include <Prism/Core/Limits.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     inline constexpr usize DynamicExtent = NumericLimits<usize>::Max();
     template <typename T, usize Extent>
@@ -308,6 +308,6 @@ namespace Prism
         -> Span<RemoveReferenceType<std::ranges::range_reference_t<Range&>>>;
 }; // namespace Prism
 #if PRISM_USE_NAMESPACE != 0
-using Prism::DynamicExtent;
-using Prism::Span;
+PRISM_EXPORT using Prism::DynamicExtent;
+PRISM_EXPORT using Prism::Span;
 #endif

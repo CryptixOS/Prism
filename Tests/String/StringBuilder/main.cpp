@@ -6,14 +6,20 @@
  */
 #include <utility>
 
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
 #include <Prism/Containers/DoublyLinkedList.hpp>
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/Formatter.hpp>
 #include <Prism/String/String.hpp>
 #include <Prism/String/StringBuilder.hpp>
 #include <Prism/String/StringUtils.hpp>
+#endif
 
-#include <Prism/Core/Types.hpp>
+
 
 using namespace Prism;
 

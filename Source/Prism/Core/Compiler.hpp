@@ -6,6 +6,16 @@
  */
 #pragma once
 
+// ---------------------------------------------------------------- modules
+// Marks the exported API in a module build (see Source/Prism/Prism.cppm);
+// expands to nothing in the header build.
+#if defined(PRISM_MODULE_BUILD) && PRISM_MODULE_BUILD != 0
+    #define PRISM_EXPORT export
+#else
+    #define PRISM_EXPORT
+#endif
+
+
 #ifndef PM_DISABLE_NOEXCEPT
     #define PM_NOEXCEPT noexcept
 #else

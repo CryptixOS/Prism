@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Details/TransformationTraits.inl>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, typename... Args>
     using IsConstructibleHelper
@@ -426,6 +426,6 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::IsTriviallyDestructible;
-using Prism::IsTriviallyDestructibleV;
+PRISM_EXPORT using Prism::IsTriviallyDestructible;
+PRISM_EXPORT using Prism::IsTriviallyDestructibleV;
 #endif

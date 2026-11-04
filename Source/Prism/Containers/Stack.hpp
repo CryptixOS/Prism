@@ -8,7 +8,7 @@
 
 #include <Prism/Containers/Deque.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, typename Container = Deque<T>>
     class Stack
@@ -63,7 +63,7 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::Stack;
+PRISM_EXPORT using Prism::Stack;
 #endif
 
 #include <Prism/Containers/Stack.inl>

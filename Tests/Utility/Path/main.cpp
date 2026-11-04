@@ -5,7 +5,14 @@
  * SPDX-License-Identifier: GPL-3
  */
 #include <cassert>
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
 #include <Prism/Utility/Path.hpp>
+#endif
 
 using namespace Prism;
 using namespace Prism::PathLiterals;

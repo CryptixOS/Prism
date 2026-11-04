@@ -4,11 +4,18 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/Containers/IntrusiveListV3.hpp>
-#include <Prism/Containers/Vector.hpp>
 
 #include <cstdio>
 #include <cstdlib>
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
+#include <Prism/Containers/IntrusiveListV3.hpp>
+#include <Prism/Containers/Vector.hpp>
+#endif
 
 // Unlike assert(), this still fires when NDEBUG is defined (release builds).
 #define Check(expr)                                                            \
@@ -28,14 +35,17 @@ T& Alias(T& value)
     return value;
 }
 
-using Prism::Vector;
-using Prism::V3::IntrusiveList;
-using Prism::V3::IntrusiveListHook;
-using Prism::V3::IntrusiveOwningListHook;
-using Prism::V3::IntrusiveRefListHook;
-
 namespace
 {
+    // Scoped here, not at global scope: in the module build the old
+    // IntrusiveList/IntrusiveListHook are also visible globally (through
+    // PRISM_USE_NAMESPACE), and these must take precedence.
+    using Prism::Vector;
+    using Prism::V3::IntrusiveList;
+    using Prism::V3::IntrusiveListHook;
+    using Prism::V3::IntrusiveOwningListHook;
+    using Prism::V3::IntrusiveRefListHook;
+
     template <typename List>
     bool Matches(const List& list, std::initializer_list<int> expected)
     {

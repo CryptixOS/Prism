@@ -21,7 +21,7 @@
         https://www.codeproject.com/Articles/1170503/The-Impossibly-Fast-Cplusplus-Delegates-Fixed
 */
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Details
     {
@@ -454,5 +454,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Delegate;
+PRISM_EXPORT using Prism::Delegate;
 #endif

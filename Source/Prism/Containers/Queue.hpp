@@ -8,7 +8,7 @@
 
 #include <Prism/Containers/Deque.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, typename Container = Deque<T>>
     class Queue
@@ -63,7 +63,7 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Queue;
+PRISM_EXPORT using Prism::Queue;
 #endif
 
 #include <Prism/Containers/Queue.inl>

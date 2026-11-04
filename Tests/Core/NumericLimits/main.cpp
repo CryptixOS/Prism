@@ -8,7 +8,14 @@
 #include <limits>
 #include <type_traits>
 
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
 #include <Prism/Core/Limits.hpp>
+#endif
+
 
 using namespace Prism;
 

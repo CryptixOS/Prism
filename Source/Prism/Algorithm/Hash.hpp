@@ -12,7 +12,7 @@
 #include <Prism/Core/Limits.hpp>
 #include <Prism/Core/Types.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Murmur
     {
@@ -23,5 +23,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-namespace Murmur = Prism::Murmur;
+PRISM_EXPORT namespace Murmur = Prism::Murmur;
 #endif

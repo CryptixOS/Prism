@@ -16,7 +16,7 @@ namespace MM
 };
 #endif
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     using VirtAddr = pointer;
 
@@ -265,10 +265,10 @@ constexpr Prism::Pointer operator""_virt(unsigned long long address)
 }
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Pointer;
-using Prism::PointerHolder;
-using Prism::PointerType;
-using Prism::VirtAddr;
+PRISM_EXPORT using Prism::Pointer;
+PRISM_EXPORT using Prism::PointerHolder;
+PRISM_EXPORT using Prism::PointerType;
+PRISM_EXPORT using Prism::VirtAddr;
 #endif
 
 #if PRISM_DISABLE_FMT == 0

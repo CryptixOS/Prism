@@ -6,7 +6,9 @@
  */
 #pragma once
 
-namespace Prism
+#include <Prism/Core/Compiler.hpp>
+
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     class Singleton
@@ -31,5 +33,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::Singleton;
+PRISM_EXPORT using Prism::Singleton;
 #endif

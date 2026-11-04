@@ -6,7 +6,7 @@
  */
 #include <Prism/Containers/UnorderedMap.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename K, typename V, typename H>
     constexpr UnorderedMap<K, V, H>::UnorderedMap(usize initialCapacity)

@@ -12,7 +12,7 @@
 
 #include <Prism/Memory/Pointer.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     using Byte = u8;
     class Buffer
@@ -93,6 +93,6 @@ namespace Prism
     };
 }; // namespace Prism
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::Buffer;
-using Prism::Byte;
+PRISM_EXPORT using Prism::Buffer;
+PRISM_EXPORT using Prism::Byte;
 #endif

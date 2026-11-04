@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Core.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename... Types>
     struct ParameterPack;
@@ -85,5 +85,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-using Prism::ParameterPack;
+PRISM_EXPORT using Prism::ParameterPack;
 #endif

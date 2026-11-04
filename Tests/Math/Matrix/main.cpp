@@ -4,8 +4,15 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
 #include <Prism/Debug/Assertions.hpp>
 #include <Prism/Math/Matrix.hpp>
+#endif
 
 using namespace Prism;
 using Math::Matrix;

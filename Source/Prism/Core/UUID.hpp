@@ -9,7 +9,7 @@
 #include <Prism/Containers/Array.hpp>
 #include <Prism/Core/Integer128.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     class UUID
     {
@@ -122,5 +122,5 @@ struct Prism::Hash<Prism::UUID>
 };
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::UUID;
+PRISM_EXPORT using Prism::UUID;
 #endif

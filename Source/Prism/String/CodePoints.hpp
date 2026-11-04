@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Concepts.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace CodePoints
     {
@@ -95,5 +95,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-namespace CodePoints = Prism::CodePoints;
+PRISM_EXPORT namespace CodePoints = Prism::CodePoints;
 #endif

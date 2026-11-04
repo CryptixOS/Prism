@@ -8,7 +8,7 @@
 
 #include <Prism/Memory/Pointer.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     using byte  = u8;
     using word  = u16;
@@ -75,10 +75,10 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-namespace Memory = Prism::Memory;
-using Prism::operator""_kib;
-using Prism::operator""_mib;
-using Prism::operator""_gib;
-using Prism::operator""_tib;
-using Prism::operator""_pib;
+PRISM_EXPORT namespace Memory = Prism::Memory;
+PRISM_EXPORT using Prism::operator""_kib;
+PRISM_EXPORT using Prism::operator""_mib;
+PRISM_EXPORT using Prism::operator""_gib;
+PRISM_EXPORT using Prism::operator""_tib;
+PRISM_EXPORT using Prism::operator""_pib;
 #endif

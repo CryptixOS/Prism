@@ -9,7 +9,7 @@
 #include <Prism/Core/Types.hpp>
 #include <Prism/String/StringView.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     namespace Printf
     {
@@ -77,5 +77,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_TARGET_CRYPTIX != 0
-namespace Printf = Prism::Printf;
+PRISM_EXPORT namespace Printf = Prism::Printf;
 #endif

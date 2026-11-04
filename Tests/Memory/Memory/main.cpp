@@ -4,11 +4,18 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <Prism/Memory/Memory.hpp>
 
 #include <assert.h>
 #include <stdio.h>  // for debugging if needed
 #include <string.h> // for memcmp in validation fallback
+
+#if PRISM_TEST_MODULES
+// Headers (std, fmt, macros) must come before any import.
+#include <Prism/Macros.hpp>
+import Prism;
+#else
+#include <Prism/Memory/Memory.hpp>
+#endif
 
 using namespace Prism;
 

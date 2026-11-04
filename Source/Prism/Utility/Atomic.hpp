@@ -13,7 +13,7 @@
 
 #include <Prism/Utility/AtomicBuiltins.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, typename = void>
     struct AtomicArithmetic
@@ -303,22 +303,22 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::Atomic;
+PRISM_EXPORT using Prism::Atomic;
 
-using Prism::AtomicBool;
-using Prism::AtomicChar;
-using Prism::AtomicSignedChar;
-using Prism::AtomicUnsignedChar;
+PRISM_EXPORT using Prism::AtomicBool;
+PRISM_EXPORT using Prism::AtomicChar;
+PRISM_EXPORT using Prism::AtomicSignedChar;
+PRISM_EXPORT using Prism::AtomicUnsignedChar;
 
-using Prism::AtomicI16;
-using Prism::AtomicI32;
-using Prism::AtomicI64;
-using Prism::AtomicI8;
+PRISM_EXPORT using Prism::AtomicI16;
+PRISM_EXPORT using Prism::AtomicI32;
+PRISM_EXPORT using Prism::AtomicI64;
+PRISM_EXPORT using Prism::AtomicI8;
 
-using Prism::AtomicU16;
-using Prism::AtomicU32;
-using Prism::AtomicU64;
-using Prism::AtomicU8;
+PRISM_EXPORT using Prism::AtomicU16;
+PRISM_EXPORT using Prism::AtomicU32;
+PRISM_EXPORT using Prism::AtomicU64;
+PRISM_EXPORT using Prism::AtomicU8;
 
-using Prism::AtomicPointer;
+PRISM_EXPORT using Prism::AtomicPointer;
 #endif

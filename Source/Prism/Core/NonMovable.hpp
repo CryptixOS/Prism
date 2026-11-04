@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Config.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     class NonMovable
@@ -24,5 +24,5 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::NonMovable;
+PRISM_EXPORT using Prism::NonMovable;
 #endif

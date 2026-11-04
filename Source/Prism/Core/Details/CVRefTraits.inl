@@ -8,7 +8,7 @@
 
 #include <Prism/Core/Details/CoreTraits.inl>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T>
     struct RemoveConst
@@ -189,8 +189,8 @@ namespace Prism
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-using Prism::RemoveConstType;
-using Prism::RemoveCvRefType;
-using Prism::RemoveReference;
-using Prism::RemoveReferenceType;
+PRISM_EXPORT using Prism::RemoveConstType;
+PRISM_EXPORT using Prism::RemoveCvRefType;
+PRISM_EXPORT using Prism::RemoveReference;
+PRISM_EXPORT using Prism::RemoveReferenceType;
 #endif

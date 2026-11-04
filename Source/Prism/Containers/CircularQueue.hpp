@@ -11,7 +11,7 @@
 #include <Prism/Core/Iterator.hpp>
 #include <Prism/Core/Types.hpp>
 
-namespace Prism
+PRISM_EXPORT namespace Prism
 {
     template <typename T, usize Capacity>
     class CircularQueue
@@ -164,5 +164,5 @@ namespace Prism
 }; // namespace Prism
 
 #ifdef PRISM_TARGET_CRYPTIX
-using Prism::CircularQueue;
+PRISM_EXPORT using Prism::CircularQueue;
 #endif
