@@ -5,3 +5,4 @@ subprojects/*.wraplock
 *.xbstrap
 
 nohup.out
+build/
