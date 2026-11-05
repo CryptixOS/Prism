@@ -1,4 +1,4 @@
-# ✨ Prism
+# Prism
 
 **Prism** is a modern C++ standard library and runtime environment tailored for freestanding and kernel-space development. It powers the core of [CryptixOS](https://github.com/CryptixOS/CryptixOS), offering high-performance, modular, and allocator-aware components built from scratch for environments without a standard C++ runtime.
 
@@ -11,34 +11,34 @@
 
 
 
-## 🚀 Goals
+## Goals
 
-- 📦 Freestanding and header-only (where possible)
-- 🧠 Designed for kernel use and low-level systems programming
-- 💎 Clean, STL-like API with zero-cost abstractions
-- 🛠 No dependencies on libstdc++, libc++, or libm
+- Freestanding and header-only (where possible)
+- Designed for kernel use and low-level systems programming
+- Clean, STL-like API with zero-cost abstractions
+- No dependencies on libstdc++, libc++, or libm
 
 ---
 
-## 📚 Features
+## Features
 
-### 🌿 Core Types
+### Core Types
 - `BasicString`, `Vector`, `Deque`, `UnorderedMap`, `RedBlackTree`, `Optional`, `Span`, etc.
 - SSO-enabled string implementation (`BasicString`)
 
-### 🔧 Utilities
+### Utilities
 - `Format` — type-safe formatting engine (like `fmtlib`)
 - `Expected`, `Result`, `ErrorCode` — error handling without exceptions
 - Type traits, concepts, and compile-time utilities
-- Smart pointers: `Ref`, `Box`, `Unique`, `Weak`
+- Smart pointers: `Ref`, `Scope`, `WeakRef`
 
-### 🧪 Testing Support
+### Testing Support
 - Minimal `assert`-based test framework
 - Kernel-friendly output via serial or logging interface
 
 ---
 
-## 🧱 Building the Kernel & Image
+## Building the Kernel & Image
 
 Just initialize the build directory with: 
 ```
@@ -49,14 +49,14 @@ and then you can build the Prism library like so
 ninja -C build
 ```
 
-## 🔨 Installation 
+## Installation 
 
 To install Prism you just run this just after you've built it
 ```
 ninja -C build install
 ```
 
-## 🧩 C++ Modules
+## C++ Modules
 
 Prism can also be built and consumed as a C++ module (`import Prism;`).
 Meson can't scan module dependencies for GCC, so the module build uses CMake
@@ -95,7 +95,7 @@ expands to `export`. When writing headers:
   `constexpr` gives them internal linkage, which an exported namespace can't
   contain.
 
-## 💻 Usage
+## Usage
 
 Prism is integrated with CryptixOS, but it can be used in any freestanding or embedded project. Just add the `Prism` source tree to your build and configure it as a system or static library.
 
@@ -103,7 +103,7 @@ Prism is integrated with CryptixOS, but it can be used in any freestanding or em
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
   - CrossFiles => **meson config files for cross compilation**
   - Source/ => **Source Root**
@@ -122,13 +122,13 @@ Prism is integrated with CryptixOS, but it can be used in any freestanding or em
 
 ---
 
-## 📄 License
+## License
 
 Prism is licensed under the **GPL-3 License** 
 
 ---
 
-## 🙌 Credits
+## Credits
 
 Prism is inspired by the design goals of:
 - The C++ STL (with a focus on zero overhead)
