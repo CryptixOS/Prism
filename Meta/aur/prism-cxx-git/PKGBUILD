@@ -1,0 +1,82 @@
+# Maintainer: Szymon Zemke <v1tr10l7@proton.me>
+#
+# Published to the AUR by .github/workflows/aur.yml on every push to master.
+# Edit this file, not the copy on the AUR.
+
+pkgname=prism-cxx-git
+_pkgname=prism
+pkgver=r0.0000000
+pkgrel=1
+pkgdesc="Freestanding C++23 standard library and runtime for kernel-space development (CryptixOS)"
+arch=('x86_64' 'aarch64')
+url="https://github.com/CryptixOS/Prism"
+license=('GPL-3.0-only' 'MIT' 'Apache-2.0 WITH LLVM-exception')
+makedepends=('git' 'meson' 'ninja')
+provides=('prism-cxx')
+conflicts=('prism-cxx')
+# libprism.a is a static library: keep it, and don't LTO it.
+options=('staticlibs' '!lto')
+
+# Meson subprojects are listed here so the build never touches the network.
+# Keep them in sync with subprojects/*.wrap.
+_fmt=fmt-10.2.0
+_magic_enum=magic_enum-v0.9.5
+source=("${_pkgname}::git+https://github.com/CryptixOS/Prism.git"
+        "demangler::git+https://github.com/ilobilo/demangler.git"
+        "${_fmt}.tar.gz::https://github.com/fmtlib/fmt/archive/10.2.0.tar.gz"
+        "${_magic_enum}.tar.gz::https://github.com/Neargye/magic_enum/releases/download/v0.9.5/${_magic_enum}.tar.gz")
+noextract=("${_fmt}.tar.gz" "${_magic_enum}.tar.gz")
+sha256sums=('SKIP'
+            'SKIP'
+            '3ca91733a7313a8ad41c0885929415f8ec0a2a31d4dc7e27e9331412f4ca26ac'
+            '0694e1ef160cbb6b8be2f43c7df349295911cb7daebdd4e557adaac2c18420f9')
+
+pkgver() {
+  cd "${_pkgname}"
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+prepare() {
+  cd "${_pkgname}/subprojects"
+
+  # wrap-file subprojects: meson picks the tarballs up from the package cache.
+  mkdir -p packagecache
+  ln -sf "${srcdir}/${_fmt}.tar.gz" packagecache/
+  ln -sf "${srcdir}/${_magic_enum}.tar.gz" packagecache/
+
+  # wrap-git subproject: an existing directory is used as is, so apply the
+  # overlay (meson.build) from packagefiles ourselves.
+  rm -rf demangler
+  cp -a "${srcdir}/demangler" demangler
+  bsdtar -xf packagefiles/demangler.tar
+}
+
+build() {
+  # Install into private directories: Prism ships its own (patched) fmt and
+  # magic_enum, which must not clash with the system packages.
+  arch-meson "${_pkgname}" build \
+    --includedir="include/prism-cxx" \
+    --libdir="lib/prism-cxx" \
+    -Dtarget=app \
+    -Dbuild_tests=false \
+    -Dwerror=false
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "${pkgdir}"
+
+  # Make `pkg-config prism-cxx` work without a custom PKG_CONFIG_PATH.
+  install -dm755 "${pkgdir}/usr/lib/pkgconfig"
+  mv "${pkgdir}/usr/lib/prism-cxx/pkgconfig/prism.pc" \
+     "${pkgdir}/usr/lib/pkgconfig/prism-cxx.pc"
+
+  install -Dm644 "${_pkgname}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${_pkgname}/subprojects/${_fmt}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.fmt"
+  install -Dm644 "${_pkgname}/subprojects/magic_enum/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.magic_enum"
+  install -Dm644 "${_pkgname}/subprojects/demangler/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.demangler"
+}

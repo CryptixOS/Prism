@@ -1,0 +1,89 @@
+name: Deploy to AUR
+
+# Publishes Meta/aur/prism-cxx-git to https://aur.archlinux.org/packages/prism-cxx-git
+#
+# Required repository secret:
+#   AUR_SSH_PRIVATE_KEY  private key whose public half is registered on the
+#                        AUR account that maintains prism-cxx-git
+# Optional repository variables:
+#   AUR_USERNAME, AUR_EMAIL  identity used for the AUR commit
+
+on:
+  push:
+    branches: ["master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aur-deploy
+  cancel-in-progress: true
+
+env:
+  PKGNAME: prism-cxx-git
+  PKGDIR: Meta/aur/prism-cxx-git
+
+jobs:
+  aur:
+    if: github.repository == 'CryptixOS/Prism'
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm --needed git openssh meson ninja
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set pkgver
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          pkgver="r$(git rev-list --count HEAD).$(git rev-parse --short=7 HEAD)"
+          sed -i "s/^pkgver=.*/pkgver=${pkgver}/" "$PKGDIR/PKGBUILD"
+          echo "PKGVER=${pkgver}" >> "$GITHUB_ENV"
+
+      - name: Build package
+        run: |
+          useradd -m builder
+          cp -r "$PKGDIR" /home/builder/pkg
+          chown -R builder:builder /home/builder/pkg
+          cd /home/builder/pkg
+          su builder -c "makepkg --noconfirm --cleanbuild"
+          su builder -c "makepkg --printsrcinfo" > .SRCINFO
+          # makepkg's pkgver() must agree with the version we publish.
+          grep -q "pkgver = ${PKGVER}$" .SRCINFO
+          cp .SRCINFO "$GITHUB_WORKSPACE/$PKGDIR/.SRCINFO"
+
+      - name: Publish
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          AUR_USERNAME: ${{ vars.AUR_USERNAME || 'github-actions' }}
+          AUR_EMAIL: ${{ vars.AUR_EMAIL || 'github-actions@users.noreply.github.com' }}
+        run: |
+          if [ -z "$AUR_SSH_PRIVATE_KEY" ]; then
+            echo "::warning::AUR_SSH_PRIVATE_KEY is not set, skipping deploy"
+            exit 0
+          fi
+
+          install -dm700 ~/.ssh
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
+          chmod 600 ~/.ssh/aur
+          ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/aur -o IdentitiesOnly=yes"
+
+          git clone "ssh://aur@aur.archlinux.org/${PKGNAME}.git" /tmp/aur
+          cp "$PKGDIR/PKGBUILD" "$PKGDIR/.SRCINFO" /tmp/aur/
+          cd /tmp/aur
+          git config user.name "$AUR_USERNAME"
+          git config user.email "$AUR_EMAIL"
+          git add PKGBUILD .SRCINFO
+          if git diff --cached --quiet; then
+            echo "AUR package is up to date"
+            exit 0
+          fi
+          git commit -m "Update to ${PKGVER} (CryptixOS/Prism@${GITHUB_SHA::7})"
+          git push origin HEAD:master
