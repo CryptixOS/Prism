@@ -11,7 +11,7 @@
 #include <Prism/String/FormatString.hpp>
 #include <Prism/String/StringBuilder.hpp>
 
-#if PRISM_DISABLE_FMT != 0
+#if PRISM_DISABLE_FMT == 0
     #include <fmt/format.h>
 #else
 #endif

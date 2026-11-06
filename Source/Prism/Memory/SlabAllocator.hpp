@@ -57,53 +57,24 @@ namespace Prism
         virtual ErrorOr<void> Initialize(usize chunkSize)
         {
             assert(Math::IsPowerOfTwo(chunkSize));
-            m_ObjectSize                 = chunkSize;
 
-            constexpr usize SLAB_SIZE    = 0x1000;
-            constexpr usize SLAB_SB_SIZE = 0x1000;
-
-            usize           totalSize    = SLAB_SIZE + SLAB_SB_SIZE;
-            usize           pageCount = Math::DivRoundUp(totalSize, PAGE_SIZE);
-
-            Pointer         base = PageAllocPolicy::CallocatePages(pageCount);
-            if (!base) return Error(ENOMEM);
-
-            auto  address  = Math::AlignUp(base, SLAB_SB_SIZE);
-            usize overhead = 0;
-            for (; overhead < sizeof(SlabFrame); overhead += m_ObjectSize);
-
-            auto frame           = new (base.As<void>()) SlabFrame;
-            frame->Data          = address + overhead;
-            frame->DataLength    = SLAB_SIZE - overhead;
-            frame->Base          = base;
-            frame->TotalLength   = totalSize;
-            m_Frame              = frame;
-            m_Frame->NextFree    = base;
-            m_Frame->Allocator   = this;
-
-            SlabObject* previous = nullptr;
-            for (usize offset = 0; offset < m_Frame->DataLength;
-                 offset += m_ObjectSize)
-            {
-                Pointer objectAddress = frame->Data.Offset(offset);
-                // WriteCanary(objectAddress);
-
-                auto    object        = objectAddress.As<SlabObject>();
-                object->Next          = previous;
-                previous              = object;
-            }
-            m_Frame->NextFree = previous;
-            return {};
+            PM_UNUSED auto guard = m_Lock.Lock();
+            m_ObjectSize         = chunkSize;
+            return Grow();
         }
         virtual void    Shutdown() { PrismToDoWarn(); }
 
         virtual Pointer Allocate()
         {
-            if (!m_Frame->NextFree && !Initialize(m_ObjectSize)) return nullptr;
+            // The emptiness check, the refill and the pop must all happen
+            // under the lock: otherwise two CPUs can both see one free object
+            // left, and one of them pops (and dereferences) nullptr.
+            PM_UNUSED auto guard = m_Lock.Lock();
+            if (!m_Frame || !m_Frame->NextFree)
+                if (!Grow()) return nullptr;
 
-            PM_UNUSED auto guard  = m_Lock.Lock();
-            auto           object = m_Frame->NextFree;
-            m_Frame->NextFree     = object->Next;
+            auto object       = m_Frame->NextFree;
+            m_Frame->NextFree = object->Next;
 
             // assert(VerifyCanary(object));
 
@@ -135,6 +106,43 @@ namespace Prism
         virtual usize Used() const { return TotalAllocated() - TotalFreed(); }
 
       private:
+        // Carves a fresh slab into objects. Caller must hold m_Lock.
+        ErrorOr<void> Grow()
+        {
+            // One page per slab: the SlabFrame header lives at the start of
+            // the page and Free()/Reallocate() find it by masking an object's
+            // address down to the page, so objects can't spill into a second
+            // page.
+            constexpr usize SLAB_SIZE = PAGE_SIZE;
+
+            Pointer         base = PageAllocPolicy::CallocatePages(1);
+            if (!base) return Error(ENOMEM);
+
+            usize overhead = 0;
+            for (; overhead < sizeof(SlabFrame); overhead += m_ObjectSize);
+
+            auto frame         = new (base.As<void>()) SlabFrame;
+            frame->Data        = base.Offset<Pointer>(overhead);
+            frame->DataLength  = SLAB_SIZE - overhead;
+            frame->Base        = base;
+            frame->TotalLength = SLAB_SIZE;
+            frame->Allocator   = this;
+
+            // Objects of older slabs that get freed are pushed onto the
+            // current frame's list, so keep whatever is left on it.
+            SlabObject* previous = m_Frame ? m_Frame->NextFree : nullptr;
+            for (usize offset = 0; offset + m_ObjectSize <= frame->DataLength;
+                 offset += m_ObjectSize)
+            {
+                auto object  = frame->Data.Offset<Pointer>(offset).As<SlabObject>();
+                object->Next = previous;
+                previous     = object;
+            }
+            frame->NextFree = previous;
+            m_Frame         = frame;
+            return {};
+        }
+
         LockPolicy             m_Lock;
 
         SlabFrame*             m_Frame          = nullptr;

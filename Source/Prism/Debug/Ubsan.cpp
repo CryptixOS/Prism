@@ -120,8 +120,15 @@ namespace
 
 static void Warn(const char* message, SourceLocation source)
 {
+    // Logging goes through instrumented code (fmt), which can trip the very
+    // same check again; without this guard that recurses until the stack
+    // overflows and silently corrupts whatever memory lies below it.
+    // NOTE: global, not per-CPU, so a report racing on another CPU is dropped.
+    static bool s_InWarn = false;
+    if (__atomic_exchange_n(&s_InWarn, true, __ATOMIC_ACQUIRE)) return;
     Prism::Log::Warn("Ubsan: {} ->\n{}[{}:{}]", message, source.File,
                      source.Line, source.Column);
+    __atomic_store_n(&s_InWarn, false, __ATOMIC_RELEASE);
     // ::Stacktrace::Print(5);
 }
 
