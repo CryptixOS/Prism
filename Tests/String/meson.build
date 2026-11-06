@@ -6,7 +6,7 @@
 #*/
 
 string_tests = [
-  'BasicString', 'BasicStringView', 'StringBuilder',
+  'BasicString', 'BasicStringView', 'Format', 'StringBuilder',
   'StringUtils',
 ]
 

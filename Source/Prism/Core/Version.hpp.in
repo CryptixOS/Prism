@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Prism/String/Formatter.hpp>
 #include <Prism/String/String.hpp>
 
 #mesondefine PM_VERSION_MAJOR
@@ -34,13 +35,10 @@ namespace Prism
                  | (static_cast<u64>(Minor) << 32)
                  | (static_cast<u64>(Patch) << 16ull);
         }
-#if PRISM_DISABLE_FMT == 0
-        constexpr explicit operator String() const
+        explicit operator String() const
         {
-            // FIXME(v1tr107): shouldnt depend on fmt
-            return fmt::format("{}.{}.{}", Major, Minor, Patch).data();
+            return Format("{}.{}.{}", Major, Minor, Patch);
         }
-#endif
     };
 
     constexpr StringView LIBRARY_NAME = "@library_name@";
@@ -59,6 +57,7 @@ namespace Prism
     constexpr StringView VERSION_STRING   = "@library_version_string@";
 }; // namespace Prism
 
+#if PRISM_DISABLE_FMT == 0
 template <>
 struct fmt::formatter<Prism::Version> : fmt::formatter<std::string>
 {
@@ -69,6 +68,22 @@ struct fmt::formatter<Prism::Version> : fmt::formatter<std::string>
         return fmt::formatter<std::string>::format(
             fmt::format("{}.{}.{}", version.Major, version.Minor,
                         version.Patch),
+            ctx);
+    }
+};
+#endif
+template <>
+struct Prism::Formatter<Prism::Version> : Prism::Formatter<Prism::StringView>
+{
+    Prism::FormatAppender Format(const Prism::Version& version,
+                                 Prism::FormatContext& ctx) const
+    {
+        char buffer[48];
+        auto result = Prism::FormatToN(buffer, sizeof(buffer), "{}.{}.{}",
+                                       version.Major, version.Minor,
+                                       version.Patch);
+        return Prism::Formatter<Prism::StringView>::Format(
+            Prism::StringView(buffer, static_cast<Prism::usize>(result.Out - buffer)),
             ctx);
     }
 };

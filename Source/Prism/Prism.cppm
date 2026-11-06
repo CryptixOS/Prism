@@ -152,6 +152,7 @@ export module Prism;
 #include <Prism/String/CodePoints.hpp>
 #include <Prism/String/FormatHandler.hpp>
 #include <Prism/String/FormatString.hpp>
+#include <Prism/String/FormatStyle.hpp>
 #include <Prism/String/Formatter.hpp>
 #include <Prism/String/FormatterContext.hpp>
 #include <Prism/String/Printf.hpp>

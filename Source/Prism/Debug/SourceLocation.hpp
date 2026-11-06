@@ -10,6 +10,7 @@
 #include <Prism/Core/Config.hpp>
 #include <Prism/Core/Types.hpp>
 
+#include <Prism/String/Formatter.hpp>
 #include <Prism/String/StringView.hpp>
 #include <Prism/Utility/Optional.hpp>
 
@@ -91,6 +92,19 @@ struct fmt::formatter<Prism::SourceLocation> : fmt::formatter<fmt::string_view>
     }
 };
 #endif
+template <>
+struct Prism::Formatter<Prism::SourceLocation>
+    : Prism::Formatter<Prism::StringView>
+{
+    Prism::FormatAppender Format(const Prism::SourceLocation& src,
+                                 Prism::FormatContext&        ctx) const
+    {
+        return Prism::Formatter<Prism::StringView>::Format(
+            Prism::Format("{}[{}:{}]::{}", src.FileName(), src.Line(),
+                          src.Column(), src.FunctionName()),
+            ctx);
+    }
+};
 
 #if PRISM_USE_NAMESPACE != 0
 using Prism::SourceLocation;

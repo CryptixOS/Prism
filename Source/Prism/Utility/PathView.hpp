@@ -8,6 +8,7 @@
 
 #include <Prism/Containers/Vector.hpp>
 #include <Prism/Core/Types.hpp>
+#include <Prism/String/Formatter.hpp>
 #include <Prism/String/String.hpp>
 
 namespace Prism
@@ -485,3 +486,13 @@ struct fmt::formatter<Prism::PathView> : fmt::formatter<fmt::string_view>
     }
 };
 #endif
+template <>
+struct Prism::Formatter<Prism::PathView> : Prism::Formatter<Prism::StringView>
+{
+    Prism::FormatAppender Format(const Prism::PathView& path,
+                                 Prism::FormatContext&   ctx) const
+    {
+        return Prism::Formatter<Prism::StringView>::Format(
+            Prism::StringView(path.Raw(), path.Size()), ctx);
+    }
+};

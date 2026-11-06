@@ -102,15 +102,12 @@ namespace Prism
             return (net >> shift) & 0xff;
         }
 
-        constexpr String ToString() const
+        String ToString() const
         {
-            auto str = fmt::format(
-                "{}.{}.{}.{}", operator[](0), operator[](1), operator[](2),
-                                                             operator[](3));
-
-            return String(str.data(), str.size());
+            return Format("{}.{}.{}.{}", operator[](0), operator[](1),
+                          operator[](2), operator[](3));
         }
-        constexpr             operator String() const { return ToString(); }
+        operator String() const { return ToString(); }
 
         friend constexpr bool operator==(const IPv4Address& lhs,
                                          const IPv4Address& rhs)
@@ -133,10 +130,27 @@ struct fmt::formatter<Prism::IPv4Address> : fmt::formatter<fmt::string_view>
     template <typename FormatContext>
     auto format(const Prism::IPv4Address ip, FormatContext& ctx) const
     {
-        return ip;
+        auto str = ip.ToString();
+        return fmt::formatter<fmt::string_view>::format(
+            fmt::string_view(str.Raw(), str.Size()), ctx);
     }
 };
 #endif
+template <>
+struct Prism::Formatter<Prism::IPv4Address>
+    : Prism::Formatter<Prism::StringView>
+{
+    Prism::FormatAppender Format(const Prism::IPv4Address& ip,
+                                 Prism::FormatContext&     ctx) const
+    {
+        char buffer[16];
+        auto result = Prism::FormatToN(buffer, sizeof(buffer), "{}.{}.{}.{}",
+                                       ip[0], ip[1], ip[2], ip[3]);
+        return Prism::Formatter<Prism::StringView>::Format(
+            Prism::StringView(buffer, static_cast<Prism::usize>(result.Out - buffer)),
+            ctx);
+    }
+};
 
 // hash support
 template <>

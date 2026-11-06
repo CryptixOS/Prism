@@ -29,6 +29,6 @@ int main()
     BasicString<char> final = sb;
     printf("final: %s\n", final.Raw());
 
-    (void)Print("Hello, {} {:#x}, {:#x}", 2);
+    Print("Hello, {} {:#x}, {:#x}\n", 2, 255, 0x10);
     return 0;
 }

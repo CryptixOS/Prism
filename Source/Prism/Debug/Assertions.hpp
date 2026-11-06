@@ -15,10 +15,12 @@
 
 #if PRISM_DISABLE_FMT == 0
     #include <fmt/format.h>
-    #define PrismFmtFormat(...) fmt::format(__VA_ARGS__)
+    #define PrismFmtFormat(...)  fmt::format(__VA_ARGS__)
+    #define PrismFmtCString(...) fmt::format(__VA_ARGS__).data()
 #else
     #include <Prism/String/Formatter.hpp>
-    #define PrismFmtFormat(fmt, ...) Format1(__VA_ARGS__)
+    #define PrismFmtFormat(...)  Prism::Format(__VA_ARGS__)
+    #define PrismFmtCString(...) Prism::Format(__VA_ARGS__).Raw()
 #endif
 
 #if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
@@ -35,11 +37,11 @@ namespace Prism
 #if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
     #define PrismEarlyPanic(fmt, ...)                                          \
         Prism::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
-    #define PrismPanic(...) Prism::panic(PrismFmtFormat(__VA_ARGS__).data())
+    #define PrismPanic(...) Prism::panic(PrismFmtCString(__VA_ARGS__))
 #else
     #define PrismEarlyPanic(fmt, ...)                                          \
         ::earlyPanic("Error Message: " fmt __VA_OPT__(, ) __VA_ARGS__)
-    #define PrismPanic(...) ::panic(PrismFmtFormat(__VA_ARGS__).data())
+    #define PrismPanic(...) ::panic(PrismFmtCString(__VA_ARGS__))
 #endif
 
 #define PrismAssert(expr...)                                                   \

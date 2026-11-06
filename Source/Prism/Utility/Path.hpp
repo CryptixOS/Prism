@@ -750,6 +750,15 @@ struct fmt::formatter<Prism::Path> : fmt::formatter<fmt::string_view>
     }
 };
 #endif
+template <>
+struct Prism::Formatter<Prism::Path> : Prism::Formatter<Prism::StringView>
+{
+    Prism::FormatAppender Format(const Prism::Path&    path,
+                                 Prism::FormatContext& ctx) const
+    {
+        return Prism::Formatter<Prism::StringView>::Format(path.View(), ctx);
+    }
+};
 
 // Opt-in to borrowed_range concept
 template <>

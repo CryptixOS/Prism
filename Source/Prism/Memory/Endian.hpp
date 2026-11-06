@@ -8,6 +8,7 @@
 
 #include <Prism/Core/Bits.hpp>
 #include <Prism/Core/Concepts.hpp>
+#include <Prism/String/Formatter.hpp>
 
 namespace Prism
 {
@@ -110,6 +111,16 @@ struct fmt::formatter<Prism::EndianStorage<T, E>>
     }
 };
 #endif
+template <typename T, Prism::Endian E>
+struct Prism::Formatter<Prism::EndianStorage<T, E>>
+    : Prism::Details::FormatterFor<T>
+{
+    auto Format(const Prism::EndianStorage<T, E>& value,
+                Prism::FormatContext&             ctx) const
+    {
+        return Prism::Details::FormatterFor<T>::Format(value.Load(), ctx);
+    }
+};
 
 #if PRISM_USE_NAMESPACE != 0
 using Prism::BigEndian;

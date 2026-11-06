@@ -78,11 +78,11 @@ namespace Prism
             result += rhs;
             return result;
         }
-        friend Integer128 operator*(const Integer128& lhs, uint32_t rhs)
+        friend Integer128 operator*(const Integer128& lhs, u32 rhs)
         {
             assert(lhs.m_High == 0);
             ValueType hi     = (lhs.m_Low >> 32) * rhs;
-            ValueType lo     = (lhs.m_Low & ~uint32_t()) * rhs;
+            ValueType lo     = (lhs.m_Low & ~u32()) * rhs;
             ValueType new_lo = (hi << 32) + lo;
             return {(hi >> 32) + (new_lo < lo ? 1 : 0), new_lo};
         }

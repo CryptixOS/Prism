@@ -246,6 +246,7 @@ install_headers(
   'Source/Prism/String/CodePoints.hpp',
   'Source/Prism/String/FormatHandler.hpp',
   'Source/Prism/String/FormatString.hpp',
+  'Source/Prism/String/FormatStyle.hpp',
   'Source/Prism/String/Formatter.hpp',
   'Source/Prism/String/FormatterContext.hpp',
   'Source/Prism/String/Printf.hpp',

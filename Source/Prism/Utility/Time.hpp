@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Types.hpp>
+#include <Prism/String/Formatter.hpp>
 
 namespace Prism
 {
@@ -175,6 +176,23 @@ struct fmt::formatter<Prism::Time::DateTime> : fmt::formatter<fmt::string_view>
     }
 };
 #endif
+template <>
+struct Prism::Formatter<Prism::Time::DateTime>
+    : Prism::Formatter<Prism::StringView>
+{
+    Prism::FormatAppender Format(const Prism::Time::DateTime& date,
+                                 Prism::FormatContext&        ctx) const
+    {
+        char buffer[64];
+        auto result = Prism::FormatToN(
+            buffer, sizeof(buffer), "{:02}:{:02}:{:04} {:02}:{:02}:{:02}",
+            date.Day, date.Month, date.Year, date.Hour, date.Minute,
+            date.Second);
+        return Prism::Formatter<Prism::StringView>::Format(
+            Prism::StringView(buffer, static_cast<Prism::usize>(result.Out - buffer)),
+            ctx);
+    }
+};
 
 #if PRISM_USE_NAMESPACE != 0
 using Prism::Time::DateTime;
