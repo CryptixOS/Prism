@@ -23,94 +23,14 @@
 
 namespace Prism
 {
-    namespace Details
-    {
-        template <typename T, typename U = typename InvUnwrap<T>::Type>
-        constexpr U&&
-        ToLValueRef(typename RemoveReference<T>::Type& value) noexcept
-        {
-            return static_cast<U&&>(value);
-        }
-
-        template <typename ResultType, typename Fn, typename... Args>
-        constexpr ResultType DoInvoke(InvokeOther, Fn&& fn, Args&&... args)
-        {
-            if constexpr (IsVoidV<ResultType>)
-                Forward<Fn>(fn)(Forward<Args>(args)...);
-            else return Forward<Fn>(fn)(Forward<Args>(args)...);
-        }
-
-        template <typename ResultType, typename MemFun, typename T,
-                  typename... Args>
-        constexpr ResultType DoInvoke(InvokeMemFunRef, MemFun&& fn, T&& arg,
-                                      Args&&... args)
-        {
-            if constexpr (IsVoidV<ResultType>)
-                (ToLValueRef<T>(arg).*fn)(Forward<Args>(args)...);
-            else return (ToLValueRef<T>(arg).*fn)(Forward<Args>(args)...);
-        }
-
-        template <typename ResultType, typename MemFun, typename T,
-                  typename... Args>
-        constexpr ResultType DoInvoke(InvokeMemFunDeref, MemFun&& fn, T&& arg,
-                                      Args&&... args)
-        {
-            if constexpr (IsVoidV<ResultType>)
-                ((*Forward<T>(arg)).*fn)(Forward<Args>(args)...);
-            else return ((*Forward<T>(arg)).*fn)(Forward<Args>(args)...);
-        }
-
-        template <typename ResultType, typename MemPtr, typename T>
-        constexpr ResultType DoInvoke(InvokeMemObjRef, MemPtr&& fn, T&& arg)
-        {
-            if constexpr (IsVoidV<ResultType>) ToLValueRef<T>(arg).*fn;
-            else return ToLValueRef<T>(arg).*fn;
-        }
-
-        template <typename ResultType, typename MemPtr, typename T>
-        constexpr ResultType DoInvoke(InvokeMemObjDeref, MemPtr&& fn, T&& arg)
-        {
-            return (*Forward<T>(arg)).*fn;
-        }
-
-        template <typename Functor, typename... Args>
-        constexpr InvokeResultType<Functor, Args...>
-        InvokeFunction(Functor&& fn, Args&&... args)
-            PM_NOEXCEPT(IsNoThrowInvocableV<Functor, Args...>)
-        {
-            using Result = InvokeResult<Functor, Args...>;
-            using Type   = typename Result::Type;
-            using Tag    = decltype(GetInvokeTag(DeclVal<Functor>(),
-                                                 DeclVal<Args>()...));
-
-            if constexpr (IsVoidV<InvokeResultType<Functor, Args...>>)
-                DoInvoke<Type>(Tag{}, Forward<Functor>(fn),
-                               Forward<Args>(args)...);
-            else
-                return DoInvoke<Type>(Tag{}, Forward<Functor>(fn),
-                                      Forward<Args>(args)...);
-        }
-    }; // namespace Details
-
-    template <typename Functor, typename... Args>
-    inline constexpr InvokeResultType<Functor, Args...> Invoke(Functor&& fn,
-                                                               Args&&... args)
-        PM_NOEXCEPT(IsNoThrowInvocable<Functor, Args...>::Value)
-    {
-        return Details::InvokeFunction(Forward<Functor>(fn),
-                                       Forward<Args>(args)...);
-    }
-
+    /// Same as InvokeR (std::invoke_r); kept for existing callers.
     template <typename ResultType, typename Functor, typename... Args>
     constexpr EnableIfType<IsInvocableR<ResultType, Functor, Args...>::Value,
                            ResultType>
     InvokeAsType(Functor&& fn, Args&&... args) noexcept(
         IsNoThrowInvocableR<ResultType, Functor, Args...>::Value)
     {
-        if constexpr (IsVoidV<ResultType>)
-            ::Prism::Invoke(Forward<Functor>(fn), Forward<Args>(args)...);
-        else
-            return ::Prism::Invoke(Forward<Functor>(fn),
+        return InvokeR<ResultType>(Forward<Functor>(fn),
                                    Forward<Args>(args)...);
     }
 

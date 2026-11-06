@@ -10,28 +10,6 @@
 
 namespace Prism
 {
-    template <typename Definition, template <typename...> typename Alternate,
-              typename... _Args>
-    struct DetectedOr
-    {
-        using Type       = Definition;
-        using IsDetected = FalseType;
-    };
-
-    template <typename Definition, template <typename...> typename Alternate,
-              typename... Args>
-        requires requires { typename Alternate<Args...>; }
-    struct DetectedOr<Definition, Alternate, Args...>
-    {
-        using Type       = Alternate<Args...>;
-        using IsDetected = TrueType;
-    };
-
-    template <typename Default, template <typename...> class Alternate,
-              typename... _Args>
-    using DetectedOrType =
-        typename DetectedOr<Default, Alternate, _Args...>::Type;
-
     template <typename Allocator>
     struct AllocatorTraits
     {

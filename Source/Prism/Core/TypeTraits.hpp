@@ -8,6 +8,7 @@
 
 #include <Prism/Core/Details/CallableTraits.inl>
 #include <Prism/Core/Details/Constructibility.inl>
+#include <Prism/Core/Details/ExtendedTraits.inl>
 
 namespace Prism
 {
@@ -51,10 +52,35 @@ namespace Prism
         if consteval { return true; }
         return false;
     }
-    // template <typename T>
-    // consteval bool IsWithinLifetime(const T* ptr) PM_NOEXCEPT
-    // {
-    // }
+#if PrismHasBuiltin(__builtin_is_within_lifetime)
+    /// `ptr` points to an object that is within its lifetime (C++26).
+    template <typename T>
+    consteval bool IsWithinLifetime(const T* ptr) PM_NOEXCEPT
+    {
+        return __builtin_is_within_lifetime(ptr);
+    }
+#endif
+
+    // Member relationships
+#if PrismHasBuiltin(__builtin_is_pointer_interconvertible_with_class)
+    /// Objects of type S are pointer-interconvertible with their member
+    /// `member` (std::is_pointer_interconvertible_with_class).
+    template <typename S, typename M>
+    constexpr bool IsPointerInterconvertibleWithClass(M S::* member) PM_NOEXCEPT
+    {
+        return __builtin_is_pointer_interconvertible_with_class(member);
+    }
+#endif
+#if PrismHasBuiltin(__builtin_is_corresponding_member)
+    /// `m1` and `m2` refer to corresponding members in the common initial
+    /// sequence of S1 and S2 (std::is_corresponding_member).
+    template <typename S1, typename S2, typename M1, typename M2>
+    constexpr bool IsCorrespondingMember(M1 S1::* m1,
+                                         M2 S2::* m2) PM_NOEXCEPT
+    {
+        return __builtin_is_corresponding_member(m1, m2);
+    }
+#endif
 
     template <typename T>
     constexpr bool IsTupleLikeV = IsTupleLike<T>::Value;

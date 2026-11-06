@@ -253,8 +253,8 @@ namespace Prism
     template <typename X, typename Y>
     struct CommonRefImpl<
         X&&, Y&&,
-        EnableIfType<IsConvertible<X&&, CommonRefC<X, Y>>::Value,
-                     IsConvertible<Y&&, CommonRefC<X, Y>>>>
+        EnableIfType<IsConvertible<X&&, CommonRefC<X, Y>>::Value
+                     && IsConvertible<Y&&, CommonRefC<X, Y>>::Value>>
     {
         using Type = CommonRefC<X, Y>;
     };
@@ -346,19 +346,19 @@ namespace Prism
     template <typename T1, typename T2>
     struct CommonReferenceImpl<T1&&, T2&&, 1, VoidType<CommonRef<T1&&, T2&&>>>
     {
-        using type = CommonRef<T1&&, T2&&>;
+        using Type = CommonRef<T1&&, T2&&>;
     };
 
     template <typename T1, typename T2>
     struct CommonReferenceImpl<T1&, T2&&, 1, VoidType<CommonRef<T1&, T2&&>>>
     {
-        using type = CommonRef<T1&, T2&&>;
+        using Type = CommonRef<T1&, T2&&>;
     };
 
     template <typename T1, typename T2>
     struct CommonReferenceImpl<T1&&, T2&, 1, VoidType<CommonRef<T1&&, T2&>>>
     {
-        using type = CommonRef<T1&&, T2&>;
+        using Type = CommonRef<T1&&, T2&>;
     };
 
     template <typename T1, typename T2>
@@ -411,13 +411,63 @@ namespace Prism
     {
     };
 
+    // SFINAE friendly: no `Type` member for non-enumeration types.
+    template <typename T, bool = IsEnum<T>::Value>
+    struct UnderlyingTypeHelper
+    {
+    };
     template <typename T>
-    struct UnderlyingType
+    struct UnderlyingTypeHelper<T, true>
     {
         using Type = __underlying_type(T);
     };
+    template <typename T>
+    struct UnderlyingType : UnderlyingTypeHelper<T>
+    {
+    };
 
-    // TODO(v1tr10l7): VoidType, TypeIdentity
+    /**
+     * Uninitialized storage suitable for an object of size `Length` with
+     * alignment `Align` (std::aligned_storage). Prefer
+     * `alignas(T) byte storage[sizeof(T)]` in new code.
+     */
+    template <usize Length, usize Align = __BIGGEST_ALIGNMENT__>
+    struct AlignedStorage
+    {
+        struct Type
+        {
+            alignas(Align) unsigned char Data[Length];
+        };
+    };
+    template <usize Length, usize Align = __BIGGEST_ALIGNMENT__>
+    using AlignedStorageType = typename AlignedStorage<Length, Align>::Type;
+
+    /// Uninitialized storage big and aligned enough for any of `Types`,
+    /// and at least `Length` bytes (std::aligned_union).
+    template <usize Length, typename... Types>
+    struct AlignedUnion
+    {
+        static_assert(sizeof...(Types) > 0,
+                      "AlignedUnion requires at least one type");
+
+      private:
+        static constexpr usize MaxOf(usize first, auto... rest)
+        {
+            ((first = rest > first ? rest : first), ...);
+            return first;
+        }
+
+      public:
+        static constexpr usize AlignmentValue = MaxOf(alignof(Types)...);
+        static constexpr usize SizeValue      = MaxOf(Length, sizeof(Types)...);
+
+        struct Type
+        {
+            alignas(AlignmentValue) unsigned char Data[SizeValue];
+        };
+    };
+    template <usize Length, typename... Types>
+    using AlignedUnionType = typename AlignedUnion<Length, Types...>::Type;
 
     namespace Details
     {
@@ -428,16 +478,6 @@ namespace Prism
         }
         template <typename T>
         void CopyConstruct(T&&) = delete;
-        template <typename>
-        class ReferenceWrapper;
-        template <typename T>
-        struct IsReferenceWrapper : FalseType
-        {
-        };
-        template <typename U>
-        struct IsReferenceWrapper<ReferenceWrapper<U>> : TrueType
-        {
-        };
     }; // namespace Details
 
     template <typename Fn, typename... ArgTypes>
@@ -494,92 +534,6 @@ namespace Prism
     template <typename T>
     struct UnwrapReferenceDecay : UnwrapReference<typename Decay<T>::Type>
     {
-    };
-
-    template <typename T>
-    struct MakeUnsigned
-    {
-        using Type = void;
-    };
-    template <>
-    struct MakeUnsigned<signed char>
-    {
-        using Type = unsigned char;
-    };
-    template <>
-    struct MakeUnsigned<short>
-    {
-        using Type = unsigned short;
-    };
-    template <>
-    struct MakeUnsigned<int>
-    {
-        using Type = unsigned int;
-    };
-    template <>
-    struct MakeUnsigned<long>
-    {
-        using Type = unsigned long;
-    };
-    template <>
-    struct MakeUnsigned<long long>
-    {
-        using Type = unsigned long long;
-    };
-    template <>
-    struct MakeUnsigned<unsigned char>
-    {
-        using Type = unsigned char;
-    };
-    template <>
-    struct MakeUnsigned<unsigned short>
-    {
-        using Type = unsigned short;
-    };
-    template <>
-    struct MakeUnsigned<unsigned int>
-    {
-        using Type = unsigned int;
-    };
-    template <>
-    struct MakeUnsigned<unsigned long>
-    {
-        using Type = unsigned long;
-    };
-    template <>
-    struct MakeUnsigned<unsigned long long>
-    {
-        using Type = unsigned long long;
-    };
-    template <>
-    struct MakeUnsigned<char>
-    {
-        using Type = unsigned char;
-    };
-    template <>
-    struct MakeUnsigned<char8_t>
-    {
-        using Type = char8_t;
-    };
-    template <>
-    struct MakeUnsigned<char16_t>
-    {
-        using Type = char16_t;
-    };
-    template <>
-    struct MakeUnsigned<char32_t>
-    {
-        using Type = char32_t;
-    };
-    template <>
-    struct MakeUnsigned<bool>
-    {
-        using Type = bool;
-    };
-    template <>
-    struct MakeUnsigned<wchar_t>
-    {
-        using Type = wchar_t;
     };
 
     template <typename T>

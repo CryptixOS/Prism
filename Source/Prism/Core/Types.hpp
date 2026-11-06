@@ -8,6 +8,7 @@
 
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Config.hpp>
+#include <Prism/Core/Details/SignModifiers.inl>
 
 #if PrismHasInclude(<assert.h>)
     #include <assert.h>
@@ -38,69 +39,6 @@ extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
 
 namespace Prism
 {
-    template <typename T>
-    struct MakeSigned
-    {
-        using Type = void;
-    };
-    template <>
-    struct MakeSigned<signed char>
-    {
-        using Type = signed char;
-    };
-    template <>
-    struct MakeSigned<short>
-    {
-        using Type = short;
-    };
-    template <>
-    struct MakeSigned<int>
-    {
-        using Type = int;
-    };
-    template <>
-    struct MakeSigned<long>
-    {
-        using Type = long;
-    };
-    template <>
-    struct MakeSigned<long long>
-    {
-        using Type = long long;
-    };
-    template <>
-    struct MakeSigned<unsigned char>
-    {
-        using Type = char;
-    };
-    template <>
-    struct MakeSigned<unsigned short>
-    {
-        using Type = short;
-    };
-    template <>
-    struct MakeSigned<unsigned int>
-    {
-        using Type = int;
-    };
-    template <>
-    struct MakeSigned<unsigned long>
-    {
-        using Type = long;
-    };
-    template <>
-    struct MakeSigned<unsigned long long>
-    {
-        using Type = long long;
-    };
-    template <>
-    struct MakeSigned<char>
-    {
-        using Type = char;
-    };
-    template <typename T>
-    using MakeSignedType = typename MakeSigned<T>::Type;
-
     using PhysAddr       = __UINTPTR_TYPE__;
 
     using usize          = __SIZE_TYPE__;
@@ -147,14 +85,14 @@ namespace Prism
 #define PrismVaArg(args, type...)  __builtin_va_arg(args, type)
 
     template <typename T>
-    constexpr const T& Min(InitializerList<T> ilist)
+    constexpr T Min(InitializerList<T> ilist)
     {
         auto     it     = ilist.begin();
-        const T& result = *it++;
+        const T* result = it++;
         for (; it != ilist.end(); it++)
-            if (*it < result) result = *it;
+            if (*it < *result) result = it;
 
-        return result;
+        return *result;
     }
     template <typename T>
     constexpr const T& Max(const T& lhs, const T& rhs)
@@ -162,14 +100,14 @@ namespace Prism
         return lhs > rhs ? lhs : rhs;
     }
     template <typename T>
-    constexpr const T& Max(InitializerList<T> ilist)
+    constexpr T Max(InitializerList<T> ilist)
     {
         auto     it     = ilist.begin();
-        const T& result = *it++;
+        const T* result = it++;
         for (; it != ilist.end(); it++)
-            if (*it > result) result = *it;
+            if (*it > *result) result = it;
 
-        return result;
+        return *result;
     }
 
     template <typename T>

@@ -47,6 +47,12 @@ namespace Prism
     {
     };
 #endif
+#ifdef __STDCPP_FLOAT32_T__
+    template <>
+    struct IsFloatingPointHelper<_Float32> : public TrueType
+    {
+    };
+#endif
 #ifdef __STDCPP_FLOAT64_T__
     template <>
     struct IsFloatingPointHelper<_Float64> : public TrueType
@@ -255,6 +261,13 @@ namespace Prism
         : public BooleanConstant<__is_trivially_copyable(T)>
     {
     };
+    /// Trivially copyable and trivially default constructible.
+    template <typename T>
+    struct IsTrivial
+        : public BooleanConstant<__is_trivially_copyable(T)
+                                 && __is_trivially_constructible(T)>
+    {
+    };
     template <typename T>
     struct IsStandardLayout : public BooleanConstant<__is_standard_layout(T)>
     {
@@ -297,10 +310,15 @@ namespace Prism
     struct IsAggregate : BooleanConstant<__is_aggregate(RemoveCvType<T>)>
     {
     };
-    // template <typename T>
-    // struct IsImplicitLifetime : BooleanConstant<__is_implicit_lifetime(T)>
-    //{
-    // };
+#if PrismHasBuiltin(__builtin_is_implicit_lifetime)
+    #define PRISM_HAS_IS_IMPLICIT_LIFETIME 1
+    /// Objects of type T may be implicitly created (C++23).
+    template <typename T>
+    struct IsImplicitLifetime
+        : BooleanConstant<__builtin_is_implicit_lifetime(T)>
+    {
+    };
+#endif
 
     template <typename T, bool = IsArithmetic<T>::Value>
     struct IsSignedHelper : FalseType
@@ -320,21 +338,42 @@ namespace Prism
         : Conjunction<IsArithmetic<T>, Negation<IsSigned<T>>>::Type
     {
     };
-#if __has_builtin(__is_bounded_array)
     template <typename T>
-    struct IsBoundedArray : BooleanConstant<__is_bounded_array(T)>
+    struct IsBoundedArray : FalseType
     {
     };
-#endif
-#if __has_builtin(__is_unbounded_array)
-    template <typename T>
-    struct IsUnboundedArray : BooleanConstant<__is_unbounded_array(T)>
+    template <typename T, usize N>
+    struct IsBoundedArray<T[N]> : TrueType
     {
     };
-#endif
-#if __has_builtin(__is_scoped_enum)
+    template <typename T>
+    struct IsUnboundedArray : FalseType
+    {
+    };
+    template <typename T>
+    struct IsUnboundedArray<T[]> : TrueType
+    {
+    };
+#if PrismHasBuiltin(__is_scoped_enum)
     template <typename T>
     struct IsScopedEnum : BooleanConstant<__is_scoped_enum(T)>
+    {
+    };
+#else
+    // A scoped enumeration doesn't implicitly convert to its underlying type.
+    template <typename T, bool = __is_enum(T)>
+    struct IsScopedEnumHelper : FalseType
+    {
+    };
+    template <typename T>
+    struct IsScopedEnumHelper<T, true>
+        : BooleanConstant<!requires(void (*f)(__underlying_type(T)), T t) {
+              f(t);
+          }>
+    {
+    };
+    template <typename T>
+    struct IsScopedEnum : IsScopedEnumHelper<T>
     {
     };
 #endif
@@ -369,10 +408,19 @@ namespace Prism
     struct IsBaseOf : BooleanConstant<__is_base_of(Base, Derived)>
     {
     };
-#ifdef __cpp_lib_is_virtual_base_of
+#if PrismHasBuiltin(__builtin_is_virtual_base_of)
+    #define PRISM_HAS_IS_VIRTUAL_BASE_OF 1
     template <typename Base, typename Derived>
     struct IsVirtualBaseOf
         : BooleanConstant<__builtin_is_virtual_base_of(Base, Derived)>
+    {
+    };
+#endif
+#if PrismHasBuiltin(__is_pointer_interconvertible_base_of)
+    #define PRISM_HAS_IS_POINTER_INTERCONVERTIBLE_BASE_OF 1
+    template <typename Base, typename Derived>
+    struct IsPointerInterconvertibleBaseOf
+        : BooleanConstant<__is_pointer_interconvertible_base_of(Base, Derived)>
     {
     };
 #endif
@@ -420,7 +468,8 @@ namespace Prism
     {
     };
     */
-#if __has_builtin(__is_layout_compatible)
+#if PrismHasBuiltin(__is_layout_compatible)
+    #define PRISM_HAS_IS_LAYOUT_COMPATIBLE 1
     template <typename T, typename U>
     struct IsLayoutCompatible : BooleanConstant<__is_layout_compatible(T, U)>
     {
@@ -519,9 +568,9 @@ namespace Prism
     inline constexpr bool IsTriviallyCopyableV = IsTriviallyCopyable<T>::Value;
     template <typename T>
     inline constexpr bool IsStandardLayoutV = IsStandardLayout<T>::Value;
-    template <typename... Types>
+    template <typename T, template <typename...> typename U>
     inline constexpr bool IsSpecializationOfV
-        = IsSpecializationOf<Types...>::Value;
+        = IsSpecializationOf<T, U>::Value;
     template <typename T>
     constexpr bool HasUniqueObjectRepresentationsV
         = HasUniqueObjectRepresentations<T>::Value;
@@ -535,39 +584,40 @@ namespace Prism
     constexpr bool IsFinalV = IsFinal<T>::Value;
     template <typename T>
     constexpr bool IsAggregateV = IsAggregate<T>::Value;
-    // template <typename T>
-    // constexpr bool IsImplicitLifetimeV = IsImplicitLifetime<T>::Value;
+#ifdef PRISM_HAS_IS_IMPLICIT_LIFETIME
+    template <typename T>
+    inline constexpr bool IsImplicitLifetimeV = IsImplicitLifetime<T>::Value;
+#endif
+    template <typename T>
+    inline constexpr bool IsTrivialV = IsTrivial<T>::Value;
     template <typename T>
     constexpr bool IsSignedV = IsSigned<T>::Value;
     template <typename T>
     constexpr bool IsUnsignedV = IsUnsigned<T>::Value;
-#if __has_builtin(__is_bounded_array)
     template <typename T>
     constexpr bool IsBoundedArrayV = IsBoundedArray<T>::Value;
-#endif
-
-#if __has_builtin(__is_unbounded_array)
     template <typename T>
     constexpr bool IsUnboundedArrayV = IsUnboundedArray<T>::Value;
-#endif
-
-#if __has_builtin(__is_scoped_enum)
     template <typename T>
     constexpr bool IsScopedEnumV = IsScopedEnum<T>::Value;
-#endif
 
     template <typename Base, typename Derived>
     constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::Value;
-#ifdef __cpp_lib_is_virtual_base_of
+#ifdef PRISM_HAS_IS_VIRTUAL_BASE_OF
     template <typename Base, typename Derived>
     constexpr bool IsVirtualBaseOfV = IsVirtualBaseOf<Base, Derived>::Value;
+#endif
+#ifdef PRISM_HAS_IS_POINTER_INTERCONVERTIBLE_BASE_OF
+    template <typename Base, typename Derived>
+    constexpr bool IsPointerInterconvertibleBaseOfV
+        = IsPointerInterconvertibleBaseOf<Base, Derived>::Value;
 #endif
     template <typename From, typename To>
     constexpr bool IsConvertibleV = IsConvertible<From, To>::Value;
     template <typename From, typename To>
     constexpr bool IsNoThrowConvertibleV
         = IsNoThrowConvertible<From, To>::Value;
-#if __has_builtin(__is_layout_compatible)
+#ifdef PRISM_HAS_IS_LAYOUT_COMPATIBLE
     template <typename T, typename U>
     constexpr bool IsLayoutCompatibleV = IsLayoutCompatible<T, U>::Value;
 #endif

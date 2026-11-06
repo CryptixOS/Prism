@@ -202,6 +202,8 @@ install_headers(
   'Source/Prism/Core/Details/Constructibility.inl',
   'Source/Prism/Core/Details/CoreTraits.inl',
   'Source/Prism/Core/Details/CVRefTraits.inl',
+  'Source/Prism/Core/Details/ExtendedTraits.inl',
+  'Source/Prism/Core/Details/SignModifiers.inl',
   'Source/Prism/Core/Details/TransformationTraits.inl',
   'Source/Prism/Core/Details/TypeProperties.inl',
 

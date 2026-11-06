@@ -19,8 +19,8 @@ namespace Prism
     struct ArrayTraits
     {
         using Type               = T[N];
-        using IsSwappable        = Details::IsSwappable<T>;
-        using IsNoThrowSwappable = Details::IsNoThrowSwappable<T>;
+        using IsSwappable        = ::Prism::IsSwappable<T>;
+        using IsNoThrowSwappable = ::Prism::IsNoThrowSwappable<T>;
     };
 
     template <typename T>
