@@ -12,6 +12,7 @@
 #include <Prism/String/FormatHandler.hpp>
 #include <Prism/String/FormatString.hpp>
 #include <Prism/String/String.hpp>
+#include <Prism/String/StringUtils.hpp>
 
 /**
  * Prism formatting library: a freestanding replacement for {fmt} with the
@@ -1043,8 +1044,15 @@ namespace Prism
         }
     };
 
-    /// fmt::to_string.
+    // Numbers and enums keep StringUtils' conversions (a base, magic_enum
+    // names); both are exported unqualified, so an unconstrained overload
+    // here made every ToString(enum) or ToString(int) ambiguous wherever
+    // Prism is a using-directive or an associated namespace.
+    using StringUtils::ToString;
+
+    /// fmt::to_string, for everything StringUtils::ToString doesn't take.
     template <typename T>
+        requires(!ArithmeticType<T> && !EnumType<T>)
     PM_NODISCARD String ToString(const T& value)
     {
         return Format("{}", value);
