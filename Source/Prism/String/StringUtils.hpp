@@ -42,10 +42,15 @@ namespace Prism
         template <ArithmeticType T>
         constexpr usize GetDigitCount(T value)
         {
-            usize result = 1;
-            for (usize i = 10; static_cast<usize>(value) >= i; i *= 10)
-                ++result;
+            // Count by dividing the magnitude: the old `i *= 10` loop never
+            // ended for negative values (cast to a huge usize) or for values
+            // past 10^19, as `i` overflowed before exceeding them.
+            u64 magnitude = 0;
+            if (value < 0) magnitude = 0 - static_cast<u64>(value);
+            else magnitude = static_cast<u64>(value);
 
+            usize result = 1;
+            for (; magnitude >= 10; magnitude /= 10) ++result;
             return result;
         }
         constexpr bool IsNumber(StringView input)
