@@ -4,73 +4,62 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Containers/BitSpan.hpp>
 
 using namespace Prism;
 
-static void TestSingleBitOps()
-{
+TEST_CASE(TestSingleBitOps){
     BitSpan<128> bits;
 
-    for (usize i = 0; i < 128; ++i) assert(bits.Test(i) == false);
+    for (usize i = 0; i < 128; ++i) EXPECT_EQ(bits.Test(i), false);
 
     bits.Set(42);
-    assert(bits.Test(42) == true);
+    EXPECT_EQ(bits.Test(42), true);
 
     bits.Clear(42);
-    assert(bits.Test(42) == false);
+    EXPECT_EQ(bits.Test(42), false);
 }
 
-static void TestRangeOps()
-{
+TEST_CASE(TestRangeOps){
     BitSpan<128> bits;
 
-    assert(bits.TestRange(10, 20) == true);
+    EXPECT_EQ((bits.TestRange(10, 20)), true);
 
     bits.SetRange(10, 20);
-    assert(bits.TestRange(10, 20) == false);
+    EXPECT_EQ((bits.TestRange(10, 20)), false);
 
-    for (usize i = 10; i < 30; ++i) assert(bits.Test(i) == true);
+    for (usize i = 10; i < 30; ++i) EXPECT_EQ(bits.Test(i), true);
 
     bits.ClearRange(10, 20);
-    assert(bits.TestRange(10, 20) == true);
+    EXPECT_EQ((bits.TestRange(10, 20)), true);
 }
 
-static void TestFindFreeRange()
-{
+TEST_CASE(TestFindFreeRange){
     BitSpan<64> bits;
 
     bits.SetRange(0, 16);
     bits.SetRange(32, 8);
 
     isize r1 = bits.FindFreeRange(8);
-    assert(r1 == 16);
+    EXPECT_EQ(r1, 16);
 
     bits.SetRange(16, 8);
 
     isize r2 = bits.FindFreeRange(8);
-    assert(r2 == 24);
+    EXPECT_EQ(r2, 24);
 
     bits.SetRange(24, 8);
 
     isize r3 = bits.FindFreeRange(8);
-    assert(r3 == 40);
+    EXPECT_EQ(r3, 40);
 }
 
-static void TestExhaustion()
-{
+TEST_CASE(TestExhaustion){
     BitSpan<32> bits;
 
     bits.SetRange(0, 32);
-    assert(bits.FindFreeRange(1) == -1);
+    EXPECT_EQ(bits.FindFreeRange(1), -1);
 }
 
-int main()
-{
-    TestSingleBitOps();
-    TestRangeOps();
-    TestFindFreeRange();
-    TestExhaustion();
 
-    return EXIT_SUCCESS;
-}

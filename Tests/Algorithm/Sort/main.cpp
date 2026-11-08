@@ -4,11 +4,11 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Algorithm/Sort.hpp>
 #include <Prism/Containers/Array.hpp>
 #include <Prism/Containers/Vector.hpp>
 #include <Prism/Utility/Compare.hpp>
-#include <cassert>
 #include <cstdio>
 #include <cstring>
 
@@ -33,44 +33,65 @@ void TestSortAlgorithm(Sorter<Container> sorter)
     {
         Container v = {};
         sorter(v.begin(), v.end(), Less<typename Container::ValueType>{});
-        assert(IsSorted(v));
+        EXPECT(IsSorted(v));
     }
     {
         Container v = {42};
         sorter(v.begin(), v.end(), Less<typename Container::ValueType>{});
-        assert(IsSorted(v));
+        EXPECT(IsSorted(v));
     }
     {
         Container v = {5, 4, 3, 2, 1};
         sorter(v.begin(), v.end(), Less<typename Container::ValueType>{});
-        assert(IsSorted(v));
+        EXPECT(IsSorted(v));
     }
     {
         Container v = {1, 2, 3, 4, 5};
         sorter(v.begin(), v.end(), Less<typename Container::ValueType>{});
-        assert(IsSorted(v));
+        EXPECT(IsSorted(v));
     }
     {
         Container v = {3, 1, 4, 1, 5, 9, 2};
         sorter(v.begin(), v.end(), Less<typename Container::ValueType>{});
-        assert(IsSorted(v));
+        EXPECT(IsSorted(v));
     }
     {
         Container v(100);
         for (usize i = 0; i < v.Size(); ++i) v[i] = 100 - i;
 
         sorter(v.begin(), v.end(), Less<typename Container::ValueType>{});
-        assert(IsSorted(v));
+        EXPECT(IsSorted(v));
     }
 }
 
-int main()
+
+TEST_CASE(TestSortAlgorithm_InsertionSort)
 {
     TestSortAlgorithm(InsertionSort);
-    TestSortAlgorithm(HeapSort);
-    TestSortAlgorithm(MergeSort);
-    TestSortAlgorithm(QuickSort);
-    TestSortAlgorithm(IntroSort);
-    TestSortAlgorithm(Sort);
-    return 0;
 }
+
+TEST_CASE(TestSortAlgorithm_HeapSort)
+{
+    TestSortAlgorithm(HeapSort);
+}
+
+TEST_CASE(TestSortAlgorithm_MergeSort)
+{
+    TestSortAlgorithm(MergeSort);
+}
+
+TEST_CASE(TestSortAlgorithm_QuickSort)
+{
+    TestSortAlgorithm(QuickSort);
+}
+
+TEST_CASE(TestSortAlgorithm_IntroSort)
+{
+    TestSortAlgorithm(IntroSort);
+}
+
+TEST_CASE(TestSortAlgorithm_Sort)
+{
+    TestSortAlgorithm(Sort);
+}
+

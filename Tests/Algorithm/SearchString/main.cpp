@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Algorithm/SearchString.hpp>
 #include <Prism/Debug/Assertions.hpp>
 #include <Prism/String/String.hpp>
@@ -14,14 +15,13 @@
 using namespace Prism;
 using namespace Prism::Literals;
 
-void KPM_Search_TestComputeLPS_Array()
-{
+TEST_CASE(KPM_Search_TestComputeLPS_Array){
     Vector<isize> expected = {0, 0, 1, 2, 0};
     String        pattern  = "ababd";
     Vector<isize> lps;
     Algorithm::ComputeLPSArray(pattern.View(), lps);
 
-    assert(lps == expected);
+    EXPECT_EQ(lps, expected);
 }
 void test_KMPearch_SingleMatch()
 {
@@ -59,7 +59,7 @@ void test_KMPearch_SingleMatch()
     };
 
     KMPearchText(string, pattern);
-    assert(foundIndices == expectedIndices);
+    EXPECT_EQ(foundIndices, expectedIndices);
 }
 
 isize KMP_Search(const String& text, const String& pattern)
@@ -79,28 +79,21 @@ isize KMP_Search(const String& text, const char ch)
     return KMP_Search(text.View(), pattern);
 }
 
-void KPM_Search_TestFind()
-{
+TEST_CASE(KPM_Search_TestFind){
     String s = "hello world"_s;
 
-    assert(KMP_Search(s, "world") == 6);
-    assert(KMP_Search(s, 'o') == 4);
+    EXPECT_EQ((KMP_Search(s, "world")), 6);
+    EXPECT_EQ((KMP_Search(s, 'o')), 4);
     s = "hello world"_s;
 
     // Find
-    assert(KMP_Search(s, "hello") == 0);
-    assert(KMP_Search(s, "world") == 6);
-    assert(KMP_Search(s, "o") == 4);
-    assert(KMP_Search(s, "notfound") < 0);
-    assert(KMP_Search(s, 'l') == 2);
+    EXPECT_EQ((KMP_Search(s, "hello")), 0);
+    EXPECT_EQ((KMP_Search(s, "world")), 6);
+    EXPECT_EQ((KMP_Search(s, "o")), 4);
+    EXPECT(KMP_Search(s, "notfound") < 0);
+    EXPECT_EQ((KMP_Search(s, 'l')), 2);
 
     // TODO(v1tr10l7): Implement RFind, FindFirstOf, FindFirstNotOf, FindLastOf
 }
 
-int main()
-{
-    KPM_Search_TestComputeLPS_Array();
-    KPM_Search_TestFind();
 
-    return EXIT_SUCCESS;
-}

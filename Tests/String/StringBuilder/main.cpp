@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <utility>
 
 #include <Prism/Containers/DoublyLinkedList.hpp>
@@ -17,18 +18,16 @@
 
 using namespace Prism;
 
-int main()
+TEST_CASE(string_builder_format_to)
 {
     StringBuilder<char> sb;
 
-    FormatTo(sb, "val: {:08x}\n", 255);     // "val: 000000ff"
-    FormatTo(sb, "val: {:6}\n", 42);        // "val:     42"
-    FormatTo(sb, "val: {:#X}\n", 0xABCDEF); // "val: ABCDEF"
-    FormatTo(sb, "val: {:#b}\n", 32);       // "val: ABCDEF"
-    //
-    BasicString<char> final = sb;
-    printf("final: %s\n", final.Raw());
+    FormatTo(sb, "val: {:08x}\n", 255);
+    FormatTo(sb, "val: {:6}\n", 42);
+    FormatTo(sb, "val: {:#X}\n", 0xABCDEF);
+    FormatTo(sb, "val: {:#b}\n", 32);
 
-    Print("Hello, {} {:#x}, {:#x}\n", 2, 255, 0x10);
-    return 0;
+    BasicString<char> final = sb;
+    EXPECT_EQ(final, "val: 000000ff\nval:     42\nval: 0XABCDEF\nval: 0b100000\n"_s);
+    EXPECT_EQ(sb.TotalLength(), final.Size());
 }

@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Utility/Atomic.hpp>
 
 using namespace Prism;
@@ -26,34 +27,34 @@ void TestAtomicClass()
     // --- Construction / Store / Load / operator= ---
     {
         A a(T(1));
-        assert(a.Load() == T(1));
+        EXPECT_EQ(a.Load(), T(1));
         a.Store(T(2), MemoryOrder::eSeqCst);
-        assert(a.Load(MemoryOrder::eSeqCst) == T(2));
+        EXPECT_EQ(a.Load(MemoryOrder::eSeqCst), T(2));
 
         // operator= returns previous value (per your Atomic::operator=
         // implementation)
         T prev = (a = T(3));
-        assert(prev == T(2));
-        assert(static_cast<T>(a) == T(3)); // operator T()
+        EXPECT_EQ(prev, T(2));
+        EXPECT(static_cast<T>(a) == T(3)); // operator T()
 
         // volatile variant
         volatile A va(T(4));
-        assert(va.Load() == T(4));
+        EXPECT_EQ(va.Load(), T(4));
         va.Store(T(5));
-        assert(va.Load() == T(5));
+        EXPECT_EQ(va.Load(), T(5));
     }
 
     // --- Exchange ---
     {
         A a(T(3));
         T old = a.Exchange(T(4), MemoryOrder::eSeqCst);
-        assert(old == T(3));
-        assert(a.Load() == T(4));
+        EXPECT_EQ(old, T(3));
+        EXPECT_EQ(a.Load(), T(4));
 
         volatile A va(T(6));
         T          oldv = va.Exchange(T(7));
-        assert(oldv == T(6));
-        assert(va.Load() == T(7));
+        EXPECT_EQ(oldv, T(6));
+        EXPECT_EQ(va.Load(), T(7));
     }
 
     // --- CompareExchange (strong) ---
@@ -65,8 +66,8 @@ void TestAtomicClass()
             bool ok       = a.CompareExchange(expected, T(8), /*weak*/ false,
                                               MemoryOrder::eSeqCst,
                                               MemoryOrder::eRelaxed);
-            assert(ok);
-            assert(a.Load() == T(8));
+            EXPECT(ok);
+            EXPECT_EQ(a.Load(), T(8));
             // expected remains (usually set to original expected or
             // unspecified) - many wrappers leave it unchanged on success
         }
@@ -80,10 +81,10 @@ void TestAtomicClass()
                                               MemoryOrder::eSeqCst,
                                               MemoryOrder::eRelaxed);
             // must fail because 5 != 4
-            assert(!ok);
-            assert(a.Load() == T(5));
+            EXPECT(!ok);
+            EXPECT_EQ(a.Load(), T(5));
             // expected must have been updated to current a.Load()
-            assert(expected == T(5));
+            EXPECT_EQ(expected, T(5));
         }
         else
         {
@@ -93,17 +94,17 @@ void TestAtomicClass()
             bool ok
                 = a.CompareExchange(expected, true, false, MemoryOrder::eSeqCst,
                                     MemoryOrder::eRelaxed);
-            assert(ok);
-            assert(a.Load() == true);
+            EXPECT(ok);
+            EXPECT_EQ(a.Load(), true);
 
             expected = false;
             ok = a.CompareExchange(expected, false, false, MemoryOrder::eSeqCst,
                                    MemoryOrder::eRelaxed);
             // expected was false but a is true -> should fail and expected be
             // set to true
-            assert(!ok);
-            assert(a.Load() == true);
-            assert(expected == true);
+            EXPECT(!ok);
+            EXPECT_EQ(a.Load(), true);
+            EXPECT_EQ(expected, true);
         }
     }
 
@@ -113,12 +114,12 @@ void TestAtomicClass()
         A a(T(1));
         T res = a.FetchAdd(T(2), MemoryOrder::eSeqCst); // returns old
         // After fetch-add, new value should be old+2
-        assert(res == T(1));
-        assert(a.Load() == T(3));
+        EXPECT_EQ(res, T(1));
+        EXPECT_EQ(a.Load(), T(3));
 
         res = a.FetchSub(T(1), MemoryOrder::eSeqCst);
-        assert(res == T(3));
-        assert(a.Load() == T(2));
+        EXPECT_EQ(res, T(3));
+        EXPECT_EQ(a.Load(), T(2));
     }
 
     // --- Bitwise fetches (only for integral types, exclude bool) ---
@@ -126,18 +127,18 @@ void TestAtomicClass()
     {
         A a(T(1));
         T old = a.FetchOr(T(4), MemoryOrder::eSeqCst);
-        assert(old == T(1));
-        assert(a.Load() == T(1 | 4));
+        EXPECT_EQ(old, T(1));
+        EXPECT_EQ(a.Load(), (T(1 | 4)));
 
         a.Store(T(1));
         old = a.FetchAnd(T(1), MemoryOrder::eSeqCst);
-        assert(old == T(1));
-        assert(a.Load() == T(1 & 1));
+        EXPECT_EQ(old, T(1));
+        EXPECT_EQ(a.Load(), (T(1 & 1)));
 
         a.Store(T(1));
         old = a.FetchXor(T(2), MemoryOrder::eSeqCst);
-        assert(old == T(1));
-        assert(a.Load() == T(1 ^ 2));
+        EXPECT_EQ(old, T(1));
+        EXPECT_EQ(a.Load(), (T(1 ^ 2)));
     }
 
     // --- FetchAdd / FetchSub operator++ / operator-- / compound assignment ---
@@ -147,32 +148,32 @@ void TestAtomicClass()
 
         // prefix ++
         T pref = ++a;
-        assert(a.Load() == T(1));
-        assert(pref == a.Load());
+        EXPECT_EQ(a.Load(), T(1));
+        EXPECT_EQ(pref, a.Load());
 
         // postfix ++ returns previous value
         T post = a++;
-        assert(post == T(1));
-        assert(a.Load() == T(2));
+        EXPECT_EQ(post, T(1));
+        EXPECT_EQ(a.Load(), T(2));
 
         // prefix --
         T predec = --a;
-        assert(predec == a.Load());
-        assert(a.Load() == T(1));
+        EXPECT_EQ(predec, a.Load());
+        EXPECT_EQ(a.Load(), T(1));
 
         // postfix --
         T postdec = a--;
-        assert(postdec == T(1));
-        assert(a.Load() == T(0));
+        EXPECT_EQ(postdec, T(1));
+        EXPECT_EQ(a.Load(), T(0));
 
         // compound assignment
         T addres = (a += T(5));
-        assert(a.Load() == T(5));
-        assert(addres == a.Load());
+        EXPECT_EQ(a.Load(), T(5));
+        EXPECT_EQ(addres, a.Load());
 
         T subres = (a -= T(2));
-        assert(a.Load() == T(3));
-        assert(subres == a.Load());
+        EXPECT_EQ(a.Load(), T(3));
+        EXPECT_EQ(subres, a.Load());
     }
 
     // --- Bitwise compound assignments (integral only, exclude bool) ---
@@ -180,13 +181,13 @@ void TestAtomicClass()
     {
         A a(T(6));
         T andres = (a &= T(3));
-        assert(andres == a.Load());
+        EXPECT_EQ(andres, a.Load());
         A b(T(1));
         T orres = (b |= T(4));
-        assert(orres == b.Load());
+        EXPECT_EQ(orres, b.Load());
         A c(T(2));
         T xorres = (c ^= T(1));
-        assert(xorres == c.Load());
+        EXPECT_EQ(xorres, c.Load());
     }
 
     // --- IsLockFree / IsAlwaysLockFree ---
@@ -203,11 +204,11 @@ void TestAtomicClass()
     // --- volatile overloads basic smoke tests ---
     {
         volatile A va(T(10));
-        assert(va.Load() == T(10));
+        EXPECT_EQ(va.Load(), T(10));
         va.Store(T(11));
-        assert(va.Load() == T(11));
+        EXPECT_EQ(va.Load(), T(11));
         T old = va.Exchange(T(12));
-        assert(old == T(11));
+        EXPECT_EQ(old, T(11));
         (void)old;
     }
 
@@ -220,11 +221,11 @@ void TestAtomicClass()
         T    expected = false;
         bool ok = a.CompareExchange(expected, true, false, MemoryOrder::eSeqCst,
                                     MemoryOrder::eRelaxed);
-        assert(ok);
-        assert(a.Load() == true);
+        EXPECT(ok);
+        EXPECT_EQ(a.Load(), true);
         // Clear via Store
         a.Store(false);
-        assert(a.Load() == false);
+        EXPECT_EQ(a.Load(), false);
     }
 
     // final smoke: load/store with different memory orders compile
@@ -236,18 +237,54 @@ void TestAtomicClass()
 }
 
 // Runner: instantiate tests for a set of types
-int main()
+
+TEST_CASE(TestAtomicClass_i8)
 {
     TestAtomicClass<i8>();
-    TestAtomicClass<i16>();
-    TestAtomicClass<i32>();
-    TestAtomicClass<i64>();
-    TestAtomicClass<u8>();
-    TestAtomicClass<u16>();
-    TestAtomicClass<u32>();
-    TestAtomicClass<u64>();
-    TestAtomicClass<bool>();
-    TestAtomicClass<Color>();
-
-    return 0;
 }
+
+TEST_CASE(TestAtomicClass_i16)
+{
+    TestAtomicClass<i16>();
+}
+
+TEST_CASE(TestAtomicClass_i32)
+{
+    TestAtomicClass<i32>();
+}
+
+TEST_CASE(TestAtomicClass_i64)
+{
+    TestAtomicClass<i64>();
+}
+
+TEST_CASE(TestAtomicClass_u8)
+{
+    TestAtomicClass<u8>();
+}
+
+TEST_CASE(TestAtomicClass_u16)
+{
+    TestAtomicClass<u16>();
+}
+
+TEST_CASE(TestAtomicClass_u32)
+{
+    TestAtomicClass<u32>();
+}
+
+TEST_CASE(TestAtomicClass_u64)
+{
+    TestAtomicClass<u64>();
+}
+
+TEST_CASE(TestAtomicClass_bool)
+{
+    TestAtomicClass<bool>();
+}
+
+TEST_CASE(TestAtomicClass_Color)
+{
+    TestAtomicClass<Color>();
+}
+

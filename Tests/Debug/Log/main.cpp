@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Debug/Log.hpp>
 #include <Prism/Debug/Logger.hpp>
 
@@ -18,11 +19,8 @@ struct Policy
     inline void Unlock() { Mutex.unlock(); }
 };
 
-int main(int argc, char** argv)
+TEST_CASE(log_levels)
 {
-    IgnoreUnused(argc);
-    IgnoreUnused(argv);
-
     Log::Log(LogLevel::eTrace, "Hello");
     Log::Log(LogLevel::eInfo, "Hello");
     Log::Log(LogLevel::eDebug, "Hello");
@@ -32,6 +30,4 @@ int main(int argc, char** argv)
 
     Logger<Policy> logger("TestLogger");
     logger.Log(LogLevel::eDebug, "TestPayload");
-
-    return EXIT_SUCCESS;
 }

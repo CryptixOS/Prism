@@ -15,9 +15,9 @@ utility_tests = [
 
 foreach name : utility_tests
   test = executable(
-    name, [srcs, files(name / 'main.cpp')],
+    name, files(name / 'main.cpp'),
     cpp_args: cpp_args, link_args: link_args,
-    include_directories: incs, dependencies: deps
+    include_directories: incs, dependencies: test_deps
   )
   test(name, test, suite: 'Utility')
 endforeach

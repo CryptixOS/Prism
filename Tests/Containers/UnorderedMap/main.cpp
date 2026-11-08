@@ -5,16 +5,15 @@
  * SPDX-License-Identifier: GPL-3
  */
 
-#include <cassert>
+#include <Prism/Test/Test.hpp>
 #include <iostream>
 #include <string>
 
 #include <Prism/Containers/UnorderedMap.hpp>
-#include <Prism/Debug/Test.hpp>
 #include <Prism/String/String.hpp>
 using namespace Prism;
 
-#define TestEq(condition) PrismTestEq(condition)
+#define TestEq(condition) EXPECT(condition)
 
 template <>
 struct Prism::Hash<std::string>
@@ -35,8 +34,7 @@ struct TestHasher
 };
 
 void Test_CoreFunctionality() {}
-void Test_InsertOrAssign_And_Find()
-{
+TEST_CASE(Test_InsertOrAssign_And_Find){
     UnorderedMap<std::string, int> map;
 
     map.InsertOrAssign("apple", 10);
@@ -49,8 +47,7 @@ void Test_InsertOrAssign_And_Find()
     TestEq(map.Find("nonexistent") == map.end());
 }
 
-void Test_InsertOrAssignOrAssign()
-{
+TEST_CASE(Test_InsertOrAssignOrAssign){
     UnorderedMap<std::string, int> map;
 
     map.InsertOrAssign("key", 1);
@@ -61,8 +58,7 @@ void Test_InsertOrAssignOrAssign()
     TestEq(map.Find("key")->Value == 42); // value must be updated
 }
 
-void Test_Erase_By_Key()
-{
+TEST_CASE(Test_Erase_By_Key){
     UnorderedMap<std::string, int> map;
 
     map.InsertOrAssign("dog", 5);
@@ -78,8 +74,7 @@ void Test_Erase_By_Key()
            == map.end()); // trying to erase nonexistent key
 }
 
-void Test_Iterator()
-{
+TEST_CASE(Test_Iterator){
     UnorderedMap<std::string, int> map;
 
     map.InsertOrAssign("one", 1);
@@ -121,8 +116,7 @@ namespace
 } // namespace
 
 // Regression: Insert(const KeyValuePair&) called itself forever.
-void Test_InsertConstPair()
-{
+TEST_CASE(Test_InsertConstPair){
     using Map = UnorderedMap<int, int>;
     Map                     map;
     const Map::KeyValuePair entry(1, 10);
@@ -136,8 +130,7 @@ void Test_InsertConstPair()
 
 // Regression: Clear() freed the bucket array, so begin() read out of bounds
 // and later lookups divided by zero buckets.
-void Test_ClearThenReuse()
-{
+TEST_CASE(Test_ClearThenReuse){
     UnorderedMap<int, int> map;
     for (int i = 0; i < 20; ++i) map.InsertOrAssign(i, i);
     map.Clear();
@@ -153,8 +146,7 @@ void Test_ClearThenReuse()
 
 // Regression: Erase() returned an iterator stuck at the end of the bucket
 // rather than the next element (or end()).
-void Test_EraseReturnsNext()
-{
+TEST_CASE(Test_EraseReturnsNext){
     UnorderedMap<int, int> map;
     for (int i = 0; i < 50; ++i) map.InsertOrAssign(i, i);
 
@@ -189,8 +181,7 @@ void Test_EraseReturnsNext()
 }
 
 // Many inserts trigger several rehashes; every key must stay reachable.
-void Test_RehashKeepsEverything()
-{
+TEST_CASE(Test_RehashKeepsEverything){
     UnorderedMap<int, int> map(1);
     for (int i = 0; i < 1000; ++i) map.InsertOrAssign(i, i * 2);
     TestEq(map.Size() == 1000);
@@ -209,8 +200,7 @@ void Test_RehashKeepsEverything()
     TestEq(map.Size() == 1000 && map.Find(777)->Value == 1554);
 }
 
-void Test_Collisions()
-{
+TEST_CASE(Test_Collisions){
     UnorderedMap<int, int, CollidingHasher> map;
     for (int i = 0; i < 10; ++i) map.InsertOrAssign(i, i);
     TestEq(map.Size() == 10);
@@ -221,8 +211,7 @@ void Test_Collisions()
 
 // Regression: copying the map shallow-copied the bucket lists, so both maps
 // shared (and double-deleted) the same nodes.
-void Test_CopyAndMove()
-{
+TEST_CASE(Test_CopyAndMove){
     g_ValueAlive = 0;
     {
         UnorderedMap<int, Tracked> original;
@@ -252,8 +241,7 @@ void Test_CopyAndMove()
 }
 
 // Regression: const operator[] tried to insert into a const map.
-void Test_ConstAccess()
-{
+TEST_CASE(Test_ConstAccess){
     UnorderedMap<int, int> map;
     map[1] = 10;
     map[2];
@@ -269,8 +257,7 @@ void Test_ConstAccess()
     TestEq(sum == 10);
 }
 
-void Test_EmplaceKeepsKeysUnique()
-{
+TEST_CASE(Test_EmplaceKeepsKeysUnique){
     UnorderedMap<int, int> map;
     map.Emplace(1, 10);
     map.Emplace(1, 20);
@@ -282,8 +269,7 @@ void Test_EmplaceKeepsKeysUnique()
     TestEq(map.Size() == 2 && map.At(2) == 40);
 }
 
-void Test_NoLeaksOnDestroy()
-{
+TEST_CASE(Test_NoLeaksOnDestroy){
     g_ValueAlive = 0;
     {
         UnorderedMap<int, Tracked> map;
@@ -294,22 +280,4 @@ void Test_NoLeaksOnDestroy()
     TestEq(g_ValueAlive == 0);
 }
 
-int main()
-{
-    Test_InsertOrAssign_And_Find();
-    Test_InsertOrAssignOrAssign();
-    Test_Erase_By_Key();
-    Test_Iterator();
-    Test_InsertConstPair();
-    Test_ClearThenReuse();
-    Test_EraseReturnsNext();
-    Test_RehashKeepsEverything();
-    Test_Collisions();
-    Test_CopyAndMove();
-    Test_ConstAccess();
-    Test_EmplaceKeepsKeysUnique();
-    Test_NoLeaksOnDestroy();
 
-    std::cout << "All IntrusiveHashMap tests passed!\n";
-    return 0;
-}

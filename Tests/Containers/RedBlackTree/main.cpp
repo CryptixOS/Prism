@@ -4,9 +4,9 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Containers/RedBlackTree.hpp>
 
-#include <cassert>
 #include <string>
 
 using namespace Prism;
@@ -23,15 +23,15 @@ void RBTree_TestInsertFind()
     tree.Insert(20, b);
     tree.Insert(5, c);
 
-    assert(tree.GetSize() == 3);
-    assert(tree.Contains(10));
-    assert(tree.Contains(20));
-    assert(tree.Contains(5));
-    assert(!tree.Contains(42));
+    EXPECT_EQ(tree.GetSize(), 3);
+    EXPECT(tree.Contains(10));
+    EXPECT(tree.Contains(20));
+    EXPECT(tree.Contains(5));
+    EXPECT(!tree.Contains(42));
 
-    assert(tree.Contains(10) && tree.At(10) == "apple");
-    assert(tree.Contains(20) && tree.At(20) == "banana");
-    assert(tree.Contains(5) && tree.At(5) == "cherry");
+    EXPECT(tree.Contains(10) && tree.At(10) == "apple");
+    EXPECT(tree.Contains(20) && tree.At(20) == "banana");
+    EXPECT(tree.Contains(5) && tree.At(5) == "cherry");
 }
 
 void RBTree_TestErase()
@@ -43,13 +43,13 @@ void RBTree_TestErase()
     tree.Insert(2, v);
     tree.Insert(3, v);
 
-    assert(tree.GetSize() == 3);
-    assert(tree.Erase(2));
-    assert(tree.GetSize() == 2);
-    assert(!tree.Contains(2));
-    assert(tree.Contains(1));
-    assert(tree.Contains(3));
-    assert(!tree.Erase(42)); // erase nonexistent
+    EXPECT_EQ(tree.GetSize(), 3);
+    EXPECT(tree.Erase(2));
+    EXPECT_EQ(tree.GetSize(), 2);
+    EXPECT(!tree.Contains(2));
+    EXPECT(tree.Contains(1));
+    EXPECT(tree.Contains(3));
+    EXPECT(!tree.Erase(42)); // erase nonexistent
 }
 
 void RBTree_TestClear()
@@ -60,10 +60,10 @@ void RBTree_TestClear()
     tree.Insert(2, val);
     tree.Insert(3, val);
 
-    assert(!tree.IsEmpty());
+    EXPECT(!tree.IsEmpty());
     tree.Clear();
-    assert(tree.IsEmpty());
-    assert(tree.GetSize() == 0);
+    EXPECT(tree.IsEmpty());
+    EXPECT_EQ(tree.GetSize(), 0);
 }
 
 void RBTree_TestIterator()
@@ -75,12 +75,12 @@ void RBTree_TestIterator()
     tree.Insert(3, v3);
 
     auto it = tree.begin();
-    assert(!it.IsLast());
-    assert(it->Key == 1 || it->Key == 2 || it->Key == 3);
+    EXPECT(!it.IsLast());
+    EXPECT(it->Key == 1 || it->Key == 2 || it->Key == 3);
 
     size_t count = 0;
     for (auto i = tree.begin(); i != tree.end(); ++i) ++count;
-    assert(count == 3);
+    EXPECT_EQ(count, 3);
 }
 
 void RBTree_TestInsertOverwrite()
@@ -92,8 +92,8 @@ void RBTree_TestInsertOverwrite()
     tree.Insert(10, val1);
     tree.Insert(10, val2); // should overwrite
 
-    assert(tree.GetSize() == 1);
-    assert(tree.Contains(10) && tree.At(10) == "second");
+    EXPECT_EQ(tree.GetSize(), 1);
+    EXPECT(tree.Contains(10) && tree.At(10) == "second");
 }
 
 void RBTree_TestDeleteOnlyRoot()
@@ -102,9 +102,9 @@ void RBTree_TestDeleteOnlyRoot()
     std::string                    val = "only";
 
     tree.Insert(42, val);
-    assert(tree.GetSize() == 1);
-    assert(tree.Erase(42));
-    assert(tree.IsEmpty());
+    EXPECT_EQ(tree.GetSize(), 1);
+    EXPECT(tree.Erase(42));
+    EXPECT(tree.IsEmpty());
 }
 
 void RBTree_TestSequentialInsert()
@@ -114,8 +114,8 @@ void RBTree_TestSequentialInsert()
 
     for (int i = 1; i <= 1000; ++i) tree.Insert(i, dummy);
 
-    assert(tree.GetSize() == 1000);
-    for (int i = 1; i <= 1000; ++i) assert(tree.Contains(i));
+    EXPECT_EQ(tree.GetSize(), 1000);
+    for (int i = 1; i <= 1000; ++i) EXPECT(tree.Contains(i));
 }
 
 void RBTree_TestInsertDeleteConsistency()
@@ -127,11 +127,11 @@ void RBTree_TestInsertDeleteConsistency()
 
     for (int i = 0; i < 100; i += 2) tree.Erase(i);
 
-    assert(tree.GetSize() == 50);
+    EXPECT_EQ(tree.GetSize(), 50);
     for (int i = 0; i < 100; ++i)
     {
-        if (i % 2 == 0) assert(!tree.Contains(i));
-        else assert(tree.Contains(i));
+        if (i % 2 == 0) EXPECT(!tree.Contains(i));
+        else EXPECT(tree.Contains(i));
     }
 }
 
@@ -141,11 +141,10 @@ void RBTree_TestNullptrBehavior()
     std::string                    val = "value";
     tree.Insert(1, val);
 
-    assert(!tree.Contains(2));
+    EXPECT(!tree.Contains(2));
 }
 
-void RBTree_RunAllTests()
-{
+TEST_CASE(RBTree_RunAllTests){
     RBTree_TestInsertFind();
     RBTree_TestErase();
     RBTree_TestClear();
@@ -158,8 +157,4 @@ void RBTree_RunAllTests()
     printf("All tests passed.\n");
 }
 
-int main()
-{
-    RBTree_RunAllTests();
-    return 0;
-}
+

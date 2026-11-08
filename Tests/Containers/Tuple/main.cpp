@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Containers/Tuple.hpp>
 #include <Prism/String/String.hpp>
 #include <iostream>
@@ -11,11 +12,11 @@
 using namespace Prism;
 using namespace Prism::Literals;
 
-int main()
+TEST_CASE(tuple_get)
 {
     Tuple tuple{10, 2.50, "Hello"_s};
 
-    std::cout << "Tuple(0) => " << tuple.Get<0>() << "\n";
-    std::cout << "Tuple(1) => " << tuple.Get<1>() << "\n";
-    std::cout << "Tuple(2) => " << tuple.Get<2>().Raw() << "\n";
+    EXPECT_EQ(tuple.Get<0>(), 10);
+    EXPECT_APPROXIMATE(tuple.Get<1>(), 2.50);
+    EXPECT_EQ(tuple.Get<2>(), "Hello"_s);
 }

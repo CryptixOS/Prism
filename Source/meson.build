@@ -19,4 +19,11 @@ srcs = files(
   'Prism/Utility/Time.cpp',
 )
 
+# Unit testing framework (hosted only: uses fork(), clock_gettime(), ...).
+test_framework_srcs = files(
+  'Prism/Test/CrashTest.cpp',
+  'Prism/Test/TestSuite.cpp',
+)
+test_main_srcs = files('Prism/Test/TestMain.cpp')
+
 incs += include_directories('.')

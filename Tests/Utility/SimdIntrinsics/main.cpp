@@ -4,15 +4,14 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Utility/SimdIntrinsics.hpp>
-#include <cassert>
 #include <cmath>
 #include <iostream>
 
 using namespace Prism;
 
-void TestSimdFloatAdd()
-{
+TEST_CASE(TestSimdFloatAdd){
     alignas(16) float a[FloatWidth];
     alignas(16) float b[FloatWidth];
     alignas(16) float out[FloatWidth];
@@ -29,11 +28,10 @@ void TestSimdFloatAdd()
     StoreFloat(out, vc);
 
     for (usize i = 0; i < FloatWidth; ++i)
-        assert(std::fabs(out[i] - (a[i] + b[i])) < 1e-5f);
+        EXPECT(std::fabs(out[i] - (a[i] + b[i])) < 1e-5f);
 }
 
-void TestSimdFloatSub()
-{
+TEST_CASE(TestSimdFloatSub){
     alignas(16) float a[FloatWidth];
     alignas(16) float b[FloatWidth];
     alignas(16) float out[FloatWidth];
@@ -50,11 +48,10 @@ void TestSimdFloatSub()
     StoreFloat(out, vc);
 
     for (usize i = 0; i < FloatWidth; ++i)
-        assert(std::fabs(out[i] - (a[i] - b[i])) < 1e-5f);
+        EXPECT(std::fabs(out[i] - (a[i] - b[i])) < 1e-5f);
 }
 
-void TestSimdFloatMul()
-{
+TEST_CASE(TestSimdFloatMul){
     alignas(16) float a[FloatWidth];
     alignas(16) float b[FloatWidth];
     alignas(16) float out[FloatWidth];
@@ -71,11 +68,10 @@ void TestSimdFloatMul()
     StoreFloat(out, vc);
 
     for (usize i = 0; i < FloatWidth; ++i)
-        assert(std::fabs(out[i] - (a[i] * b[i])) < 1e-5f);
+        EXPECT(std::fabs(out[i] - (a[i] * b[i])) < 1e-5f);
 }
 
-void TestSimdFloatDiv()
-{
+TEST_CASE(TestSimdFloatDiv){
     alignas(16) float a[FloatWidth];
     alignas(16) float b[FloatWidth];
     alignas(16) float out[FloatWidth];
@@ -92,27 +88,17 @@ void TestSimdFloatDiv()
     StoreFloat(out, vc);
 
     for (usize i = 0; i < FloatWidth; ++i)
-        assert(std::fabs(out[i] - (a[i] / b[i])) < 1e-5f);
+        EXPECT(std::fabs(out[i] - (a[i] / b[i])) < 1e-5f);
 }
 
-void TestSimdFloatSet1()
-{
+TEST_CASE(TestSimdFloatSet1){
     float      out[FloatWidth];
     float      val = 3.14159f;
     simd_float v   = Set1Float(val);
     StoreFloat(out, v);
 
     for (usize i = 0; i < FloatWidth; ++i)
-        assert(std::fabs(out[i] - val) < 1e-5f);
+        EXPECT(std::fabs(out[i] - val) < 1e-5f);
 }
 
-int main()
-{
-    TestSimdFloatAdd();
-    TestSimdFloatSub();
-    TestSimdFloatMul();
-    TestSimdFloatDiv();
-    TestSimdFloatSet1();
-    std::cout << "SIMD intrinsic tests passed.\n";
-    return 0;
-}
+

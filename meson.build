@@ -128,6 +128,29 @@ prism_dep = declare_dependency(
   dependencies: deps, 
 )
 pkg.generate(prism)
+
+# Unit testing framework (Prism/Test), only for hosted targets.
+if target == 'app' or target == 'cryptix-app'
+  prism_test = static_library('prism_test',
+    test_framework_srcs, cpp_args: cxx_args,
+    include_directories: incs,
+    dependencies: deps,
+    link_with: prism,
+    install: true,
+  )
+  prism_test_main = static_library('prism_test_main',
+    test_main_srcs, cpp_args: cxx_args,
+    include_directories: incs,
+    dependencies: deps,
+    install: true,
+  )
+  prism_test_dep = declare_dependency(
+    include_directories: incs,
+    compile_args: cxx_args,
+    dependencies: deps,
+    link_with: [prism_test, prism_test_main, prism],
+  )
+endif
 install_headers(
   #'Source/Prism/Algorithm/Random.hpp',
   'Source/Prism/Algorithm/Find.hpp',
@@ -256,6 +279,21 @@ install_headers(
   'Source/Prism/String/StringView.hpp',
   'Source/Prism/String/StringView.inl',
   subdir: 'Prism/String'
+)
+install_headers(
+  'Source/Prism/Test/CrashTest.hpp',
+  'Source/Prism/Test/Macros.hpp',
+  'Source/Prism/Test/Test.hpp',
+  'Source/Prism/Test/TestCase.hpp',
+  'Source/Prism/Test/TestResult.hpp',
+  'Source/Prism/Test/TestSuite.hpp',
+  subdir: 'Prism/Test'
+)
+install_headers(
+  'Source/Prism/Test/Randomized/Generator.hpp',
+  'Source/Prism/Test/Randomized/RandomRun.hpp',
+  'Source/Prism/Test/Randomized/RandSource.hpp',
+  subdir: 'Prism/Test/Randomized'
 )
 install_headers(
   'Source/Prism/Utility/Atomic.hpp',

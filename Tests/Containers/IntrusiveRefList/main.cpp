@@ -4,21 +4,13 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Containers/IntrusiveRefList.hpp>
 
 #include <cstdio>
 #include <cstdlib>
 
-// Unlike assert(), this still fires when NDEBUG is defined (release builds).
-#define Check(expr)                                                            \
-    do {                                                                       \
-        if (!(expr))                                                           \
-        {                                                                      \
-            std::fprintf(stderr, "%s:%d: Check failed: %s\n", __FILE__,       \
-                         __LINE__, #expr);                                     \
-            std::abort();                                                      \
-        }                                                                      \
-    } while (0)
+// Unlike EXPECT(), this still fires when NDEBUG is defined (release builds).
 
 using namespace Prism;
 
@@ -40,28 +32,26 @@ namespace
     };
     using List = IntrusiveRefList<Node>;
 
-    void PushIterateAndArrow()
-    {
+    TEST_CASE(PushIterateAndArrow){
         List list;
         list.PushBack(CreateRef<Node>(1));
         list.PushBack(CreateRef<Node>(2));
         list.PushBack(CreateRef<Node>(3));
-        Check(list.Size() == 3);
+        EXPECT_EQ(list.Size(), 3);
 
         // Regression: Iterator::operator-> returned T&, so `it->Value`
         // didn't compile.
         int sum = 0;
         for (auto it = list.begin(); it != list.end(); ++it) sum += it->Value;
-        Check(sum == 6);
+        EXPECT_EQ(sum, 6);
 
         int expected = 3;
         for (auto it = list.rbegin(); it != list.rend(); ++it)
-            Check((*it)->Value == expected--);
-        Check(expected == 0);
+            EXPECT((*it)->Value == expected--);
+        EXPECT_EQ(expected, 0);
     }
 
-    void UnlinkAndEraseKeepSize()
-    {
+    TEST_CASE(UnlinkAndEraseKeepSize){
         List list;
         auto a = CreateRef<Node>(1);
         auto b = CreateRef<Node>(2);
@@ -71,57 +61,46 @@ namespace
         list.PushBack(c);
 
         b->Hook.Unlink(b);
-        Check(list.Size() == 2);
+        EXPECT_EQ(list.Size(), 2);
 
         List other;
         list.Erase(b); // not in `list` anymore
-        Check(list.Size() == 2);
+        EXPECT_EQ(list.Size(), 2);
         other.PushBack(b);
         list.Erase(b); // belongs to `other`
-        Check(list.Size() == 2 && other.Size() == 1);
+        EXPECT(list.Size() == 2 && other.Size() == 1);
         other.Clear();
 
         auto next = list.Erase(list.begin());
-        Check(next.Current == c && list.Size() == 1);
+        EXPECT(next.Current == c && list.Size() == 1);
         list.Clear();
-        Check(list.Empty() && list.Size() == 0);
+        EXPECT(list.Empty() && list.Size() == 0);
     }
 
-    void MovePreservesSize()
-    {
+    TEST_CASE(MovePreservesSize){
         List source;
         source.PushBack(CreateRef<Node>(1));
         source.PushBack(CreateRef<Node>(2));
 
         List moved(Move(source));
-        Check(moved.Size() == 2 && source.Size() == 0);
-        Check(moved.Head()->Hook.Owner == &moved);
+        EXPECT(moved.Size() == 2 && source.Size() == 0);
+        EXPECT(moved.Head()->Hook.Owner == &moved);
     }
 
-    void NodesFreedAfterClear()
-    {
+    TEST_CASE(NodesFreedAfterClear){
         g_Alive = 0;
         {
             List list;
             list.PushBack(CreateRef<Node>(1));
             list.PushBack(CreateRef<Node>(2));
-            Check(g_Alive == 2);
+            EXPECT_EQ(g_Alive, 2);
             list.Clear();
-            Check(g_Alive == 0);
+            EXPECT_EQ(g_Alive, 0);
 
             list.PushBack(CreateRef<Node>(3));
         }
-        Check(g_Alive == 0);
+        EXPECT_EQ(g_Alive, 0);
     }
 } // namespace
 
-int main()
-{
-    PushIterateAndArrow();
-    UnlinkAndEraseKeepSize();
-    MovePreservesSize();
-    NodesFreedAfterClear();
 
-    std::puts("All IntrusiveRefList tests passed!");
-    return 0;
-}

@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Utility/AtomicBuiltins.hpp>
 
 using namespace Prism;
@@ -22,20 +23,20 @@ void TestAtomicType()
     // --- AtomicLoad / Store ---
     T val = T(1);
     AtomicStore(val, T(2), MemoryOrder::eSeqCst);
-    assert(AtomicLoad(val, MemoryOrder::eSeqCst) == T(2));
+    EXPECT_EQ((AtomicLoad(val, MemoryOrder::eSeqCst)), T(2));
 
     T dest{};
     AtomicLoad(val, dest, MemoryOrder::eSeqCst);
-    assert(dest == T(2));
+    EXPECT_EQ(dest, T(2));
 
     T src = T(3);
     AtomicStore(val, src, MemoryOrder::eSeqCst);
-    assert(val == T(3));
+    EXPECT_EQ(val, T(3));
 
     // --- Exchange ---
     T old = AtomicExchange(val, T(4), MemoryOrder::eSeqCst);
-    assert(old == T(3));
-    assert(val == T(4));
+    EXPECT_EQ(old, T(3));
+    EXPECT_EQ(val, T(4));
 
     // --- CompareExchange strong ---
     if constexpr (!IsSameV<T, bool>)
@@ -46,9 +47,9 @@ void TestAtomicType()
         bool success = AtomicCompareExchange(val, expected, T(6), false,
                                              MemoryOrder::eSeqCst,
                                              MemoryOrder::eRelaxed);
-        assert(!success);
-        assert(val == T(5));
-        assert(expected == T(5));
+        EXPECT(!success);
+        EXPECT_EQ(val, T(5));
+        EXPECT_EQ(expected, T(5));
     }
     else
     {
@@ -58,26 +59,26 @@ void TestAtomicType()
         bool success  = AtomicCompareExchange(val, expected, true, false,
                                               MemoryOrder::eSeqCst,
                                               MemoryOrder::eRelaxed);
-        assert(success);
-        assert(val == true);
+        EXPECT(success);
+        EXPECT_EQ(val, true);
 
         expected = false;
         success  = AtomicCompareExchange(val, expected, false, false,
                                          MemoryOrder::eSeqCst,
                                          MemoryOrder::eRelaxed);
-        assert(!success); // because expected != val
-        assert(val == true);
-        assert(expected == true);
+        EXPECT(!success); // because expected != val
+        EXPECT_EQ(val, true);
+        EXPECT_EQ(expected, true);
     }
     // --- Arithmetic fetches (only for integral-like) ---
     if constexpr (!IsSameV<T, bool>)
     {
         val = T(1);
         AtomicAddFetch(val, T(2), MemoryOrder::eSeqCst);
-        assert(static_cast<T>(val) == static_cast<T>(3));
+        EXPECT(static_cast<T>(val) == static_cast<T>(3));
 
         AtomicSubFetch(val, T(1), MemoryOrder::eSeqCst);
-        assert(static_cast<T>(val) == static_cast<T>(2));
+        EXPECT(static_cast<T>(val) == static_cast<T>(2));
     }
 
     // --- Bitwise fetches (only for integral-like) ---
@@ -85,18 +86,18 @@ void TestAtomicType()
     {
         val = T(1);
         AtomicOrFetch(val, T(4), MemoryOrder::eSeqCst);
-        assert(static_cast<T>(val) == static_cast<T>(1 | 4));
+        EXPECT(static_cast<T>(val) == static_cast<T>(1 | 4));
 
         AtomicAndFetch(val, T(1), MemoryOrder::eSeqCst);
-        assert(static_cast<T>(val) == static_cast<T>((1 | 4) & 1));
+        EXPECT(static_cast<T>(val) == static_cast<T>((1 | 4) & 1));
 
         val = T(1);
         AtomicXorFetch(val, T(2), MemoryOrder::eSeqCst);
-        assert(static_cast<T>(val) == static_cast<T>(1 ^ 2));
+        EXPECT(static_cast<T>(val) == static_cast<T>(1 ^ 2));
 
         val = T(1);
         AtomicNandFetch(val, T(2), MemoryOrder::eSeqCst);
-        assert(static_cast<T>(val) == static_cast<T>(~(1 & 2)));
+        EXPECT(static_cast<T>(val) == static_cast<T>(~(1 & 2)));
     }
 
     // --- Fetch ops returning old value ---
@@ -104,33 +105,33 @@ void TestAtomicType()
     {
         val      = T(1);
         T oldVal = AtomicFetchAdd(val, T(2), MemoryOrder::eSeqCst);
-        assert(oldVal == T(1));
-        assert(static_cast<T>(val) == static_cast<T>(3));
+        EXPECT_EQ(oldVal, T(1));
+        EXPECT(static_cast<T>(val) == static_cast<T>(3));
 
         oldVal = AtomicFetchSub(val, T(1), MemoryOrder::eSeqCst);
-        assert(static_cast<T>(oldVal) == static_cast<T>(3));
-        assert(static_cast<T>(val) == static_cast<T>(2));
+        EXPECT(static_cast<T>(oldVal) == static_cast<T>(3));
+        EXPECT(static_cast<T>(val) == static_cast<T>(2));
 
         oldVal = AtomicFetchOr(val, T(4), MemoryOrder::eSeqCst);
-        assert(static_cast<T>(oldVal) == static_cast<T>(2));
-        assert(static_cast<T>(val) == static_cast<T>(2 | 4));
+        EXPECT(static_cast<T>(oldVal) == static_cast<T>(2));
+        EXPECT(static_cast<T>(val) == static_cast<T>(2 | 4));
 
         oldVal = AtomicFetchAnd(val, T(2), MemoryOrder::eSeqCst);
-        assert(static_cast<T>(oldVal) == static_cast<T>(2 | 4));
-        assert(static_cast<T>(val) == static_cast<T>((2 | 4) & 2));
+        EXPECT(static_cast<T>(oldVal) == static_cast<T>(2 | 4));
+        EXPECT(static_cast<T>(val) == static_cast<T>((2 | 4) & 2));
     }
 
     // --- TestAndSet / Clear ---
     {
         bool flag  = 0;
         bool first = AtomicTestAndSet(flag, MemoryOrder::eSeqCst);
-        assert(first == false);
+        EXPECT_EQ(first, false);
         bool second = AtomicTestAndSet(flag, MemoryOrder::eSeqCst);
-        assert(second == true);
+        EXPECT_EQ(second, true);
 
         bool bflag = true;
         AtomicClear(bflag, MemoryOrder::eSeqCst);
-        assert(bflag == false);
+        EXPECT_EQ(bflag, false);
     }
 
     // --- Fences (no observable effect here) ---
@@ -138,22 +139,58 @@ void TestAtomicType()
     AtomicSignalFence(MemoryOrder::eAcquire);
 
     // --- LockFree check ---
-    assert(AtomicAlwaysLockFree(sizeof(T), nullptr));
+    EXPECT(AtomicAlwaysLockFree(sizeof(T), nullptr));
 }
 
 // --- Runner ---
-int main()
+
+TEST_CASE(TestAtomicType_i8)
 {
     TestAtomicType<i8>();
-    TestAtomicType<i16>();
-    TestAtomicType<i32>();
-    TestAtomicType<i64>();
-    TestAtomicType<u8>();
-    TestAtomicType<u16>();
-    TestAtomicType<u32>();
-    TestAtomicType<u64>();
-    TestAtomicType<bool>();
-    TestAtomicType<Color>();
-
-    return 0;
 }
+
+TEST_CASE(TestAtomicType_i16)
+{
+    TestAtomicType<i16>();
+}
+
+TEST_CASE(TestAtomicType_i32)
+{
+    TestAtomicType<i32>();
+}
+
+TEST_CASE(TestAtomicType_i64)
+{
+    TestAtomicType<i64>();
+}
+
+TEST_CASE(TestAtomicType_u8)
+{
+    TestAtomicType<u8>();
+}
+
+TEST_CASE(TestAtomicType_u16)
+{
+    TestAtomicType<u16>();
+}
+
+TEST_CASE(TestAtomicType_u32)
+{
+    TestAtomicType<u32>();
+}
+
+TEST_CASE(TestAtomicType_u64)
+{
+    TestAtomicType<u64>();
+}
+
+TEST_CASE(TestAtomicType_bool)
+{
+    TestAtomicType<bool>();
+}
+
+TEST_CASE(TestAtomicType_Color)
+{
+    TestAtomicType<Color>();
+}
+

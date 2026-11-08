@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: GPL-3
  */
 #include <Prism/String/Formatter.hpp>
+#include <Prism/Test/Test.hpp>
 #include <Prism/String/String.hpp>
 #include <Prism/Utility/Path.hpp>
 #include <cassert>
 #include <ctime>
-#include <gtest/gtest.h>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -17,127 +17,127 @@
 using namespace Prism;
 using namespace Prism::Literals;
 
-TEST(BasicString, String_TestConstruction)
+TEST_CASE(String_TestConstruction)
 {
     String empty;
-    ASSERT_TRUE(empty.Empty());
-    ASSERT_EQ(empty.Size(), 0);
+    EXPECT(empty.Empty());
+    EXPECT_EQ(empty.Size(), 0);
 
     String repeated(5, 'x');
-    ASSERT_EQ(repeated, "xxxxx"_s);
+    EXPECT_EQ(repeated, "xxxxx"_s);
 
     const char* raw = "hello";
     String      fromRaw(raw);
-    ASSERT_EQ(fromRaw, "hello"_s);
+    EXPECT_EQ(fromRaw, "hello"_s);
 
     String fromView = "world"_s;
-    ASSERT_EQ(fromView, "world"_s);
+    EXPECT_EQ(fromView, "world"_s);
 }
 
-TEST(BasicString, String_TestIteration)
+TEST_CASE(String_TestIteration)
 {
     String      s = "abc"_s;
 
     std::string built;
     for (char c : s) built += c;
 
-    ASSERT_EQ(built, "abc");
+    EXPECT_EQ(built, "abc");
 }
 
-TEST(BasicString, String_TestAccessors)
+TEST_CASE(String_TestAccessors)
 {
     String s = "hello"_s;
 
-    ASSERT_EQ(s.At(0), 'h');
-    ASSERT_EQ(s[1], 'e');
-    ASSERT_EQ(s.Front(), 'h');
-    ASSERT_EQ(s.Back(), 'o');
+    EXPECT_EQ(s.At(0), 'h');
+    EXPECT_EQ(s[1], 'e');
+    EXPECT_EQ(s.Front(), 'h');
+    EXPECT_EQ(s.Back(), 'o');
 }
 
-TEST(BasicString, String_TestFind)
+TEST_CASE(String_TestFind)
 {
     String s = "hello world"_s;
 
-    ASSERT_EQ(s.Find("world"), 6);
-    ASSERT_EQ(s.Find('o'), 4);
-    ASSERT_EQ(s.RFind('o'), 7);
+    EXPECT_EQ(s.Find("world"), 6);
+    EXPECT_EQ(s.Find('o'), 4);
+    EXPECT_EQ(s.RFind('o'), 7);
     s = "hello world"_s;
 
     // Find
-    ASSERT_EQ(s.Find("hello"), 0);
-    ASSERT_EQ(s.Find("world"), 6);
-    ASSERT_EQ(s.Find("o"), 4);
-    ASSERT_EQ(s.Find("notfound"), String::NPos);
-    ASSERT_EQ(s.Find('l'), 2);
+    EXPECT_EQ(s.Find("hello"), 0);
+    EXPECT_EQ(s.Find("world"), 6);
+    EXPECT_EQ(s.Find("o"), 4);
+    EXPECT_EQ(s.Find("notfound"), String::NPos);
+    EXPECT_EQ(s.Find('l'), 2);
 
     // RFind
-    ASSERT_EQ(s.RFind("hello"), 0);
-    ASSERT_EQ(s.RFind("world"), 6);
-    ASSERT_EQ(s.RFind("o"), 7);
-    ASSERT_EQ(s.RFind('l'), 9);
-    ASSERT_EQ(s.RFind("notfound"), String::NPos);
+    EXPECT_EQ(s.RFind("hello"), 0);
+    EXPECT_EQ(s.RFind("world"), 6);
+    EXPECT_EQ(s.RFind("o"), 7);
+    EXPECT_EQ(s.RFind('l'), 9);
+    EXPECT_EQ(s.RFind("notfound"), String::NPos);
 
     // FindFirstOf
-    ASSERT_EQ(s.FindFirstOf("aeiou"_s), 1); // 'e'
-    ASSERT_EQ(s.FindFirstOf("xyz"_s), String::NPos);
-    ASSERT_EQ(s.FindFirstOf('o'), 4);
+    EXPECT_EQ(s.FindFirstOf("aeiou"_s), 1); // 'e'
+    EXPECT_EQ(s.FindFirstOf("xyz"_s), String::NPos);
+    EXPECT_EQ(s.FindFirstOf('o'), 4);
 
     // FindFirstNotOf
-    ASSERT_EQ(s.FindFirstNotOf("hel"_s), 4); // 'o'
-    ASSERT_TRUE(s.FindFirstNotOf("hello wrd"_s)
+    EXPECT_EQ(s.FindFirstNotOf("hel"_s), 4); // 'o'
+    EXPECT(s.FindFirstNotOf("hello wrd"_s)
                 == String::NPos); // all characters matched
-    ASSERT_EQ(s.FindFirstNotOf('h'), 1);
+    EXPECT_EQ(s.FindFirstNotOf('h'), 1);
 
     // FindLastOf
-    ASSERT_EQ(s.FindLastOf("ol"), 9); // last 'l'
-    ASSERT_EQ(s.FindLastOf("xyz"), String::NPos);
-    ASSERT_EQ(s.FindLastOf('l'), 9);
+    EXPECT_EQ(s.FindLastOf("ol"), 9); // last 'l'
+    EXPECT_EQ(s.FindLastOf("xyz"), String::NPos);
+    EXPECT_EQ(s.FindLastOf('l'), 9);
 
     // FindLastNotOf
-    // ASSERT_EQ(s.FindLastNotOf("d"_s) ,  9); // 'l'
-    // ASSERT_TRUE(s.FindLastNotOf("helo wrd"_s)
+    // EXPECT_EQ(s.FindLastNotOf("d"_s) ,  9); // 'l'
+    // EXPECT(s.FindLastNotOf("helo wrd"_s)
     //       == String::NPos); // all characters matched
-    // ASSERT_EQ(s.FindLastNotOf('d') ,  9);
+    // EXPECT_EQ(s.FindLastNotOf('d') ,  9);
 }
 
-TEST(BasicString, String_TestComparisons)
+TEST_CASE(String_TestComparisons)
 {
     String a = "abc"_s;
     String b = "abc"_s;
     String c = "abd"_s;
 
-    ASSERT_EQ(a, b);
-    ASSERT_TRUE(a != c);
-    ASSERT_EQ((a <=> c), std::strong_ordering::less);
+    EXPECT_EQ(a, b);
+    EXPECT(a != c);
+    EXPECT_EQ((a <=> c), std::strong_ordering::less);
 }
 
-TEST(BasicString, String_TestSubstringAndResize)
+TEST_CASE(String_TestSubstringAndResize)
 {
     String s   = "abcdef"_s;
 
     String sub = s.Substr(1, 3);
-    ASSERT_EQ(sub, "bcd"_s);
+    EXPECT_EQ(sub, "bcd"_s);
 
     s.Resize(3);
     printf("s1: %s\n", s.Raw());
     printf("s2: %s\n", "abc"_s.Raw());
-    ASSERT_EQ(s, "abc"_s);
+    EXPECT_EQ(s, "abc"_s);
 
     s.Resize(5, 'x');
-    ASSERT_EQ(s, "abcxx"_s);
+    EXPECT_EQ(s, "abcxx"_s);
 }
 
-TEST(BasicString, String_TestCopyAndSwap)
+TEST_CASE(String_TestCopyAndSwap)
 {
     String a = "abc"_s;
     String b = "xyz"_s;
 
     a.Swap(b);
-    ASSERT_EQ(a, "xyz"_s);
-    ASSERT_EQ(b, "abc"_s);
+    EXPECT_EQ(a, "xyz"_s);
+    EXPECT_EQ(b, "abc"_s);
 
     a = b;
-    ASSERT_EQ(a, "abc"_s);
+    EXPECT_EQ(a, "abc"_s);
 }
 
 Path String_TestPath(PathView path)
@@ -164,7 +164,7 @@ Path String_TestPath(PathView path)
 
     return !segments.Empty() ? segments.Front() : ":(";
 }
-TEST(BasicString, String_TestSplit)
+TEST_CASE(String_TestSplit)
 {
     PathView path         = "/usr/sbin/string/someother/anyway/yo/hello.txt"_sv;
     auto     newPath      = String_TestPath(path);
@@ -173,19 +173,19 @@ TEST(BasicString, String_TestSplit)
     concatenated += String(newPath.View());
     String_TestPath(concatenated);
 }
-TEST(BasicString, String_TestMove)
+TEST_CASE(String_TestMove)
 {
     String str   = "Hello";
     auto   other = Move(str);
-    ASSERT_TRUE(str.Empty());
-    ASSERT_EQ(other.Size(), 5);
+    EXPECT(str.Empty());
+    EXPECT_EQ(other.Size(), 5);
 
     String next(Move(other));
-    ASSERT_TRUE(other.Empty());
-    ASSERT_EQ(next.Size(), 5);
+    EXPECT(other.Empty());
+    EXPECT_EQ(next.Size(), 5);
 }
 
-TEST(BasicString, String_TestBasicStringAssignments)
+TEST_CASE(String_TestBasicStringAssignments)
 {
     using String = BasicString<char>;
 
@@ -194,9 +194,9 @@ TEST(BasicString, String_TestBasicStringAssignments)
         String a = "Hello";
         String b;
         b = a;
-        ASSERT_EQ(b, "Hello");
-        ASSERT_EQ(a, "Hello");
-        ASSERT_EQ(b.Size(), 5);
+        EXPECT_EQ(b, "Hello");
+        EXPECT_EQ(a, "Hello");
+        EXPECT_EQ(b.Size(), 5);
     }
 
     // Test move assignment
@@ -204,26 +204,26 @@ TEST(BasicString, String_TestBasicStringAssignments)
         String a = "World";
         String b;
         b = Move(a);
-        ASSERT_EQ(b, "World");
+        EXPECT_EQ(b, "World");
         // We can't assume `a` still contains valid data after move, only that
         // it's safe to destroy.
-        ASSERT_EQ(b.Size(), 5);
+        EXPECT_EQ(b.Size(), 5);
     }
 
     // Test assignment from const char*
     {
         String a;
         a = "Test123";
-        ASSERT_EQ(a, "Test123");
-        ASSERT_EQ(a.Size(), 7);
+        EXPECT_EQ(a, "Test123");
+        EXPECT_EQ(a.Size(), 7);
     }
 
     // Test assignment from a single character
     {
         String a;
         a = 'Z';
-        ASSERT_EQ(a, "Z");
-        ASSERT_EQ(a.Size(), 1);
+        EXPECT_EQ(a, "Z");
+        EXPECT_EQ(a.Size(), 1);
     }
 
     // Test assignment from StringView-like object
@@ -232,12 +232,12 @@ TEST(BasicString, String_TestBasicStringAssignments)
         StringView view("stringview");
 
         a = view;
-        ASSERT_EQ(a, "stringview");
-        ASSERT_EQ(a.Size(), 10);
+        EXPECT_EQ(a, "stringview");
+        EXPECT_EQ(a.Size(), 10);
     }
 }
 
-TEST(BasicString, String_TestBasicStringAddition)
+TEST_CASE(String_TestBasicStringAddition)
 {
     using String = BasicString<char>;
 
@@ -247,10 +247,10 @@ TEST(BasicString, String_TestBasicStringAddition)
         String b = "World";
         String c = a + b;
 
-        ASSERT_EQ(a, "Hello"); // Must stay unchanged
-        ASSERT_EQ(b, "World"); // Must stay unchanged
-        ASSERT_EQ(c, "HelloWorld");
-        ASSERT_EQ(c.Size(), 10);
+        EXPECT_EQ(a, "Hello"); // Must stay unchanged
+        EXPECT_EQ(b, "World"); // Must stay unchanged
+        EXPECT_EQ(c, "HelloWorld");
+        EXPECT_EQ(c.Size(), 10);
     }
 
     // Addition with const char* (if supported)
@@ -258,9 +258,9 @@ TEST(BasicString, String_TestBasicStringAddition)
         String a = "Foo";
         String b = a + "Bar";
 
-        ASSERT_EQ(a, "Foo"); // a must stay unchanged
-        ASSERT_EQ(b, "FooBar");
-        ASSERT_EQ(b.Size(), 6);
+        EXPECT_EQ(a, "Foo"); // a must stay unchanged
+        EXPECT_EQ(b, "FooBar");
+        EXPECT_EQ(b.Size(), 6);
     }
 
     // Addition with empty string
@@ -269,8 +269,8 @@ TEST(BasicString, String_TestBasicStringAddition)
         String b;
         String c = a + b;
 
-        ASSERT_EQ(c, "NonEmpty");
-        ASSERT_EQ(c.Size(), 8);
+        EXPECT_EQ(c, "NonEmpty");
+        EXPECT_EQ(c.Size(), 8);
     }
 }
 // Random helper
@@ -290,7 +290,7 @@ String String_RandomString(usize length = 100)
 }
 
 // Fuzz test
-TEST(BasicString, String_FuzzTestBasicString)
+TEST_CASE(String_FuzzTestBasicString)
 {
     srand(static_cast<unsigned>(time(nullptr))); // Seed random
 
@@ -304,38 +304,38 @@ TEST(BasicString, String_FuzzTestBasicString)
 
         // Copy assignment
         String copy = a;
-        ASSERT_EQ(copy, a);
-        ASSERT_EQ(copy.Size(), a.Size());
+        EXPECT_EQ(copy, a);
+        EXPECT_EQ(copy.Size(), a.Size());
 
         // Move assignment
         String move = Move(b);
-        ASSERT_EQ(move.Size(), len2); // b was random of size len2
+        EXPECT_EQ(move.Size(), len2); // b was random of size len2
 
         // Assignment from const char*
         const char* literal = "LiteralString";
         a                   = literal;
-        ASSERT_EQ(a, "LiteralString");
-        ASSERT_EQ(a.Size(), strlen(literal));
+        EXPECT_EQ(a, "LiteralString");
+        EXPECT_EQ(a.Size(), strlen(literal));
 
         // Assignment from single char
         b = 'X';
-        ASSERT_EQ(b, "X");
-        ASSERT_EQ(b.Size(), 1);
+        EXPECT_EQ(b, "X");
+        EXPECT_EQ(b.Size(), 1);
 
         // Assignment from StringView
         StringView view("ViewContent");
         a = view;
-        ASSERT_EQ(a, "ViewContent");
-        ASSERT_EQ(a.Size(), strlen("ViewContent"));
+        EXPECT_EQ(a, "ViewContent");
+        EXPECT_EQ(a.Size(), strlen("ViewContent"));
 
         // Operator+
         String combined = a + b;
-        ASSERT_EQ(combined, "ViewContentX");
-        ASSERT_EQ(combined.Size(), strlen("ViewContentX"));
+        EXPECT_EQ(combined, "ViewContentX");
+        EXPECT_EQ(combined.Size(), strlen("ViewContentX"));
     }
 }
 
-TEST(BasicString, String_FuzzTestBasicString2)
+TEST_CASE(String_FuzzTestBasicString2)
 {
     srand(static_cast<unsigned>(time(nullptr))); // Seed random
 
@@ -349,57 +349,57 @@ TEST(BasicString, String_FuzzTestBasicString2)
 
         // --- Copy assignment ---
         String copy = a;
-        ASSERT_EQ(copy, a);
-        ASSERT_EQ(copy.Size(), a.Size());
+        EXPECT_EQ(copy, a);
+        EXPECT_EQ(copy.Size(), a.Size());
 
         // --- Self-copy assignment ---
         a = a;
-        ASSERT_EQ(a, copy);
+        EXPECT_EQ(a, copy);
 
         // --- Move assignment ---
         String move = Move(b);
-        ASSERT_EQ(move.Size(), len2); // b was random of size len2
+        EXPECT_EQ(move.Size(), len2); // b was random of size len2
 
         // --- Assignment from const char* ---
         const char* literal = "LiteralString";
         a                   = literal;
-        ASSERT_EQ(a, "LiteralString");
-        ASSERT_EQ(a.Size(), strlen(literal));
+        EXPECT_EQ(a, "LiteralString");
+        EXPECT_EQ(a.Size(), strlen(literal));
 
         // --- Assignment from single char ---
         b = 'X';
-        ASSERT_EQ(b, "X");
-        ASSERT_EQ(b.Size(), 1);
+        EXPECT_EQ(b, "X");
+        EXPECT_EQ(b.Size(), 1);
 
         // --- Assignment from StringView ---
         StringView view("ViewContent");
         a = view;
-        ASSERT_EQ(a, "ViewContent");
-        ASSERT_EQ(a.Size(), strlen("ViewContent"));
+        EXPECT_EQ(a, "ViewContent");
+        EXPECT_EQ(a.Size(), strlen("ViewContent"));
 
         // --- Operator+ ---
         String combined = a + b;
-        ASSERT_EQ(combined, "ViewContentX");
-        ASSERT_EQ(combined.Size(), strlen("ViewContentX"));
+        EXPECT_EQ(combined, "ViewContentX");
+        EXPECT_EQ(combined.Size(), strlen("ViewContentX"));
 
         // --- Operator+= ---
         a += b;
-        ASSERT_EQ(a, "ViewContentX");
-        ASSERT_EQ(a.Size(), strlen("ViewContentX"));
+        EXPECT_EQ(a, "ViewContentX");
+        EXPECT_EQ(a.Size(), strlen("ViewContentX"));
 
         // --- Assignment with empty string ---
         a = "";
-        ASSERT_TRUE(a.Empty());
-        ASSERT_EQ(a.Size(), 0);
+        EXPECT(a.Empty());
+        EXPECT_EQ(a.Size(), 0);
 
         // --- Concatenation with empty ---
         String c         = String_RandomString(rand() % 20);
         String d         = "";
         String combined2 = c + d;
-        ASSERT_EQ(combined2, c);
+        EXPECT_EQ(combined2, c);
 
         combined2 = d + c;
-        ASSERT_EQ(combined2, c);
+        EXPECT_EQ(combined2, c);
 
         // --- Fuzz: Random characters append ---
         usize  randomPushCount = rand() % 50;
@@ -409,13 +409,13 @@ TEST(BasicString, String_FuzzTestBasicString2)
         {
             char randomChar = String_RandomChar();
             fuzzString += randomChar;
-            ASSERT_EQ(fuzzString.Size(), j + 1);
-            ASSERT_EQ(fuzzString.Back(), randomChar);
+            EXPECT_EQ(fuzzString.Size(), j + 1);
+            EXPECT_EQ(fuzzString.Back(), randomChar);
         }
     }
 }
 
-TEST(BasicString, String_MegaFuzzTestBasicString)
+TEST_CASE(String_MegaFuzzTestBasicString)
 {
     srand(static_cast<unsigned>(time(nullptr)));
 
@@ -449,16 +449,16 @@ TEST(BasicString, String_MegaFuzzTestBasicString)
             case 0: // Copy assign
             {
                 String copy = a;
-                ASSERT_EQ(copy, a);
+                EXPECT_EQ(copy, a);
                 a = copy;
-                ASSERT_EQ(a, copy);
+                EXPECT_EQ(a, copy);
                 break;
             }
             case 1: // Move assign
             {
                 String tmp   = b;
                 String moved = Move(tmp);
-                ASSERT_EQ(moved, b);
+                EXPECT_EQ(moved, b);
                 break;
             }
             case 2: // Assignment from const char*
@@ -467,31 +467,31 @@ TEST(BasicString, String_MegaFuzzTestBasicString)
                     = {"Test", "Mega", "Fuzz", "", "String!"};
                 const char* lit = literals[rand() % 5];
                 a               = lit;
-                ASSERT_EQ(a, lit);
+                EXPECT_EQ(a, lit);
                 break;
             }
             case 3: // Assignment from char
             {
                 char ch = String_RandomChar();
                 a       = ch;
-                ASSERT_EQ(a.Size(), 1);
-                ASSERT_EQ(a[0], ch);
+                EXPECT_EQ(a.Size(), 1);
+                EXPECT_EQ(a[0], ch);
                 break;
             }
             case 4: // Assignment from StringView
             {
                 StringView view = b;
                 a               = view;
-                ASSERT_EQ(a, view);
+                EXPECT_EQ(a, view);
                 break;
             }
             case 5: // operator+
             {
                 String combined = a + b;
                 for (usize i = 0; i < a.Size(); i++)
-                    ASSERT_EQ(combined[i], a[i]);
+                    EXPECT_EQ(combined[i], a[i]);
                 for (usize i = 0; i < b.Size(); i++)
-                    ASSERT_EQ(combined[i + a.Size()], b[i]);
+                    EXPECT_EQ(combined[i + a.Size()], b[i]);
                 break;
             }
             case 6: // operator+=
@@ -507,9 +507,9 @@ TEST(BasicString, String_MegaFuzzTestBasicString)
                 std::cout << "B(" << b.Size() << ") => '"
                           << std::setprecision(b.Size()) << b.Raw() << "'\n";
                 a += b;
-                for (usize i = 0; i < oldSize; i++) ASSERT_EQ(a[i], before[i]);
+                for (usize i = 0; i < oldSize; i++) EXPECT_EQ(a[i], before[i]);
                 for (usize i = 0; i < b.Size(); i++)
-                    ASSERT_EQ(a[i + oldSize], b[i]);
+                    EXPECT_EQ(a[i + oldSize], b[i]);
                 break;
             }
             case 7: // swap two strings
@@ -517,7 +517,7 @@ TEST(BasicString, String_MegaFuzzTestBasicString)
                 String tmp = a;
                 a          = b;
                 b          = tmp;
-                ASSERT_TRUE(a == tmp || b == tmp);
+                EXPECT(a == tmp || b == tmp);
                 break;
             }
             case 8: // compare strings
@@ -532,7 +532,7 @@ TEST(BasicString, String_MegaFuzzTestBasicString)
                     }
                 }
                 if (a.Size() != b.Size()) equal = false;
-                ASSERT_EQ(equal, (a == b));
+                EXPECT_EQ(equal, (a == b));
                 break;
             }
             case 9: // substr test
@@ -543,7 +543,7 @@ TEST(BasicString, String_MegaFuzzTestBasicString)
                     usize len   = 1 + rand() % (a.Size() - start);
                     auto  sub   = a.Substr(start, len);
                     for (usize i = 0; i < len; i++)
-                        ASSERT_EQ(sub[i], a[start + i]);
+                        EXPECT_EQ(sub[i], a[start + i]);
                 }
                 break;
             }
@@ -553,56 +553,34 @@ TEST(BasicString, String_MegaFuzzTestBasicString)
         if (iteration % 1000 == 0) pool.clear();
     }
 }
-TEST(BasicString, String_Trim)
+TEST_CASE(String_Trim)
 {
     String basic = "   hello world   ";
-    ASSERT_EQ(basic.Trim(), "hello world"_sv);
+    EXPECT_EQ(basic.Trim(), "hello world"_sv);
 
     String left = "   hello";
-    ASSERT_EQ(left.Trim(TrimMode::eLeft), "hello");
-    ASSERT_EQ(left.Trim(TrimMode::eRight), "   hello");
+    EXPECT_EQ(left.Trim(TrimMode::eLeft), "hello");
+    EXPECT_EQ(left.Trim(TrimMode::eRight), "   hello");
 
     String right = "hello   ";
-    ASSERT_EQ(right.Trim(TrimMode::eRight), "hello");
-    ASSERT_EQ(right.Trim(TrimMode::eLeft), "hello   ");
+    EXPECT_EQ(right.Trim(TrimMode::eRight), "hello");
+    EXPECT_EQ(right.Trim(TrimMode::eLeft), "hello   ");
 
     String both = "   hello   ";
-    ASSERT_EQ(both.Trim(TrimMode::eBoth), "hello");
+    EXPECT_EQ(both.Trim(TrimMode::eBoth), "hello");
 
     String nowhitespace = "hello";
-    ASSERT_EQ(nowhitespace.Trim(), "hello");
+    EXPECT_EQ(nowhitespace.Trim(), "hello");
 
     String allwhitespace = "     ";
-    ASSERT_TRUE(allwhitespace.Trim().Empty());
-    ASSERT_TRUE(allwhitespace.Trim(TrimMode::eLeft).Empty());
-    ASSERT_TRUE(allwhitespace.Trim(TrimMode::eRight).Empty());
+    EXPECT(allwhitespace.Trim().Empty());
+    EXPECT(allwhitespace.Trim(TrimMode::eLeft).Empty());
+    EXPECT(allwhitespace.Trim(TrimMode::eRight).Empty());
 
     String empty;
-    ASSERT_TRUE(empty.Trim().Empty());
+    EXPECT(empty.Trim().Empty());
 
     String sso = "  a  ";
-    ASSERT_EQ(sso.Trim(), "a");
+    EXPECT_EQ(sso.Trim(), "a");
 }
 
-#if 0
-int main()
-{
-    String_TestConstruction();
-    String_TestIteration();
-    String_TestAccessors();
-    String_TestFind();
-    String_TestComparisons();
-    String_TestSubstringAndResize();
-    String_TestCopyAndSwap();
-    String_TestSplit();
-    String_TestMove();
-    String_TestBasicStringAssignments();
-    String_TestBasicStringAddition();
-    String_FuzzTestBasicString();
-    String_FuzzTestBasicString2();
-    String_MegaFuzzTestBasicString();
-    String_Trim();
-
-    return 0;
-}
-#endif

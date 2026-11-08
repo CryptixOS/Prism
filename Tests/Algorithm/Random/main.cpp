@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Algorithm/Random.hpp>
 #include <Prism/Utility/Math.hpp>
 
@@ -15,7 +16,7 @@ using namespace Prism::Algorithm;
 // First 3 values for reference
 constexpr u32 KnownOutputs[] = {3499211612u, 581869302u, 3890346734u};
 
-static void   TestLog2CompileTime()
+TEST_CASE(TestLog2CompileTime)
 {
     static_assert(Algorithm::Details::Log2<unsigned int, 1>::Value == 0,
                   "Log2(1) == 0");
@@ -29,32 +30,32 @@ static void   TestLog2CompileTime()
     PrismDebug("Log2 compile-time tests passed.\n");
 }
 
-static void TestDefaultSeedSequence()
+TEST_CASE(TestDefaultSeedSequence)
 {
     mt19937 engine; // default seed 5489
     for (usize i = 0; i < 3; ++i)
     {
         auto val = engine();
-        assert(val == KnownOutputs[i]
+        EXPECT(val == KnownOutputs[i]
                && "MT output mismatch with default seed");
     }
     PrismDebug("Default seed output tests passed.\n");
 }
 
-static void TestSeedConstructorAndEquality()
+TEST_CASE(TestSeedConstructorAndEquality)
 {
     mt19937 eng1(5489);
     mt19937 eng2(5489);
     mt19937 eng3(12345);
 
-    assert(eng1 == eng2 && "Engines with same seed should be equal");
-    assert(!(eng1 != eng2) && "Inequality failed on equal engines");
-    assert(eng1 != eng3 && "Engines with different seeds should differ");
+    EXPECT(eng1 == eng2 && "Engines with same seed should be equal");
+    EXPECT(!(eng1 != eng2) && "Inequality failed on equal engines");
+    EXPECT(eng1 != eng3 && "Engines with different seeds should differ");
 
     PrismDebug("Seed constructor and equality tests passed.\n");
 }
 
-static void TestDiscardAdvancesState()
+TEST_CASE(TestDiscardAdvancesState)
 {
     mt19937 eng1(5489);
     mt19937 eng2(5489);
@@ -66,22 +67,16 @@ static void TestDiscardAdvancesState()
     eng2.Discard(10);
 
     // next value should be the same
-    assert(eng1() == eng2()
+    EXPECT(eng1() == eng2()
            && "Discard should advance state equivalently to operator() calls");
 
     PrismDebug("Discard method test passed.\n");
 }
 
-int main()
+TEST_CASE(uniform_int_distribution_constructs)
 {
-    TestLog2CompileTime();
-    TestDefaultSeedSequence();
-    TestSeedConstructorAndEquality();
-    TestDiscardAdvancesState();
-
     UniformIntDistribution<mt19937_64::ResultType> dist;
     mt19937_64                                     rng;
-
-    PrismDebug("All MersenneTwisterEngine tests passed.\n");
-    return 0;
+    (void)dist;
+    (void)rng;
 }

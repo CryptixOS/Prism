@@ -4,10 +4,17 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/String/StringView.hpp>
 
 #include <cstdio>
 
 using namespace Prism;
 
-int main() { std::printf("HelloWorld"); };
+TEST_CASE(string_view_basics)
+{
+    StringView view = "HelloWorld";
+    EXPECT_EQ(view.Size(), 10u);
+    EXPECT_EQ(view, "HelloWorld");
+    EXPECT_EQ(view.Substr(5), "World");
+}

@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: GPL-3
  */
 #include <Prism/String/Formatter.hpp>
+#include <Prism/Test/Test.hpp>
 
-#include <stdio.h>
 #include <string.h>
 
 using namespace Prism;
@@ -14,27 +14,16 @@ using namespace Prism;
 // Expected values were produced by fmt for the same format strings and
 // arguments (ANSI styles: fmt 10.2 layout).
 
-static int  s_Failures = 0;
-static int  s_Total    = 0;
-
 static void Check(const char* what, StringView got, StringView want)
 {
-    ++s_Total;
     if (got.Size() == want.Size()
         && memcmp(got.Raw(), want.Raw(), want.Size()) == 0)
         return;
-
-    ++s_Failures;
-    printf("FAIL %s\n  got:  [%.*s]\n  want: [%.*s]\n", what,
-           static_cast<int>(got.Size()), got.Raw(),
-           static_cast<int>(want.Size()), want.Raw());
+    FAIL(Format("{}\n  got:  [{}]\n  want: [{}]", what, got, want));
 }
 static void CheckTrue(const char* what, bool condition)
 {
-    ++s_Total;
-    if (condition) return;
-    ++s_Failures;
-    printf("FAIL %s\n", what);
+    if (!condition) FAIL(what);
 }
 
 #define Expect(want, ...) Check(#__VA_ARGS__, Format(__VA_ARGS__), want)
@@ -77,10 +66,14 @@ namespace NS
 
 
 
-int        main()
+TEST_CASE(literal_text_and_escapes)
 {
     Expect("plain text", "plain text");
     Expect("{escaped} } {", "{{escaped}} }} {{");
+}
+
+TEST_CASE(integers)
+{
     Expect("0", "{}", 0);
     Expect("-1", "{}", -1);
     Expect("42", "{}", 42u);
@@ -123,6 +116,10 @@ int        main()
     Expect("+42***", "{:*<+6}", 42);
     Expect("00007", "{:0>5}", 7);
     Expect("7    ", "{:<05}", 7);
+}
+
+TEST_CASE(chars_and_bools)
+{
     Expect("A", "{:c}", 65);
     Expect("z", "{:c}", (unsigned char)'z');
     Expect("  B|", "{:>3c}|", 66);
@@ -141,6 +138,10 @@ int        main()
     Expect("  true|", "{:>6}|", true);
     Expect("false", "{:s}", false);
     Expect("0x1", "{:#x}", true);
+}
+
+TEST_CASE(strings)
+{
     Expect("str", "{}", "str");
     Expect("str     |", "{:8}|", "str");
     Expect("     str|", "{:>8}|", "str");
@@ -155,10 +156,18 @@ int        main()
     Expect("żół|żó   |", "{:.3}|{:5}|", "żółw", "żó");
     Expect("日本*", "{:*^5}", "日本");
     Expect("→→→1→→→", "{:→^7}", 1);
+}
+
+TEST_CASE(pointers)
+{
     Expect("0x1234", "{}", (void*)0x1234);
     Expect("0x1234", "{:p}", (void*)0x1234);
     Expect("      0xff|", "{:>10}|", (const void*)0xff);
     Expect("0x0", "{}", nullptr);
+}
+
+TEST_CASE(argument_ids_and_dynamic_specs)
+{
     Expect("a b a", "{0} {1} {0}", "a", "b");
     Expect("   21   |", "{1:>4}{0:<4}|", 1, 2);
     Expect("   5|", "{:{}}|", 5, 4);
@@ -166,41 +175,69 @@ int        main()
     Expect("ab|", "{:.{}}|", "abcdef", 2);
     Expect("abc   |", "{0:{1}.{2}}|", "abcdef", 6, 3);
     Expect("a    |", "{:{}.{}}|", "abcdef", 5, 1);
+}
+
+TEST_CASE(custom_formatters)
+{
     Expect("(1, 2)", "{}", Point{1, 2});
     Expect("      nm|", "{:>8}|", Name{"nm"});
     Expect("  name   |", "{:^9}|", Name{"name"});
     Expect("30 5", "{} {}", NS::E::eA, 5);
 
+}
+
+TEST_CASE(grouping_and_string_types)
+{
     Expect("1,234,567", "{:L}", 1234567);
     Expect("-1,000", "{:L}", -1000);
     Expect("12,345,678", "{}", GroupDigits(12345678));
     Expect("view", "{}", StringView("view"));
     Expect("   own", "{:>6}", String("own"));
+}
+
+TEST_CASE(named_arguments)
+{
     Expect("1    2", "{a} {b:>{w}}", Arg("a", 1), Arg("b", 2), Arg("w", 4));
     {
         using namespace FormatLiterals;
         Expect("1-0xff", "{x}-{y:#x}", "x"_a = 1, "y"_a = 255);
     }
+}
+
+TEST_CASE(join)
+{
     {
         unsigned char sig[4] = {0x89, 'P', 'N', 'G'};
         Expect("0x89\\0x50\\0x4e\\0x47", "{:#02x}", Join(sig, "\\"));
         int v[3] = {1, 2, 3};
         Expect("[  1,   2,   3]", "[{:>3}]", Join(v + 0, v + 3, ", "));
     }
+}
+
+TEST_CASE(helpers)
+{
     Expect("3", "{}", Underlying(NS::E::eA));
     Expect("30", "{}", NS::E::eA);
     Check("ToString", ToString(-77), "-77");
     Expect("1 ff", Runtime("{} {:x}"), 1, 255);
     Expect("1 ", Runtime("{} {:x}"), 1);
+}
+
+TEST_CASE(styles)
+{
     Expect("\x1b[1m\x1b[38;2;255;000;000me1\x1b[0m",
-           Fg(Color::eRed) | Emphasis::eBold, "e{}", 1);
+           Fg(TextColor::eRed) | TextEmphasis::eBold, "e{}", 1);
     Expect("\x1b[3m\x1b[4m\x1b[44mx\x1b[0m",
-           Bg(TerminalColor::eBlue) | Emphasis::eUnderline
-               | Emphasis::eItalic,
+           Bg(TerminalColor::eBlue) | TextEmphasis::eUnderline
+               | TextEmphasis::eItalic,
            "x");
     Expect("\x1b[38;2;001;002;003m   7\x1b[0m", "{:>4}",
-           Styled(7, Fg(Rgb(1, 2, 3))));
+           Styled(7, Fg(RgbColor(1, 2, 3))));
     Expect("0x1000", "{}", Pointer(0x1000ul));
+}
+
+TEST_CASE(output_functions)
+{
     {
         char buf[8];
         auto r = FormatToN(buf, sizeof(buf), "{}-{}", 123456, 789);
@@ -233,6 +270,4 @@ int        main()
         CheckTrue("FormatToSink", total == 40);
     }
 
-    printf("Format: %d/%d checks failed\n", s_Failures, s_Total);
-    return s_Failures != 0;
 }

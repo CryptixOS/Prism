@@ -4,35 +4,29 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
+#include <Prism/Test/Test.hpp>
 #include <Prism/Containers/DoublyLinkedList.hpp>
 
-#include <cassert>
 #include <cstdio>
 
 using namespace Prism;
 
-void DoublyLinkedList_TestPushPop()
-{
+TEST_CASE(DoublyLinkedList_TestPushPop){
     DoublyLinkedList<int> list;
-    assert(list.Empty());
-    assert(list.Size() == 0);
+    EXPECT(list.Empty());
+    EXPECT_EQ(list.Size(), 0);
 
     list.PushFront(1);
     list.PushFront(2);
     list.PushBack(3);
     // list: 2 <-> 1 <-> 3
 
-    assert(!list.Empty());
-    assert(list.Size() == 3);
-    assert(list.PopFrontElement() == 2);
-    assert(list.PopBackElement() == 3);
-    assert(list.PopFrontElement() == 1);
-    assert(list.Empty());
+    EXPECT(!list.Empty());
+    EXPECT_EQ(list.Size(), 3);
+    EXPECT_EQ(list.PopFrontElement(), 2);
+    EXPECT_EQ(list.PopBackElement(), 3);
+    EXPECT_EQ(list.PopFrontElement(), 1);
+    EXPECT(list.Empty());
 }
 
-int main()
-{
-    DoublyLinkedList_TestPushPop();
-
-    return EXIT_SUCCESS;
-};
+;
