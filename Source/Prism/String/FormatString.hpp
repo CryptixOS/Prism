@@ -111,7 +111,8 @@ namespace Prism
             = requires(const T& value) { FormatAs(value); };
 #if PRISM_DISABLE_FMT == 0
         template <typename T>
-        concept HasFmtFormatter = fmt::is_formattable<T, char>::value;
+        concept HasFmtFormatter
+            = !IsArrayV<T> && fmt::is_formattable<T, char>::value;
 #else
         template <typename T>
         concept HasFmtFormatter = false;
@@ -261,6 +262,15 @@ namespace Prism
             }
         };
     } // namespace Details
+
+    /// Whether values of type T can be formatted (built-in type,
+    /// Prism::Formatter specialization, FormatAs() or fmt::formatter).
+    template <typename T>
+    concept Formattable
+        = Details::IsNativeFormatTypeV<Details::FormatKeyType<T>>
+       || Details::HasPrismFormatter<Details::FormatKeyType<T>>
+       || Details::HasFormatAs<Details::FormatKeyType<T>>
+       || Details::HasFmtFormatter<Details::FormatKeyType<T>>;
 
     /// Wraps a format string that is only known at run time: no compile-time
     /// checking, errors skip the faulty replacement field.

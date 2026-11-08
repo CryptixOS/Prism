@@ -12,155 +12,155 @@
  * Text styles (fmt/color.h): ANSI foreground/background colors and
  * emphasis.
  *
- *   Format(Fg(Color::eRed) | Emphasis::eBold, "error: {}", msg)
+ *   Format(Fg(TextColor::eRed) | TextEmphasis::eBold, "error: {}", msg)
  *   Format("{} {}", Styled(42, Bg(TerminalColor::eBlue)), "plain")
  */
 namespace Prism
 {
     /// Named 24-bit colors (the CSS/X11 set, same values as fmt::color).
-    enum class Color : u32
+    enum class TextColor : u32
     {
-        eAliceBlue = 0xF0F8FF,
-        eAntiqueWhite = 0xFAEBD7,
-        eAqua = 0x00FFFF,
-        eAquamarine = 0x7FFFD4,
-        eAzure = 0xF0FFFF,
-        eBeige = 0xF5F5DC,
-        eBisque = 0xFFE4C4,
-        eBlack = 0x000000,
-        eBlanchedAlmond = 0xFFEBCD,
-        eBlue = 0x0000FF,
-        eBlueViolet = 0x8A2BE2,
-        eBrown = 0xA52A2A,
-        eBurlyWood = 0xDEB887,
-        eCadetBlue = 0x5F9EA0,
-        eChartreuse = 0x7FFF00,
-        eChocolate = 0xD2691E,
-        eCoral = 0xFF7F50,
-        eCornflowerBlue = 0x6495ED,
-        eCornsilk = 0xFFF8DC,
-        eCrimson = 0xDC143C,
-        eCyan = 0x00FFFF,
-        eDarkBlue = 0x00008B,
-        eDarkCyan = 0x008B8B,
-        eDarkGoldenRod = 0xB8860B,
-        eDarkGray = 0xA9A9A9,
-        eDarkGreen = 0x006400,
-        eDarkKhaki = 0xBDB76B,
-        eDarkMagenta = 0x8B008B,
-        eDarkOliveGreen = 0x556B2F,
-        eDarkOrange = 0xFF8C00,
-        eDarkOrchid = 0x9932CC,
-        eDarkRed = 0x8B0000,
-        eDarkSalmon = 0xE9967A,
-        eDarkSeaGreen = 0x8FBC8F,
-        eDarkSlateBlue = 0x483D8B,
-        eDarkSlateGray = 0x2F4F4F,
-        eDarkTurquoise = 0x00CED1,
-        eDarkViolet = 0x9400D3,
-        eDeepPink = 0xFF1493,
-        eDeepSkyBlue = 0x00BFFF,
-        eDimGray = 0x696969,
-        eDodgerBlue = 0x1E90FF,
-        eFireBrick = 0xB22222,
-        eFloralWhite = 0xFFFAF0,
-        eForestGreen = 0x228B22,
-        eFuchsia = 0xFF00FF,
-        eGainsboro = 0xDCDCDC,
-        eGhostWhite = 0xF8F8FF,
-        eGold = 0xFFD700,
-        eGoldenRod = 0xDAA520,
-        eGray = 0x808080,
-        eGreen = 0x008000,
-        eGreenYellow = 0xADFF2F,
-        eHoneyDew = 0xF0FFF0,
-        eHotPink = 0xFF69B4,
-        eIndianRed = 0xCD5C5C,
-        eIndigo = 0x4B0082,
-        eIvory = 0xFFFFF0,
-        eKhaki = 0xF0E68C,
-        eLavender = 0xE6E6FA,
-        eLavenderBlush = 0xFFF0F5,
-        eLawnGreen = 0x7CFC00,
-        eLemonChiffon = 0xFFFACD,
-        eLightBlue = 0xADD8E6,
-        eLightCoral = 0xF08080,
-        eLightCyan = 0xE0FFFF,
+        eAliceBlue            = 0xF0F8FF,
+        eAntiqueWhite         = 0xFAEBD7,
+        eAqua                 = 0x00FFFF,
+        eAquamarine           = 0x7FFFD4,
+        eAzure                = 0xF0FFFF,
+        eBeige                = 0xF5F5DC,
+        eBisque               = 0xFFE4C4,
+        eBlack                = 0x000000,
+        eBlanchedAlmond       = 0xFFEBCD,
+        eBlue                 = 0x0000FF,
+        eBlueViolet           = 0x8A2BE2,
+        eBrown                = 0xA52A2A,
+        eBurlyWood            = 0xDEB887,
+        eCadetBlue            = 0x5F9EA0,
+        eChartreuse           = 0x7FFF00,
+        eChocolate            = 0xD2691E,
+        eCoral                = 0xFF7F50,
+        eCornflowerBlue       = 0x6495ED,
+        eCornsilk             = 0xFFF8DC,
+        eCrimson              = 0xDC143C,
+        eCyan                 = 0x00FFFF,
+        eDarkBlue             = 0x00008B,
+        eDarkCyan             = 0x008B8B,
+        eDarkGoldenRod        = 0xB8860B,
+        eDarkGray             = 0xA9A9A9,
+        eDarkGreen            = 0x006400,
+        eDarkKhaki            = 0xBDB76B,
+        eDarkMagenta          = 0x8B008B,
+        eDarkOliveGreen       = 0x556B2F,
+        eDarkOrange           = 0xFF8C00,
+        eDarkOrchid           = 0x9932CC,
+        eDarkRed              = 0x8B0000,
+        eDarkSalmon           = 0xE9967A,
+        eDarkSeaGreen         = 0x8FBC8F,
+        eDarkSlateBlue        = 0x483D8B,
+        eDarkSlateGray        = 0x2F4F4F,
+        eDarkTurquoise        = 0x00CED1,
+        eDarkViolet           = 0x9400D3,
+        eDeepPink             = 0xFF1493,
+        eDeepSkyBlue          = 0x00BFFF,
+        eDimGray              = 0x696969,
+        eDodgerBlue           = 0x1E90FF,
+        eFireBrick            = 0xB22222,
+        eFloralWhite          = 0xFFFAF0,
+        eForestGreen          = 0x228B22,
+        eFuchsia              = 0xFF00FF,
+        eGainsboro            = 0xDCDCDC,
+        eGhostWhite           = 0xF8F8FF,
+        eGold                 = 0xFFD700,
+        eGoldenRod            = 0xDAA520,
+        eGray                 = 0x808080,
+        eGreen                = 0x008000,
+        eGreenYellow          = 0xADFF2F,
+        eHoneyDew             = 0xF0FFF0,
+        eHotPink              = 0xFF69B4,
+        eIndianRed            = 0xCD5C5C,
+        eIndigo               = 0x4B0082,
+        eIvory                = 0xFFFFF0,
+        eKhaki                = 0xF0E68C,
+        eLavender             = 0xE6E6FA,
+        eLavenderBlush        = 0xFFF0F5,
+        eLawnGreen            = 0x7CFC00,
+        eLemonChiffon         = 0xFFFACD,
+        eLightBlue            = 0xADD8E6,
+        eLightCoral           = 0xF08080,
+        eLightCyan            = 0xE0FFFF,
         eLightGoldenRodYellow = 0xFAFAD2,
-        eLightGray = 0xD3D3D3,
-        eLightGreen = 0x90EE90,
-        eLightPink = 0xFFB6C1,
-        eLightSalmon = 0xFFA07A,
-        eLightSeaGreen = 0x20B2AA,
-        eLightSkyBlue = 0x87CEFA,
-        eLightSlateGray = 0x778899,
-        eLightSteelBlue = 0xB0C4DE,
-        eLightYellow = 0xFFFFE0,
-        eLime = 0x00FF00,
-        eLimeGreen = 0x32CD32,
-        eLinen = 0xFAF0E6,
-        eMagenta = 0xFF00FF,
-        eMaroon = 0x800000,
-        eMediumAquamarine = 0x66CDAA,
-        eMediumBlue = 0x0000CD,
-        eMediumOrchid = 0xBA55D3,
-        eMediumPurple = 0x9370DB,
-        eMediumSeaGreen = 0x3CB371,
-        eMediumSlateBlue = 0x7B68EE,
-        eMediumSpringGreen = 0x00FA9A,
-        eMediumTurquoise = 0x48D1CC,
-        eMediumVioletRed = 0xC71585,
-        eMidnightBlue = 0x191970,
-        eMintCream = 0xF5FFFA,
-        eMistyRose = 0xFFE4E1,
-        eMoccasin = 0xFFE4B5,
-        eNavajoWhite = 0xFFDEAD,
-        eNavy = 0x000080,
-        eOldLace = 0xFDF5E6,
-        eOlive = 0x808000,
-        eOliveDrab = 0x6B8E23,
-        eOrange = 0xFFA500,
-        eOrangeRed = 0xFF4500,
-        eOrchid = 0xDA70D6,
-        ePaleGoldenRod = 0xEEE8AA,
-        ePaleGreen = 0x98FB98,
-        ePaleTurquoise = 0xAFEEEE,
-        ePaleVioletRed = 0xDB7093,
-        ePapayaWhip = 0xFFEFD5,
-        ePeachPuff = 0xFFDAB9,
-        ePeru = 0xCD853F,
-        ePink = 0xFFC0CB,
-        ePlum = 0xDDA0DD,
-        ePowderBlue = 0xB0E0E6,
-        ePurple = 0x800080,
-        eRebeccaPurple = 0x663399,
-        eRed = 0xFF0000,
-        eRosyBrown = 0xBC8F8F,
-        eRoyalBlue = 0x4169E1,
-        eSaddleBrown = 0x8B4513,
-        eSalmon = 0xFA8072,
-        eSandyBrown = 0xF4A460,
-        eSeaGreen = 0x2E8B57,
-        eSeaShell = 0xFFF5EE,
-        eSienna = 0xA0522D,
-        eSilver = 0xC0C0C0,
-        eSkyBlue = 0x87CEEB,
-        eSlateBlue = 0x6A5ACD,
-        eSlateGray = 0x708090,
-        eSnow = 0xFFFAFA,
-        eSpringGreen = 0x00FF7F,
-        eSteelBlue = 0x4682B4,
-        eTan = 0xD2B48C,
-        eTeal = 0x008080,
-        eThistle = 0xD8BFD8,
-        eTomato = 0xFF6347,
-        eTurquoise = 0x40E0D0,
-        eViolet = 0xEE82EE,
-        eWheat = 0xF5DEB3,
-        eWhite = 0xFFFFFF,
-        eWhiteSmoke = 0xF5F5F5,
-        eYellow = 0xFFFF00,
-        eYellowGreen = 0x9ACD32,
+        eLightGray            = 0xD3D3D3,
+        eLightGreen           = 0x90EE90,
+        eLightPink            = 0xFFB6C1,
+        eLightSalmon          = 0xFFA07A,
+        eLightSeaGreen        = 0x20B2AA,
+        eLightSkyBlue         = 0x87CEFA,
+        eLightSlateGray       = 0x778899,
+        eLightSteelBlue       = 0xB0C4DE,
+        eLightYellow          = 0xFFFFE0,
+        eLime                 = 0x00FF00,
+        eLimeGreen            = 0x32CD32,
+        eLinen                = 0xFAF0E6,
+        eMagenta              = 0xFF00FF,
+        eMaroon               = 0x800000,
+        eMediumAquamarine     = 0x66CDAA,
+        eMediumBlue           = 0x0000CD,
+        eMediumOrchid         = 0xBA55D3,
+        eMediumPurple         = 0x9370DB,
+        eMediumSeaGreen       = 0x3CB371,
+        eMediumSlateBlue      = 0x7B68EE,
+        eMediumSpringGreen    = 0x00FA9A,
+        eMediumTurquoise      = 0x48D1CC,
+        eMediumVioletRed      = 0xC71585,
+        eMidnightBlue         = 0x191970,
+        eMintCream            = 0xF5FFFA,
+        eMistyRose            = 0xFFE4E1,
+        eMoccasin             = 0xFFE4B5,
+        eNavajoWhite          = 0xFFDEAD,
+        eNavy                 = 0x000080,
+        eOldLace              = 0xFDF5E6,
+        eOlive                = 0x808000,
+        eOliveDrab            = 0x6B8E23,
+        eOrange               = 0xFFA500,
+        eOrangeRed            = 0xFF4500,
+        eOrchid               = 0xDA70D6,
+        ePaleGoldenRod        = 0xEEE8AA,
+        ePaleGreen            = 0x98FB98,
+        ePaleTurquoise        = 0xAFEEEE,
+        ePaleVioletRed        = 0xDB7093,
+        ePapayaWhip           = 0xFFEFD5,
+        ePeachPuff            = 0xFFDAB9,
+        ePeru                 = 0xCD853F,
+        ePink                 = 0xFFC0CB,
+        ePlum                 = 0xDDA0DD,
+        ePowderBlue           = 0xB0E0E6,
+        ePurple               = 0x800080,
+        eRebeccaPurple        = 0x663399,
+        eRed                  = 0xFF0000,
+        eRosyBrown            = 0xBC8F8F,
+        eRoyalBlue            = 0x4169E1,
+        eSaddleBrown          = 0x8B4513,
+        eSalmon               = 0xFA8072,
+        eSandyBrown           = 0xF4A460,
+        eSeaGreen             = 0x2E8B57,
+        eSeaShell             = 0xFFF5EE,
+        eSienna               = 0xA0522D,
+        eSilver               = 0xC0C0C0,
+        eSkyBlue              = 0x87CEEB,
+        eSlateBlue            = 0x6A5ACD,
+        eSlateGray            = 0x708090,
+        eSnow                 = 0xFFFAFA,
+        eSpringGreen          = 0x00FF7F,
+        eSteelBlue            = 0x4682B4,
+        eTan                  = 0xD2B48C,
+        eTeal                 = 0x008080,
+        eThistle              = 0xD8BFD8,
+        eTomato               = 0xFF6347,
+        eTurquoise            = 0x40E0D0,
+        eViolet               = 0xEE82EE,
+        eWheat                = 0xF5DEB3,
+        eWhite                = 0xFFFFFF,
+        eWhiteSmoke           = 0xF5F5F5,
+        eYellow               = 0xFFFF00,
+        eYellowGreen          = 0x9ACD32,
     };
 
     /// The 16 standard terminal colors (SGR foreground codes).
@@ -184,7 +184,7 @@ namespace Prism
         eBrightWhite,
     };
 
-    enum class Emphasis : u8
+    enum class TextEmphasis : u8
     {
         eBold          = 1,
         eFaint         = 1 << 1,
@@ -196,27 +196,27 @@ namespace Prism
         eStrikethrough = 1 << 7,
     };
 
-    struct Rgb
+    struct RgbColor
     {
-        u8 R = 0;
-        u8 G = 0;
-        u8 B = 0;
+        u8 R                 = 0;
+        u8 G                 = 0;
+        u8 B                 = 0;
 
-        constexpr Rgb() = default;
-        constexpr Rgb(u8 r, u8 g, u8 b)
+        constexpr RgbColor() = default;
+        constexpr RgbColor(u8 r, u8 g, u8 b)
             : R(r)
             , G(g)
             , B(b)
         {
         }
-        constexpr Rgb(u32 hex)
+        constexpr RgbColor(u32 hex)
             : R((hex >> 16) & 0xff)
             , G((hex >> 8) & 0xff)
             , B(hex & 0xff)
         {
         }
-        constexpr Rgb(Color color)
-            : Rgb(static_cast<u32>(color))
+        constexpr RgbColor(TextColor color)
+            : RgbColor(static_cast<u32>(color))
         {
         }
     };
@@ -227,24 +227,24 @@ namespace Prism
         bool IsRgb = true;
         union
         {
-            Rgb           RgbColor;
-            TerminalColor Terminal;
+            struct RgbColor Rgb;
+            TerminalColor   Terminal;
         };
 
         constexpr StyleColor()
-            : RgbColor()
+            : Rgb()
         {
         }
-        constexpr StyleColor(Rgb rgb)
-            : RgbColor(rgb)
+        constexpr StyleColor(struct RgbColor rgb)
+            : Rgb(rgb)
         {
         }
-        constexpr StyleColor(Color color)
-            : RgbColor(color)
+        constexpr StyleColor(TextColor color)
+            : Rgb(color)
         {
         }
         constexpr StyleColor(u32 hex)
-            : RgbColor(hex)
+            : Rgb(hex)
         {
         }
         constexpr StyleColor(TerminalColor color)
@@ -258,18 +258,16 @@ namespace Prism
     {
       public:
         constexpr TextStyle() = default;
-        constexpr TextStyle(Emphasis emphasis)
+        constexpr TextStyle(TextEmphasis emphasis)
             : m_Emphasis(static_cast<u8>(emphasis))
         {
         }
 
-        constexpr bool       HasForeground() const { return m_HasForeground; }
-        constexpr bool       HasBackground() const { return m_HasBackground; }
-        constexpr bool       HasEmphasis() const { return m_Emphasis != 0; }
-        constexpr bool       Empty() const
-        {
-            return !HasForeground() && !HasBackground() && !HasEmphasis();
-        }
+        constexpr bool HasForeground() const { return m_HasForeground; }
+        constexpr bool HasBackground() const { return m_HasBackground; }
+        constexpr bool HasEmphasis() const { return m_Emphasis != 0; }
+        constexpr bool Empty() const
+        { return !HasForeground() && !HasBackground() && !HasEmphasis(); }
 
         constexpr StyleColor Foreground() const { return m_Foreground; }
         constexpr StyleColor Background() const { return m_Background; }
@@ -291,11 +289,9 @@ namespace Prism
             m_Emphasis |= rhs.m_Emphasis;
             return *this;
         }
-        friend constexpr TextStyle operator|(TextStyle      lhs,
+        friend constexpr TextStyle operator|(TextStyle        lhs,
                                              const TextStyle& rhs)
-        {
-            return lhs |= rhs;
-        }
+        { return lhs |= rhs; }
 
         static constexpr TextStyle MakeForeground(StyleColor color)
         {
@@ -320,21 +316,15 @@ namespace Prism
         u8         m_Emphasis      = 0;
     };
 
-    constexpr TextStyle operator|(Emphasis lhs, Emphasis rhs)
-    {
-        return TextStyle(lhs) | TextStyle(rhs);
-    }
+    constexpr TextStyle operator|(TextEmphasis lhs, TextEmphasis rhs)
+    { return TextStyle(lhs) | TextStyle(rhs); }
 
     /// Foreground color style (fmt::fg).
     constexpr TextStyle Fg(StyleColor color)
-    {
-        return TextStyle::MakeForeground(color);
-    }
+    { return TextStyle::MakeForeground(color); }
     /// Background color style (fmt::bg).
     constexpr TextStyle Bg(StyleColor color)
-    {
-        return TextStyle::MakeBackground(color);
-    }
+    { return TextStyle::MakeBackground(color); }
 
     namespace Details
     {
@@ -362,11 +352,11 @@ namespace Prism
             else
             {
                 out.Append(background ? "48;2;" : "38;2;", 5);
-                WriteColorComponent(out, color.RgbColor.R);
+                WriteColorComponent(out, color.Rgb.R);
                 out.PushBack(';');
-                WriteColorComponent(out, color.RgbColor.G);
+                WriteColorComponent(out, color.Rgb.G);
                 out.PushBack(';');
-                WriteColorComponent(out, color.RgbColor.B);
+                WriteColorComponent(out, color.Rgb.B);
             }
             out.PushBack('m');
         }
@@ -393,9 +383,7 @@ namespace Prism
             return !style.Empty();
         }
         inline void WriteStyleReset(FormatBuffer& out)
-        {
-            out.Append("\x1b[0m", 4);
-        }
+        { out.Append("\x1b[0m", 4); }
     } // namespace Details
 
     inline void VFormatTo(FormatBuffer& out, const TextStyle& style,
@@ -421,16 +409,14 @@ namespace Prism
     {
         String result;
         VFormatToSink([&result](const char* data, usize size)
-                      { result += StringView(data, size); },
-                      style, format, args);
+                      { result += StringView(data, size); }, style, format,
+                      args);
         return result;
     }
     template <typename... Args>
-    PM_NODISCARD String Format(const TextStyle& style,
+    PM_NODISCARD String Format(const TextStyle&      style,
                                FormatString<Args...> format, Args&&... args)
-    {
-        return VFormat(style, format.View(), MakeFormatArgs(args...));
-    }
+    { return VFormat(style, format.View(), MakeFormatArgs(args...)); }
 
     template <typename OutputIt, typename... Args>
         requires FormatOutputIterator<OutputIt>
@@ -468,8 +454,8 @@ namespace Prism
                Args&&... args)
     {
         VFormatToSink([](const char* data, usize size)
-                      { Log::Print(StringView(data, size)); },
-                      style, format.View(), MakeFormatArgs(args...));
+                      { Log::Print(StringView(data, size)); }, style,
+                      format.View(), MakeFormatArgs(args...));
     }
 
     /// A value printed with a style (fmt::styled).
@@ -481,20 +467,15 @@ namespace Prism
     };
     template <typename T>
     constexpr StyledArg<T> Styled(const T& value, TextStyle style)
-    {
-        return {value, style};
-    }
+    { return {value, style}; }
     template <typename T>
     struct Formatter<StyledArg<T>, char>
     {
         Details::FormatterFor<Details::FormatKeyType<T>> Inner{};
 
         constexpr const char* Parse(FormatParseContext& ctx)
-        {
-            return Details::ParseWith(Inner, ctx);
-        }
-        FormatAppender Format(const StyledArg<T>& arg,
-                              FormatContext&      ctx) const
+        { return Details::ParseWith(Inner, ctx); }
+        FormatAppender Format(const StyledArg<T>& arg, FormatContext& ctx) const
         {
             bool styled = Details::WriteStyleBegin(ctx.Buffer(), arg.Style);
             auto inner  = Inner;
