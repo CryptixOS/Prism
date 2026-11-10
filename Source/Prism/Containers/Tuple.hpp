@@ -88,9 +88,9 @@ namespace Prism
     class Tuple
     {
       public:
-        Tuple() = default;
+        constexpr Tuple() = default;
 
-        Tuple(Types... args)
+        constexpr Tuple(Types... args)
             : m_Storage(Forward<Types>(args)...)
         {
         }
@@ -119,7 +119,7 @@ namespace Prism
         template <typename... UTypes,
                   typename = EnableIfType<TupleIsConstructible<
                       sizeof...(UTypes) - 1, const UTypes&...>::Value>>
-        Tuple(const Tuple<UTypes...>& other)
+        constexpr Tuple(const Tuple<UTypes...>& other)
             : m_Storage(other.m_Storage)
         {
         }
@@ -127,20 +127,36 @@ namespace Prism
         template <typename... UTypes,
                   typename = EnableIfType<TupleIsConstructible<
                       sizeof...(UTypes) - 1, UTypes&&...>::Value>>
-        Tuple(Tuple<UTypes...>&& other)
+        constexpr Tuple(Tuple<UTypes...>&& other)
             : m_Storage(Move(other.m_Storage))
         {
         }
 
         template <usize Index>
-        typename TupleArgumentType<Index, Types...>::Type& Get()
+        constexpr typename TupleArgumentType<Index, Types...>::Type& Get() &
         {
             return TupleAccessor<Index, Types...>::Access(m_Storage);
         }
         template <usize Index>
-        const typename TupleArgumentType<Index, Types...>::Type& Get() const
+        constexpr const typename TupleArgumentType<Index, Types...>::Type&
+        Get() const&
         {
             return TupleAccessor<Index, Types...>::Access(m_Storage);
+        }
+        template <usize Index>
+        constexpr typename TupleArgumentType<Index, Types...>::Type&& Get() &&
+        {
+            return static_cast<
+                typename TupleArgumentType<Index, Types...>::Type&&>(
+                TupleAccessor<Index, Types...>::Access(m_Storage));
+        }
+        template <usize Index>
+        constexpr const typename TupleArgumentType<Index, Types...>::Type&&
+        Get() const&&
+        {
+            return static_cast<
+                const typename TupleArgumentType<Index, Types...>::Type&&>(
+                TupleAccessor<Index, Types...>::Access(m_Storage));
         }
 
       private:
@@ -149,24 +165,22 @@ namespace Prism
 
     template <typename T>
     struct TupleSize;
-    template <typename T, typename U = RemoveCvType<T>,
-              typename = typename EnableIfType<IsSame<T, U>::Value>::Type,
-              usize    = TupleSize<T>::Value>
-    using EnableIfHasTupleSize = T;
 
     template <typename T>
-    struct TupleSize<const EnableIfHasTupleSize<T>> : public TupleSize<T>
+        requires requires { TupleSize<T>::Value; }
+    struct TupleSize<const T> : public TupleSize<T>
     {
     };
 
     template <typename T>
-    struct TupleSize<volatile EnableIfHasTupleSize<T>> : public TupleSize<T>
+        requires requires { TupleSize<T>::Value; }
+    struct TupleSize<volatile T> : public TupleSize<T>
     {
     };
 
     template <typename T>
-    struct TupleSize<const volatile EnableIfHasTupleSize<T>>
-        : public TupleSize<T>
+        requires requires { TupleSize<T>::Value; }
+    struct TupleSize<const volatile T> : public TupleSize<T>
     {
     };
 
@@ -213,6 +227,24 @@ namespace Prism
     {
     };
 
+    // Tuple is tuple-like, so Apply() and friends accept it by forwarding
+    // reference (mutable lvalues stay mutable, rvalues are moved from).
+    template <typename... Types>
+    struct IsTupleLikeHelper<Tuple<Types...>> : TrueType
+    {
+    };
+
+    // The generic Swap() excludes tuple-like types, so provide one here.
+    template <typename... Types>
+    constexpr void Swap(Tuple<Types...>& lhs, Tuple<Types...>& rhs)
+    {
+        if (&lhs == &rhs) return;
+
+        Tuple<Types...> temp = Move(lhs);
+        lhs                  = Move(rhs);
+        rhs                  = Move(temp);
+    }
+
     template <typename... Types>
     Tuple<RemoveReferenceType<Types>...> MakeTuple(Types&&... args)
     {
@@ -235,22 +267,25 @@ namespace Prism
     inline constexpr bool UnpackTuple<Trait, T, const Tuple<U...>&>
         = Trait<T, const U&...>::Value;
 
-    // template <typename Fn, typename TupleLike, usize... Index>
-    // constexpr decltype(auto) ApplyImpl(Fn&& fn, TupleLike&& t,
-    //                                    IndexSequence<Index...>)
-    // {
-    //     return std::__invoke(Forward<Fn>(fn),
-    //                         Gget<Index>(Forward<TupleLike>(t))...);
-    // }
-    //
+    namespace Details
+    {
+        template <typename Fn, typename TupleLike, usize... Index>
+        constexpr decltype(auto) ApplyImpl(Fn&& fn, TupleLike&& t,
+                                           IndexSequence<Index...>)
+        {
+            return Invoke(Forward<Fn>(fn),
+                          Forward<TupleLike>(t).template Get<Index>()...);
+        }
+    } // namespace Details
+
     template <typename Fn, TupleLikeType TupleLike>
     constexpr decltype(auto) Apply(Fn&& fn, TupleLike&& t)
         PM_NOEXCEPT(UnpackTuple<IsNoThrowInvocable, Fn, TupleLike>)
     {
         using Indices
             = MakeIndexSequence<TupleSizeV<RemoveReferenceType<TupleLike>>>;
-        return std::__apply_impl(Forward<Fn>(fn), Forward<TupleLike>(t),
-                                 Indices{});
+        return Details::ApplyImpl(Forward<Fn>(fn), Forward<TupleLike>(t),
+                                  Indices{});
     }
 
     template <typename F, typename... Args, usize... I>
@@ -365,18 +400,6 @@ namespace Prism
             return Ret(Forward<Res>(res)...);
         }
     };
-
-    template <typename F, typename... Args>
-    auto Apply(F functor, const Tuple<Args...>& args)
-    {
-        return Apply(Move(functor), args, IndexSequenceFor<Args...>());
-    }
-
-    template <typename F, typename... Args>
-    auto Apply(F functor, Tuple<Args...>&& args)
-    {
-        return Apply(Move(functor), Move(args), IndexSequenceFor<Args...>());
-    }
 
     template <typename... Tuples,
               typename Ret = typename TupleConcatenationResult<Tuples...>::Type>
