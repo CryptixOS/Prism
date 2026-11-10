@@ -2,7 +2,7 @@
  * Created By V1tr10l7 On 01.06.2025.
  * Copyright (C) 2024-2025, Szymon Zemke <V1tr10l7@Proton.Me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #pragma once
 

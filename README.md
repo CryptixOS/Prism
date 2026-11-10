@@ -114,7 +114,9 @@ Prism is integrated with CryptixOS, but it can be used in any freestanding or em
 
 ## License
 
-Prism is licensed under the **GPL-3 License** 
+Prism is licensed under the **GNU General Public License v2.0 or later**
+(`GPL-2.0-or-later`), see [LICENSE](LICENSE). Bundled dependencies keep their
+own licenses: fmt and magic_enum (MIT), demangler (Apache-2.0).
 
 ---
 

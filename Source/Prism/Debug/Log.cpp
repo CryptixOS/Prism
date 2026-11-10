@@ -2,7 +2,7 @@
  * Created by v1tr10l7 on 21.02.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>

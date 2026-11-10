@@ -2,7 +2,7 @@
 #* Created by v1tr10l7 on 07.11.2026.
 #* Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
 #*
-#* SPDX-License-Identifier: GPL-3
+#* SPDX-License-Identifier: GPL-2.0-or-later
 #*/
 # Mirrors Tests/meson.build: Prism and the test framework are compiled once
 # with the test flags, and each Tests/<Suite>/<Name>/main.cpp becomes one
