@@ -235,34 +235,42 @@ namespace Prism
     inline constexpr bool UnpackTuple<Trait, T, const Tuple<U...>&>
         = Trait<T, const U&...>::Value;
 
-    // template <typename Fn, typename TupleLike, usize... Index>
-    // constexpr decltype(auto) ApplyImpl(Fn&& fn, TupleLike&& t,
-    //                                    IndexSequence<Index...>)
-    // {
-    //     return std::__invoke(Forward<Fn>(fn),
-    //                         Gget<Index>(Forward<TupleLike>(t))...);
-    // }
-    //
-    template <typename Fn, TupleLikeType TupleLike>
-    constexpr decltype(auto) Apply(Fn&& fn, TupleLike&& t)
-        PM_NOEXCEPT(UnpackTuple<IsNoThrowInvocable, Fn, TupleLike>)
+    namespace Details
     {
-        using Indices
-            = MakeIndexSequence<TupleSizeV<RemoveReferenceType<TupleLike>>>;
-        return std::__apply_impl(Forward<Fn>(fn), Forward<TupleLike>(t),
-                                 Indices{});
-    }
+        template <typename>
+        struct ApplyIndices
+        {
+            static constexpr bool IsTuple = false;
+        };
+        template <typename... Types>
+        struct ApplyIndices<Tuple<Types...>>
+        {
+            static constexpr bool IsTuple = true;
+            using Type                    = IndexSequenceFor<Types...>;
+        };
 
-    template <typename F, typename... Args, usize... I>
-    auto Apply(F functor, const Tuple<Args...>& args, IndexSequence<I...>)
-    {
-        return functor(args.template Get<I>()...);
-    }
+        template <typename Fn, typename TupleT, usize... Indices>
+        constexpr decltype(auto) ApplyImpl(Fn&& fn, TupleT&& tuple,
+                                           IndexSequence<Indices...>)
+        {
+            // Each element keeps the tuple's value category and constness:
+            // Tuple& gives T&, const Tuple& gives const T&, Tuple&& gives T&&
+            return Invoke(Forward<Fn>(fn), ForwardLike<TupleT>(
+                                               tuple.template Get<Indices>())...);
+        }
+    }; // namespace Details
 
-    template <typename F, typename... Args, usize... I>
-    auto Apply(F functor, Tuple<Args...>&& args, IndexSequence<I...>)
+    /**
+     * @brief Calls fn with the elements of tuple as arguments (std::apply).
+     */
+    template <typename Fn, typename TupleT>
+        requires(Details::ApplyIndices<RemoveCvRefType<TupleT>>::IsTuple)
+    constexpr decltype(auto) Apply(Fn&& fn, TupleT&& tuple)
     {
-        return functor(Move(args.template Get<I>())...);
+        using Indices =
+            typename Details::ApplyIndices<RemoveCvRefType<TupleT>>::Type;
+        return Details::ApplyImpl(Forward<Fn>(fn), Forward<TupleT>(tuple),
+                                  Indices{});
     }
 
     // Turns a set of Tuple-like types into a Tuple
@@ -365,18 +373,6 @@ namespace Prism
             return Ret(Forward<Res>(res)...);
         }
     };
-
-    template <typename F, typename... Args>
-    auto Apply(F functor, const Tuple<Args...>& args)
-    {
-        return Apply(Move(functor), args, IndexSequenceFor<Args...>());
-    }
-
-    template <typename F, typename... Args>
-    auto Apply(F functor, Tuple<Args...>&& args)
-    {
-        return Apply(Move(functor), Move(args), IndexSequenceFor<Args...>());
-    }
 
     template <typename... Tuples,
               typename Ret = typename TupleConcatenationResult<Tuples...>::Type>
