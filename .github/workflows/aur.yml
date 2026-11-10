@@ -8,8 +8,11 @@ name: Deploy to AUR
 # Optional repository variables:
 #   AUR_USERNAME, AUR_EMAIL  identity used for the AUR commit
 
+# Runs only after the CI workflow succeeded on a push to master.
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: ["master"]
   workflow_dispatch:
 
@@ -26,18 +29,23 @@ env:
 
 jobs:
   aur:
-    if: github.repository == 'CryptixOS/Prism'
+    if: >-
+      github.repository == 'CryptixOS/Prism' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-latest
     container: archlinux:base-devel
 
     steps:
       - name: Install dependencies
-        run: pacman -Syu --noconfirm --needed git openssh meson ninja
+        run: pacman -Syu --noconfirm --needed git openssh cmake ninja fmt
 
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set pkgver
         run: |
@@ -63,6 +71,7 @@ jobs:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           AUR_USERNAME: ${{ vars.AUR_USERNAME || 'github-actions' }}
           AUR_EMAIL: ${{ vars.AUR_EMAIL || 'github-actions@users.noreply.github.com' }}
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
           if [ -z "$AUR_SSH_PRIVATE_KEY" ]; then
             echo "::warning::AUR_SSH_PRIVATE_KEY is not set, skipping deploy"
@@ -85,5 +94,5 @@ jobs:
             echo "AUR package is up to date"
             exit 0
           fi
-          git commit -m "Update to ${PKGVER} (CryptixOS/Prism@${GITHUB_SHA::7})"
+          git commit -m "Update to ${PKGVER} (CryptixOS/Prism@${SHA::7})"
           git push origin HEAD:master

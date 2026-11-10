@@ -4,14 +4,15 @@
 #*
 #* SPDX-License-Identifier: GPL-2.0-or-later
 #*/
-# CMake build, kept equivalent to meson.build (same sources, flags, options
-# and dependencies). Typical use:
+# Prism's primary build system. meson.build is deprecated and only kept for
+# backward compatibility. Typical use:
 #
-#   cmake -S . -B build-cmake -G Ninja -DPRISM_BUILD_TESTS=ON
-#   cmake --build build-cmake && ctest --test-dir build-cmake
+#   cmake -S . -B build -G Ninja -DPRISM_TARGET=app -DPRISM_BUILD_TESTS=ON
+#   cmake --build build && ctest --test-dir build
 #
-# or, from another CMake project: add_subdirectory(Prism) and link
-# Prism::Prism (and Prism::Test / Prism::TestMain for unit tests).
+# From another CMake project, either add_subdirectory(Prism) or, after
+# installing, find_package(Prism); then link Prism::Prism (and Prism::Test /
+# Prism::TestMain for unit tests).
 cmake_minimum_required(VERSION 3.24)
 
 project(prism VERSION 0.0.1 LANGUAGES C CXX)
@@ -25,6 +26,18 @@ endif()
 set(PRISM_EXTRA_INCS "" CACHE STRING "Extra include directory")
 option(PRISM_BUILD_TESTS "Build the unit tests" OFF)
 option(PRISM_WERROR "Treat warnings as errors (meson: werror=true)" ON)
+
+# The patched fmt 10.2 (fmt-10.2.0.patch) is only needed on CryptixOS; host
+# builds (target=app) use the host's fmt by default.
+set(PRISM_SYSTEM_FMT_DEFAULT OFF)
+if(PRISM_TARGET STREQUAL "app")
+  set(PRISM_SYSTEM_FMT_DEFAULT ON)
+endif()
+option(PRISM_USE_SYSTEM_FMT
+  "Use the host's fmt instead of the bundled, patched fmt 10.2"
+  ${PRISM_SYSTEM_FMT_DEFAULT})
+
+set(PRISM_PKGCONFIG_NAME "prism" CACHE STRING "Name of the installed pkg-config file")
 
 set(PRISM_HOSTED OFF)
 if(PRISM_TARGET STREQUAL "app" OR PRISM_TARGET STREQUAL "cryptix-app")
@@ -50,24 +63,39 @@ endif()
 # ==============================================================================
 ### Dependencies
 #
-# Uses the meson subprojects when they're already downloaded, otherwise
-# fetches the same sources (fmt gets fmt-10.2.0.patch applied).
+# Bundled dependencies come from the meson subprojects when they're already
+# downloaded, otherwise they're fetched (fmt gets fmt-10.2.0.patch applied).
 include(FetchContent)
 set(PRISM_SUBPROJECTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects")
 
-if(EXISTS "${PRISM_SUBPROJECTS}/fmt-10.2.0/include/fmt/format.h")
-  set(PRISM_FMT_DIR "${PRISM_SUBPROJECTS}/fmt-10.2.0")
+if(PRISM_USE_SYSTEM_FMT)
+  find_package(fmt REQUIRED)
+  set(PRISM_FMT_DEFINES "")
 else()
-  find_program(PRISM_PATCH patch REQUIRED)
-  FetchContent_Declare(prism_fmt
-    URL https://github.com/fmtlib/fmt/archive/10.2.0.tar.gz
-    URL_HASH SHA256=3ca91733a7313a8ad41c0885929415f8ec0a2a31d4dc7e27e9331412f4ca26ac
-    PATCH_COMMAND ${PRISM_PATCH} -p1 -E --forward
-                  -i "${CMAKE_CURRENT_SOURCE_DIR}/fmt-10.2.0.patch"
-    SOURCE_SUBDIR prism-no-cmake # header-only: don't add fmt's own project
+  if(EXISTS "${PRISM_SUBPROJECTS}/fmt-10.2.0/include/fmt/format.h")
+    set(PRISM_FMT_DIR "${PRISM_SUBPROJECTS}/fmt-10.2.0")
+  else()
+    find_program(PRISM_PATCH patch REQUIRED)
+    FetchContent_Declare(prism_fmt
+      URL https://github.com/fmtlib/fmt/archive/10.2.0.tar.gz
+      URL_HASH SHA256=3ca91733a7313a8ad41c0885929415f8ec0a2a31d4dc7e27e9331412f4ca26ac
+      PATCH_COMMAND ${PRISM_PATCH} -p1 -E --forward
+                    -i "${CMAKE_CURRENT_SOURCE_DIR}/fmt-10.2.0.patch"
+      SOURCE_SUBDIR prism-no-cmake # header-only: don't add fmt's own project
+    )
+    FetchContent_MakeAvailable(prism_fmt)
+    set(PRISM_FMT_DIR "${prism_fmt_SOURCE_DIR}")
+  endif()
+  # Configuration the patched, freestanding fmt is built for.
+  set(PRISM_FMT_DEFINES
+    FMT_STATIC_THOUSANDS_SEPARATOR=1
+    FMT_USE_LONG_DOUBLE=0
+    FMT_USE_DOUBLE=0
+    FMT_USE_FLOAT=0
+    FMT_USE_FLOAT128=0
+    FMT_USE_EXCEPTIONS=0
+    FMT_HEADER_ONLY=1
   )
-  FetchContent_MakeAvailable(prism_fmt)
-  set(PRISM_FMT_DIR "${prism_fmt_SOURCE_DIR}")
 endif()
 
 if(EXISTS "${PRISM_SUBPROJECTS}/magic_enum/include")
@@ -97,52 +125,52 @@ endif()
 
 add_library(prism_deps INTERFACE)
 target_include_directories(prism_deps SYSTEM INTERFACE
-  "$<BUILD_INTERFACE:${PRISM_FMT_DIR}/include>"
-  "$<BUILD_INTERFACE:${PRISM_MAGIC_ENUM_DIR}/include>"
-  "$<BUILD_INTERFACE:${PRISM_DEMANGLER_DIR}/include>"
+  "$<$<BOOL:${PRISM_FMT_DIR}>:${PRISM_FMT_DIR}/include>"
+  "${PRISM_MAGIC_ENUM_DIR}/include"
+  "${PRISM_DEMANGLER_DIR}/include"
 )
-# fmt's own meson.build exports these with fmt_dep.
-target_compile_definitions(prism_deps INTERFACE
-  FMT_STATIC_THOUSANDS_SEPARATOR=1
-  FMT_USE_LONG_DOUBLE=0
-  FMT_USE_DOUBLE=0
-  FMT_USE_FLOAT=0
-  FMT_HEADER_ONLY
-)
+if(PRISM_USE_SYSTEM_FMT)
+  target_link_libraries(prism_deps INTERFACE fmt::fmt)
+endif()
 
 # ==============================================================================
 ### Flags (same as meson.build's cxx_args)
-set(PRISM_CXX_ARGS
+#
+# PRISM_DEFINES are part of Prism's interface and are exported to installed
+# consumers (CMake package and pkg-config); PRISM_CODEGEN_ARGS are only
+# propagated within the build tree.
+set(PRISM_DEFINES
+  ${PRISM_FMT_DEFINES}
+  MAGIC_ENUM_RANGE_MAX=0x8a00
+  PRISM_LOG_ENABLE=true
+)
+if(PRISM_TARGET STREQUAL "cryptix" OR PRISM_TARGET STREQUAL "carbonc")
+  list(APPEND PRISM_DEFINES PRISM_USE_NAMESPACE)
+  if(PRISM_TARGET STREQUAL "cryptix")
+    list(APPEND PRISM_DEFINES PRISM_TARGET_CRYPTIX)
+  else()
+    list(APPEND PRISM_DEFINES PRISM_TARGET_CARBONC)
+  endif()
+endif()
+
+set(PRISM_CODEGEN_ARGS
   -fno-lto
   -fsized-deallocation
   -Wno-unused-parameter
   -Wno-frame-address
-  -DFMT_STATIC_THOUSANDS_SEPARATOR=1
-  -DFMT_USE_LONG_DOUBLE=0
-  -DFMT_USE_DOUBLE=0
-  -DFMT_USE_FLOAT=0
-  -DFMT_USE_FLOAT128=0
-  -DFMT_USE_EXCEPTIONS=0
-  -DFMT_HEADER_ONLY=1
-  -DMAGIC_ENUM_RANGE_MAX=0x8a00
-  -DPRISM_LOG_ENABLE=true
   -fno-omit-frame-pointer
   -fPIE
   -fPIC
   -fno-rtti
   -fno-exceptions
 )
-if(PRISM_TARGET STREQUAL "cryptix" OR PRISM_TARGET STREQUAL "carbonc")
-  list(APPEND PRISM_CXX_ARGS -DPRISM_USE_NAMESPACE)
-  if(PRISM_TARGET STREQUAL "cryptix")
-    list(APPEND PRISM_CXX_ARGS -DPRISM_TARGET_CRYPTIX)
-  else()
-    list(APPEND PRISM_CXX_ARGS -DPRISM_TARGET_CARBONC)
-  endif()
-endif()
 if(PRISM_EXTRA_INCS)
-  list(APPEND PRISM_CXX_ARGS "-I${PRISM_EXTRA_INCS}")
+  list(APPEND PRISM_CODEGEN_ARGS "-I${PRISM_EXTRA_INCS}")
 endif()
+
+# Everything together, as used by Tests/CMakeLists.txt.
+list(TRANSFORM PRISM_DEFINES PREPEND "-D" OUTPUT_VARIABLE PRISM_DEFINE_ARGS)
+set(PRISM_CXX_ARGS ${PRISM_CODEGEN_ARGS} ${PRISM_DEFINE_ARGS})
 
 set(PRISM_WARNING_ARGS -Wall -Wextra)
 if(PRISM_WERROR)
@@ -183,6 +211,7 @@ configure_file("${CMAKE_CURRENT_BINARY_DIR}/Version.hpp.cmake.in"
 
 # ==============================================================================
 ### Library
+include(GNUInstallDirs)
 set(PRISM_SOURCES
   Source/Prism/Algorithm/Hash.cpp
   Source/Prism/Containers/Bitmap.cpp
@@ -214,11 +243,16 @@ add_library(Prism ALIAS prism) # target name of the previous CMakeLists.txt
 target_include_directories(prism PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Source>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
-  "$<INSTALL_INTERFACE:include>"
+  "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
-target_compile_options(prism PUBLIC ${PRISM_CXX_ARGS}
+target_compile_definitions(prism PUBLIC ${PRISM_DEFINES})
+target_compile_options(prism
+  PUBLIC "$<BUILD_INTERFACE:${PRISM_CODEGEN_ARGS}>"
   PRIVATE ${PRISM_WARNING_ARGS})
 target_link_libraries(prism PUBLIC "$<BUILD_INTERFACE:prism_deps>")
+if(PRISM_USE_SYSTEM_FMT)
+  target_link_libraries(prism PUBLIC "$<INSTALL_INTERFACE:fmt::fmt>")
+endif()
 
 # Unit testing framework (Prism/Test), only for hosted targets.
 if(PRISM_HOSTED)
@@ -234,32 +268,88 @@ if(PRISM_HOSTED)
 endif()
 
 # ==============================================================================
-### Install (headers, libraries, pkg-config)
-include(GNUInstallDirs)
-install(TARGETS prism ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+### Install (headers, libraries, CMake package, pkg-config)
+include(CMakePackageConfigHelpers)
+set(PRISM_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/Prism"
+  CACHE STRING "Where to install the CMake package files")
+set(PRISM_INSTALL_PKGCONFIGDIR "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+  CACHE STRING "Where to install the pkg-config file")
+
+set_target_properties(prism PROPERTIES EXPORT_NAME Prism)
+set(PRISM_INSTALL_TARGETS prism)
 if(PRISM_HOSTED)
-  install(TARGETS prism_test prism_test_main
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  set_target_properties(prism_test PROPERTIES EXPORT_NAME Test)
+  set_target_properties(prism_test_main PROPERTIES EXPORT_NAME TestMain)
+  list(APPEND PRISM_INSTALL_TARGETS prism_test prism_test_main)
 endif()
+install(TARGETS ${PRISM_INSTALL_TARGETS} EXPORT PrismTargets
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(EXPORT PrismTargets NAMESPACE Prism::
+  DESTINATION ${PRISM_INSTALL_CMAKEDIR})
+
 install(DIRECTORY Source/Prism DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Prism/Core)
+# Bundled header-only dependencies used by Prism's public headers.
+install(DIRECTORY "${PRISM_MAGIC_ENUM_DIR}/include/magic_enum"
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+if(NOT PRISM_USE_SYSTEM_FMT)
+  install(DIRECTORY "${PRISM_FMT_DIR}/include/fmt"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
 
-set(PRISM_PC_LIBS "-lprism")
-file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/prism.pc" CONTENT
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/PrismConfig.cmake.in" [=[
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+if(@PRISM_USE_SYSTEM_FMT@)
+  find_dependency(fmt)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/PrismTargets.cmake")
+check_required_components(Prism)
+]=])
+configure_package_config_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/PrismConfig.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/PrismConfig.cmake"
+  INSTALL_DESTINATION ${PRISM_INSTALL_CMAKEDIR})
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/PrismConfigVersion.cmake"
+  COMPATIBILITY SameMinorVersion)
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/PrismConfig.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/PrismConfigVersion.cmake"
+  DESTINATION ${PRISM_INSTALL_CMAKEDIR})
+
+# pkg-config. libdir/includedir are relative to the prefix when possible so
+# the file works for any install prefix.
+foreach(dir LIBDIR INCLUDEDIR)
+  if(IS_ABSOLUTE "${CMAKE_INSTALL_${dir}}")
+    set(PRISM_PC_${dir} "${CMAKE_INSTALL_${dir}}")
+  else()
+    set(PRISM_PC_${dir} "\${prefix}/${CMAKE_INSTALL_${dir}}")
+  endif()
+endforeach()
+string(JOIN " " PRISM_PC_CFLAGS ${PRISM_DEFINE_ARGS})
+set(PRISM_PC_REQUIRES "")
+if(PRISM_USE_SYSTEM_FMT)
+  set(PRISM_PC_REQUIRES "Requires: fmt")
+endif()
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/prism.pc"
 "prefix=${CMAKE_INSTALL_PREFIX}
-libdir=\${prefix}/${CMAKE_INSTALL_LIBDIR}
-includedir=\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}
+libdir=${PRISM_PC_LIBDIR}
+includedir=${PRISM_PC_INCLUDEDIR}
 
 Name: prism
-Description: Prism support library
+Description: Freestanding C++23 standard library and runtime for kernel-space development
+URL: https://github.com/CryptixOS/Prism
 Version: ${PROJECT_VERSION}
-Libs: -L\${libdir} ${PRISM_PC_LIBS}
-Cflags: -I\${includedir}
+${PRISM_PC_REQUIRES}
+Libs: -L\${libdir} -lprism
+Cflags: -I\${includedir} ${PRISM_PC_CFLAGS}
 ")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/prism.pc"
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+  DESTINATION ${PRISM_INSTALL_PKGCONFIGDIR}
+  RENAME "${PRISM_PKGCONFIG_NAME}.pc")
 
 # ==============================================================================
 ### Tests

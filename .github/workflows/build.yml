@@ -1,6 +1,6 @@
-name: CI Meson
+name: CI
 permissions:
-  contents: write
+  contents: read
 
 on:
   push:
@@ -9,7 +9,46 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-linux:
+  cmake:
+    name: CMake (${{ matrix.target }}, ${{ matrix.compiler }}, ${{ matrix.build-type }})
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    strategy:
+      fail-fast: false
+      matrix:
+        # app uses the system fmt, cryptix-app the bundled, patched fmt 10.2.
+        target: [app, cryptix-app]
+        compiler: [gcc, clang]
+        build-type: [Debug, Release]
+
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm --needed git cmake ninja fmt clang patch
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: |
+          if [ "${{ matrix.compiler }}" = clang ]; then
+            export CC=clang CXX=clang++
+          fi
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+            -DPRISM_TARGET=${{ matrix.target }} \
+            -DPRISM_BUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Install
+        run: DESTDIR="$PWD/staging" cmake --install build
+
+  # Deprecated meson build, kept while it's still supported.
+  meson:
     runs-on: [ubuntu-latest]
     strategy:
       fail-fast: false

@@ -4,10 +4,11 @@
 
 ---
 
-![License](https://img.shields.io/github/license/CryptixOS/CryptixOS)
+![License](https://img.shields.io/github/license/CryptixOS/Prism)
 ![Architecture](https://img.shields.io/badge/arch-x86__64%20%7C%20aarch64-blue)
-[![Build](https://github.com/CryptixOS/CryptixOS/actions/workflows/build.yml/badge.svg)](https://github.com/CryptixOS/CryptixOS/actions/workflows/build.yml)
-[![Check-Typos](https://github.com/CryptixOS/CryptixOS/actions/workflows/typos.yml/badge.svg)](https://github.com/CryptixOS/CryptixOS/actions/workflows/typos.yml)
+[![Build](https://github.com/CryptixOS/Prism/actions/workflows/build.yml/badge.svg)](https://github.com/CryptixOS/Prism/actions/workflows/build.yml)
+[![Check-Typos](https://github.com/CryptixOS/Prism/actions/workflows/typos.yml/badge.svg)](https://github.com/CryptixOS/Prism/actions/workflows/typos.yml)
+[![AUR](https://img.shields.io/aur/version/prism-cxx-git)](https://aur.archlinux.org/packages/prism-cxx-git)
 
 
 
@@ -45,43 +46,58 @@
 
 ---
 
-## Building the Kernel & Image
+## Building
 
-Just initialize the build directory with: 
+Prism is built with CMake:
 ```
-meson setup build --buildtype=debugoptimized
-```
-and then you can build the Prism library like so
-```
-ninja -C build
-```
-
-Or with CMake:
-```
-cmake -S . -B build -G Ninja
+cmake -S . -B build -G Ninja -DPRISM_TARGET=app
 cmake --build build
 ```
+
+`PRISM_TARGET` selects what Prism is built for:
+
+| Target        | Environment                    | fmt                         |
+|---------------|--------------------------------|-----------------------------|
+| `app`         | host (Linux, ...)              | system fmt                  |
+| `cryptix-app` | CryptixOS userspace (default)  | bundled, patched fmt 10.2   |
+| `cryptix`     | CryptixOS kernel               | bundled, patched fmt 10.2   |
+| `carbonc`     | carbonc                        | bundled, patched fmt 10.2   |
+
+The fmt choice can be overridden with `-DPRISM_USE_SYSTEM_FMT=ON|OFF`.
+Bundled dependencies (patched fmt, magic_enum, demangler) are taken from
+`subprojects/` when present, otherwise they're downloaded at configure time.
+
+> **meson is deprecated.** `meson.build` is still there for backward
+> compatibility (`meson setup build -Dtarget=app && ninja -C build`), but new
+> options and features only land in CMake.
 
 ## Running the tests
 
 ```
-meson setup build-tests -Dbuild_tests=true
-meson test -C build-tests
-```
-or
-```
-cmake -S . -B build-tests -G Ninja -DPRISM_BUILD_TESTS=ON
+cmake -S . -B build-tests -G Ninja -DPRISM_TARGET=app -DPRISM_BUILD_TESTS=ON
 cmake --build build-tests && ctest --test-dir build-tests
 ```
 A test binary can also be run directly, e.g.
 `build-tests/Tests/String/Format --list` or `... 'join*'`.
 
-## Installation 
+## Installation
 
-To install Prism you just run this just after you've built it
+On Arch Linux, install [`prism-cxx-git`](https://aur.archlinux.org/packages/prism-cxx-git)
+from the AUR. It installs headers to `/usr/include/prism-cxx` and the
+libraries to `/usr/lib/prism-cxx`.
+
+From source:
 ```
-ninja -C build install
+cmake --install build
 ```
+
+Then use it from CMake:
+```cmake
+find_package(Prism REQUIRED)
+target_link_libraries(app PRIVATE Prism::Prism)  # Prism::Test, Prism::TestMain
+```
+or with pkg-config: `pkg-config --cflags --libs prism` (`prism-cxx` for the
+AUR package).
 
 ## Usage
 
@@ -93,7 +109,7 @@ Prism is integrated with CryptixOS, but it can be used in any freestanding or em
 
 ## Project Structure
 
-  - CrossFiles => **meson config files for cross compilation**
+  - CrossFiles => **meson config files for cross compilation** (deprecated)
   - Source/ => **Source Root**
     - Prism/
       - Algorithm/ 
@@ -104,10 +120,11 @@ Prism is integrated with CryptixOS, but it can be used in any freestanding or em
       - String/
       - Test/ => **unit testing framework**
       - Utility
-  - subprojects => **meson subprojects**
+  - subprojects => **bundled dependencies**
   - Tests => **Unit Tests**
-  - meson.build => **Main Build Script**
-  - CMakeLists.txt => **CMake Build Script** (kept equivalent to meson.build)
+  - CMakeLists.txt => **Main Build Script**
+  - meson.build => **meson Build Script** (deprecated, kept for backward compatibility)
+  - Meta/aur => **AUR package**
   - typos.toml => **typos configuration**
 
 ---

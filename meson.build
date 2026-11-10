@@ -4,8 +4,10 @@
 #*
 #* SPDX-License-Identifier: GPL-2.0-or-later
 #*/
+# DEPRECATED: CMake (CMakeLists.txt) is Prism's build system now. This file
+# is only kept for backward compatibility and will be removed eventually.
 project('prism', ['c', 'cpp'],
-  version: 'v0.0.1', license: 'GPL-3', 
+  version: '0.0.1', license: 'GPL-2.0-or-later',
   default_options: [
     'c_std=c17',
     'cpp_std=c++23',
@@ -13,6 +15,8 @@ project('prism', ['c', 'cpp'],
     'werror=true',
     'default_library=static',
 ],)
+
+warning('Building Prism with meson is deprecated, use CMake instead (see README.md)')
 
 if not meson.get_compiler('cpp').has_argument('-std=gnu++23')
   error('C++23 support is needed. Please install clang 17 or higher.')
@@ -29,14 +33,25 @@ warning_args = [
   '-Wno-frame-address',
   '-Wno-unused-parameter',
 ]
+target = get_option('target')
+
+# The patched fmt 10.2 (fmt-10.2.0.patch) is only needed on CryptixOS; host
+# builds (target=app) use the host's fmt.
+use_system_fmt = target == 'app'
+fmt_macros = []
+if not use_system_fmt
+  fmt_macros = [
+    '-DFMT_STATIC_THOUSANDS_SEPARATOR=1',
+    '-DFMT_USE_LONG_DOUBLE=0',
+    '-DFMT_USE_DOUBLE=0',
+    '-DFMT_USE_FLOAT=0',
+    '-DFMT_USE_FLOAT128=0',
+    '-DFMT_USE_EXCEPTIONS=0',
+    '-DFMT_HEADER_ONLY=1',
+  ]
+endif
 macros = [
-  '-DFMT_STATIC_THOUSANDS_SEPARATOR=1',
-  '-DFMT_USE_LONG_DOUBLE=0',
-  '-DFMT_USE_DOUBLE=0',
-  '-DFMT_USE_FLOAT=0',
-  '-DFMT_USE_FLOAT128=0',
-  '-DFMT_USE_EXCEPTIONS=0',
-  '-DFMT_HEADER_ONLY=1',
+  fmt_macros,
   '-DMAGIC_ENUM_RANGE_MAX=0x8a00',
   '-DPRISM_LOG_ENABLE=true',
 ]
@@ -57,7 +72,6 @@ cxx_args = [
 ]
 
 incs = [ include_directories('Source') ]
-target = get_option('target')
 extraincs = get_option('extra_incs')
 build_tests = get_option('build_tests')
 
@@ -79,7 +93,7 @@ else
 endif
 git_tag = run_command('git', 'rev-parse', 'HEAD').stdout().strip()
 
-version = meson.project_version().substring(1).split('.')
+version = meson.project_version().split('.')
 versionConf = configuration_data()
 versionConf.set('library_name', 'prism')
 versionConf.set('PM_VERSION_MAJOR', version[0])
@@ -101,8 +115,13 @@ configure_file(
 
 # ==============================================================================
 ### Dependencies
+if use_system_fmt
+  fmt_dep = dependency('fmt')
+else
+  fmt_dep = subproject('fmt-10.2.0').get_variable('fmt_dep')
+endif
 deps = [
-  subproject('fmt-10.2.0').get_variable('fmt_dep'),
+  fmt_dep,
   dependency('demangler'),
   dependency('magic_enum', default_options: [
     'test=false',
@@ -127,7 +146,10 @@ prism_dep = declare_dependency(
   compile_args: cxx_args,
   dependencies: deps, 
 )
-pkg.generate(prism)
+pkg.generate(prism,
+  description: 'Freestanding C++23 standard library and runtime for kernel-space development',
+  url: 'https://github.com/CryptixOS/Prism',
+)
 
 # Unit testing framework (Prism/Test), only for hosted targets.
 if target == 'app' or target == 'cryptix-app'
@@ -309,6 +331,7 @@ install_headers(
   'Source/Prism/Utility/Delegate.hpp',
   'Source/Prism/Utility/Expected.hpp',
   'Source/Prism/Utility/Hash.hpp',
+  'Source/Prism/Utility/LockingPolicy.hpp',
   'Source/Prism/Utility/Math.hpp',
   'Source/Prism/Utility/Mutex.hpp',
   'Source/Prism/Utility/Optional.hpp',
