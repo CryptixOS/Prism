@@ -100,7 +100,7 @@ TEST_CASE(DelegateTest_MoveConstructor)
 {
     Delegate<int(int, int)> d1([](int a, int b) { return a / b; });
     d1.BindLambda([](int a, int b) { return a / b; });
-    Delegate<int(int, int)> d2 = std::move(d1);
+    Delegate<int(int, int)> d2 = Move(d1);
     EXPECT_EQ((d2(8, 2)), 4);
 }
 TEST_CASE(DelegateTest_CopyAssignment)

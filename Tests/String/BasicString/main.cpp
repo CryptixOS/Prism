@@ -10,9 +10,6 @@
 #include <Prism/Utility/Path.hpp>
 #include <cassert>
 #include <ctime>
-#include <iomanip>
-#include <iostream>
-#include <vector>
 
 using namespace Prism;
 using namespace Prism::Literals;
@@ -38,7 +35,7 @@ TEST_CASE(String_TestIteration)
 {
     String      s = "abc"_s;
 
-    std::string built;
+    String built;
     for (char c : s) built += c;
 
     EXPECT_EQ(built, "abc");
@@ -108,7 +105,7 @@ TEST_CASE(String_TestComparisons)
 
     EXPECT_EQ(a, b);
     EXPECT(a != c);
-    EXPECT_EQ((a <=> c), std::strong_ordering::less);
+    EXPECT_EQ((a <=> c), StrongOrdering::less);
 }
 
 TEST_CASE(String_TestSubstringAndResize)
@@ -154,10 +151,7 @@ Path String_TestPath(PathView path)
         //          segment.Size(), string.Raw(), string.Size(),
         //          (segment == string));
 
-        std::cout << "VFS: '" << std::setprecision(segment.Size())
-                  << segment.Raw() << "' == '"
-                  << std::setprecision(string.Size()) << string.Raw() << "'"
-                  << (segment == string) << "\n";
+        Println("VFS: '{}' == '{}'{}", segment, string, segment == string);
 
         if (i == segments.Size() - 1) return Path(segment);
     }
@@ -419,27 +413,27 @@ TEST_CASE(String_MegaFuzzTestBasicString)
 {
     srand(static_cast<unsigned>(time(nullptr)));
 
-    std::vector<String> pool; // Pool of random strings
+    Vector<String> pool; // Pool of random strings
 
     for (int iteration = 0; iteration < 10000; iteration++) // Big stress
     {
         int op = rand() % 10;
 
-        if (pool.empty() || op < 2) // Force-create strings early
+        if (pool.Empty() || op < 2) // Force-create strings early
         {
-            pool.push_back(String_RandomString());
+            pool.PushBack(String_RandomString());
             continue;
         }
 
-        int    idxA = rand() % pool.size();
-        int    idxB = rand() % pool.size();
+        int    idxA = rand() % pool.Size();
+        int    idxB = rand() % pool.Size();
 
         String a    = pool[idxA];
         String b    = pool[idxB];
         if (a.Raw() == b.Raw())
         {
-            pool.push_back(String_RandomString());
-            b       = pool.back();
+            pool.PushBack(String_RandomString());
+            b       = pool.Back();
             pool[0] = pool[1];
             continue;
         }
@@ -499,13 +493,10 @@ TEST_CASE(String_MegaFuzzTestBasicString)
                 usize  oldSize = a.Size();
                 String before  = a;
 
-                std::cout << "OldSize: " << oldSize << "\n";
-                std::cout << std::setprecision(before.Size()) << before.Size()
-                          << "\n";
-                std::cout << "A(" << a.Size() << ") => '"
-                          << std::setprecision(a.Size()) << a.Raw() << "'\n";
-                std::cout << "B(" << b.Size() << ") => '"
-                          << std::setprecision(b.Size()) << b.Raw() << "'\n";
+                Println("OldSize: {}", oldSize);
+                Println("{}", before.Size());
+                Println("A({}) => '{}'", a.Size(), a);
+                Println("B({}) => '{}'", b.Size(), b);
                 a += b;
                 for (usize i = 0; i < oldSize; i++) EXPECT_EQ(a[i], before[i]);
                 for (usize i = 0; i < b.Size(); i++)
@@ -550,7 +541,7 @@ TEST_CASE(String_MegaFuzzTestBasicString)
         }
 
         // Every 1000 iterations, shuffle/reset
-        if (iteration % 1000 == 0) pool.clear();
+        if (iteration % 1000 == 0) pool.Clear();
     }
 }
 TEST_CASE(String_Trim)

@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
+#include <Prism/Containers/KeyValuePair.hpp>
 #include <Prism/Containers/Queue.hpp>
 using namespace Prism;
 
@@ -33,7 +34,7 @@ TEST_CASE(move_construction_from_container)
 {
     Deque<int> d;
     d.PushBack(42);
-    Q q(std::move(d));
+    Q q(Move(d));
     EXPECT(!q.Empty());
     EXPECT_EQ(q.Front(), 42);
 }
@@ -66,18 +67,18 @@ TEST_CASE(push_rvalue)
 {
     Q   q;
     int x = 99;
-    q.Push(std::move(x));
+    q.Push(Move(x));
     EXPECT_EQ(q.Size(), 1);
     EXPECT_EQ(q.Front(), 99);
 }
 
 TEST_CASE(emplace)
 {
-    Queue<std::pair<int, int>> q;
+    Queue<KeyValuePair<int, int>> q;
     q.Emplace(1, 2);
     EXPECT_EQ(q.Size(), 1);
-    EXPECT_EQ(q.Front().first, 1);
-    EXPECT_EQ(q.Front().second, 2);
+    EXPECT_EQ(q.Front().Key, 1);
+    EXPECT_EQ(q.Front().Value, 2);
 }
 
 TEST_CASE(popelement)
@@ -108,7 +109,7 @@ TEST_CASE(move_assignment)
     Q q1;
     q1.Push(42);
     Q q2;
-    q2 = std::move(q1);
+    q2 = Move(q1);
     EXPECT_EQ(q2.Size(), 1);
     EXPECT_EQ(q2.Front(), 42);
 }

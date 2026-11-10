@@ -6,7 +6,6 @@
  */
 #include <Prism/Test/Test.hpp>
 #include <Prism/Containers/Vector.hpp>
-#include <string>
 
 using namespace Prism;
 
@@ -52,7 +51,7 @@ TEST_CASE(Vector_TestCopyConstructor){
 
 TEST_CASE(Vector_TestMoveConstructor){
     Vector<int> a{4, 5, 6};
-    Vector<int> b = std::move(a);
+    Vector<int> b = Move(a);
     EXPECT_EQ(b.Size(), 3);
     EXPECT(b[0] == 4 && b[1] == 5 && b[2] == 6);
     EXPECT(a.Empty());
@@ -117,7 +116,7 @@ TEST_CASE(Vector_TestRawPointer){
 }
 
 TEST_CASE(Vector_TestEmplaceBack){
-    Vector<std::string> v;
+    Vector<String> v;
     v.EmplaceBack("hello");
     v.EmplaceBack(5, 'a');
     EXPECT_EQ(v.Size(), 2);
@@ -125,7 +124,7 @@ TEST_CASE(Vector_TestEmplaceBack){
     EXPECT_EQ(v[1], "aaaaa");
 }
 TEST_CASE(Vector_TestEmplace){
-    Vector<std::string> v;
+    Vector<String> v;
 
     // 1. Emplace into an empty vector (acts like end())
     auto                it1 = v.Emplace(v.cbegin(), "middle");

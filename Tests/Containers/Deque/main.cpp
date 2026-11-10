@@ -9,8 +9,6 @@
 
 using namespace Prism;
 
-#include <string>
-#include <utility>
 
 TEST_CASE(TestBasicOperations){
     Deque<int> dq;
@@ -35,7 +33,7 @@ TEST_CASE(TestBasicOperations){
 }
 
 TEST_CASE(TestPopElement){
-    Deque<std::string> dq;
+    Deque<String> dq;
     dq.PushBack("a");
     dq.PushBack("b");
     dq.PushBack("c");
@@ -85,12 +83,12 @@ TEST_CASE(TestMove){
     dq1.PushBack(42);
     dq1.PushBack(84);
 
-    Deque<int> dq2 = std::move(dq1);
+    Deque<int> dq2 = Move(dq1);
     EXPECT_EQ(dq2.Size(), 2);
     EXPECT_EQ(dq2[0], 42);
     EXPECT_EQ(dq2[1], 84);
 
-    dq1 = std::move(dq2);
+    dq1 = Move(dq2);
     EXPECT_EQ(dq1.Size(), 2);
     EXPECT_EQ(dq1[0], 42);
     EXPECT_EQ(dq1[1], 84);

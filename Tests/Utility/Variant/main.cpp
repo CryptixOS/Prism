@@ -95,7 +95,7 @@ void TestCopyAndMove()
     EXPECT(v2.Has<NonTrivial>());
     EXPECT(v2.Get<NonTrivial>().val == 10);
 
-    v3 = std::move(v2); // move assign
+    v3 = Move(v2); // move assign
     EXPECT(v3.Has<NonTrivial>());
     EXPECT(v3.Get<NonTrivial>().val == 10);
 }

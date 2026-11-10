@@ -7,17 +7,16 @@
 #include <Prism/Test/Test.hpp>
 #include <Prism/Containers/RedBlackTree.hpp>
 
-#include <string>
 
 using namespace Prism;
 
 void RBTree_TestInsertFind()
 {
-    RedBlackTree<int, std::string> tree;
+    RedBlackTree<int, String> tree;
 
-    std::string                    a = "apple";
-    std::string                    b = "banana";
-    std::string                    c = "cherry";
+    String                    a = "apple";
+    String                    b = "banana";
+    String                    c = "cherry";
 
     tree.Insert(10, a);
     tree.Insert(20, b);
@@ -36,8 +35,8 @@ void RBTree_TestInsertFind()
 
 void RBTree_TestErase()
 {
-    RedBlackTree<int, std::string> tree;
-    std::string                    v = "value";
+    RedBlackTree<int, String> tree;
+    String                    v = "value";
 
     tree.Insert(1, v);
     tree.Insert(2, v);
@@ -54,8 +53,8 @@ void RBTree_TestErase()
 
 void RBTree_TestClear()
 {
-    RedBlackTree<int, std::string> tree;
-    std::string                    val = "v";
+    RedBlackTree<int, String> tree;
+    String                    val = "v";
     tree.Insert(1, val);
     tree.Insert(2, val);
     tree.Insert(3, val);
@@ -68,8 +67,8 @@ void RBTree_TestClear()
 
 void RBTree_TestIterator()
 {
-    RedBlackTree<int, std::string> tree;
-    std::string                    v1 = "a", v2 = "b", v3 = "c";
+    RedBlackTree<int, String> tree;
+    String                    v1 = "a", v2 = "b", v3 = "c";
     tree.Insert(2, v1);
     tree.Insert(1, v2);
     tree.Insert(3, v3);
@@ -85,9 +84,9 @@ void RBTree_TestIterator()
 
 void RBTree_TestInsertOverwrite()
 {
-    RedBlackTree<int, std::string> tree;
-    std::string                    val1 = "first";
-    std::string                    val2 = "second";
+    RedBlackTree<int, String> tree;
+    String                    val1 = "first";
+    String                    val2 = "second";
 
     tree.Insert(10, val1);
     tree.Insert(10, val2); // should overwrite
@@ -98,8 +97,8 @@ void RBTree_TestInsertOverwrite()
 
 void RBTree_TestDeleteOnlyRoot()
 {
-    RedBlackTree<int, std::string> tree;
-    std::string                    val = "only";
+    RedBlackTree<int, String> tree;
+    String                    val = "only";
 
     tree.Insert(42, val);
     EXPECT_EQ(tree.GetSize(), 1);
@@ -109,8 +108,8 @@ void RBTree_TestDeleteOnlyRoot()
 
 void RBTree_TestSequentialInsert()
 {
-    RedBlackTree<int, std::string> tree;
-    std::string                    dummy = "x";
+    RedBlackTree<int, String> tree;
+    String                    dummy = "x";
 
     for (int i = 1; i <= 1000; ++i) tree.Insert(i, dummy);
 
@@ -120,8 +119,8 @@ void RBTree_TestSequentialInsert()
 
 void RBTree_TestInsertDeleteConsistency()
 {
-    RedBlackTree<int, std::string> tree;
-    std::string                    val = "v";
+    RedBlackTree<int, String> tree;
+    String                    val = "v";
 
     for (int i = 0; i < 100; ++i) tree.Insert(i, val);
 
@@ -137,8 +136,8 @@ void RBTree_TestInsertDeleteConsistency()
 
 void RBTree_TestNullptrBehavior()
 {
-    RedBlackTree<int, std::string> tree;
-    std::string                    val = "value";
+    RedBlackTree<int, String> tree;
+    String                    val = "value";
     tree.Insert(1, val);
 
     EXPECT(!tree.Contains(2));

@@ -9,8 +9,6 @@
 #include <Prism/Debug/Assertions.hpp>
 #include <Prism/String/String.hpp>
 
-#include <iomanip>
-#include <iostream>
 
 using namespace Prism;
 using namespace Prism::Literals;
@@ -65,10 +63,8 @@ void test_KMPearch_SingleMatch()
 isize KMP_Search(const String& text, const String& pattern)
 {
     isize pos = Algorithm::FindStringKMP(text.View(), pattern.View());
-    std::cout << "Searching for '" << std::setprecision(pattern.Size())
-              << pattern.Raw() << "' in '" << std::setprecision(text.Size())
-              << text.Raw() << "'...\n";
-    std::cout << "Returned index => " << pos << "\n";
+    Println("Searching for '{}' in '{}'...", pattern, text);
+    Println("Returned index => {}", pos);
 
     return pos;
 }

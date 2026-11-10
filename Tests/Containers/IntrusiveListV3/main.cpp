@@ -29,7 +29,7 @@ using Prism::V3::IntrusiveRefListHook;
 namespace
 {
     template <typename List>
-    bool Matches(const List& list, std::initializer_list<int> expected)
+    bool Matches(const List& list, InitializerList<int> expected)
     {
         if (list.Size() != expected.size()) return false;
 

@@ -15,7 +15,6 @@ using namespace Prism;
 #include <Prism/Containers/IntrusiveList.hpp>
 #include <Prism/Containers/Vector.hpp>
 #include <cstdlib>
-#include <iostream>
 
 // Unlike EXPECT(), this still fires when NDEBUG is defined (release builds).
 
@@ -59,7 +58,7 @@ TEST_CASE(IntrusiveList_TestPushAndIteration){
     }
 
     EXPECT_EQ(idx, 3);
-    std::cout << "IntrusiveList_TestPushAndIteration passed!\n";
+    Println("IntrusiveList_TestPushAndIteration passed!");
 }
 
 TEST_CASE(IntrusiveList_TestUnlinkMiddle){
@@ -88,7 +87,7 @@ TEST_CASE(IntrusiveList_TestUnlinkMiddle){
     }
 
     EXPECT_EQ(idx, 2);
-    std::cout << "IntrusiveList_TestUnlinkMiddle passed!\n";
+    Println("IntrusiveList_TestUnlinkMiddle passed!");
 }
 
 TEST_CASE(IntrusiveList_TestUnlinkHead){
@@ -106,7 +105,7 @@ TEST_CASE(IntrusiveList_TestUnlinkHead){
     EXPECT_EQ(b.Hook.Previous, nullptr);
     EXPECT(!a.Hook.IsLinked());
 
-    std::cout << "IntrusiveList_TestUnlinkHead passed!\n";
+    Println("IntrusiveList_TestUnlinkHead passed!");
 }
 
 TEST_CASE(IntrusiveList_TestUnlinkTail){
@@ -124,7 +123,7 @@ TEST_CASE(IntrusiveList_TestUnlinkTail){
     EXPECT_EQ(b.Hook.Next, nullptr);
     EXPECT(!c.Hook.IsLinked());
 
-    std::cout << "IntrusiveList_TestUnlinkTail passed!\n";
+    Println("IntrusiveList_TestUnlinkTail passed!");
 }
 
 TEST_CASE(IntrusiveList_TestClear){
@@ -144,7 +143,7 @@ TEST_CASE(IntrusiveList_TestClear){
     EXPECT(!b.Hook.IsLinked());
     EXPECT(!c.Hook.IsLinked());
 
-    std::cout << "IntrusiveList_TestClear passed!\n";
+    Println("IntrusiveList_TestClear passed!");
 }
 
 // Regression: IntrusiveListHook::Unlink() didn't update the owner's size.

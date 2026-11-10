@@ -127,14 +127,14 @@ constexpr void RunAllTests()
     TestIntegralLimits<unsigned long>();
     TestIntegralLimits<long long>();
     TestIntegralLimits<unsigned long long>();
-    TestIntegralLimits<std::int8_t>();
-    TestIntegralLimits<std::uint8_t>();
-    TestIntegralLimits<std::int16_t>();
-    TestIntegralLimits<std::uint16_t>();
-    TestIntegralLimits<std::int32_t>();
-    TestIntegralLimits<std::uint32_t>();
-    TestIntegralLimits<std::int64_t>();
-    TestIntegralLimits<std::uint64_t>();
+    TestIntegralLimits<i8>();
+    TestIntegralLimits<u8>();
+    TestIntegralLimits<i16>();
+    TestIntegralLimits<u16>();
+    TestIntegralLimits<i32>();
+    TestIntegralLimits<u32>();
+    TestIntegralLimits<i64>();
+    TestIntegralLimits<u64>();
 
 #if PRISM_TARGET_CRYPTIX == 0
     // Floating-point types
