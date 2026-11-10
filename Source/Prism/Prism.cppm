@@ -35,6 +35,7 @@ module;
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <new>
 #include <ranges>
@@ -85,6 +86,9 @@ export module Prism;
 #include <Prism/Core/NonMovable.hpp>
 #include <Prism/Core/ParameterPack.hpp>
 #include <Prism/Core/Ranges.hpp>
+#include <Prism/Ranges/Range.hpp>
+#include <Prism/Ranges/Ranges.hpp>
+#include <Prism/Ranges/Views.hpp>
 #include <Prism/Core/Singleton.hpp>
 #include <Prism/Core/TypeTraits.hpp>
 #include <Prism/Core/Types.hpp>

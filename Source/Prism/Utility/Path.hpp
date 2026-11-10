@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Prism/Core/Iterator.hpp>
 #include <Prism/Utility/PathView.hpp>
 
 namespace Prism
@@ -13,7 +14,7 @@ namespace Prism
     class PathIterator
     {
       public:
-        using IteratorCategory   = std::bidirectional_iterator_tag;
+        using IteratorCategory   = BidirectionalIteratorTag;
         using ValueType          = PathView;
         using DifferenceType     = ptrdiff;
         using Pointer            = const PathView*;
@@ -760,10 +761,12 @@ struct Prism::Formatter<Prism::Path> : Prism::Formatter<Prism::StringView>
     }
 };
 
-// Opt-in to borrowed_range concept
+#if PRISM_STD_INTEROP != 0
+// Kept as before for std ranges. Prism's own EnableBorrowedRange/EnableView
+// are not specialized for Path: it owns its string, so iterators into a
+// temporary Path would dangle.
 template <>
 inline constexpr bool std::ranges::enable_borrowed_range<Prism::Path> = true;
-
-// Opt-in to view concept
 template <>
 inline constexpr bool std::ranges::enable_view<Prism::Path> = true;
+#endif

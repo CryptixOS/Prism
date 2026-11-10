@@ -14,8 +14,9 @@
 #include <Prism/String/CharTraits.hpp>
 #include <Prism/String/CodePoints.hpp>
 
+#include <Prism/Ranges/Range.hpp>
+
 #include <cassert>
-#include <ranges>
 
 namespace Prism
 {
@@ -96,8 +97,8 @@ namespace Prism
               m_Size(size)
         {
         }
-        template <std::contiguous_iterator It, std::sized_sentinel_for<It> End>
-            requires SameAs<std::iter_value_t<It>, C>
+        template <ContiguousIterator It, SizedSentinelFor<It> End>
+            requires SameAs<IteratorValueType<It>, C>
                   && (!ConvertibleTo<End, SizeType>)
         constexpr explicit BasicStringView(BasicStringView&& str)
             : BasicStringView(Move(str.m_Data), Move(str.m_Size))
@@ -982,17 +983,25 @@ namespace Prism
     };
 }; // namespace Prism
 
-// Opt-in to borrowed_range concept
+// A string view is a borrowed range and a view.
+template <typename C, typename Traits>
+inline constexpr bool
+    Prism::Ranges::EnableBorrowedRange<Prism::BasicStringView<C, Traits>>
+    = true;
+template <typename C, typename Traits>
+inline constexpr bool
+    Prism::Ranges::EnableView<Prism::BasicStringView<C, Traits>>
+    = true;
+#if PRISM_STD_INTEROP != 0
 template <typename C, typename Traits>
 inline constexpr bool
     std::ranges::enable_borrowed_range<Prism::BasicStringView<C, Traits>>
     = true;
-
-// Opt-in to view concept
 template <typename C, typename Traits>
 inline constexpr bool
     std::ranges::enable_view<Prism::BasicStringView<C, Traits>>
     = true;
+#endif
 
 #if PRISM_DISABLE_FMT == 0
 template <>

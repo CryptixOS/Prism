@@ -265,6 +265,12 @@ install_headers(
 )
 
 install_headers(
+  'Source/Prism/Ranges/Range.hpp',
+  'Source/Prism/Ranges/Ranges.hpp',
+  'Source/Prism/Ranges/Views.hpp',
+  subdir: 'Prism/Ranges'
+)
+install_headers(
   'Source/Prism/String/CharTraits.hpp',
   'Source/Prism/String/CodePoints.hpp',
   'Source/Prism/String/FormatHandler.hpp',

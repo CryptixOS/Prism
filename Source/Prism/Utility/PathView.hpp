@@ -465,14 +465,12 @@ using Prism::PathView;
 using namespace Prism::PathViewLiterals;
 #endif
 
-// Opt-in to borrowed_range concept
+// A path view is a borrowed range and a view.
 template <>
-inline constexpr bool std::ranges::enable_borrowed_range<Prism::PathView>
+inline constexpr bool Prism::Ranges::EnableBorrowedRange<Prism::PathView>
     = true;
-
-// Opt-in to view concept
 template <>
-inline constexpr bool std::ranges::enable_view<Prism::PathView> = true;
+inline constexpr bool Prism::Ranges::EnableView<Prism::PathView> = true;
 
 #if PRISM_DISABLE_FMT == 0
 template <>

@@ -10,6 +10,7 @@
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Iterator.hpp>
 #include <Prism/Core/Limits.hpp>
+#include <Prism/Ranges/Range.hpp>
 
 namespace Prism
 {
@@ -101,7 +102,7 @@ namespace Prism
             if constexpr (Extent != DynamicExtent) assert(count == Extent);
         }
 
-        template <std::contiguous_iterator It, std::sized_sentinel_for<It> End>
+        template <ContiguousIterator It, SizedSentinelFor<It> End>
             requires IsCompatibleRef<IteratorReferenceType<It>>::Value
                       && (!IsConvertibleV<End, SizeType>)
         explicit(Extent != DynamicExtent) constexpr Span(It first, It last)
@@ -135,18 +136,14 @@ namespace Prism
             requires(!Details::IsSpanV<RemoveCvRefType<Range>>)
                  && (!Details::IsStdArray<RemoveCvRefType<Range>>)
                  && (!IsArrayV<RemoveCvRefType<Range>>)
-                 && std::ranges::contiguous_range<Range>
-                 && std::ranges::sized_range<Range>
-                 && (std::ranges::borrowed_range<Range> || IsConstV<ValueType>)
-                 && IsCompatibleRef<
-                        std::ranges::range_reference_t<Range>>::value
+                 && Ranges::ContiguousRange<Range> && Ranges::SizedRange<Range>
+                 && (Ranges::BorrowedRange<Range> || IsConstV<ElementType>)
+                 && IsCompatibleRef<Ranges::RangeReferenceType<Range>>::Value
         constexpr explicit(Extent != DynamicExtent) Span(Range&& range)
-            PM_NOEXCEPT(PM_NOEXCEPT(std::ranges::data(range))
-                        && PM_NOEXCEPT(std::ranges::size(range)))
-            : Span(std::ranges::data(range), std::ranges::size(range))
+            : Span(Ranges::Data(range), Ranges::Size(range))
         {
             if constexpr (Extent != DynamicExtent)
-                assert(std::ranges::size(range) == Extent);
+                assert(Ranges::Size(range) == Extent);
         }
 
         explicit(Extent != DynamicExtent) constexpr Span(
@@ -300,12 +297,20 @@ namespace Prism
     template <typename T, usize Extent>
     Span(const Array<T, Extent>&) -> Span<const T, Extent>;
 
-    template <std::contiguous_iterator It, typename End>
+    template <ContiguousIterator It, typename End>
     Span(It, End) -> Span<RemoveReferenceType<IteratorReferenceType<It>>>;
 
-    template <std::ranges::contiguous_range Range>
+    template <Ranges::ContiguousRange Range>
     Span(Range&&)
-        -> Span<RemoveReferenceType<std::ranges::range_reference_t<Range&>>>;
+        -> Span<RemoveReferenceType<Ranges::RangeReferenceType<Range&>>>;
+
+    namespace Ranges
+    {
+        template <typename T, usize Extent>
+        inline constexpr bool EnableBorrowedRange<Span<T, Extent>> = true;
+        template <typename T, usize Extent>
+        inline constexpr bool EnableView<Span<T, Extent>> = true;
+    } // namespace Ranges
 }; // namespace Prism
 #if PRISM_USE_NAMESPACE != 0
 using Prism::DynamicExtent;
