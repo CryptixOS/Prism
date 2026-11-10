@@ -7,14 +7,15 @@
 #pragma once
 
 #include <Prism/Core/Concepts.hpp>
+#include <Prism/Core/Limits.hpp>
 
 namespace Prism
 {
     template <typename T>
     struct IntegerTraits
     {
-        static constexpr i32 Digits = std::numeric_limits<T>::digits;
-        static constexpr T   Max    = std::numeric_limits<T>::max();
+        static constexpr i32 Digits = NumericLimits<T>::Digits;
+        static constexpr T   Max    = NumericLimits<T>::Max();
     };
 
     template <typename T, typename U>

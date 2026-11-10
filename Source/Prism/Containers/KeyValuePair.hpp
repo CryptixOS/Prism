@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Prism/Core/Concepts.hpp>
 #include <Prism/Core/Core.hpp>
 
 namespace Prism
@@ -59,14 +60,14 @@ namespace Prism
         template <typename T, typename U>
         constexpr auto operator()(const T& t, const U& u) const
         {
-            if constexpr (std::three_way_comparable_with<T, U>)
+            if constexpr (ThreeWayComparableWith<T, U>)
             {
                 return t <=> u;
             }
             else {
-                if (t < u) return std::weak_ordering::less;
-                if (u < t) return std::weak_ordering::greater;
-                return std::weak_ordering::equivalent;
+                if (t < u) return WeakOrdering::less;
+                if (u < t) return WeakOrdering::greater;
+                return WeakOrdering::equivalent;
             }
         }
     };

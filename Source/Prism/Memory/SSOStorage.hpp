@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Types.hpp>
+#include <Prism/Memory/Memory.hpp>
 
 namespace Prism
 {
@@ -35,7 +36,7 @@ namespace Prism
 
             T* newData = new T[capacity];
 
-            for (usize i = 0; i < Size(); i++) newData[i] = std::move(At(i));
+            for (usize i = 0; i < Size(); i++) newData[i] = Move(At(i));
             delete[] Long().Data;
 
             Long().Data     = newData;
@@ -67,7 +68,7 @@ namespace Prism
             if (IsLong()) delete[] m_Storage.Long.Data;
 
             void* sbo = &m_Storage;
-            std::memset(sbo, 0, *m_Storage);
+            Memory::Fill(sbo, 0, sizeof(m_Storage));
             m_UsingSBO = true;
             m_Size     = 0;
         }

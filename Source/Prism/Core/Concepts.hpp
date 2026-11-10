@@ -91,7 +91,10 @@ namespace Prism
               { lhs = Forward<RHS>(rhs) } -> SameAs<LHS>;
           };
     template <typename T>
-    concept Swappable = requires(T& a, T& b) { Swap(a, b); };
+    // Prism::Swap is declared in Core.hpp, after this header, so an
+    // unqualified Swap(a, b) here never finds it for fundamental types or
+    // pointers. IsSwappable mirrors Prism::Swap's contract instead.
+    concept Swappable = IsSwappableV<T>;
 
     template <typename F>
     inline constexpr bool IsLambda
@@ -164,7 +167,7 @@ namespace Prism
         = EqualityComparable<T> && EqualityComparable<U>
        && CommonReferenceWith<Details::ConstRef<T>, Details::ConstRef<U>>
        && EqualityComparable<
-              CommonReference<Details::ConstRef<T>, Details::ConstRef<U>>>
+              CommonReferenceType<Details::ConstRef<T>, Details::ConstRef<U>>>
        && Details::WeaklyEqualityComparableWith<T, U>;
 
     template <typename T>
@@ -175,8 +178,80 @@ namespace Prism
     concept TotallyOrderedWith
         = TotallyOrdered<T> && TotallyOrdered<U> && EqualityComparableWith<T, U>
        && TotallyOrdered<
-              CommonReference<Details::ConstRef<T>, Details::ConstRef<U>>>
+              CommonReferenceType<Details::ConstRef<T>, Details::ConstRef<U>>>
        && Details::PartiallyOrderedWith<T, U>;
+
+    // Three-way comparison (std::common_comparison_category,
+    // std::three_way_comparable, std::three_way_comparable_with)
+    namespace Details
+    {
+        template <typename T>
+        inline constexpr u32 ComparisonCategoryRank = 0;
+        template <>
+        inline constexpr u32 ComparisonCategoryRank<PartialOrdering> = 1;
+        template <>
+        inline constexpr u32 ComparisonCategoryRank<WeakOrdering> = 2;
+        template <>
+        inline constexpr u32 ComparisonCategoryRank<StrongOrdering> = 3;
+
+        template <typename... Ts>
+        constexpr u32 CommonComparisonCategoryRank()
+        {
+            u32 rank = 3;
+            ((rank = ComparisonCategoryRank<Ts> < rank
+                       ? ComparisonCategoryRank<Ts>
+                       : rank),
+             ...);
+            return rank;
+        }
+    } // namespace Details
+
+    /// The weakest comparison category of Ts..., or void if one of them
+    /// isn't a comparison category.
+    template <typename... Ts>
+    struct CommonComparisonCategory
+    {
+        static constexpr u32 Rank = Details::CommonComparisonCategoryRank<Ts...>();
+        using Type = ConditionalType<
+            Rank == 0, void,
+            ConditionalType<
+                Rank == 1, PartialOrdering,
+                ConditionalType<Rank == 2, WeakOrdering, StrongOrdering>>>;
+    };
+    template <typename... Ts>
+    using CommonComparisonCategoryType =
+        typename CommonComparisonCategory<Ts...>::Type;
+
+    namespace Details
+    {
+        template <typename T, typename Category>
+        concept CompareAs
+            = SameAs<CommonComparisonCategoryType<T, Category>, Category>;
+    } // namespace Details
+
+    template <typename T, typename Category = PartialOrdering>
+    concept ThreeWayComparable
+        = Details::WeaklyEqualityComparableWith<T, T>
+       && Details::PartiallyOrderedWith<T, T>
+       && requires(const RemoveReferenceType<T>& a,
+                   const RemoveReferenceType<T>& b) {
+              { a <=> b } -> Details::CompareAs<Category>;
+          };
+
+    template <typename T, typename U, typename Category = PartialOrdering>
+    concept ThreeWayComparableWith
+        = ThreeWayComparable<T, Category> && ThreeWayComparable<U, Category>
+       && CommonReferenceWith<Details::ConstRef<T>, Details::ConstRef<U>>
+       && ThreeWayComparable<
+              CommonReferenceType<Details::ConstRef<T>, Details::ConstRef<U>>,
+              Category>
+       && Details::WeaklyEqualityComparableWith<T, U>
+       && Details::PartiallyOrderedWith<T, U>
+       && requires(const RemoveReferenceType<T>& t,
+                   const RemoveReferenceType<U>& u) {
+              { t <=> u } -> Details::CompareAs<Category>;
+              { u <=> t } -> Details::CompareAs<Category>;
+          };
 
     template <typename T>
     concept Movable = IsObjectV<T> && MoveConstructible<T>
@@ -265,6 +340,24 @@ namespace Prism
               Ranges::Swap(Forward<T>(t), Forward<U>(u));
               Ranges::Swap(Forward<U>(u), Forward<T>(t));
           };
+
+    // Callable concepts (std::invocable, std::regular_invocable,
+    // std::predicate, std::relation, std::equivalence_relation,
+    // std::strict_weak_order)
+    template <typename F, typename... Args>
+    concept Invocable = IsInvocableV<F, Args...>;
+    template <typename F, typename... Args>
+    concept RegularInvocable = Invocable<F, Args...>;
+    template <typename F, typename... Args>
+    concept Predicate = RegularInvocable<F, Args...>
+                     && BooleanTestable<InvokeResultType<F, Args...>>;
+    template <typename R, typename T, typename U>
+    concept Relation = Predicate<R, T, T> && Predicate<R, U, U>
+                    && Predicate<R, T, U> && Predicate<R, U, T>;
+    template <typename R, typename T, typename U>
+    concept EquivalenceRelation = Relation<R, T, U>;
+    template <typename R, typename T, typename U>
+    concept StrictWeakOrder = Relation<R, T, U>;
 
     template <typename T>
     concept ArithmeticType = IsArithmeticV<T>;

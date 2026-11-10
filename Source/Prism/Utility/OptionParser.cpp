@@ -6,7 +6,7 @@
  */
 #include <Prism/Utility/OptionParser.hpp>
 
-#include <cctype>
+#include <Prism/String/CodePoints.hpp>
 
 namespace Prism
 {
@@ -32,7 +32,7 @@ namespace Prism
                 argStart    = i + 1;
             }
 
-            if (!std::isalpha(*(&c + 1)))
+            if (!CodePoints::IsAlpha(*(&c + 1)))
                 ;
             if (c == '=')
             {

@@ -37,9 +37,27 @@ namespace Prism
         template <Integral T, UnsignedIntegral UT = MakeUnsigned<T>::Type>
         constexpr UT Absolute(T value)
         {
-            return static_cast<UT>(value < 0 ? -value : value);
+            // Negate in the unsigned type: -value overflows for the minimum.
+            return value < 0 ? static_cast<UT>(UT(0) - static_cast<UT>(value))
+                             : static_cast<UT>(value);
         }
 #if PRISM_TARGET_CRYPTIX == 0
+        /**
+         * @brief Absolute value of a floating-point number (std::fabs).
+         *
+         * Clears the sign bit, so FAbs(-0.0) is +0.0 and the sign of NaN is
+         * cleared too. Usable in constant expressions.
+         */
+        template <FloatingPoint T>
+        PM_NODISCARD constexpr T FAbs(T value)
+        {
+            if constexpr (IsSameV<RemoveCvType<T>, float>)
+                return __builtin_fabsf(value);
+            else if constexpr (IsSameV<RemoveCvType<T>, double>)
+                return __builtin_fabs(value);
+            else return __builtin_fabsl(value);
+        }
+
         /**
          * @brief Computes the absolute value of a floating-point type.
          *
@@ -53,7 +71,7 @@ namespace Prism
         template <FloatingPoint T>
         constexpr T Absolute(T value)
         {
-            return value < 0 ? value * -1 : value;
+            return FAbs(value);
         }
 #endif
 
