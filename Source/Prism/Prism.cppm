@@ -41,6 +41,9 @@ module;
 #include <utility>
 
 #include <math.h>
+#if PrismHasInclude(<sched.h>)
+    #include <sched.h>
+#endif
 #if PrismHasInclude(<unistd.h>)
     #include <unistd.h>
 #endif
@@ -170,6 +173,7 @@ export module Prism;
 #include <Prism/Utility/Hash.hpp>
 #include <Prism/Utility/LockingPolicy.hpp>
 #include <Prism/Utility/Math.hpp>
+#include <Prism/Utility/Mutex.hpp>
 #include <Prism/Utility/Optional.hpp>
 #include <Prism/Utility/Path.hpp>
 #include <Prism/Utility/PathView.hpp>

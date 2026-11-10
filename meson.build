@@ -304,6 +304,7 @@ install_headers(
   'Source/Prism/Utility/Expected.hpp',
   'Source/Prism/Utility/Hash.hpp',
   'Source/Prism/Utility/Math.hpp',
+  'Source/Prism/Utility/Mutex.hpp',
   'Source/Prism/Utility/Optional.hpp',
   #'Source/Prism/Utility/OptionParser.hpp',
   'Source/Prism/Utility/Path.hpp',

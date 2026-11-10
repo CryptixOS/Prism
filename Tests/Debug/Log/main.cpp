@@ -7,17 +7,17 @@
 #include <Prism/Test/Test.hpp>
 #include <Prism/Debug/Log.hpp>
 #include <Prism/Debug/Logger.hpp>
+#include <Prism/Utility/Mutex.hpp>
 
 using namespace Prism;
-
 using namespace Prism::Literals;
-#include <mutex>
+
 struct Policy
 {
-    std::mutex  Mutex;
+    Prism::Mutex Mutex;
 
-    inline void Lock() { Mutex.lock(); }
-    inline void Unlock() { Mutex.unlock(); }
+    inline void  Lock() { Mutex.Lock(); }
+    inline void  Unlock() { Mutex.Unlock(); }
 };
 
 TEST_CASE(log_levels)

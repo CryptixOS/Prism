@@ -9,6 +9,7 @@ utility_tests = [
   'Atomic',
   'AtomicBuiltins',
   'Delegate',
+  'Mutex',
   'Path',
   'SimdIntrinsics',
 ]
