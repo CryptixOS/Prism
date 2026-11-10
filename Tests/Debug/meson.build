@@ -17,3 +17,12 @@ foreach name : debug_tests
   )
   test(name, test, suite: 'Debug')
 endforeach
+
+# Same test with Logger taking Prism::FormatString instead of fmt's.
+test_log_prism_format = executable(
+  'LogPrismFormat', files('Log' / 'main.cpp'),
+  cpp_args: cpp_args + ['-DPRISM_LOGGER_USE_PRISM_FORMAT=1'],
+  link_args: link_args,
+  include_directories: incs, dependencies: test_deps
+)
+test('LogPrismFormat', test_log_prism_format, suite: 'Debug')

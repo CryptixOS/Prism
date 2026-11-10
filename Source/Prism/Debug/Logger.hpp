@@ -12,12 +12,37 @@
 #include <Prism/String/String.hpp>
 #include <Prism/Utility/Delegate.hpp>
 
+// Selects the format string type taken by Logger's formatting overloads:
+//   1 -> Prism::FormatString (Prism::Format), types with only an
+//        fmt::formatter still work through Prism's fmt bridge
+//   0 -> fmt::format_string (fmt::format)
+// Defaults to fmt while it is available, and is forced to Prism::Format when
+// fmt is disabled.
+#if PRISM_DISABLE_FMT != 0
+    #undef PRISM_LOGGER_USE_PRISM_FORMAT
+    #define PRISM_LOGGER_USE_PRISM_FORMAT 1
+#elif !defined(PRISM_LOGGER_USE_PRISM_FORMAT)
+    #define PRISM_LOGGER_USE_PRISM_FORMAT 0
+#endif
+
+#if PRISM_LOGGER_USE_PRISM_FORMAT != 0
+    #include <Prism/String/Formatter.hpp>
+#endif
+
 #if defined(__linux__ ) && PRISM_TARGET_CRYPTIX == 0
     #include <unistd.h>
 #endif
 
 namespace Prism
 {
+#if PRISM_LOGGER_USE_PRISM_FORMAT != 0
+    template <typename... Args>
+    using LoggerFormatString = FormatString<Args...>;
+#else
+    template <typename... Args>
+    using LoggerFormatString = fmt::format_string<Args...>;
+#endif
+
     template <typename LockingPolicy>
     class Logger
     {
@@ -89,103 +114,117 @@ namespace Prism
         }
 
         template <typename... Args>
-        inline void Log(fmt::format_string<Args...> format, Args&&... args)
+        inline void Log(LoggerFormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eNone, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Log(LogLevel logLevel, fmt::format_string<Args...> format,
+        inline void Log(LogLevel logLevel, LoggerFormatString<Args...> format,
                         Args&&... args)
         {
-            std::string formatted = fmt::format(format, Forward<Args>(args)...);
-            Log(logLevel, StringView(formatted.data(), formatted.size()));
+            if (logLevel < m_LogLevelFilter) return;
+            FormatAndLog(logLevel, "", format, Forward<Args>(args)...);
         }
 
         template <typename... Args>
-        inline void Debug(fmt::format_string<Args...> format, Args&&... args)
+        inline void Debug(LoggerFormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eDebug, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Trace(fmt::format_string<Args...> format, Args&&... args)
+        inline void Trace(LoggerFormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eTrace, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Info(fmt::format_string<Args...> format, Args&&... args)
+        inline void Info(LoggerFormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eInfo, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Warn(fmt::format_string<Args...> format, Args&&... args)
+        inline void Warn(LoggerFormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eWarn, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Error(fmt::format_string<Args...> format, Args&&... args)
+        inline void Error(LoggerFormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eError, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Fatal(fmt::format_string<Args...> format, Args&&... args)
+        inline void Fatal(LoggerFormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eFatal, format, Forward<Args>(args)...);
         }
 
         template <typename... Args>
-        inline void LogTagged(fmt::format_string<Args...> format,
+        inline void LogTagged(LoggerFormatString<Args...> format,
                               Args&&... args)
         {
             Log(LogLevel::eNone, format, Forward<Args>(args)...);
         }
         template <typename... Args>
         inline void LogTagged(LogLevel logLevel, StringView tag,
-                              fmt::format_string<Args...> format,
+                              LoggerFormatString<Args...> format,
                               Args&&... args)
         {
-            std::string formatted = fmt::format(format, Forward<Args>(args)...);
-            Log(logLevel, StringView(formatted.data(), formatted.size()), tag);
+            if (logLevel < m_LogLevelFilter) return;
+            FormatAndLog(logLevel, tag, format, Forward<Args>(args)...);
         }
 
         template <typename... Args>
-        inline void DebugTag(StringView tag, fmt::format_string<Args...> format,
+        inline void DebugTag(StringView tag, LoggerFormatString<Args...> format,
                              Args&&... args)
         {
             LogTagged(LogLevel::eDebug, tag, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void TraceTag(StringView tag, fmt::format_string<Args...> format,
+        inline void TraceTag(StringView tag, LoggerFormatString<Args...> format,
                              Args&&... args)
         {
             LogTagged(LogLevel::eTrace, tag, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void InfoTag(StringView tag, fmt::format_string<Args...> format,
+        inline void InfoTag(StringView tag, LoggerFormatString<Args...> format,
                             Args&&... args)
         {
             LogTagged(LogLevel::eInfo, tag, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void WarnTag(StringView tag, fmt::format_string<Args...> format,
+        inline void WarnTag(StringView tag, LoggerFormatString<Args...> format,
                             Args&&... args)
         {
 
             LogTagged(LogLevel::eWarn, tag, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void ErrorTag(StringView tag, fmt::format_string<Args...> format,
+        inline void ErrorTag(StringView tag, LoggerFormatString<Args...> format,
                              Args&&... args)
         {
             LogTagged(LogLevel::eError, tag, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void FatalTag(StringView tag, fmt::format_string<Args...> format,
+        inline void FatalTag(StringView tag, LoggerFormatString<Args...> format,
                              Args&&... args)
         {
             LogTagged(LogLevel::eFatal, tag, format, Forward<Args>(args)...);
         }
 
       private:
+        template <typename... Args>
+        inline void FormatAndLog(LogLevel logLevel, StringView tag,
+                                 LoggerFormatString<Args...> format,
+                                 Args&&... args)
+        {
+#if PRISM_LOGGER_USE_PRISM_FORMAT != 0
+            String formatted = Prism::Format(format, Forward<Args>(args)...);
+            Log(logLevel, formatted.View(), tag);
+#else
+            auto formatted = fmt::format(format, Forward<Args>(args)...);
+            Log(logLevel, StringView(formatted.data(), formatted.size()), tag);
+#endif
+        }
+
         String               m_Name;
         LogLevel             m_LogLevelFilter = LogLevel::eTrace;
         Vector<LogSinkBase*> m_Sinks;
