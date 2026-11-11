@@ -18,7 +18,7 @@
  * `#include <Prism/Macros.hpp>`.
  *
  * Rules for the headers:
- *  - Anything that isn't Prism (std, libc, fmt, magic_enum, demangler,
+ *  - Anything that isn't Prism (std, libc, demangler,
  *    platform headers) has to be included in the global module fragment
  *    below first. Include guards then turn the headers' own includes into
  *    no-ops, so third-party declarations never get attached to Prism.
@@ -65,7 +65,6 @@ module;
 #endif
 
 #include <demangler.hpp>
-#include <magic_enum/magic_enum.hpp>
 
 export module Prism;
 
