@@ -147,23 +147,20 @@ namespace Prism
                          || !IsTriviallyDestructibleV<T>))
         {
             if (this == &other) return *this;
-
-            Reset();
-            if (other.HasValue())
+            if (!other.HasValue())
             {
-                if (HasValue()) Value() = other.ReleaseValue();
-                else
-                {
-                    ConstructAt<RemoveConstType<T>>(&m_Storage,
-                                                    other.ReleaseValue());
-                    m_HasValue = true;
-                }
-
+                Reset();
                 return *this;
             }
 
-            Value().~T();
-            m_HasValue = false;
+            if (HasValue()) Value() = other.ReleaseValue();
+            else
+            {
+                ConstructAt<RemoveConstType<T>>(&m_Storage,
+                                                other.ReleaseValue());
+                m_HasValue = true;
+            }
+
             return *this;
         }
 
