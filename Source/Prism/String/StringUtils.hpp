@@ -112,11 +112,7 @@ namespace Prism
 
         template <EnumType T>
         constexpr StringView ToString(T enumerator)
-        {
-            auto str = EnumName(enumerator);
-
-            return StringView(str.data(), str.size());
-        }
+        { return EnumName(enumerator); }
 
         template <ArithmeticType T>
         constexpr T ToNumber(StringView string, usize base = 10)
