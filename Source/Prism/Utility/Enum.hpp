@@ -35,9 +35,10 @@
  * Values outside the range have no name. Enumerators sharing a value report
  * whichever name the compiler prints (normally the first).
  *
- * Clang rejects casting a constant to a value an enum can't represent, which
- * for an enum *without* a fixed underlying type is anything outside the bits
- * its enumerators need. Give such enums a fixed type or a narrow EnumRange.
+ * Enums without a fixed underlying type (C enums) can only hold the values
+ * that fit the bits their enumerators need; clang rejects a constant cast to
+ * anything else. Such values are detected and skipped, so C enums work with
+ * the default range too.
  */
 
 #ifndef PRISM_ENUM_RANGE_MIN
@@ -111,25 +112,23 @@ namespace Prism
                                  sizeof(__PRETTY_FUNCTION__) - 1);
         }
 
-        /// The name copied out, so the binary keeps the names only, not
-        /// every __PRETTY_FUNCTION__ string that was parsed.
         template <auto V>
-        struct EnumNameStorage
+        struct EnumConstantProbe
         {
-            static constexpr EnumNameSpan Span = RawEnumName<V>();
-
-            struct Buffer
-            {
-                char Data[Span.Size + 1];
-            };
-            static constexpr Buffer Value = []
-            {
-                Buffer buffer{};
-                for (usize i = 0; i < Span.Size; ++i)
-                    buffer.Data[i] = Span.Data[i];
-                return buffer;
-            }();
         };
+        /// Whether E can hold N. False only for enums without a fixed
+        /// underlying type, outside the range their enumerators span (the
+        /// cast is then not a constant expression, so the probe fails).
+        template <typename E, i64 N>
+        concept EnumRepresentable = requires {
+            typename EnumConstantProbe<static_cast<E>(
+                static_cast<UnderlyingTypeType<E>>(N))>;
+        };
+
+        /// Only unscoped enums can lack a fixed underlying type; scoped ones
+        /// skip the probe, which matters for wide custom ranges.
+        template <typename E>
+        concept UnscopedEnum = requires(E e) { static_cast<void>(+e); };
 
         template <EnumType E>
         struct EnumTable
@@ -162,16 +161,64 @@ namespace Prism
 
             static constexpr usize RangeSize = static_cast<usize>(Max - Min + 1);
 
-            template <usize I>
-            static constexpr E ValueAt
-                = static_cast<E>(static_cast<Underlying>(Min + static_cast<i64>(I)));
+            static constexpr E     ValueAt(usize i)
+            {
+                return static_cast<E>(
+                    static_cast<Underlying>(Min + static_cast<i64>(i)));
+            }
 
-            static constexpr usize Count
+            /// The one per-value instantiation: the name of Min + I, or an
+            /// empty span. Everything after works on the resulting array.
+            template <usize I>
+            static constexpr EnumNameSpan SpanAt()
+            {
+                constexpr i64 n = Min + static_cast<i64>(I);
+                if constexpr (UnscopedEnum<E> && !EnumRepresentable<E, n>)
+                    return {};
+                else
+                    return RawEnumName<static_cast<E>(
+                        static_cast<Underlying>(n))>();
+            }
+
+            struct SpanArray
+            {
+                EnumNameSpan Items[RangeSize];
+            };
+            static constexpr SpanArray Spans
                 = []<usize... I>(IndexSequence<I...>)
             {
-                return (usize{0} + ...
-                        + (EnumNameStorage<ValueAt<I>>::Span.Size != 0));
+                return SpanArray{{SpanAt<I>()...}};
             }(MakeIndexSequence<RangeSize>{});
+
+            static constexpr usize Count = []
+            {
+                usize count = 0;
+                for (usize i = 0; i < RangeSize; ++i)
+                    count += Spans.Items[i].Size != 0;
+                return count;
+            }();
+            static constexpr usize PoolSize = []
+            {
+                usize size = 0;
+                for (usize i = 0; i < RangeSize; ++i) size += Spans.Items[i].Size;
+                return size;
+            }();
+
+            /// All names back to back, so the binary keeps the names only,
+            /// not every __PRETTY_FUNCTION__ string that was parsed.
+            struct NamePool
+            {
+                char Chars[PoolSize + 1];
+            };
+            static constexpr NamePool Pool = []
+            {
+                NamePool pool{};
+                usize    at = 0;
+                for (usize i = 0; i < RangeSize; ++i)
+                    for (usize c = 0; c < Spans.Items[i].Size; ++c)
+                        pool.Chars[at++] = Spans.Items[i].Data[c];
+                return pool;
+            }();
 
             struct Entries
             {
@@ -180,26 +227,21 @@ namespace Prism
                 StringView Names[Count ? Count : 1]{};
             };
 
-            static constexpr Entries Data
-                = []<usize... I>(IndexSequence<I...>)
+            static constexpr Entries Data = []
             {
                 Entries entries{};
-                usize   next = 0;
-                (
-                    [&]
-                    {
-                        using Storage = EnumNameStorage<ValueAt<I>>;
-                        if constexpr (Storage::Span.Size != 0)
-                        {
-                            entries.Values[next] = ValueAt<I>;
-                            entries.Names[next]  = StringView(
-                                Storage::Value.Data, Storage::Span.Size);
-                            ++next;
-                        }
-                    }(),
-                    ...);
+                usize   next = 0, at = 0;
+                for (usize i = 0; i < RangeSize; ++i)
+                {
+                    usize size = Spans.Items[i].Size;
+                    if (size == 0) continue;
+                    entries.Values[next] = ValueAt(i);
+                    entries.Names[next]  = StringView(Pool.Chars + at, size);
+                    at += size;
+                    ++next;
+                }
                 return entries;
-            }(MakeIndexSequence<RangeSize>{});
+            }();
 
             /// Index into Data, or Count if `value` has no name.
             static constexpr usize Find(E value)
