@@ -13,7 +13,7 @@
 #include <Prism/String/String.hpp>
 #include <Prism/String/StringView.hpp>
 
-#include <magic_enum/magic_enum.hpp>
+#include <Prism/Utility/Enum.hpp>
 
 namespace Prism
 {
@@ -35,9 +35,7 @@ namespace Prism
         using CodePoints::ToLower;
         using CodePoints::ToUpper;
         constexpr usize Length(const char* str)
-        {
-            return StringView(str).Size();
-        }
+        { return StringView(str).Size(); }
 
         template <ArithmeticType T>
         constexpr usize GetDigitCount(T value)
@@ -115,7 +113,7 @@ namespace Prism
         template <EnumType T>
         constexpr StringView ToString(T enumerator)
         {
-            auto str = magic_enum::enum_name(enumerator);
+            auto str = EnumName(enumerator);
 
             return StringView(str.data(), str.size());
         }
