@@ -543,11 +543,11 @@ namespace Prism::Algorithm
     }
 
     using mt19937
-        = MersenneTwisterEngine<uint_fast32_t, 32, 624, 397, 31, 0x9908b0df, 11,
+        = MersenneTwisterEngine<__UINT_FAST32_TYPE__, 32, 624, 397, 31, 0x9908b0df, 11,
                                 0xffffffff, 7, 0x9d2c5680, 15, 0xefc60000, 18,
                                 1812433253>;
     using mt19937_64 = MersenneTwisterEngine<
-        uint_fast64_t, 64, 312, 156, 31, 0xb5026f5aa96619e9ull, 29,
+        __UINT_FAST64_TYPE__, 64, 312, 156, 31, 0xb5026f5aa96619e9ull, 29,
         0x5555555555555555ull, 17, 0x71d67fffeda60000ull, 37,
         0xfff7eee000000000ull, 43, 6364136223846793005ull>;
 
