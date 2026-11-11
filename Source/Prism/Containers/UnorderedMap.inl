@@ -135,7 +135,7 @@ namespace Prism
     {
         // Keep the bucket array: begin()/Find()/Insert() rely on it.
         for (auto& bucket : m_Buckets)
-            while (Node* node = bucket.PopFrontElement()) delete node;
+            while (Node* node = bucket.TakeFront()) delete node;
 
         m_Size = 0;
     }
@@ -150,7 +150,7 @@ namespace Prism
 
         for (auto& bucket : oldTable)
         {
-            while (Node* node = bucket.PopFrontElement())
+            while (Node* node = bucket.TakeFront())
             {
                 auto newIndex = HashType{}(node->Entry.Key) % count;
                 m_Buckets[newIndex].PushBack(node);
@@ -300,10 +300,10 @@ namespace Prism
     UnorderedMap<K, V, H>::Erase(Iterator<> it)
     {
         if (it.m_Map != this || it.m_BucketIndex >= Capacity()
-            || it.ListIt == BucketType::Iterator::UniversalEnd())
+            || it.ListIt == typename BucketType::Iterator{})
             return end();
 
-        Node* node   = it.ListIt.operator->();
+        Node* node   = it.ListIt.Node();
         auto& bucket = m_Buckets[it.m_BucketIndex];
         auto  next   = bucket.Erase(it.ListIt);
         delete node;

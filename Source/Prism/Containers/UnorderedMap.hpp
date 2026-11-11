@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Prism/Containers/DoublyLinkedList.hpp>
-#include <Prism/Containers/IntrusiveList.hpp>
+#include <Prism/Containers/IntrusiveListV3.hpp>
 #include <Prism/Containers/Vector.hpp>
 
 #include <Prism/Core/Iterator.hpp>
@@ -100,11 +100,10 @@ namespace Prism
             using ValueType = V;
 
             ///> The key-value pair.
-            KeyValuePair            Entry;
+            KeyValuePair                Entry;
 
             ///> Hook for intrusive list linking.
-            IntrusiveListHook<Node> Hook;
-            using List = IntrusiveList<Node>;
+            V3::IntrusiveListHook<Node> Hook;
 
             /**
              * @brief Default constructor, enabled if key and value types are
@@ -136,7 +135,7 @@ namespace Prism
         };
 
         using NodeType   = Node;
-        using BucketType = IntrusiveList<Node>;
+        using BucketType = V3::IntrusiveList<Node>;
 
         /**
          * @brief Forward iterator for the UnorderedMap.
@@ -152,6 +151,9 @@ namespace Prism
                 = ConditionalType<Const, const KeyValuePair&, KeyValuePair&>;
             using EntryPointerType
                 = ConditionalType<Const, const KeyValuePair*, KeyValuePair*>;
+            using ListIteratorType
+                = ConditionalType<Const, typename BucketType::ConstIterator,
+                                  typename BucketType::Iterator>;
 
             constexpr Iterator(MapPointerType map, bool end)
                 : m_Map(map)
@@ -159,14 +161,14 @@ namespace Prism
                 if (end)
                 {
                     m_BucketIndex = map->Capacity();
-                    ListIt        = BucketType::Iterator::UniversalEnd();
+                    ListIt        = ListIteratorType{};
                     return;
                 }
 
                 m_BucketIndex = 0;
                 if (map->Capacity() == 0) return;
                 ListIt = map->m_Buckets[m_BucketIndex].begin();
-                while (ListIt == BucketType::Iterator::UniversalEnd()
+                while (ListIt == ListIteratorType{}
                        && ++m_BucketIndex < map->Capacity())
                     ListIt = map->m_Buckets[m_BucketIndex].begin();
             }
@@ -184,7 +186,7 @@ namespace Prism
             // constexpr Iterator(
             //     ConditionalType<Const, const UnorderedMap*, UnorderedMap*>
             //     map, const usize index) : m_Map(map) , m_BucketIndex(index)
-            //     , ListIt(BucketType::Iterator::UniversalEnd())
+            //     , ListIt(ListIteratorType{})
             // {
             //     if (m_BucketIndex >= m_Map->Capacity()) return;
             //
@@ -197,7 +199,7 @@ namespace Prism
              */
             constexpr Iterator(
                 ConditionalType<Const, const UnorderedMap*, UnorderedMap*> map,
-                usize index, typename BucketType::Iterator listIt)
+                usize index, ListIteratorType listIt)
                 : m_Map(map)
                 , m_BucketIndex(index)
                 , ListIt(listIt)
@@ -218,7 +220,7 @@ namespace Prism
              */
             constexpr inline void AdvanceToValid()
             {
-                while (ListIt == BucketType::Iterator::UniversalEnd()
+                while (ListIt == ListIteratorType{}
                        && m_BucketIndex < m_Map->Capacity())
                 {
                     ++m_BucketIndex;
@@ -253,7 +255,7 @@ namespace Prism
             constexpr Iterator& operator++()
             {
                 ListIt++;
-                while (ListIt == BucketType::Iterator::UniversalEnd()
+                while (ListIt == ListIteratorType{}
                        && ++m_BucketIndex < m_Map->Capacity())
                     ListIt = m_Map->m_Buckets[m_BucketIndex].begin();
 
@@ -286,9 +288,8 @@ namespace Prism
 
             ConditionalType<Const, const UnorderedMap*, UnorderedMap*> m_Map
                 = nullptr;
-            usize                         m_BucketIndex = 0;
-            typename BucketType::Iterator ListIt
-                = BucketType::Iterator::UniversalEnd();
+            usize            m_BucketIndex = 0;
+            ListIteratorType ListIt{};
         };
         using ConstIterator        = Iterator<true>;
 

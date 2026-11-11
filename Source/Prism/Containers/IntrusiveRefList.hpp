@@ -6,6 +6,13 @@
  */
 #pragma once
 
+/**
+ * @deprecated Superseded by Prism::V3::IntrusiveList in
+ * <Prism/Containers/IntrusiveListV3.hpp> (use IntrusiveListHook<T, Ref<T>>,
+ * a.k.a. IntrusiveRefListHook<T>). Nothing in Prism uses this
+ * header any more; it is kept only until it is deleted.
+ */
+
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Iterator.hpp>
 #include <Prism/Core/Types.hpp>
