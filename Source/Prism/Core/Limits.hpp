@@ -86,8 +86,7 @@ namespace Prism
         constexpr static T    Min()
         {
             if constexpr (!IsSignedV<T>) return 0;
-
-            return -Max() - 1;
+            else return -Max() - 1;
         }
         constexpr static T Max()
         {
