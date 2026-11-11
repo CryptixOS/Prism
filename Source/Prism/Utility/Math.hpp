@@ -304,13 +304,13 @@ namespace Prism
             }
 
     #ifdef PRISM_TARGET_X86_64
-            if constexpr (IsSame<T, f32>)
+            if constexpr (IsSameV<T, f32>)
             {
                 f32 res;
                 __asm__ volatile("sqrtss %1, %0" : "=x"(res) : "x"(value));
                 return res;
             }
-            if constexpr (IsSame<T, f64>)
+            if constexpr (IsSameV<T, f64>)
             {
                 f64 res;
                 __asm__ volatile("sqrtsd %1, %0" : "=x"(res) : "x"(value));

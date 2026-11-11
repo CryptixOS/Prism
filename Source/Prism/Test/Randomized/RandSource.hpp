@@ -58,9 +58,7 @@ namespace Prism::Test
 
         /// Uniform double in [0, 1).
         double UniformDouble()
-        {
-            return static_cast<double>(Next() >> 11) * 0x1.0p-53;
-        }
+        { return static_cast<double>(Next() >> 11) * 0x1.0p-53; }
 
       private:
         u64        m_State[4]{};
@@ -130,5 +128,6 @@ namespace Prism::Test
     };
 
     /// The source used by GEN() inside the running randomized test.
-    RandSource& CurrentRandSource();
+    inline constexpr RandSource& CurrentRandSource()
+    { return Suite::CurrentRandSource(); }
 } // namespace Prism::Test

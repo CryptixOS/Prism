@@ -176,7 +176,7 @@ namespace Prism
         auto result = (expr);                                                  \
         if (!result)                                                           \
         {                                                                      \
-            LogError(fmt::format(__VA_ARGS__).data());                         \
+            LogError(Prism::Format(__VA_ARGS__).Raw());                        \
             return (return_value);                                             \
         }                                                                      \
         Prism::Move(result.Value());                                           \

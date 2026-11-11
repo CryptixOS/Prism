@@ -15,8 +15,7 @@
 namespace Prism::Test
 {
     /**
-     * Runs the registered test cases. Command line (same as Serenity's
-     * LibTest, plus --seed and --help):
+     * Runs the registered test cases. Command line:
      *
      *   test [options] [pattern]
      *     pattern                    only run cases whose name matches
@@ -30,55 +29,38 @@ namespace Prism::Test
      *
      * The exit status is non-zero when any test failed.
      */
-    class TestSuite
+    namespace Suite
     {
-      public:
-        static TestSuite& The();
+        int         Main(int argc, char** argv);
 
-        int               Main(int argc, char** argv);
+        void        AddCase(const TestCase& testCase);
+        void        SetSetup(TestFunction setup);
 
-        void              AddCase(const TestCase& testCase);
-        void              SetSetup(TestFunction setup) { m_Setup = setup; }
+        TestResult  CurrentResult();
+        void        SetCurrentResult(TestResult result);
 
-        TestResult        CurrentResult() const { return m_CurrentResult; }
-        void              SetCurrentResult(TestResult result);
+        bool        IsReportingEnabled();
+        void        SetReportingEnabled(bool enabled);
 
-        bool              IsReportingEnabled() const { return m_Reporting; }
-        void SetReportingEnabled(bool enabled) { m_Reporting = enabled; }
-
-        u64  RandomizedRuns() const { return m_RandomizedRuns; }
-        RandSource& CurrentRandSource() { return m_RandSource; }
-
-      private:
-        TestSuite() = default;
+        u64         RandomizedRuns();
+        RandSource& CurrentRandSource();
 
         struct Statistics
         {
-            u64 TestsRun        = 0;
-            u64 TestsFailed     = 0;
-            u64 BenchmarksRun   = 0;
+            u64 TestsRun         = 0;
+            u64 TestsFailed      = 0;
+            u64 BenchmarksRun    = 0;
             u64 BenchmarksFailed = 0;
-            u64 TestNanos       = 0;
-            u64 BenchmarkNanos  = 0;
+            u64 TestNanos        = 0;
+            u64 BenchmarkNanos   = 0;
         };
 
-        Vector<TestCase> m_Cases;
-        TestFunction     m_Setup                = nullptr;
-        TestResult       m_CurrentResult        = TestResult::eNotRun;
-        bool             m_Reporting            = true;
-        u64              m_RandomizedRuns       = 100;
-        u64              m_BenchmarkRepetitions = 1;
-        u64              m_Seed                 = 0;
-        Random           m_Random;
-        RandSource       m_RandSource;
+        bool       RunCase(const TestCase& testCase, u64& nanos);
+        bool       RunTest(const TestCase& testCase);
+        bool       RunBenchmark(const TestCase& testCase, u64& nanos);
+        bool       RunRandomized(const TestCase& testCase);
 
-        bool             RunCase(const TestCase& testCase, u64& nanos);
-        bool             RunTest(const TestCase& testCase);
-        bool             RunBenchmark(const TestCase& testCase, u64& nanos);
-        bool             RunRandomized(const TestCase& testCase);
-
-        TestResult       RunWithSource(const TestCase& testCase,
-                                       RandSource       source);
-        RandomRun        Shrink(const TestCase& testCase, RandomRun run);
-    };
+        TestResult RunWithSource(const TestCase& testCase, RandSource source);
+        RandomRun  Shrink(const TestCase& testCase, RandomRun run);
+    }; // namespace Suite
 } // namespace Prism::Test

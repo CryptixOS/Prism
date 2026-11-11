@@ -14,9 +14,7 @@
 namespace Prism
 {
     struct SlabObject
-    {
-        SlabObject* Next = nullptr;
-    };
+    { SlabObject* Next = nullptr; };
 
     constexpr u64 SLAB_CANARY = 0xdeadbeefcafebabe;
     constexpr u64 FREE_POISON = 0xdeaddeaddeaddead;
@@ -33,6 +31,8 @@ namespace Prism
     class SlabAllocatorBase
     {
       public:
+        virtual ~SlabAllocatorBase()       = default;
+
         virtual usize AllocationSize()     = 0;
         virtual void  Free(Pointer memory) = 0;
     };
@@ -115,18 +115,18 @@ namespace Prism
             // page.
             constexpr usize SLAB_SIZE = PAGE_SIZE;
 
-            Pointer         base = PageAllocPolicy::CallocatePages(1);
+            Pointer         base      = PageAllocPolicy::CallocatePages(1);
             if (!base) return Error(ENOMEM);
 
             usize overhead = 0;
             for (; overhead < sizeof(SlabFrame); overhead += m_ObjectSize);
 
-            auto frame         = new (base.As<void>()) SlabFrame;
-            frame->Data        = base.Offset<Pointer>(overhead);
-            frame->DataLength  = SLAB_SIZE - overhead;
-            frame->Base        = base;
-            frame->TotalLength = SLAB_SIZE;
-            frame->Allocator   = this;
+            auto frame           = new (base.As<void>()) SlabFrame;
+            frame->Data          = base.Offset<Pointer>(overhead);
+            frame->DataLength    = SLAB_SIZE - overhead;
+            frame->Base          = base;
+            frame->TotalLength   = SLAB_SIZE;
+            frame->Allocator     = this;
 
             // Objects of older slabs that get freed are pushed onto the
             // current frame's list, so keep whatever is left on it.
@@ -134,7 +134,8 @@ namespace Prism
             for (usize offset = 0; offset + m_ObjectSize <= frame->DataLength;
                  offset += m_ObjectSize)
             {
-                auto object  = frame->Data.Offset<Pointer>(offset).As<SlabObject>();
+                auto object
+                    = frame->Data.Offset<Pointer>(offset).As<SlabObject>();
                 object->Next = previous;
                 previous     = object;
             }
@@ -165,9 +166,7 @@ namespace Prism
         }
 
         PM_UNUSED inline void Poison(Pointer object)
-        {
-            Memory::Fill(object, 0xde, m_ObjectSize - 2 * CANARY_SIZE);
-        }
+        { Memory::Fill(object, 0xde, m_ObjectSize - 2 * CANARY_SIZE); }
         PM_UNUSED inline bool IsPoisoned(Pointer object)
         {
             for (usize i = 0;

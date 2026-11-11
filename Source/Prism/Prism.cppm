@@ -65,7 +65,6 @@ module;
 #endif
 
 #include <demangler.hpp>
-#include <fmt/format.h>
 #include <magic_enum/magic_enum.hpp>
 
 export module Prism;

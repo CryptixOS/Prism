@@ -7,6 +7,7 @@
 #include <Prism/String/Formatter.hpp>
 #include <Prism/Test/Test.hpp>
 #include <Prism/String/String.hpp>
+#include <Prism/String/StringUtils.hpp>
 #include <Prism/Utility/Path.hpp>
 #include <cassert>
 #include <ctime>
@@ -309,7 +310,7 @@ TEST_CASE(String_FuzzTestBasicString)
         const char* literal = "LiteralString";
         a                   = literal;
         EXPECT_EQ(a, "LiteralString");
-        EXPECT_EQ(a.Size(), strlen(literal));
+        EXPECT_EQ(a.Size(), StringUtils::Length(literal));
 
         // Assignment from single char
         b = 'X';
@@ -320,12 +321,12 @@ TEST_CASE(String_FuzzTestBasicString)
         StringView view("ViewContent");
         a = view;
         EXPECT_EQ(a, "ViewContent");
-        EXPECT_EQ(a.Size(), strlen("ViewContent"));
+        EXPECT_EQ(a.Size(), StringUtils::Length("ViewContent"));
 
         // Operator+
         String combined = a + b;
         EXPECT_EQ(combined, "ViewContentX");
-        EXPECT_EQ(combined.Size(), strlen("ViewContentX"));
+        EXPECT_EQ(combined.Size(), StringUtils::Length("ViewContentX"));
     }
 }
 
@@ -358,7 +359,7 @@ TEST_CASE(String_FuzzTestBasicString2)
         const char* literal = "LiteralString";
         a                   = literal;
         EXPECT_EQ(a, "LiteralString");
-        EXPECT_EQ(a.Size(), strlen(literal));
+        EXPECT_EQ(a.Size(), StringUtils::Length(literal));
 
         // --- Assignment from single char ---
         b = 'X';
@@ -369,17 +370,17 @@ TEST_CASE(String_FuzzTestBasicString2)
         StringView view("ViewContent");
         a = view;
         EXPECT_EQ(a, "ViewContent");
-        EXPECT_EQ(a.Size(), strlen("ViewContent"));
+        EXPECT_EQ(a.Size(), StringUtils::Length("ViewContent"));
 
         // --- Operator+ ---
         String combined = a + b;
         EXPECT_EQ(combined, "ViewContentX");
-        EXPECT_EQ(combined.Size(), strlen("ViewContentX"));
+        EXPECT_EQ(combined.Size(), StringUtils::Length("ViewContentX"));
 
         // --- Operator+= ---
         a += b;
         EXPECT_EQ(a, "ViewContentX");
-        EXPECT_EQ(a.Size(), strlen("ViewContentX"));
+        EXPECT_EQ(a.Size(), StringUtils::Length("ViewContentX"));
 
         // --- Assignment with empty string ---
         a = "";

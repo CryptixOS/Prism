@@ -123,19 +123,6 @@ namespace Prism
     static_assert(sizeof(IPv4Address) == 4);
 }; // namespace Prism
 
-#if PRISM_DISABLE_FMT == 0
-template <>
-struct fmt::formatter<Prism::IPv4Address> : fmt::formatter<fmt::string_view>
-{
-    template <typename FormatContext>
-    auto format(const Prism::IPv4Address ip, FormatContext& ctx) const
-    {
-        auto str = ip.ToString();
-        return fmt::formatter<fmt::string_view>::format(
-            fmt::string_view(str.Raw(), str.Size()), ctx);
-    }
-};
-#endif
 template <>
 struct Prism::Formatter<Prism::IPv4Address>
     : Prism::Formatter<Prism::StringView>

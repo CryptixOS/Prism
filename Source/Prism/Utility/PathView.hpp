@@ -472,18 +472,6 @@ inline constexpr bool Prism::Ranges::EnableBorrowedRange<Prism::PathView>
 template <>
 inline constexpr bool Prism::Ranges::EnableView<Prism::PathView> = true;
 
-#if PRISM_DISABLE_FMT == 0
-template <>
-struct fmt::formatter<Prism::PathView> : fmt::formatter<fmt::string_view>
-{
-    template <typename FormatContext>
-    auto format(const Prism::PathView& src, FormatContext& ctx) const
-    {
-        return fmt::formatter<fmt::string_view>::format(
-            fmt::format("{}", fmt::string_view{src.Raw(), src.Size()}), ctx);
-    }
-};
-#endif
 template <>
 struct Prism::Formatter<Prism::PathView> : Prism::Formatter<Prism::StringView>
 {

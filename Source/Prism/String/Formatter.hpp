@@ -910,45 +910,6 @@ namespace Prism
             }
         };
 
-#if PRISM_DISABLE_FMT == 0
-        /// Transition aid: formats types that only have an fmt::formatter by
-        /// forwarding the replacement field's spec to fmt. Dynamic
-        /// width/precision referring to other arguments is not supported
-        /// here.
-        template <typename T>
-        struct FmtBridgeFormatter
-        {
-            static constexpr usize Capacity       = 64;
-            char                   Spec[Capacity] = {};
-            usize                  Size           = 0;
-
-            constexpr const char*  Parse(FormatParseContext& ctx)
-            {
-                auto  it    = ctx.begin();
-                usize depth = 0;
-                Spec[Size++] = '{';
-                Spec[Size++] = ':';
-                for (; it != ctx.end(); ++it)
-                {
-                    if (*it == '{') ++depth;
-                    else if (*it == '}')
-                    {
-                        if (depth == 0) break;
-                        --depth;
-                    }
-                    if (Size < Capacity - 1) Spec[Size++] = *it;
-                }
-                Spec[Size++] = '}';
-                return it;
-            }
-            void Format(const T& value, FormatContext& ctx) const
-            {
-                auto str
-                    = fmt::format(fmt::runtime(fmt::string_view(Spec, Size)), value);
-                ctx.Buffer().Append(str.data(), str.size());
-            }
-        };
-#endif
     } // namespace Details
 
     // Helpers

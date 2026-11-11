@@ -35,8 +35,7 @@ namespace Prism
     }
 
     template <Integral T>
-    PM_NODISCARD
-    constexpr T ByteSwap(T valueue) PM_NOEXCEPT
+    PM_NODISCARD constexpr T ByteSwap(T valueue) PM_NOEXCEPT
     {
         if constexpr (sizeof(T) == 1) return valueue;
         if !consteval
@@ -54,7 +53,7 @@ namespace Prism
         }
 
         using U          = typename MakeUnsigned<RemoveCvType<T>>::Type;
-        usize difference = CHAR_BIT * (sizeof(T) - 1);
+        usize difference = __CHAR_BIT__ * (sizeof(T) - 1);
         usize mask1      = static_cast<unsigned char>(~0);
         usize mask2      = mask1 << difference;
         usize value      = valueue;
@@ -63,9 +62,9 @@ namespace Prism
             usize b1 = value & mask1;
             usize b2 = value & mask2;
             value = (value ^ b1 ^ b2 ^ (b1 << difference) ^ (b2 >> difference));
-            mask1 <<= CHAR_BIT;
-            mask2 >>= CHAR_BIT;
-            difference -= 2 * CHAR_BIT;
+            mask1 <<= __CHAR_BIT__;
+            mask2 >>= __CHAR_BIT__;
+            difference -= 2 * __CHAR_BIT__;
         }
         return static_cast<U>(value);
     }
@@ -184,14 +183,10 @@ namespace Prism
 
     template <UnsignedIntegral T>
     constexpr i32 CountLeftOne(T x) PM_NOEXCEPT
-    {
-        return CountLeftZero<T>(static_cast<T>(~x));
-    }
+    { return CountLeftZero<T>(static_cast<T>(~x)); }
     template <UnsignedIntegral T>
     constexpr i32 CountRightOne(T x) PM_NOEXCEPT
-    {
-        return CountRightZero(static_cast<T>(~x));
-    }
+    { return CountRightZero(static_cast<T>(~x)); }
 
     template <UnsignedIntegral T>
     constexpr i32 PopCount(T x) PM_NOEXCEPT
@@ -223,16 +218,14 @@ namespace Prism
 
     template <UnsignedIntegral T>
     constexpr bool HasSingleBit(T x) PM_NOEXCEPT
-    {
-        return PopCount(x) == 1;
-    }
+    { return PopCount(x) == 1; }
 
     template <UnsignedIntegral T>
     constexpr T BitCeil(T x) PM_NOEXCEPT
     {
         constexpr auto Nd = IntegerTraits<T>::Digits;
         if (x == 0 || x == 1) return 1;
-        auto shiftExponent = Nd - CountLeftZero((T)(x - 1u));
+        auto shiftExponent = Nd - CountLeftZero(static_cast<T>(x - 1u));
         if (!IsConstantEvaluated())
             assert(shiftExponent != IntegerTraits<T>::Digits);
 
@@ -250,7 +243,8 @@ namespace Prism
     {
         constexpr auto Nd = IntegerTraits<T>::Digits;
         if (x == 0) return 0;
-        return (T)1u << (Nd - CountLeftZero((T)(x >> 1)));
+        return static_cast<T>(1u)
+            << (Nd - CountLeftZero(static_cast<T>(x >> 1)));
     }
     template <UnsignedIntegral T>
     constexpr i32 BitWidth(T x) PM_NOEXCEPT

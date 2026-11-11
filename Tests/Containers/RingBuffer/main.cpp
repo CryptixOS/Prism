@@ -6,6 +6,7 @@
  */
 #include <Prism/Test/Test.hpp>
 #include <Prism/Containers/RingBuffer.hpp>
+#include <Prism/String/CharTraits.hpp>
 
 using namespace Prism;
 
@@ -22,7 +23,7 @@ TEST_CASE(TestBasicReadWrite){
 
     char out[4] = {};
     EXPECT_EQ((buffer.Read(reinterpret_cast<u8*>(out), 3)), 3);
-    EXPECT_EQ((memcmp(out, "ABC", 3)), 0);
+    EXPECT_EQ((CharTraits<char>::Compare(out, "ABC", 3)), 0);
     EXPECT_EQ(buffer.Used(), 0);
 }
 
@@ -39,7 +40,7 @@ TEST_CASE(TestWraparound){
 
     char out2[2] = {};
     EXPECT_EQ((buffer.Read(reinterpret_cast<u8*>(out2), 2)), 2);
-    EXPECT_EQ((memcmp(out2, "CD", 2)), 0);
+    EXPECT_EQ((CharTraits<char>::Compare(out2, "CD", 2)), 0);
 }
 
 TEST_CASE(TestFullBuffer){
@@ -78,7 +79,7 @@ void TestZeroCopyWriteRead()
     buffer.BeginRead(readPtr, readSize);
     EXPECT_EQ(readSize, writeSize);
     EXPECT(memset(readPtr, 'X', readSize) == nullptr
-           || memcmp(readPtr, "XXXXXXXX", readSize) == 0);
+           || CharTraits<char>::Compare(static_cast<const char*>(readPtr), "XXXXXXXX", readSize) == 0);
 
     buffer.EndRead(readSize);
     EXPECT_EQ(buffer.Used(), 0);

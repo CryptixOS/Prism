@@ -35,22 +35,15 @@ namespace Prism::Test
         constexpr TestFunction Function() const { return m_Function; }
         constexpr TestCaseKind Kind() const { return m_Kind; }
         constexpr bool         IsBenchmark() const
-        {
-            return m_Kind == TestCaseKind::eBenchmark;
-        }
+        { return m_Kind == TestCaseKind::eBenchmark; }
         constexpr bool IsRandomized() const
-        {
-            return m_Kind == TestCaseKind::eRandomized;
-        }
+        { return m_Kind == TestCaseKind::eRandomized; }
 
       private:
         StringView   m_Name;
         TestFunction m_Function;
         TestCaseKind m_Kind;
     };
-
-    void AddTestCaseToSuite(const TestCase& testCase);
-    void SetSuiteSetupFunction(TestFunction setup);
 } // namespace Prism::Test
 
 #define PRISM_TEST_DEFINE_CASE(name, kind)                                     \
@@ -59,8 +52,8 @@ namespace Prism::Test
     {                                                                          \
         PrismTestCaseRegistrar_##name()                                        \
         {                                                                      \
-            ::Prism::Test::AddTestCaseToSuite(::Prism::Test::TestCase(         \
-                #name, PrismTestCase_##name, kind));                           \
+            ::Prism::Test::Suite::AddCase(                                     \
+                ::Prism::Test::TestCase(#name, PrismTestCase_##name, kind));   \
         }                                                                      \
     } PrismTestCaseRegistrarInstance_##name;                                   \
     static void PrismTestCase_##name()
@@ -86,8 +79,6 @@ namespace Prism::Test
     static struct PrismTestSetupRegistrar                                      \
     {                                                                          \
         PrismTestSetupRegistrar()                                              \
-        {                                                                      \
-            ::Prism::Test::SetSuiteSetupFunction(PrismTestSetup);              \
-        }                                                                      \
+        { ::Prism::Test::Suite::SetSetup(PrismTestSetup); }                    \
     } PrismTestSetupRegistrarInstance;                                         \
     static void PrismTestSetup()

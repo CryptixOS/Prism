@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Prism/Core/Types.hpp>
+#include <Prism/String/FormatString.hpp>
 #include <Prism/String/StringView.hpp>
 
 namespace Prism
@@ -36,67 +37,69 @@ namespace Prism
 
         void  Print(LogLevel logLevel, StringView str);
 
-#if PRISM_DISABLE_FMT == 0
         template <typename... Args>
-        inline void Print(LogLevel logLevel, fmt::format_string<Args...> format,
+        inline void Print(LogLevel logLevel, FormatString<Args...> format,
                           Args&&... args)
         {
-            auto formattedString = fmt::format(format, Forward<Args>(args)...);
-            Print(logLevel,
-                  StringView(formattedString.data(), formattedString.size()));
+            // Unqualified so ADL finds Prism::Format at instantiation:
+            // Formatter.hpp includes this header, so it may not be declared
+            // yet.
+            String formattedString = Format(format, Forward<Args>(args)...);
+            Print(logLevel, formattedString.View());
         }
 
         template <typename... Args>
-        inline void Log(LogLevel level, fmt::format_string<Args...> format,
+        inline void Log(LogLevel level, FormatString<Args...> format,
                         Args&&... args)
         {
-            auto formattedString = fmt::format(format, Forward<Args>(args)...);
-            Log(level,
-                StringView(formattedString.data(), formattedString.size()));
+            String formattedString = Format(format, Forward<Args>(args)...);
+            Log(level, formattedString.View());
         }
 
         template <typename... Args>
-        inline void Message(fmt::format_string<Args...> format, Args&&... args)
+        inline void Message(FormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eNone, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Debug(fmt::format_string<Args...> format, Args&&... args)
+        inline void Debug(FormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eDebug, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Trace(fmt::format_string<Args...> format, Args&&... args)
+        inline void Trace(FormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eTrace, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Info(fmt::format_string<Args...> format, Args&&... args)
+        inline void Info(FormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eInfo, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Warn(fmt::format_string<Args...> format, Args&&... args)
+        inline void Warn(FormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eWarn, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Error(fmt::format_string<Args...> format, Args&&... args)
+        inline void Error(FormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eError, format, Forward<Args>(args)...);
         }
         template <typename... Args>
-        inline void Fatal(fmt::format_string<Args...> format, Args&&... args)
+        inline void Fatal(FormatString<Args...> format, Args&&... args)
         {
             Log(LogLevel::eFatal, format, Forward<Args>(args)...);
         }
-#endif
     }; // namespace Log
 }; // namespace Prism
 
 #if PRISM_USE_NAMESPACE
 namespace Log = Prism::Log;
 #endif
+
+// Last, since Formatter.hpp depends on the declarations above.
+#include <Prism/String/Formatter.hpp>
 
 #ifdef PRISM_BUILD_DEBUG
     #define PrismDebug(...)        Log::Debug(__VA_ARGS__)

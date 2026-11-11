@@ -7,7 +7,7 @@
 #pragma once
 
 /**
- * Prism's unit testing framework, modelled after SerenityOS' LibTest.
+ * Prism's unit testing framework
  *
  *   #include <Prism/Test/Test.hpp>
  *
@@ -25,7 +25,7 @@
  *   }
  *
  * Link with prism_test and prism_test_main (which provides main()), or call
- * Prism::Test::TestSuite::The().Main(argc, argv) from your own main().
+ * Prism::Test::TestSuite::Main(argc, argv) from your own main().
  *
  * Test cases:   TEST_CASE, BENCHMARK_CASE, RANDOMIZED_TEST_CASE, TEST_SETUP
  * Expectations: EXPECT, EXPECT_EQ, EXPECT_NE, EXPECT_EQ_TRUTH,

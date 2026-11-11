@@ -73,25 +73,6 @@ namespace Prism
     };
 }; // namespace Prism
 
-#if PRISM_DISABLE_FMT == 0
-template <>
-struct fmt::formatter<Prism::SourceLocation> : fmt::formatter<fmt::string_view>
-{
-    template <typename FormatContext>
-    auto format(const Prism::SourceLocation& src, FormatContext& ctx) const
-    {
-        fmt::string_view filename
-            = {src.FileName().Raw(), src.FileName().Size()};
-        fmt::string_view functionName
-            = {src.FunctionName().Raw(), src.FunctionName().Size()};
-
-        return fmt::formatter<fmt::string_view>::format(
-            fmt::format("{}[{}:{}]::{}", filename, src.Line(), src.Column(),
-                        functionName),
-            ctx);
-    }
-};
-#endif
 template <>
 struct Prism::Formatter<Prism::SourceLocation>
     : Prism::Formatter<Prism::StringView>

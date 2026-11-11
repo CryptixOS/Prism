@@ -737,20 +737,6 @@ using Prism::Path;
 using namespace Prism::PathLiterals;
 #endif
 
-#if PRISM_DISABLE_FMT == 0
-template <>
-struct fmt::formatter<Prism::Path> : fmt::formatter<fmt::string_view>
-{
-    template <typename FormatContext>
-    auto format(const Prism::Path& src, FormatContext& ctx) const
-    {
-        return fmt::formatter<fmt::string_view>::format(
-            fmt::format("{}",
-                        fmt::string_view{src.View().Raw(), src.View().Size()}),
-            ctx);
-    }
-};
-#endif
 template <>
 struct Prism::Formatter<Prism::Path> : Prism::Formatter<Prism::StringView>
 {

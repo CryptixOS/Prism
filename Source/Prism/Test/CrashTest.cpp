@@ -22,12 +22,12 @@ namespace Prism::Test
     bool Crash::RunImpl(StringView description, ThunkFn thunk, void* context,
                         int expectedSignal)
     {
-        if (IsReportingEnabled()) Warnln("Testing \"{}\"", description);
+        if (IsReportingEnabled()) Warn("Testing \"{}\"", description);
 
         pid_t pid = fork();
         if (pid < 0)
         {
-            Warnln("{}: fork() failed: {}", Details::FailTag(), strerror(errno));
+            Warn("{}: fork() failed: {}", Details::FailTag(), strerror(errno));
             return false;
         }
         if (pid == 0)
@@ -68,11 +68,11 @@ namespace Prism::Test
         if (!IsReportingEnabled()) return false;
 
         if (signalled)
-            Warnln("{}: \"{}\" {} (signal {}: {}, expected {})",
+            Warn("{}: \"{}\" {} (signal {}: {}, expected {})",
                    Details::FailTag(), description, problem, signal,
                    strsignal(signal), expectedSignal);
         else
-            Warnln("{}: \"{}\" {} (exit code {})", Details::FailTag(),
+            Warn("{}: \"{}\" {} (exit code {})", Details::FailTag(),
                    description, problem, code);
         return false;
     }

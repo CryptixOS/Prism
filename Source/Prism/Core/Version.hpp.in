@@ -57,21 +57,6 @@ namespace Prism
     constexpr StringView VERSION_STRING   = "@library_version_string@";
 }; // namespace Prism
 
-#if PRISM_DISABLE_FMT == 0
-template <>
-struct fmt::formatter<Prism::Version> : fmt::formatter<std::string>
-{
-    template <typename FormatContext>
-    auto format(const Prism::Version& version, FormatContext& ctx) const
-    {
-
-        return fmt::formatter<std::string>::format(
-            fmt::format("{}.{}.{}", version.Major, version.Minor,
-                        version.Patch),
-            ctx);
-    }
-};
-#endif
 template <>
 struct Prism::Formatter<Prism::Version> : Prism::Formatter<Prism::StringView>
 {

@@ -41,8 +41,7 @@ namespace Prism
      *   ctx.Out() (or nothing).
      *
      * The primary template is deliberately unusable: a type is formattable
-     * only through a specialization, a FormatAs(T) overload found by ADL, or
-     * (when fmt is enabled) an fmt::formatter<T> specialization.
+     * only through a specialization or a FormatAs(T) overload found by ADL.
      */
     template <typename T, typename Char = char>
     struct Formatter

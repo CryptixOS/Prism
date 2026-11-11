@@ -313,7 +313,7 @@ namespace Prism
     }
     template <typename K, typename V, typename CompareOp>
     void
-    RedBlackTree<K, V, CompareOp>::PrintNode(const fmt::string_view& prefix,
+    RedBlackTree<K, V, CompareOp>::PrintNode(StringView prefix,
                                              const Node* node, bool isLeft)
     {
         if (node)
@@ -324,13 +324,12 @@ namespace Prism
 
             // print the value of the node
             PrismMessage("{}{}\n", node->Key(),
-                         node->Color == Color::eBlack ? "B" : "R",
                          node->Color == Color::eBlack ? "B" : "R");
 
             // enter the next tree level - left and right branch
-            PrintNode(fmt::format("{}{}", prefix, isLeft ? "│   " : "    "),
+            PrintNode(Format("{}{}", prefix, isLeft ? "│   " : "    "),
                       node->LeftChild, true);
-            PrintNode(fmt::format("{}{}", prefix, isLeft ? "│   " : "    "),
+            PrintNode(Format("{}{}", prefix, isLeft ? "│   " : "    "),
                       node->RightChild, false);
         }
     }

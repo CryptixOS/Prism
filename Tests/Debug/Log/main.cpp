@@ -51,13 +51,7 @@ struct CaptureSink final : public LogSinkBase
     void SetPattern(StringView) override {}
 };
 
-static_assert(IsSameV<LoggerFormatString<int>,
-#if PRISM_LOGGER_USE_PRISM_FORMAT != 0
-                      FormatString<int>
-#else
-                      fmt::format_string<int>
-#endif
-                      >);
+static_assert(IsSameV<LoggerFormatString<int>, FormatString<int>>);
 
 TEST_CASE(logger_formats_payload)
 {

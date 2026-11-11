@@ -9,7 +9,6 @@ cpp_args = [
   '-Wno-self-assign-overloaded',
   '-lgcc_s',
   '-fmodules-ts',
-  '-DPRISM_DISABLE_FMT=0',
   '-DPRISM_USE_NAMESPACE=1',
 ]
 link_args = [

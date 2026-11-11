@@ -10,6 +10,20 @@
 
 namespace Prism::Test
 {
+    class RandSource;
+    enum class TestResult : u8;
+    namespace Suite
+    {
+        TestResult  CurrentResult();
+        void        SetCurrentResult(TestResult result);
+
+        bool        IsReportingEnabled();
+        void        SetReportingEnabled(bool enabled);
+
+        u64         RandomizedRuns();
+        RandSource& CurrentRandSource();
+    }; // namespace Suite
+
     enum class TestResult : u8
     {
         /// The test hasn't run yet.
@@ -43,20 +57,27 @@ namespace Prism::Test
     }
 
     // State of the test that is currently running (see TestSuite).
-    TestResult CurrentTestResult();
-    void       SetCurrentTestResult(TestResult result);
+    inline constexpr TestResult CurrentTestResult()
+    { return Suite::CurrentResult(); }
+    inline constexpr void SetCurrentTestResult(TestResult result)
+    { return Suite::SetCurrentResult(result); }
     /// Marks the current test as failed.
-    void       CurrentTestCaseDidFail();
+    inline constexpr void CurrentTestCaseDidFail()
+    { Suite::SetCurrentResult(TestResult::eFailed); }
     /// Whether the current test has already failed.
-    bool       CurrentTestCaseFailed();
+    inline constexpr bool CurrentTestCaseFailed()
+    { return Suite::CurrentResult() == TestResult::eFailed; }
 
     /// Expectation failures are only printed while reporting is enabled. It
     /// is disabled while a randomized test is searching for / shrinking a
     /// counterexample, and re-enabled for the final, reported run.
-    bool       IsReportingEnabled();
-    void       EnableReporting();
-    void       DisableReporting();
+    inline constexpr bool IsReportingEnabled()
+    { return Suite::IsReportingEnabled(); }
+    inline constexpr void EnableReporting()
+    { Suite::SetReportingEnabled(true); }
+    inline constexpr void DisableReporting()
+    { Suite::SetReportingEnabled(false); }
 
     /// Number of runs of each RANDOMIZED_TEST_CASE (--randomized_runs).
-    u64        RandomizedRuns();
+    inline constexpr u64 RandomizedRuns() { return Suite::RandomizedRuns(); }
 } // namespace Prism::Test

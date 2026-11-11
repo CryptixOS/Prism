@@ -97,20 +97,6 @@ namespace Prism
     using NetworkOrdered = BigEndian<T>;
 }; // namespace Prism
 
-#if PRISM_DISABLE_FMT == 0
-template <typename T, Prism::Endian E>
-struct fmt::formatter<Prism::EndianStorage<T, E>>
-    : fmt::formatter<fmt::string_view>
-{
-    template <typename FormatContext>
-    auto format(const Prism::EndianStorage<T, E>& value,
-                FormatContext&                    ctx) const
-    {
-        return fmt::formatter<fmt::string_view>::format(
-            fmt::format("{}", value.Load()), ctx);
-    }
-};
-#endif
 template <typename T, Prism::Endian E>
 struct Prism::Formatter<Prism::EndianStorage<T, E>>
     : Prism::Details::FormatterFor<T>

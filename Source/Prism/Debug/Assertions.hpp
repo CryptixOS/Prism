@@ -13,15 +13,10 @@
 
 #include <Prism/String/StringView.hpp>
 
-#if PRISM_DISABLE_FMT == 0
-    #include <fmt/format.h>
-    #define PrismFmtFormat(...)  fmt::format(__VA_ARGS__)
-    #define PrismFmtCString(...) fmt::format(__VA_ARGS__).data()
-#else
-    #include <Prism/String/Formatter.hpp>
-    #define PrismFmtFormat(...)  Prism::Format(__VA_ARGS__)
-    #define PrismFmtCString(...) Prism::Format(__VA_ARGS__).Raw()
-#endif
+#include <Prism/String/Formatter.hpp>
+
+#define PrismFmtFormat(...)  Prism::Format(__VA_ARGS__)
+#define PrismFmtCString(...) Prism::Format(__VA_ARGS__).Raw()
 
 #if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
 namespace Prism

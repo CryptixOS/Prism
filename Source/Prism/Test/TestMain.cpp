@@ -8,5 +8,5 @@
 
 int main(int argc, char** argv)
 {
-    return Prism::Test::TestSuite::The().Main(argc, argv);
+    return Prism::Test::Suite::Main(argc, argv);
 }

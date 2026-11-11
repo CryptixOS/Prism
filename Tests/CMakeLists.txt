@@ -10,7 +10,6 @@
 
 set(PRISM_TEST_CXX_ARGS
   -Wno-unused-parameter
-  -DPRISM_DISABLE_FMT=0
   -DPRISM_USE_NAMESPACE=1
 )
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -31,7 +30,7 @@ set_target_properties(prism_test_support PROPERTIES SOURCES
 target_include_directories(prism_test_support PUBLIC
   "${PROJECT_SOURCE_DIR}/Source" "${PROJECT_BINARY_DIR}")
 target_compile_options(prism_test_support PUBLIC
-  ${PRISM_CXX_ARGS} ${PRISM_WARNING_ARGS} ${PRISM_TEST_CXX_ARGS})
+  ${PRISM_CXX_ARGS} ${PRISM_CORE_WARNING_ARGS} ${PRISM_TEST_CXX_ARGS})
 target_link_libraries(prism_test_support PUBLIC prism_deps)
 
 add_library(prism_test_support_main STATIC
@@ -64,15 +63,6 @@ prism_add_tests(Containers
   Tuple UnorderedMap Vector)
 prism_add_tests(Core TypeTraits)
 prism_add_tests(Debug Log)
-# Same test with Logger taking Prism::FormatString instead of fmt's.
-add_executable(test_Debug_LogPrismFormat "${CMAKE_CURRENT_SOURCE_DIR}/Debug/Log/main.cpp")
-set_target_properties(test_Debug_LogPrismFormat PROPERTIES
-  OUTPUT_NAME LogPrismFormat
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Debug")
-target_compile_definitions(test_Debug_LogPrismFormat PRIVATE PRISM_LOGGER_USE_PRISM_FORMAT=1)
-target_link_libraries(test_Debug_LogPrismFormat PRIVATE ${PRISM_TEST_LINK_LIBS})
-add_test(NAME "Debug/LogPrismFormat" COMMAND test_Debug_LogPrismFormat)
-set_tests_properties("Debug/LogPrismFormat" PROPERTIES LABELS Debug TIMEOUT 30)
 prism_add_tests(Math Matrix Vector)
 prism_add_tests(Memory Memory Ref Scope SlabAllocator WeakRef)
 prism_add_tests(Ranges Views)

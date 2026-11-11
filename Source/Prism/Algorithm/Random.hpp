@@ -463,7 +463,7 @@ namespace Prism::Algorithm
         q.Generate(ar, ar + n * k);
         for (usize i = 0; i < n; ++i)
             m_X[i] = static_cast<ResultType>(
-                (ar[2 * i] + ((u64)ar[2 * i + 1] << 32)) & MaxValue);
+                (ar[2 * i] + (static_cast<u64>(ar[2 * i + 1]) << 32)) & MaxValue);
         const ResultType mask
             = r == DT ? ResultType(~0) : (ResultType(1) << r) - ResultType(1);
         m_X = 0;

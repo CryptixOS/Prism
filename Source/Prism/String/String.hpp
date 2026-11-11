@@ -944,18 +944,6 @@ namespace Prism
 
 }; // namespace Prism
 
-#if PRISM_DISABLE_FMT == 0
-template <>
-struct fmt::formatter<Prism::String> : fmt::formatter<fmt::string_view>
-{
-    template <typename FormatContext>
-    auto format(const Prism::String& src, FormatContext& ctx) const
-    {
-        return fmt::formatter<fmt::string_view>::format(
-            fmt::format("{}", fmt::string_view(src.Raw(), src.Size())), ctx);
-    }
-};
-#endif
 
 #if PRISM_USE_NAMESPACE != 0
 using Prism::BasicString;

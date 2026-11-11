@@ -12,9 +12,7 @@ namespace Prism
 {
     template <typename T>
     PM_NODISCARD inline constexpr T* AddressOf(T& object) PM_NOEXCEPT
-    {
-        return __builtin_addressof(object);
-    }
+    { return __builtin_addressof(object); }
 
     template <typename T>
     const T* AddressOf(const T&&) = delete;
@@ -61,9 +59,7 @@ namespace Prism
 
     template <typename T>
     inline constexpr AddConstType<T>& AsConst(T& t) PM_NOEXCEPT
-    {
-        return t;
-    }
+    { return t; }
     template <typename T>
     void AsConst(const T&&) = delete;
     template <typename T, typename U>
@@ -75,7 +71,8 @@ namespace Prism
             if constexpr (isAddingConst) return AsConst(x);
             else return static_cast<U&>(x);
         }
-        else {
+        else
+        {
             if constexpr (isAddingConst) return Move(AsConst(x));
             else return Move(x);
         }
@@ -117,9 +114,7 @@ namespace Prism
     using IndexSequenceFor = MakeIndexSequence<sizeof...(Types)>;
 
     struct InPlaceT
-    {
-        explicit InPlaceT() = default;
-    };
+    { explicit InPlaceT() = default; };
     inline constexpr InPlaceT InPlace{};
     template <typename T>
     struct InPlaceTypeT
@@ -137,9 +132,9 @@ namespace Prism
     constexpr InPlaceIndexT<I> InPlaceIndex{};
 
     template <typename T, typename... Args>
-    constexpr auto ConstructAt(T* location, Args&&... args)
-        PM_NOEXCEPT(PM_NOEXCEPT(::new ((void*)0) T(DeclVal<Args>()...)))
-            -> decltype(::new ((void*)0) T(DeclVal<Args>()...))
+    constexpr auto ConstructAt(T* location, Args&&... args) PM_NOEXCEPT(
+        PM_NOEXCEPT(::new (reinterpret_cast<void*>(0)) T(DeclVal<Args>()...)))
+        -> decltype(::new (reinterpret_cast<void*>(0)) T(DeclVal<Args>()...))
     {
         assert(location);
         return ::new (reinterpret_cast<void*>(location))

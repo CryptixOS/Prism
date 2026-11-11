@@ -133,6 +133,12 @@ namespace Prism
         struct DecayConditionalResult
         {
         };
+        template <typename T, typename U>
+        struct DecayConditionalResult<T, U,
+                                      VoidType<ConditionalResultType<T, U>>>
+            : Decay<ConditionalResultType<T, U>>
+        {
+        };
         template <typename T, typename U, typename = void>
         struct CommonType2 : DecayConditionalResult<const T&, const U&>
         {

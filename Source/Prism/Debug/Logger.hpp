@@ -12,22 +12,7 @@
 #include <Prism/String/String.hpp>
 #include <Prism/Utility/Delegate.hpp>
 
-// Selects the format string type taken by Logger's formatting overloads:
-//   1 -> Prism::FormatString (Prism::Format), types with only an
-//        fmt::formatter still work through Prism's fmt bridge
-//   0 -> fmt::format_string (fmt::format)
-// Defaults to fmt while it is available, and is forced to Prism::Format when
-// fmt is disabled.
-#if PRISM_DISABLE_FMT != 0
-    #undef PRISM_LOGGER_USE_PRISM_FORMAT
-    #define PRISM_LOGGER_USE_PRISM_FORMAT 1
-#elif !defined(PRISM_LOGGER_USE_PRISM_FORMAT)
-    #define PRISM_LOGGER_USE_PRISM_FORMAT 0
-#endif
-
-#if PRISM_LOGGER_USE_PRISM_FORMAT != 0
-    #include <Prism/String/Formatter.hpp>
-#endif
+#include <Prism/String/Formatter.hpp>
 
 #if defined(__linux__ ) && PRISM_TARGET_CRYPTIX == 0
     #include <unistd.h>
@@ -35,13 +20,8 @@
 
 namespace Prism
 {
-#if PRISM_LOGGER_USE_PRISM_FORMAT != 0
     template <typename... Args>
     using LoggerFormatString = FormatString<Args...>;
-#else
-    template <typename... Args>
-    using LoggerFormatString = fmt::format_string<Args...>;
-#endif
 
     template <typename LockingPolicy>
     class Logger
@@ -216,13 +196,8 @@ namespace Prism
                                  LoggerFormatString<Args...> format,
                                  Args&&... args)
         {
-#if PRISM_LOGGER_USE_PRISM_FORMAT != 0
             String formatted = Prism::Format(format, Forward<Args>(args)...);
             Log(logLevel, formatted.View(), tag);
-#else
-            auto formatted = fmt::format(format, Forward<Args>(args)...);
-            Log(logLevel, StringView(formatted.data(), formatted.size()), tag);
-#endif
         }
 
         String               m_Name;

@@ -10,10 +10,6 @@
 #include <Prism/String/String.hpp>
 #include <Prism/String/StringView.hpp>
 
-#if PRISM_DISABLE_FMT == 0
-    #include <fmt/format.h>
-#endif
-
 namespace Prism
 {
     namespace Details
@@ -109,19 +105,8 @@ namespace Prism
         template <typename T>
         concept HasFormatAs
             = requires(const T& value) { FormatAs(value); };
-#if PRISM_DISABLE_FMT == 0
-        template <typename T>
-        concept HasFmtFormatter
-            = !IsArrayV<T> && fmt::is_formattable<T, char>::value;
-#else
-        template <typename T>
-        concept HasFmtFormatter = false;
-#endif
-
         template <typename T>
         struct FormatAsFormatter;
-        template <typename T>
-        struct FmtBridgeFormatter;
 
         template <typename T>
         struct UnformattableType
@@ -147,13 +132,10 @@ namespace Prism
             if constexpr (HasPrismFormatter<T>) return TypeIdentity<Formatter<T, char>>{};
             else if constexpr (HasFormatAs<T>)
                 return TypeIdentity<FormatAsFormatter<T>>{};
-            else if constexpr (HasFmtFormatter<T>)
-                return TypeIdentity<FmtBridgeFormatter<T>>{};
             else return TypeIdentity<UnformattableType<T>>{};
         }
 
-        /// The formatter used for T: Formatter<T>, then FormatAs(), then
-        /// fmt::formatter<T> (when fmt is enabled).
+        /// The formatter used for T: Formatter<T>, then FormatAs().
         template <typename T>
         using FormatterFor = typename decltype(SelectFormatter<T>())::Type;
 
@@ -264,13 +246,12 @@ namespace Prism
     } // namespace Details
 
     /// Whether values of type T can be formatted (built-in type,
-    /// Prism::Formatter specialization, FormatAs() or fmt::formatter).
+    /// Prism::Formatter specialization or FormatAs()).
     template <typename T>
     concept Formattable
         = Details::IsNativeFormatTypeV<Details::FormatKeyType<T>>
        || Details::HasPrismFormatter<Details::FormatKeyType<T>>
-       || Details::HasFormatAs<Details::FormatKeyType<T>>
-       || Details::HasFmtFormatter<Details::FormatKeyType<T>>;
+       || Details::HasFormatAs<Details::FormatKeyType<T>>;
 
     /// Wraps a format string that is only known at run time: no compile-time
     /// checking, errors skip the faulty replacement field.
