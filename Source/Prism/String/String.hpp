@@ -86,14 +86,17 @@ namespace Prism
 
         constexpr BasicString& operator=(const BasicString& other)
         {
-            if (other.Empty()) return *this;
+            // Self-assignment is identity, not equal contents; an empty
+            // `other` must still empty *this
+            if (this == &other) return *this;
 
-            if (other == *this) return *this;
             ResizeIfNeededOverwrite(other.Raw(), other.Size());
             return *this;
         }
         constexpr BasicString& operator=(BasicString&& str)
         {
+            // Would free our buffer, then take the freed storage back
+            if (this == &str) return *this;
             if (IsLong()) delete[] Long().Data;
             m_Storage     = Move(str.m_Storage);
             str.m_Storage = {};
