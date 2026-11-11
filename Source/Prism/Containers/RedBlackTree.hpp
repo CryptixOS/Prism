@@ -13,8 +13,6 @@
 #include <Prism/String/Formatter.hpp>
 #include <Prism/Utility/Compare.hpp>
 
-#include <magic_enum/magic_enum.hpp>
-
 namespace Prism
 {
     template <typename K, typename V, typename CompareOp = Less<K>>
