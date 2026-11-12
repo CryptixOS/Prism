@@ -5,9 +5,11 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Algorithm/SearchString.hpp>
 #include <Prism/Debug/Assertions.hpp>
-#include <Prism/String/String.hpp>
+import Prism.Test.Test;
+import Prism.Algorithm.SearchString;
+import Prism.Debug.Assertions;
+import Prism.String.String;
 
 
 using namespace Prism;

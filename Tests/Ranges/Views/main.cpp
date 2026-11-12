@@ -4,12 +4,13 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/Containers/KeyValuePair.hpp>
-#include <Prism/Containers/Span.hpp>
-#include <Prism/Containers/Vector.hpp>
-#include <Prism/Ranges/Ranges.hpp>
-#include <Prism/String/StringView.hpp>
 #include <Prism/Test/Test.hpp>
+import Prism.Ranges.Ranges;
+import Prism.String.StringView;
+import Prism.Test.Test;
+import Prism.Containers.KeyValuePair;
+import Prism.Containers.Span;
+import Prism.Containers.Vector;
 
 using namespace Prism;
 

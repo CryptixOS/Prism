@@ -13,6 +13,7 @@
     #if PRISM_TARGET_CRYPTIX != 0
         #include <Library/Stacktrace.hpp>
     #endif
+import Prism.Debug.Log;
 
 namespace
 {

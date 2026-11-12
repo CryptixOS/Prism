@@ -6,9 +6,10 @@
  */
 
 #include <Prism/Test/Test.hpp>
+import Prism.Test.Test;
+import Prism.String.String;
+import Prism.Containers.UnorderedMap;
 
-#include <Prism/Containers/UnorderedMap.hpp>
-#include <Prism/String/String.hpp>
 using namespace Prism;
 
 #define TestEq(condition) EXPECT(condition)

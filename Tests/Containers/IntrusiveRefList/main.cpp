@@ -5,10 +5,11 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Containers/IntrusiveRefList.hpp>
 
 #include <cstdio>
 #include <cstdlib>
+import Prism.Test.Test;
+import Prism.Containers.IntrusiveRefList;
 
 // Unlike EXPECT(), this still fires when NDEBUG is defined (release builds).
 

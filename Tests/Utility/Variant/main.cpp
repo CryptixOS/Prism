@@ -6,7 +6,9 @@
  */
 #include <Prism/Test/Test.hpp>
 #include <Prism/Debug/Log.hpp>
-#include <Prism/Utility/Variant.hpp>
+import Prism.Test.Test;
+import Prism.Debug.Log;
+import Prism.Utility.Variant;
 using namespace Prism;
 
 // Test types

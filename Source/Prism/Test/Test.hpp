@@ -9,7 +9,8 @@
 /**
  * Prism's unit testing framework
  *
- *   #include <Prism/Test/Test.hpp>
+ *   #include <Prism/Test/Test.hpp> // the macros
+ *   import Prism.Test.Test;            // everything else
  *
  *   TEST_CASE(vector_push_back)
  *   {
@@ -34,13 +35,6 @@
  * Crash tests:  EXPECT_CRASH, EXPECT_CRASH_WITH_SIGNAL, EXPECT_NO_CRASH
  * Randomized:   GEN, ASSUME, REJECT and the generators in Prism::Test::Gen
  */
-#include <Prism/Test/CrashTest.hpp>
-#include <Prism/Test/Macros.hpp>
-#include <Prism/Test/Randomized/Generator.hpp>
-#include <Prism/Test/Randomized/RandomRun.hpp>
-#include <Prism/Test/Randomized/RandSource.hpp>
-#include <Prism/Test/TestCase.hpp>
-#include <Prism/Test/TestResult.hpp>
-#include <Prism/Test/TestSuite.hpp>
 
-namespace Gen = Prism::Test::Gen;
+#include <Prism/Test/Macros.hpp>
+#include <Prism/Test/TestCase.hpp>

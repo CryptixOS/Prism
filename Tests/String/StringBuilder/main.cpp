@@ -7,14 +7,14 @@
 #include <Prism/Test/Test.hpp>
 #include <utility>
 
-#include <Prism/Containers/DoublyLinkedList.hpp>
 #include <Prism/Core/Types.hpp>
-#include <Prism/String/Formatter.hpp>
-#include <Prism/String/String.hpp>
-#include <Prism/String/StringBuilder.hpp>
-#include <Prism/String/StringUtils.hpp>
+import Prism.Test.Test;
+import Prism.String.Formatter;
+import Prism.String.String;
+import Prism.String.StringBuilder;
+import Prism.String.StringUtils;
+import Prism.Containers.DoublyLinkedList;
 
-#include <Prism/Core/Types.hpp>
 
 using namespace Prism;
 

@@ -5,202 +5,123 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-/**
- * The Prism module: `import Prism;`
- *
- * One module interface unit built from the regular headers, the same way
- * fmt builds its module. Every Prism header is included in the module
- * purview, where PRISM_EXPORT expands to `export` (PRISM_MODULE_BUILD is
- * defined for this TU only). The header build of the same files stays
- * untouched, so `#include <Prism/...>` keeps working.
- *
- * Macros can't be exported. Importers that need them also do
- * `#include <Prism/Macros.hpp>`.
- *
- * Rules for the headers:
- *  - Anything that isn't Prism (std, libc, demangler,
- *    platform headers) has to be included in the global module fragment
- *    below first. Include guards then turn the headers' own includes into
- *    no-ops, so third-party declarations never get attached to Prism.
- *  - Exported namespaces can't contain internal-linkage entities: use
- *    `inline constexpr` for namespace-scope constants, and keep `static`
- *    helpers in .cpp files or in a non-exported namespace.
- */
 module;
 
-// ---------------------------------------------------- global module fragment
-#include <Prism/Macros.hpp>
-
-#include <compare>
-#include <cstddef>
-#include <functional>
-#include <initializer_list>
-#include <iterator>
-#include <memory>
-#include <new>
-#include <ranges>
-#include <utility>
-
-#include <math.h>
-#if PrismHasInclude(<sched.h>)
-    #include <sched.h>
-#endif
-#if PrismHasInclude(<unistd.h>)
-    #include <unistd.h>
-#endif
-#if PRISM_TARGET_CRYPTIX != 0
-    #include <API/Limits.hpp>
-    #include <Library/Stacktrace.hpp>
-    #include <cerrno>
-#elif PRISM_TARGET_CARBONC != 0
-    #include <errno.h>
-#endif
-#if defined(__APPLE__)
-    #include <TargetConditionals.h>
-#endif
-#if defined(__x86_64__) || defined(__i386__)
-    #include <emmintrin.h>
-#elif defined(__aarch64__)
-    #include <arm_neon.h>
-#endif
-
-#include <demangler.hpp>
+#include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Config.hpp>
+#include <Prism/Core/Platform.hpp>
+#include <Prism/Core/LanguageSupport.hpp>
+#include <Prism/Core/Types.hpp>
+#include <Prism/Core/Error.hpp>
+#include <Prism/Debug/Assertions.hpp>
+#include <Prism/Debug/Log.hpp>
 
 export module Prism;
 
-// -------------------------------------------------------------- interface
-// clang-format off
-#include <Prism/Core/AllocatorTraits.hpp>
-#include <Prism/Core/Bits.hpp>
-#include <Prism/Core/Concepts.hpp>
-#include <Prism/Core/Core.hpp>
-#include <Prism/Core/Error.hpp>
-#include <Prism/Core/Eternal.hpp>
-#include <Prism/Core/HashTraits.hpp>
-#include <Prism/Core/Integer128.hpp>
-#include <Prism/Core/Iterator.hpp>
-#include <Prism/Core/Limits.hpp>
-#include <Prism/Core/NonCopyable.hpp>
-#include <Prism/Core/NonMovable.hpp>
-#include <Prism/Core/ParameterPack.hpp>
-#include <Prism/Core/Ranges.hpp>
-#include <Prism/Ranges/Range.hpp>
-#include <Prism/Ranges/Ranges.hpp>
-#include <Prism/Ranges/Views.hpp>
-#include <Prism/Core/Singleton.hpp>
-#include <Prism/Core/TypeTraits.hpp>
-#include <Prism/Core/Types.hpp>
-#include <Prism/Core/UUID.hpp>
-
-#include <Prism/Debug/Assertions.hpp>
-#include <Prism/Debug/Log.hpp>
-#include <Prism/Debug/LogSink.hpp>
-#include <Prism/Debug/Logger.hpp>
-#include <Prism/Debug/SourceLocation.hpp>
-#include <Prism/Debug/Stacktrace.hpp>
-
-#include <Prism/Algorithm/FNV1aHash.hpp>
-#include <Prism/Algorithm/Find.hpp>
-#include <Prism/Algorithm/Hash.hpp>
-#include <Prism/Algorithm/Random.hpp>
-#include <Prism/Algorithm/SearchString.hpp>
-#include <Prism/Algorithm/Sort.hpp>
-
-#include <Prism/Containers/Array.hpp>
-#include <Prism/Containers/BitSpan.hpp>
-#include <Prism/Containers/Bitmap.hpp>
-#include <Prism/Containers/CircularQueue.hpp>
-#include <Prism/Containers/Deque.hpp>
-#include <Prism/Containers/DoublyLinkedList.hpp>
-#include <Prism/Containers/IntervalTree.hpp>
-#include <Prism/Containers/IntrusiveList.hpp>
-#include <Prism/Containers/IntrusiveListV3.hpp>
-#include <Prism/Containers/IntrusiveRedBlackTree.hpp>
-#include <Prism/Containers/IntrusiveRefList.hpp>
-#include <Prism/Containers/KeyValuePair.hpp>
-#include <Prism/Containers/Queue.hpp>
-#include <Prism/Containers/RadixTree.hpp>
-#include <Prism/Containers/RedBlackTree.hpp>
-#include <Prism/Containers/RingBuffer.hpp>
-#include <Prism/Containers/Set.hpp>
-#include <Prism/Containers/Span.hpp>
-#include <Prism/Containers/SplitBuffer.hpp>
-#include <Prism/Containers/Stack.hpp>
-#include <Prism/Containers/Tuple.hpp>
-#include <Prism/Containers/UnorderedMap.hpp>
-#include <Prism/Containers/Vector.hpp>
-
-#include <Prism/Math/Matrix.hpp>
-#include <Prism/Math/SimdVector.hpp>
-#include <Prism/Math/Vector.hpp>
-
-#include <Prism/Memory/Allocator.hpp>
-#include <Prism/Memory/BitStream.hpp>
-#include <Prism/Memory/Buffer.hpp>
-#include <Prism/Memory/BumpAllocator.hpp>
-#include <Prism/Memory/ByteStream.hpp>
-#include <Prism/Memory/Endian.hpp>
-#include <Prism/Memory/Memory.hpp>
-#include <Prism/Memory/Pointer.hpp>
-#include <Prism/Memory/Ref.hpp>
-#include <Prism/Memory/RefCounted.hpp>
-#include <Prism/Memory/SSOStorage.hpp>
-#include <Prism/Memory/Scope.hpp>
-#include <Prism/Memory/SlabAllocator.hpp>
-#include <Prism/Memory/SlabPool.hpp>
-#include <Prism/Memory/SlobAllocator.hpp>
-#include <Prism/Memory/WeakRef.hpp>
-
-#include <Prism/Network/IPv4Address.hpp>
-
-#include <Prism/String/CharTraits.hpp>
-#include <Prism/String/CodePoints.hpp>
-#include <Prism/String/FormatHandler.hpp>
-#include <Prism/String/FormatString.hpp>
-#include <Prism/String/FormatStyle.hpp>
-#include <Prism/String/Formatter.hpp>
-#include <Prism/String/FormatterContext.hpp>
-#include <Prism/String/Printf.hpp>
-#include <Prism/String/String.hpp>
-#include <Prism/String/StringBuilder.hpp>
-#include <Prism/String/StringUtils.hpp>
-#include <Prism/String/StringView.hpp>
-
-#include <Prism/Utility/Atomic.hpp>
-#include <Prism/Utility/AtomicBuiltins.hpp>
-#include <Prism/Utility/Checksum.hpp>
-#include <Prism/Utility/Compare.hpp>
-#include <Prism/Utility/Delegate.hpp>
-#include <Prism/Utility/Expected.hpp>
-#include <Prism/Utility/Hash.hpp>
-#include <Prism/Utility/LockingPolicy.hpp>
-#include <Prism/Utility/Math.hpp>
-#include <Prism/Utility/Mutex.hpp>
-#include <Prism/Utility/Optional.hpp>
-#include <Prism/Utility/Path.hpp>
-#include <Prism/Utility/PathView.hpp>
-#include <Prism/Utility/RangeAllocator.hpp>
-#include <Prism/Utility/SimdIntrinsics.hpp>
-#include <Prism/Utility/SimdVector.hpp>
-#include <Prism/Utility/Time.hpp>
-// clang-format on
-
-// ---------------------------------------------------------- implementation
-// The library's .cpp files (Source/meson.build). Ideally these would sit in
-// a private module fragment (`module :private;`) so editing them doesn't
-// rebuild importers, but GCC doesn't support that yet.
-
-#include <Prism/Algorithm/Hash.cpp>
-#include <Prism/Containers/Bitmap.cpp>
-#include <Prism/Containers/RingBuffer.cpp>
-#include <Prism/Debug/Assertions.cpp>
-#include <Prism/Debug/Log.cpp>
-#include <Prism/Debug/LogSink.cpp>
-#include <Prism/Debug/Logger.cpp>
-#include <Prism/Debug/Stacktrace.cpp>
-#include <Prism/Debug/Ubsan.cpp>
-#include <Prism/Memory/Memory.cpp>
-#include <Prism/String/Printf.cpp>
-#include <Prism/Utility/Path.cpp>
-#include <Prism/Utility/PathView.cpp>
-#include <Prism/Utility/Time.cpp>
+// Every Prism module. The macros still come from the headers above.
+export import Prism.Algorithm.FNV1aHash;
+export import Prism.Algorithm.Find;
+export import Prism.Algorithm.Hash;
+export import Prism.Algorithm.Random;
+export import Prism.Algorithm.SearchString;
+export import Prism.Algorithm.Sort;
+export import Prism.Containers.Array;
+export import Prism.Containers.BitSpan;
+export import Prism.Containers.Bitmap;
+export import Prism.Containers.CircularQueue;
+export import Prism.Containers.Deque;
+export import Prism.Containers.DoublyLinkedList;
+export import Prism.Containers.IntervalTree;
+export import Prism.Containers.IntrusiveList;
+export import Prism.Containers.IntrusiveListV3;
+export import Prism.Containers.IntrusiveRedBlackTree;
+export import Prism.Containers.IntrusiveRefList;
+export import Prism.Containers.KeyValuePair;
+export import Prism.Containers.Queue;
+export import Prism.Containers.RadixTree;
+export import Prism.Containers.RedBlackTree;
+export import Prism.Containers.RingBuffer;
+export import Prism.Containers.Set;
+export import Prism.Containers.Span;
+export import Prism.Containers.SplitBuffer;
+export import Prism.Containers.Stack;
+export import Prism.Containers.Tuple;
+export import Prism.Containers.UnorderedMap;
+export import Prism.Containers.Vector;
+export import Prism.Core.AllocatorTraits;
+export import Prism.Core.Bits;
+export import Prism.Core.Concepts;
+export import Prism.Core.Core;
+export import Prism.Core.Error;
+export import Prism.Core.Eternal;
+export import Prism.Core.HashTraits;
+export import Prism.Core.Integer128;
+export import Prism.Core.Iterator;
+export import Prism.Core.Limits;
+export import Prism.Core.NonCopyable;
+export import Prism.Core.NonMovable;
+export import Prism.Core.ParameterPack;
+export import Prism.Core.Ranges;
+export import Prism.Core.Singleton;
+export import Prism.Core.TypeTraits;
+export import Prism.Core.TypeTraitsForward;
+export import Prism.Core.UUID;
+export import Prism.Debug.Assertions;
+export import Prism.Debug.Log;
+export import Prism.Debug.LogSink;
+export import Prism.Debug.Logger;
+export import Prism.Debug.SourceLocation;
+export import Prism.Debug.Stacktrace;
+export import Prism.Math.Matrix;
+export import Prism.Math.SimdVector;
+export import Prism.Math.Vector;
+export import Prism.Memory.Allocator;
+export import Prism.Memory.BitStream;
+export import Prism.Memory.Buffer;
+export import Prism.Memory.BumpAllocator;
+export import Prism.Memory.ByteStream;
+export import Prism.Memory.Endian;
+export import Prism.Memory.Memory;
+export import Prism.Memory.Pointer;
+export import Prism.Memory.Ref;
+export import Prism.Memory.RefCounted;
+export import Prism.Memory.SSOStorage;
+export import Prism.Memory.Scope;
+export import Prism.Memory.SlabAllocator;
+export import Prism.Memory.SlabPool;
+export import Prism.Memory.SlobAllocator;
+export import Prism.Memory.WeakRef;
+export import Prism.Network.IPv4Address;
+export import Prism.Ranges.Range;
+export import Prism.Ranges.Ranges;
+export import Prism.Ranges.Views;
+export import Prism.String.CharTraits;
+export import Prism.String.CodePoints;
+export import Prism.String.FormatHandler;
+export import Prism.String.FormatString;
+export import Prism.String.Formatter;
+export import Prism.String.FormatterContext;
+export import Prism.String.Printf;
+export import Prism.String.String;
+export import Prism.String.StringBuilder;
+export import Prism.String.StringUtils;
+export import Prism.String.StringView;
+export import Prism.Utility.Atomic;
+export import Prism.Utility.AtomicBuiltins;
+export import Prism.Utility.Checksum;
+export import Prism.Utility.Compare;
+export import Prism.Utility.Delegate;
+export import Prism.Utility.Enum;
+export import Prism.Utility.Expected;
+export import Prism.Utility.Hash;
+export import Prism.Utility.LockingPolicy;
+export import Prism.Utility.Math;
+export import Prism.Utility.Mutex;
+export import Prism.Utility.OptionParser;
+export import Prism.Utility.Optional;
+export import Prism.Utility.Path;
+export import Prism.Utility.PathView;
+export import Prism.Utility.RangeAllocator;
+export import Prism.Utility.SimdIntrinsics;
+export import Prism.Utility.SimdVector;
+export import Prism.Utility.Time;

@@ -12,8 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+import Prism.Test.Test;
+import Prism.Utility.OptionParser;
 
-#include <Prism/Utility/OptionParser.hpp>
 using namespace Prism;
 
 #define COUNT_OF(x)                                                            \

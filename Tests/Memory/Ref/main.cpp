@@ -6,9 +6,10 @@
  */
 
 #include <Prism/Test/Test.hpp>
-#include <Prism/Memory/Ref.hpp>
 #include <cstdio>
 #include <cstdlib>
+import Prism.Test.Test;
+import Prism.Memory.Ref;
 
 // Unlike EXPECT(), this still fires when NDEBUG is defined (release builds).
 

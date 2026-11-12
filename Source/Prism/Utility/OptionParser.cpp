@@ -4,9 +4,10 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/Utility/OptionParser.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.String.CodePoints;
+import Prism.Utility.OptionParser;
 
-#include <Prism/String/CodePoints.hpp>
 
 namespace Prism
 {

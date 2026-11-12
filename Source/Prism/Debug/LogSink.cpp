@@ -5,7 +5,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Debug/Log.hpp>
-#include <Prism/Debug/LogSink.hpp>
+import Prism.Debug.Log;
+import Prism.Debug.LogSink;
 
 #if 1
 namespace Prism

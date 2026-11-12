@@ -4,7 +4,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/Test/TestSuite.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.Test.TestSuite;
 
 int main(int argc, char** argv)
 {

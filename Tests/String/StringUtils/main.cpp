@@ -8,8 +8,10 @@
 #include <string>
 
 #include <Prism/Debug/Log.hpp>
-#include <Prism/String/String.hpp>
-#include <Prism/String/StringUtils.hpp>
+import Prism.Test.Test;
+import Prism.Debug.Log;
+import Prism.String.String;
+import Prism.String.StringUtils;
 
 using namespace Prism;
 using namespace StringUtils;

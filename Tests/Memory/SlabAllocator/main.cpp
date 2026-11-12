@@ -6,11 +6,13 @@
  */
 #include <Prism/Test/Test.hpp>
 #include <Prism/Core/Error.hpp>
-#include <Prism/Memory/SlabPool.hpp>
 
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <string.h>
+import Prism.Test.Test;
+import Prism.Core.Error;
+import Prism.Memory.SlabPool;
 
 using namespace Prism;
 struct DummyLock
@@ -34,7 +36,7 @@ struct DummyPageAlloc
         if (memory == MAP_FAILED) return nullptr;
 
         memset(memory, 0, count * PAGE_SIZE);
-        return Pointer(reinterpret_cast<uintptr_t>(memory));
+        return Pointer(reinterpret_cast<upointer>(memory));
     }
 
     static void FreePages(Pointer base, usize count)

@@ -6,11 +6,12 @@
  */
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
-#include <Prism/Debug/LogSink.hpp>
+import Prism.Debug.Log;
+import Prism.Debug.LogSink;
+import Prism.String.Printf;
+import Prism.String.String;
+import Prism.String.StringUtils;
 
-#include <Prism/String/Printf.hpp>
-#include <Prism/String/String.hpp>
-#include <Prism/String/StringUtils.hpp>
 
 #if PRISM_TARGET_CRYPTIX != 0
 namespace Logger
@@ -179,7 +180,7 @@ namespace Prism::Log
         return nwritten;
     }
 
-    isize PrintArgument(StringView::Iterator& it, VaList& args,
+    isize PrintArgument(StringView::Iterator&, VaList& args,
                         PrintfFormatSpec& specs)
     {
         isize nwritten = 0;

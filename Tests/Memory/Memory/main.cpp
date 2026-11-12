@@ -5,10 +5,11 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Memory/Memory.hpp>
 
 #include <stdio.h>  // for debugging if needed
 #include <string.h> // for memcmp in validation fallback
+import Prism.Test.Test;
+import Prism.Memory.Memory;
 
 using namespace Prism;
 

@@ -4,8 +4,10 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/String/Printf.hpp>
-#include <Prism/String/StringUtils.hpp>
+#include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.String.Printf;
+import Prism.String.StringUtils;
 
 namespace Prism::Printf
 {

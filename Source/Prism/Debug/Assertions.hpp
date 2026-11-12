@@ -7,27 +7,13 @@
 #pragma once
 
 #include <Prism/Core/Config.hpp>
-
 #include <Prism/Debug/Log.hpp>
-#include <Prism/Debug/SourceLocation.hpp>
 
-#include <Prism/String/StringView.hpp>
-
-#include <Prism/String/Formatter.hpp>
+// Macros only: the code lives in module Prism.Debug.Assertions, which
+// files using these macros import too.
 
 #define PrismFmtFormat(...)  Prism::Format(__VA_ARGS__)
 #define PrismFmtCString(...) Prism::Format(__VA_ARGS__).Raw()
-
-#if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
-namespace Prism
-{
-#endif
-    extern void earlyPanic(Prism::StringView msg);
-    PM_NORETURN
-    extern void panic(Prism::StringView msg);
-#if PRISM_TARGET_CRYPTIX == 0
-}; // namespace Prism
-#endif
 
 #if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
     #define PrismEarlyPanic(fmt, ...)                                          \

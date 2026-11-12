@@ -5,7 +5,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Core/Platform.hpp>
-#include <Prism/Memory/Memory.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.Memory.Memory;
 
 namespace Prism
 {

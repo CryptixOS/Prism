@@ -5,9 +5,10 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Containers/Tuple.hpp>
-#include <Prism/String/String.hpp>
 #include <iostream>
+import Prism.Test.Test;
+import Prism.String.String;
+import Prism.Containers.Tuple;
 
 using namespace Prism;
 using namespace Prism::Literals;

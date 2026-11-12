@@ -4,7 +4,6 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/Utility/PathView.hpp>
 
 #if PRISM_TARGET_CRYPTIX != 0
     #include <API/Limits.hpp>
@@ -12,6 +11,14 @@
 #else
     #define PRISM_MAX_PATH 255
 #endif
+
+#include <Prism/Core/Types.hpp>
+import Prism.String.Formatter;
+import Prism.String.String;
+import Prism.String.StringView;
+import Prism.Containers.Vector;
+import Prism.Utility.PathView;
+
 
 namespace Prism
 {

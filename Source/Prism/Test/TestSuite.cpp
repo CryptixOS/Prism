@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+import Prism.Test.Test;
 
 namespace Prism::Test
 {

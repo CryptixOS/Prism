@@ -1,0 +1,124 @@
+/*
+ * Created by v1tr10l7 on 14.03.2025.
+ * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+module;
+
+#include <Prism/Core/Types.hpp>
+export module Prism.Memory.Endian;
+
+export import Prism.Core.Bits;
+export import Prism.Core.Concepts;
+export import Prism.String.Formatter;
+
+export extern "C++"
+{
+    namespace Prism
+    {
+        constexpr inline Endian g_HostEndianness = Endian::eNative;
+
+        template <typename T>
+        concept IntegralOrUnderlyingIntegral
+            = IsIntegralV<T> || (IsEnumV<T> && IsIntegralV<UnderlyingTypeType<T>>);
+        template <typename T>
+        concept IntegralUnderlying
+            = IsEnumV<T> && IsIntegralV<UnderlyingTypeType<T>>;
+
+        template <Endian New, Endian Old = Endian::eNative, Integral T>
+        inline constexpr T ConvertEndian(T num)
+            requires(sizeof(T) <= 8 && HasUniqueObjectRepresentationsV<T>)
+        {
+            if constexpr (New == Old) return num;
+
+            return ByteSwap(num);
+        }
+        template <Endian New, Endian Old = Endian::eNative, IntegralUnderlying T>
+        inline constexpr T ConvertEndian(T num)
+            requires(sizeof(T) <= 8 && HasUniqueObjectRepresentationsV<T>)
+        {
+            if constexpr (New == Old) return num;
+
+            return static_cast<T>(ByteSwap(ToUnderlying(num)));
+        }
+
+        template <Endian New, IntegralOrUnderlyingIntegral T>
+        inline constexpr T ToEndian(T num)
+        {
+            return ConvertEndian<New, Endian::eNative>(num);
+        }
+
+        template <Endian Old, IntegralOrUnderlyingIntegral T>
+        inline constexpr T FromEndian(T num)
+        {
+            return ConvertEndian<Endian::eNative, Old>(num);
+        }
+
+        template <typename T, Endian E>
+        struct PM_PACKED EndianStorage
+        {
+            inline constexpr EndianStorage() = default;
+            inline constexpr EndianStorage(T value)
+                : Value(ConvertEndian<E>(value))
+            {
+            }
+
+            inline constexpr T Load() const
+            {
+                return ConvertEndian<Endian::eNative, E>(Value);
+            }
+
+            inline constexpr void Store(T value)
+            {
+                Value = ConvertEndian<E, Endian::eNative>(value);
+            }
+
+            inline constexpr T    operator*() const { return Load(); }
+            friend constexpr bool operator==(const EndianStorage& lhs,
+                                             const EndianStorage  rhs)
+            {
+                return lhs.Value == rhs.Value;
+            }
+            friend constexpr bool operator!=(const EndianStorage& lhs,
+                                             const EndianStorage  rhs)
+            {
+                return !(lhs == rhs);
+            }
+            constexpr auto operator<=>(const usize other) const
+            {
+                return ConvertEndian<E, Endian::eNative>(Value) <=> other;
+            }
+            inline constexpr operator T() { return Value; }
+
+            T                Value;
+        };
+
+        template <typename T>
+        using LittleEndian = EndianStorage<T, Endian::eLittle>;
+        template <typename T>
+        using BigEndian = EndianStorage<T, Endian::eBig>;
+        template <typename T>
+        using NetworkOrdered = BigEndian<T>;
+    }; // namespace Prism
+
+    template <typename T, Prism::Endian E>
+    struct Prism::Formatter<Prism::EndianStorage<T, E>>
+        : Prism::Details::FormatterFor<T>
+    {
+        auto Format(const Prism::EndianStorage<T, E>& value,
+                    Prism::FormatContext&             ctx) const
+        {
+            return Prism::Details::FormatterFor<T>::Format(value.Load(), ctx);
+        }
+    };
+
+#if PRISM_USE_NAMESPACE != 0
+    using Prism::BigEndian;
+    using Prism::ConvertEndian;
+    using Prism::Endian;
+    using Prism::EndianStorage;
+    using Prism::LittleEndian;
+    using Prism::ToEndian;
+#endif
+}

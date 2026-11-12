@@ -5,7 +5,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Containers/BitSpan.hpp>
+import Prism.Test.Test;
+import Prism.Containers.BitSpan;
 
 using namespace Prism;
 

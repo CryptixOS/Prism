@@ -1,0 +1,171 @@
+/*
+ * Created by v1tr10l7 on 12.07.2025.
+ * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+module;
+
+#include <Prism/Core/Types.hpp>
+#include <Prism/Core/Platform.hpp>
+
+export module Prism.Network.IPv4Address;
+
+export import Prism.Memory.Endian;
+export import Prism.String.Formatter;
+export import Prism.String.StringUtils;
+export import Prism.Containers.Array;
+
+export extern "C++"
+{
+    namespace Prism
+    {
+        constexpr bool ParseIPv4(StringView str, NetworkOrdered<u32>& out)
+        {
+            u32   octets[4] = {};
+            usize index     = 0;
+            u32   current   = 0;
+
+            for (char c : str)
+            {
+                if (c >= '0' && c <= '9')
+                {
+                    current = current * 10 + (c - '0');
+                    if (current > 255) return false;
+                }
+                else if (c == '.')
+                {
+                    if (index >= 4) return false;
+                    octets[index++] = current;
+                    current         = 0;
+                }
+                else return false;
+            }
+
+            if (index != 3) return false;
+            octets[3]      = current;
+
+            const u32 host = (octets[0] << 24) | (octets[1] << 16)
+                           | (octets[2] << 8) | (octets[3]);
+
+            out.Store(host);
+            return true;
+        }
+        class PM_PACKED IPv4Address
+        {
+          public:
+            constexpr IPv4Address() = default;
+
+            constexpr IPv4Address(u32 seg1, u32 seg2, u32 seg3, u32 seg4)
+                : IPv4Address(ToArray({seg1, seg2, seg3, seg4}))
+            {
+            }
+            constexpr IPv4Address(Array<u32, 4> segments)
+                : IPv4Address((segments[0] << 24) | (segments[1] << 16)
+                              | (segments[2] << 8) | segments[3])
+            {
+            }
+            constexpr explicit IPv4Address(StringView ip)
+            {
+                NetworkOrdered<u32> parsed{};
+                m_Address = NetworkOrdered<u32>{0};
+                if (ParseIPv4(ip, parsed)) m_Address = parsed;
+            }
+            constexpr IPv4Address(NetworkOrdered<u32> address)
+                : m_Address(address)
+            {
+            }
+
+            constexpr IPv4Address& operator=(const Array<u32, 4>& segments)
+            {
+                m_Address.Store((segments[0] << 24) | (segments[1] << 16)
+                                | (segments[2] << 8) | (segments[3]));
+                return *this;
+            }
+            constexpr IPv4Address& operator=(StringView ip)
+            {
+                NetworkOrdered<u32> parsed{};
+                if (ParseIPv4(ip, parsed)) m_Address = parsed;
+                return *this;
+            }
+
+            constexpr IPv4Address& operator=(NetworkOrdered<u32> ip)
+            {
+                return (m_Address = ip), *this;
+            }
+
+            constexpr NetworkOrdered<u32> Raw() const { return m_Address; }
+            constexpr    operator NetworkOrdered<u32>() const { return m_Address; }
+
+            constexpr u8 operator[](usize index) const
+            {
+                assert(index < 4);
+
+                const u32 net   = m_Address.Load();
+                const u32 shift = 24 - (index * 8);
+
+                return (net >> shift) & 0xff;
+            }
+
+            String ToString() const
+            {
+                return Format("{}.{}.{}.{}", operator[](0), operator[](1),
+                              operator[](2), operator[](3));
+            }
+            operator String() const { return ToString(); }
+
+            friend constexpr bool operator==(const IPv4Address& lhs,
+                                             const IPv4Address& rhs)
+                = default;
+            friend constexpr bool operator!=(const IPv4Address& lhs,
+                                             const IPv4Address& rhs)
+                = default;
+
+          private:
+            NetworkOrdered<u32> m_Address = 0;
+        };
+
+        static_assert(sizeof(IPv4Address) == 4);
+    }; // namespace Prism
+
+    template <>
+    struct Prism::Formatter<Prism::IPv4Address>
+        : Prism::Formatter<Prism::StringView>
+    {
+        Prism::FormatAppender Format(const Prism::IPv4Address& ip,
+                                     Prism::FormatContext&     ctx) const
+        {
+            char buffer[16];
+            auto result = Prism::FormatToN(buffer, sizeof(buffer), "{}.{}.{}.{}",
+                                           ip[0], ip[1], ip[2], ip[3]);
+            return Prism::Formatter<Prism::StringView>::Format(
+                Prism::StringView(buffer, static_cast<Prism::usize>(result.Out - buffer)),
+                ctx);
+        }
+    };
+
+    // hash support
+    template <>
+    struct Prism::Hash<Prism::IPv4Address>
+    {
+        PM_NODISCARD Prism::usize
+                     operator()(const Prism::IPv4Address& ip) const PM_NOEXCEPT
+        {
+            using namespace Prism;
+            u32 key = ip.Raw().Load();
+
+#if PM_CONTEXT_KERNEL != 0
+            return Hash<Prism::u32>{}(key);
+#else
+            usize       length = sizeof(key);
+            const usize seed   = 0xc70f6907ul;
+
+            return Prism::Murmur::Hash2(reinterpret_cast<u8*>(&key), length, seed);
+#endif
+        }
+    };
+
+#if PRISM_USE_NAMESPACE != 0
+    using Prism::IPv4Address;
+#endif
+}

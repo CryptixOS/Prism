@@ -8,8 +8,9 @@
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+import Prism.Test.Test;
+import Prism.Core.Limits;
 
-#include <Prism/Core/Limits.hpp>
 
 using namespace Prism;
 

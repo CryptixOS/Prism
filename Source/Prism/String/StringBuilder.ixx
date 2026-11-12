@@ -1,0 +1,135 @@
+/*
+ * Created by v1tr10l7 on 24.04.2025.
+ * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+module;
+
+#include <Prism/Core/Types.hpp>
+export module Prism.String.StringBuilder;
+
+export import Prism.String.String;
+export import Prism.String.StringUtils;
+export import Prism.Containers.DoublyLinkedList;
+
+export extern "C++"
+{
+    namespace Prism
+    {
+        template <typename C = char, typename Traits = CharTraits<C>>
+        class StringBuilder
+        {
+          public:
+            inline constexpr static usize DEFAULT_SEGMENT_CAPACITY = 100;
+
+            constexpr explicit StringBuilder([[maybe_unused]] usize segmentCapacity
+                                             = DEFAULT_SEGMENT_CAPACITY)
+                : m_Length(0)
+            {
+                Reset();
+            }
+            constexpr ~StringBuilder() {}
+
+            constexpr bool Empty() const { return m_Length == 0; }
+            inline void    Reset()
+            {
+                m_Segments.Clear();
+                m_Length = 0;
+
+                m_Segments.PushBack(String{""});
+                auto& segment = m_Segments.Tail();
+                segment.Reserve(DEFAULT_SEGMENT_CAPACITY);
+            }
+
+            constexpr void Append(C c)
+            {
+                Reinvalidate();
+                Segment() += c;
+                ++m_Length;
+            }
+            constexpr void Append(const C* str, usize len)
+            {
+                Reinvalidate();
+                Segment() += BasicStringView<C, Traits>(str, len);
+                m_Length += len;
+            }
+            constexpr void Append(const char* str)
+            {
+                Append(str, Traits::Length(str));
+            }
+            constexpr void Append(const BasicString<char>& str)
+            {
+                Append(str.Raw(), str.Size());
+            }
+            constexpr void Append(u64 value)
+            {
+                Reinvalidate();
+
+                auto string = StringUtils::ToString<u64>(value);
+                m_Length += string.Size();
+                Segment() += string;
+            }
+
+            constexpr void Insert(BasicStringView<C, Traits> other)
+            {
+                m_Segments.PushFront(other);
+                m_Length += other.Size();
+            }
+
+            constexpr StringBuilder& operator<<(C ch)
+            {
+                Append(ch);
+                return *this;
+            }
+            constexpr StringBuilder& operator<<(BasicStringView<C, Traits> str)
+            {
+                Append(str.Raw(), str.Size());
+                return *this;
+            }
+            constexpr StringBuilder& operator<<(const BasicString<C, Traits>& rhs)
+            {
+                Append(rhs);
+                return *this;
+            }
+            constexpr StringBuilder& operator<<(u64 value)
+            {
+                Append(value);
+                return *this;
+            }
+
+            constexpr BasicString<C, Traits> ToString() const
+            {
+                BasicString<C, Traits> string;
+                string.Reserve(m_Length);
+
+                for (auto& segment : m_Segments) string += segment;
+                return string;
+            }
+            constexpr operator auto() { return ToString(); }
+
+            usize     TotalLength() const { return m_Length; }
+            using SegmentType = BasicString<C, Traits>;
+
+          private:
+            constexpr static usize MAX_SEGMENT_SIZE = 128;
+
+            constexpr SegmentType& Segment() { return m_Segments.Tail(); }
+            constexpr void         Reinvalidate()
+            {
+                auto& segment = Segment();
+                if (segment.Size() < MAX_SEGMENT_SIZE) return;
+
+                auto& newSegment = m_Segments.EmplaceBack();
+                newSegment.Reserve(MAX_SEGMENT_SIZE);
+            }
+
+            DoublyLinkedList<SegmentType> m_Segments;
+            usize                         m_Length;
+        };
+    }; // namespace Prism
+
+#if PRISM_USE_NAMESPACE != 0
+    using Prism::StringBuilder;
+#endif
+}

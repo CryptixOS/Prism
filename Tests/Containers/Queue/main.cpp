@@ -5,8 +5,9 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Containers/KeyValuePair.hpp>
-#include <Prism/Containers/Queue.hpp>
+import Prism.Test.Test;
+import Prism.Containers.KeyValuePair;
+import Prism.Containers.Queue;
 using namespace Prism;
 
 using Q = Queue<int>;

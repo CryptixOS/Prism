@@ -48,7 +48,8 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
-set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+# Prism/Utility is made of C++20 named modules (Source/Prism/Utility/*.ixx).
+set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
@@ -230,6 +231,129 @@ set(PRISM_SOURCES
   Source/Prism/Utility/PathView.cpp
   Source/Prism/Utility/Time.cpp
 )
+# Module interface units, one named module per file (Prism.<Dir>.<Name>).
+# Projects that compile Prism from source (CryptixOS) add these to their own
+# FILE_SET CXX_MODULES. Variant.ixx is left out: it doesn't compile yet.
+set(PRISM_MODULE_INTERFACES
+  Source/Prism/Algorithm/FNV1aHash.ixx
+  Source/Prism/Algorithm/Find.ixx
+  Source/Prism/Algorithm/Hash.ixx
+  Source/Prism/Algorithm/Random.ixx
+  Source/Prism/Algorithm/SearchString.ixx
+  Source/Prism/Algorithm/Sort.ixx
+  Source/Prism/Containers/Array.ixx
+  Source/Prism/Containers/BitSpan.ixx
+  Source/Prism/Containers/Bitmap.ixx
+  Source/Prism/Containers/CircularQueue.ixx
+  Source/Prism/Containers/Deque.ixx
+  Source/Prism/Containers/DoublyLinkedList.ixx
+  Source/Prism/Containers/IntervalTree.ixx
+  Source/Prism/Containers/IntrusiveList.ixx
+  Source/Prism/Containers/IntrusiveListV3.ixx
+  Source/Prism/Containers/IntrusiveRedBlackTree.ixx
+  Source/Prism/Containers/IntrusiveRefList.ixx
+  Source/Prism/Containers/KeyValuePair.ixx
+  Source/Prism/Containers/Queue.ixx
+  Source/Prism/Containers/RadixTree.ixx
+  Source/Prism/Containers/RedBlackTree.ixx
+  Source/Prism/Containers/RingBuffer.ixx
+  Source/Prism/Containers/Set.ixx
+  Source/Prism/Containers/Span.ixx
+  Source/Prism/Containers/SplitBuffer.ixx
+  Source/Prism/Containers/Stack.ixx
+  Source/Prism/Containers/Tuple.ixx
+  Source/Prism/Containers/UnorderedMap.ixx
+  Source/Prism/Containers/Vector.ixx
+  Source/Prism/Core/AllocatorTraits.ixx
+  Source/Prism/Core/Bits.ixx
+  Source/Prism/Core/Concepts.ixx
+  Source/Prism/Core/Core.ixx
+  Source/Prism/Core/Error.ixx
+  Source/Prism/Core/Eternal.ixx
+  Source/Prism/Core/HashTraits.ixx
+  Source/Prism/Core/Integer128.ixx
+  Source/Prism/Core/Iterator.ixx
+  Source/Prism/Core/Limits.ixx
+  Source/Prism/Core/NonCopyable.ixx
+  Source/Prism/Core/NonMovable.ixx
+  Source/Prism/Core/ParameterPack.ixx
+  Source/Prism/Core/Ranges.ixx
+  Source/Prism/Core/Singleton.ixx
+  Source/Prism/Core/TypeTraits.ixx
+  Source/Prism/Core/TypeTraitsForward.ixx
+  Source/Prism/Core/UUID.ixx
+  Source/Prism/Debug/Assertions.ixx
+  Source/Prism/Debug/Log.ixx
+  Source/Prism/Debug/LogSink.ixx
+  Source/Prism/Debug/Logger.ixx
+  Source/Prism/Debug/SourceLocation.ixx
+  Source/Prism/Debug/Stacktrace.ixx
+  Source/Prism/Math/Matrix.ixx
+  Source/Prism/Math/SimdVector.ixx
+  Source/Prism/Math/Vector.ixx
+  Source/Prism/Memory/Allocator.ixx
+  Source/Prism/Memory/BitStream.ixx
+  Source/Prism/Memory/Buffer.ixx
+  Source/Prism/Memory/BumpAllocator.ixx
+  Source/Prism/Memory/ByteStream.ixx
+  Source/Prism/Memory/Endian.ixx
+  Source/Prism/Memory/Memory.ixx
+  Source/Prism/Memory/Pointer.ixx
+  Source/Prism/Memory/Ref.ixx
+  Source/Prism/Memory/RefCounted.ixx
+  Source/Prism/Memory/SSOStorage.ixx
+  Source/Prism/Memory/Scope.ixx
+  Source/Prism/Memory/SlabAllocator.ixx
+  Source/Prism/Memory/SlabPool.ixx
+  Source/Prism/Memory/SlobAllocator.ixx
+  Source/Prism/Memory/WeakRef.ixx
+  Source/Prism/Network/IPv4Address.ixx
+  Source/Prism/Ranges/Range.ixx
+  Source/Prism/Ranges/Ranges.ixx
+  Source/Prism/Ranges/Views.ixx
+  Source/Prism/String/CharTraits.ixx
+  Source/Prism/String/CodePoints.ixx
+  Source/Prism/String/FormatHandler.ixx
+  Source/Prism/String/FormatString.ixx
+  Source/Prism/String/Formatter.ixx
+  Source/Prism/String/FormatterContext.ixx
+  Source/Prism/String/Printf.ixx
+  Source/Prism/String/String.ixx
+  Source/Prism/String/StringBuilder.ixx
+  Source/Prism/String/StringUtils.ixx
+  Source/Prism/String/StringView.ixx
+  Source/Prism/Utility/Atomic.ixx
+  Source/Prism/Utility/AtomicBuiltins.ixx
+  Source/Prism/Utility/Checksum.ixx
+  Source/Prism/Utility/Compare.ixx
+  Source/Prism/Utility/Delegate.ixx
+  Source/Prism/Utility/Enum.ixx
+  Source/Prism/Utility/Expected.ixx
+  Source/Prism/Utility/Hash.ixx
+  Source/Prism/Utility/LockingPolicy.ixx
+  Source/Prism/Utility/Math.ixx
+  Source/Prism/Utility/Mutex.ixx
+  Source/Prism/Utility/OptionParser.ixx
+  Source/Prism/Utility/Optional.ixx
+  Source/Prism/Utility/Path.ixx
+  Source/Prism/Utility/PathView.ixx
+  Source/Prism/Utility/RangeAllocator.ixx
+  Source/Prism/Utility/SimdIntrinsics.ixx
+  Source/Prism/Utility/SimdVector.ixx
+  Source/Prism/Utility/Time.ixx
+)
+# The test framework's modules (Prism.Test.*), built into prism_test.
+set(PRISM_TEST_MODULE_INTERFACES
+  Source/Prism/Test/CrashTest.ixx
+  Source/Prism/Test/Macros.ixx
+  Source/Prism/Test/Randomized/Generator.ixx
+  Source/Prism/Test/Randomized/RandSource.ixx
+  Source/Prism/Test/Randomized/RandomRun.ixx
+  Source/Prism/Test/Test.ixx
+  Source/Prism/Test/TestCase.ixx
+  Source/Prism/Test/TestResult.ixx
+  Source/Prism/Test/TestSuite.ixx
+)
 set(PRISM_TEST_FRAMEWORK_SOURCES
   Source/Prism/Test/CrashTest.cpp
   Source/Prism/Test/TestSuite.cpp
@@ -241,6 +365,8 @@ add_library(prism STATIC
   "${PRISM_DEMANGLER_DIR}/source/demangler.cpp"
 )
 add_library(Prism::Prism ALIAS prism)
+target_sources(prism PUBLIC FILE_SET CXX_MODULES BASE_DIRS Source
+  FILES ${PRISM_MODULE_INTERFACES})
 add_library(Prism ALIAS prism) # target name of the previous CMakeLists.txt
 target_include_directories(prism PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Source>"
@@ -262,6 +388,8 @@ if(PRISM_HOSTED)
   add_library(Prism::Test ALIAS prism_test)
   target_link_libraries(prism_test PUBLIC prism)
   target_compile_options(prism_test PRIVATE ${PRISM_WARNING_ARGS})
+  target_sources(prism_test PUBLIC FILE_SET CXX_MODULES BASE_DIRS Source
+    FILES ${PRISM_TEST_MODULE_INTERFACES})
 
   add_library(prism_test_main STATIC ${PRISM_TEST_MAIN_SOURCES})
   add_library(Prism::TestMain ALIAS prism_test_main)
@@ -285,12 +413,13 @@ if(PRISM_HOSTED)
   list(APPEND PRISM_INSTALL_TARGETS prism_test prism_test_main)
 endif()
 install(TARGETS ${PRISM_INSTALL_TARGETS} EXPORT PrismTargets
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  FILE_SET CXX_MODULES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT PrismTargets NAMESPACE Prism::
   DESTINATION ${PRISM_INSTALL_CMAKEDIR})
 
 install(DIRECTORY Source/Prism DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl")
+  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl" PATTERN "*.ixx")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Prism/Core)
 # Bundled header-only dependencies used by Prism's public headers.

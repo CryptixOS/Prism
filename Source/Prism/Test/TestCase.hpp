@@ -7,44 +7,9 @@
 #pragma once
 
 #include <Prism/Core/Types.hpp>
-#include <Prism/String/StringView.hpp>
 
-namespace Prism::Test
-{
-    using TestFunction = void (*)();
-
-    enum class TestCaseKind : u8
-    {
-        eTest,
-        eBenchmark,
-        eRandomized,
-    };
-
-    class TestCase
-    {
-      public:
-        constexpr TestCase(StringView name, TestFunction function,
-                           TestCaseKind kind)
-            : m_Name(name)
-            , m_Function(function)
-            , m_Kind(kind)
-        {
-        }
-
-        constexpr StringView   Name() const { return m_Name; }
-        constexpr TestFunction Function() const { return m_Function; }
-        constexpr TestCaseKind Kind() const { return m_Kind; }
-        constexpr bool         IsBenchmark() const
-        { return m_Kind == TestCaseKind::eBenchmark; }
-        constexpr bool IsRandomized() const
-        { return m_Kind == TestCaseKind::eRandomized; }
-
-      private:
-        StringView   m_Name;
-        TestFunction m_Function;
-        TestCaseKind m_Kind;
-    };
-} // namespace Prism::Test
+// Macros only: the code lives in module Prism.Test.TestCase, which
+// files using these macros import too.
 
 #define PRISM_TEST_DEFINE_CASE(name, kind)                                     \
     static void PrismTestCase_##name();                                        \

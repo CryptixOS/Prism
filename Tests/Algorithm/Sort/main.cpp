@@ -5,12 +5,13 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Algorithm/Sort.hpp>
-#include <Prism/Containers/Array.hpp>
-#include <Prism/Containers/Vector.hpp>
-#include <Prism/Utility/Compare.hpp>
 #include <cstdio>
 #include <cstring>
+import Prism.Test.Test;
+import Prism.Algorithm.Sort;
+import Prism.Containers.Array;
+import Prism.Containers.Vector;
+import Prism.Utility.Compare;
 
 using namespace Prism;
 

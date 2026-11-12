@@ -5,9 +5,10 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/String/StringView.hpp>
 
 #include <cstdio>
+import Prism.Test.Test;
+import Prism.String.StringView;
 
 using namespace Prism;
 

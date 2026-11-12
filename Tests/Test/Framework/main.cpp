@@ -8,6 +8,8 @@
 #include <Prism/Test/Test.hpp>
 
 #include <signal.h>
+import Prism.Core.Error;
+import Prism.Test.Test;
 
 using namespace Prism;
 

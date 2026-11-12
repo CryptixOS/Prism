@@ -5,7 +5,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Containers/RedBlackTree.hpp>
+import Prism.Test.Test;
+import Prism.Containers.RedBlackTree;
 
 
 using namespace Prism;

@@ -5,7 +5,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Utility/Path.hpp>
+import Prism.Test.Test;
+import Prism.Utility.Path;
 
 using namespace Prism;
 using namespace Prism::PathLiterals;

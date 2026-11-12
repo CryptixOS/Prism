@@ -4,8 +4,10 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/Algorithm/Hash.hpp>
-#include <Prism/Core/Bits.hpp>
+#include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.Algorithm.Hash;
+import Prism.Core.Bits;
 
 namespace Prism::Murmur
 {

@@ -6,6 +6,7 @@
  */
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Debug/Assertions.hpp>
+import Prism.Debug.Assertions;
 
 #if !(PrismHasInclude(<assert.h>))
 extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,

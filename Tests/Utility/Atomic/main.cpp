@@ -5,7 +5,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Utility/Atomic.hpp>
+import Prism.Test.Test;
+import Prism.Utility.Atomic;
 
 using namespace Prism;
 

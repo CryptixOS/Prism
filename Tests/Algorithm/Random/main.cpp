@@ -5,8 +5,10 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Algorithm/Random.hpp>
-#include <Prism/Utility/Math.hpp>
+#include <Prism/Debug/Log.hpp>
+import Prism.Test.Test;
+import Prism.Algorithm.Random;
+import Prism.Utility.Math;
 
 using namespace Prism;
 using namespace Prism::Algorithm;

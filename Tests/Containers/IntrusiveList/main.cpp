@@ -5,16 +5,17 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Containers/IntrusiveList.hpp>
-#include <Prism/String/StringView.hpp>
 
 #include <cstdio>
 
 using namespace Prism;
 
-#include <Prism/Containers/IntrusiveList.hpp>
-#include <Prism/Containers/Vector.hpp>
 #include <cstdlib>
+import Prism.Test.Test;
+import Prism.Debug.Log;
+import Prism.String.StringView;
+import Prism.Containers.IntrusiveList;
+import Prism.Containers.Vector;
 
 // Unlike EXPECT(), this still fires when NDEBUG is defined (release builds).
 

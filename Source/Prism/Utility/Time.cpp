@@ -4,8 +4,9 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/String/StringBuilder.hpp>
-#include <Prism/Utility/Time.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.String.StringBuilder;
+import Prism.Utility.Time;
 
 namespace Prism::Time
 {

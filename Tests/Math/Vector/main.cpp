@@ -6,9 +6,11 @@
  */
 #include <Prism/Test/Test.hpp>
 #include <Prism/Debug/Assertions.hpp>
-#include <Prism/Math/Vector.hpp>
 
 #include <iostream>
+import Prism.Test.Test;
+import Prism.Debug.Assertions;
+import Prism.Math.Vector;
 
 using namespace Prism;
 

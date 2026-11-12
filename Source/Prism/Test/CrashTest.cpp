@@ -16,6 +16,7 @@
 #ifdef __linux__
     #include <sys/prctl.h>
 #endif
+import Prism.Test.Test;
 
 namespace Prism::Test
 {

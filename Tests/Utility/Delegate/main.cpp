@@ -5,10 +5,11 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Memory/Scope.hpp>
-#include <Prism/Utility/Delegate.hpp>
 #include <cstdio>
 #include <cstdlib>
+import Prism.Test.Test;
+import Prism.Memory.Scope;
+import Prism.Utility.Delegate;
 
 // Unlike EXPECT(), this still fires when NDEBUG is defined (release builds).
 

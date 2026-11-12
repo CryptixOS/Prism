@@ -5,9 +5,10 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Utility/LockingPolicy.hpp>
-#include <Prism/Utility/Math.hpp>
-#include <Prism/Utility/Mutex.hpp>
+import Prism.Test.Test;
+import Prism.Utility.LockingPolicy;
+import Prism.Utility.Math;
+import Prism.Utility.Mutex;
 
 using namespace Prism;
 

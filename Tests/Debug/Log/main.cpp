@@ -6,8 +6,10 @@
  */
 #include <Prism/Test/Test.hpp>
 #include <Prism/Debug/Log.hpp>
-#include <Prism/Debug/Logger.hpp>
-#include <Prism/Utility/Mutex.hpp>
+import Prism.Test.Test;
+import Prism.Debug.Log;
+import Prism.Debug.Logger;
+import Prism.Utility.Mutex;
 
 using namespace Prism;
 using namespace Prism::Literals;

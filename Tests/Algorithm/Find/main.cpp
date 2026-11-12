@@ -6,10 +6,12 @@
  */
 
 #include <Prism/Test/Test.hpp>
-#include <Prism/Algorithm/Find.hpp>
-#include <Prism/Containers/Array.hpp>
-#include <Prism/Containers/Vector.hpp>
 #include <Prism/Debug/Assertions.hpp>
+import Prism.Test.Test;
+import Prism.Algorithm.Find;
+import Prism.Debug.Assertions;
+import Prism.Containers.Array;
+import Prism.Containers.Vector;
 
 TEST_CASE(TestFind){
     Array<int, 5> arr = {1, 2, 3, 4, 5};

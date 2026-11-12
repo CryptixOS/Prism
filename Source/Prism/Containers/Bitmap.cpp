@@ -4,8 +4,9 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/Containers/Bitmap.hpp>
-#include <Prism/Utility/Math.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.Containers.Bitmap;
+import Prism.Utility.Math;
 
 namespace Prism
 {

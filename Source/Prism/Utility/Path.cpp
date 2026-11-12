@@ -4,7 +4,13 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/Utility/Path.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.String.Formatter;
+import Prism.String.String;
+import Prism.String.StringView;
+import Prism.Containers.Vector;
+import Prism.Utility.Path;
+
 
 namespace Prism
 {

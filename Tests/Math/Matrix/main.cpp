@@ -6,7 +6,9 @@
  */
 #include <Prism/Test/Test.hpp>
 #include <Prism/Debug/Assertions.hpp>
-#include <Prism/Math/Matrix.hpp>
+import Prism.Test.Test;
+import Prism.Debug.Assertions;
+import Prism.Math.Matrix;
 
 using namespace Prism;
 using Math::Matrix;

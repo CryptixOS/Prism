@@ -4,10 +4,11 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/String/Formatter.hpp>
 #include <Prism/Test/Test.hpp>
 
 #include <string.h>
+import Prism.String.Formatter;
+import Prism.Test.Test;
 
 using namespace Prism;
 
