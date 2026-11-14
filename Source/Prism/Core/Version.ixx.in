@@ -48,21 +48,21 @@ namespace Prism
         }
     };
 
-    constexpr StringView LIBRARY_NAME = "@library_name@";
+    inline constexpr StringView LIBRARY_NAME = "@library_name@";
 
-    constexpr Version    VERSION
+    inline constexpr Version VERSION
         = {PM_VERSION_MAJOR, PM_VERSION_MINOR, PM_VERSION_PATCH};
-    constexpr StringView GIT_TAG          = "@git_tag@";
+    inline constexpr StringView GIT_TAG          = "@git_tag@";
 
     // When the build was configured (a module can't use __DATE__).
-    constexpr StringView BUILD_DATE       = "@build_date@";
-    constexpr StringView BUILD_TIME       = "@build_time@";
+    inline constexpr StringView BUILD_DATE       = "@build_date@";
+    inline constexpr StringView BUILD_TIME       = "@build_time@";
 
-    constexpr StringView ARCH_STRING      = "@arch@";
-    constexpr StringView COMPILER         = "@compiler@";
-    constexpr StringView COMPILER_VERSION = "@compiler_version@";
+    inline constexpr StringView ARCH_STRING      = "@arch@";
+    inline constexpr StringView COMPILER         = "@compiler@";
+    inline constexpr StringView COMPILER_VERSION = "@compiler_version@";
 
-    constexpr StringView VERSION_STRING   = "@library_version_string@";
+    inline constexpr StringView VERSION_STRING   = "@library_version_string@";
 }; // namespace Prism
 
 template <>

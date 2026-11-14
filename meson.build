@@ -210,6 +210,7 @@ install_headers(
   'Source/Prism/Core/NonMovable.ixx',
   'Source/Prism/Core/ParameterPack.ixx',
   'Source/Prism/Core/Platform.hpp',
+  'Source/Prism/Core/PlatformHooks.hpp',
   'Source/Prism/Core/Singleton.ixx',
   'Source/Prism/Core/Types.hpp',
   'Source/Prism/Core/TypeTraits.ixx',

@@ -81,3 +81,21 @@ prism_add_tests(String BasicString BasicStringView Format FormatGolden StringBui
 prism_add_tests(Test Framework)
 prism_add_tests(Utility Atomic AtomicBuiltins Delegate Enum Mutex OptionParser Path
   SimdIntrinsics Variant)
+
+# Every public header compiles on its own: one translation unit per header,
+# including only that header. (Modules are compiled on their own anyway.)
+file(GLOB_RECURSE PRISM_PUBLIC_HEADERS RELATIVE "${PROJECT_SOURCE_DIR}/Source"
+  CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/Source/Prism/*.hpp")
+set(PRISM_HEADER_CHECK_SOURCES "")
+foreach(header IN LISTS PRISM_PUBLIC_HEADERS)
+  string(MAKE_C_IDENTIFIER "${header}" id)
+  set(source "${CMAKE_CURRENT_BINARY_DIR}/HeaderCheck/${id}.cpp")
+  file(CONFIGURE OUTPUT "${source}" CONTENT "#include <${header}>\n")
+  list(APPEND PRISM_HEADER_CHECK_SOURCES "${source}")
+endforeach()
+add_library(prism_header_check OBJECT ${PRISM_HEADER_CHECK_SOURCES})
+target_include_directories(prism_header_check PRIVATE
+  "${PROJECT_SOURCE_DIR}/Source" "${PROJECT_BINARY_DIR}")
+target_compile_options(prism_header_check PRIVATE
+  ${PRISM_CXX_ARGS} ${PRISM_WARNING_ARGS})
+set_target_properties(prism_header_check PROPERTIES CXX_SCAN_FOR_MODULES OFF)

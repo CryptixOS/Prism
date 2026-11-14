@@ -1,0 +1,19 @@
+/*
+ * Created by v1tr10l7 on 14.11.2026.
+ * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+#pragma once
+
+// For PRISM_STRICT_FREESTANDING builds (-nostdinc++): the bundled demangler's
+// header needs <cstddef>, one of the freestanding headers every compiler
+// ships. This is all of it that the demangler uses.
+#include <stddef.h>
+
+namespace std
+{
+    using ::ptrdiff_t;
+    using ::size_t;
+    using nullptr_t = decltype(nullptr);
+}; // namespace std

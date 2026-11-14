@@ -27,6 +27,9 @@ set(PRISM_EXTRA_INCS "" CACHE STRING "Extra include directory")
 option(PRISM_BUILD_TESTS "Build the unit tests" OFF)
 option(PRISM_BUILD_BENCHMARKS "Build the benchmarks (hosted targets only)" OFF)
 option(PRISM_WERROR "Treat warnings as errors (meson: werror=true)" ON)
+option(PRISM_STRICT_FREESTANDING
+  "Compile Prism's own sources with -nostdinc++ (kernel targets): proves no \
+hosted C++ header is needed" OFF)
 
 set(PRISM_PKGCONFIG_NAME "prism" CACHE STRING "Name of the installed pkg-config file")
 
@@ -121,6 +124,9 @@ set(PRISM_CODEGEN_ARGS
   -fno-rtti
   -fno-exceptions
 )
+if(NOT PRISM_HOSTED)
+  list(APPEND PRISM_CODEGEN_ARGS -ffreestanding)
+endif()
 if(PRISM_EXTRA_INCS)
   list(APPEND PRISM_CODEGEN_ARGS "-I${PRISM_EXTRA_INCS}")
 endif()
@@ -337,6 +343,16 @@ add_library(prism STATIC
   "${PRISM_DEMANGLER_DIR}/source/demangler.cpp"
 )
 add_library(Prism::Prism ALIAS prism)
+if(PRISM_STRICT_FREESTANDING)
+  if(PRISM_HOSTED)
+    message(FATAL_ERROR "PRISM_STRICT_FREESTANDING needs PRISM_TARGET=cryptix or carbonc")
+  endif()
+  # Not the bundled demangler: it uses <cstddef> & co., which the kernel's
+  # KLibC++ provides.
+  set_source_files_properties(${PRISM_SOURCES} ${PRISM_MODULE_INTERFACES}
+    ${PRISM_GENERATED_MODULE_INTERFACES}
+    PROPERTIES COMPILE_OPTIONS -nostdinc++)
+endif()
 target_sources(prism PUBLIC FILE_SET CXX_MODULES
   BASE_DIRS Source "${PRISM_GENERATED_DIR}"
   FILES ${PRISM_MODULE_INTERFACES} ${PRISM_GENERATED_MODULE_INTERFACES})

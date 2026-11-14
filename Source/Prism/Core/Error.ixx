@@ -7,12 +7,6 @@
 module;
 
 #include <Prism/Core/Types.hpp>
-#if PRISM_TARGET_CRYPTIX != 0
-    #include <cerrno>
-#elif PRISM_TARGET_CARBONC != 0
-    #include <errno.h>
-#endif
-
 #include <Prism/Core/Error.hpp>
 
 export module Prism.Core.Error;
@@ -26,7 +20,7 @@ export extern "C++"
     {
 
 #if PRISM_TARGET_CRYPTIX != 0
-        using PosixErrorCode = std::errno_t;
+        using PosixErrorCode = ::errno_t;
 #else
         using PosixErrorCode = isize;
 #endif

@@ -38,13 +38,13 @@ export extern "C++"
 
               private:
                 friend class CircularQueue;
-                Iterator(CircularQueue& queue, size_t const index)
+                Iterator(CircularQueue& queue, usize const index)
                     : m_Queue(queue)
                     , m_Index(index)
                 {
                 }
                 CircularQueue& m_Queue;
-                size_t         m_Index = 0;
+                usize         m_Index = 0;
             };
 
           public:

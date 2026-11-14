@@ -67,14 +67,8 @@ namespace Prism
         return lhs < rhs ? lhs : rhs;
     }
 
-    // The comparison categories and std::initializer_list are part of the
-    // language: the compiler requires these exact types for `<=>` and braced
-    // initialization, so Prism can only alias them.
-    using PartialOrdering = std::partial_ordering;
-    using WeakOrdering    = std::weak_ordering;
-    using StrongOrdering  = std::strong_ordering;
-    template <typename T>
-    using InitializerList = std::initializer_list<T>;
+    // PartialOrdering, WeakOrdering, StrongOrdering and InitializerList come
+    // from Core/LanguageSupport.hpp.
     using VaList          = __builtin_va_list;
 #define PrismVaStart(args, format) __builtin_va_start(args, format)
 #define PrismVaEnd(args)           __builtin_va_end(args)

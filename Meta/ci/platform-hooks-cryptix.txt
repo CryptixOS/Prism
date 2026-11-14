@@ -1,0 +1,13 @@
+# Symbols libprism.a leaves undefined for PRISM_TARGET=cryptix,
+# demangled, one per line. See Source/Prism/Core/PlatformHooks.hpp.
+# __stack_chk_fail comes from -fstack-protector, on by default in most
+# toolchains and in PRISM_HARDENED builds.
+Logger::Print(Prism::BasicStringView<char, Prism::CharTraits<char> >)
+__stack_chk_fail
+memcpy
+memset
+operator delete(void*, unsigned long)
+operator delete[](void*)
+operator new(unsigned long)
+operator new[](unsigned long)
+strlen

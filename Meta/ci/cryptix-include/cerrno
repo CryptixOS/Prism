@@ -13,7 +13,9 @@
 
 #include <errno.h>
 
+// KLibC's errno.h declares a global errno_t, which <cerrno> brings into std.
+using errno_t = int;
 namespace std
 {
-    using errno_t = int;
+    using ::errno_t;
 };

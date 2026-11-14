@@ -60,11 +60,16 @@ jobs:
           ${CXX:-c++} --version
           hosted=OFF
           case "${{ matrix.target }}" in app|cryptix-app) hosted=ON ;; esac
-          # Outside the kernel tree, cryptix gets stand-ins for the few
-          # CryptixOS headers it includes.
+          # The freestanding targets build Prism's own sources with
+          # -nostdinc++, so no hosted C++ header can sneak in. Outside the
+          # kernel tree, cryptix gets stand-ins for the few CryptixOS
+          # headers it includes.
           extra=
+          if [ $hosted = OFF ]; then
+            extra="-DPRISM_STRICT_FREESTANDING=ON"
+          fi
           if [ "${{ matrix.target }}" = cryptix ]; then
-            extra="-DPRISM_EXTRA_INCS=$PWD/Meta/ci/cryptix-include"
+            extra="$extra -DPRISM_EXTRA_INCS=$PWD/Meta/ci/cryptix-include"
           fi
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake-build-type }} \
@@ -78,6 +83,10 @@ jobs:
       - name: Test
         if: matrix.target == 'app' || matrix.target == 'cryptix-app'
         run: ctest --test-dir build --output-on-failure
+
+      - name: Check the platform hook contract
+        if: matrix.target == 'cryptix' || matrix.target == 'carbonc'
+        run: Meta/ci/check-hooks.sh build/libprism.a ${{ matrix.target }}
 
       - name: Install
         run: DESTDIR="$PWD/staging" cmake --install build

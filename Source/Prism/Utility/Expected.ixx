@@ -7,9 +7,6 @@
 module;
 
 #include <Prism/Core/Types.hpp>
-#include <cassert>
-#include <memory>
-#include <utility>
 
 export module Prism.Utility.Expected;
 

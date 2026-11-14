@@ -9,7 +9,6 @@ module;
 #include <Prism/Core/Types.hpp>
 
 #include <Prism/Debug/Log.hpp>
-#include <cassert>
 #include <Prism/Core/Compiler.hpp>
 
 export module Prism.Containers.UnorderedMap;

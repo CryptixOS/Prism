@@ -9,6 +9,16 @@
 // Macros only: the code lives in module Prism.Core.Error, which
 // files using these macros import too.
 
+#include <Prism/Core/Config.hpp>
+
+// The E* error codes are macros, so they have to come from here rather
+// than from the module.
+#if PRISM_TARGET_CRYPTIX != 0
+    #include <cerrno>
+#else
+    #include <errno.h>
+#endif
+
 #ifndef Stringify
     #define Stringify(x) PrismStringify(x)
 #endif

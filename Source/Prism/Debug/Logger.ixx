@@ -1,8 +1,14 @@
 module;
 
 #include <Prism/Core/Types.hpp>
-#if defined(__linux__ ) && PRISM_TARGET_CRYPTIX == 0
+// Timestamps and thread IDs on hosted Linux; the freestanding targets leave
+// them empty.
+#if defined(__linux__) && PRISM_TARGET_CRYPTIX == 0 && PRISM_TARGET_CARBONC == 0
+    #define PRISM_LOGGER_USE_LINUX 1
+    #include <time.h>
     #include <unistd.h>
+#else
+    #define PRISM_LOGGER_USE_LINUX 0
 #endif
 
 export module Prism.Debug.Logger;
@@ -55,7 +61,7 @@ export extern "C++"
                 message.Level      = level;
                 message.Payload    = payload;
 
-#if PRISM_TARGET_CRYPTIX == 0 && defined(__linux__)
+#if PRISM_LOGGER_USE_LINUX != 0
                 struct timespec ts;
                 if (clock_gettime(CLOCK_REALTIME, &ts) == 0)
                 {

@@ -26,7 +26,7 @@ export extern "C++"
         { SlabObject* Next = nullptr; };
 
         inline constexpr u64 SLAB_CANARY = 0xdeadbeefcafebabe;
-        inline constexpr u64 FREE_POISON = 0xdeaddeaddeaddead;
+        inline constexpr u8  FREE_POISON = 0xde;
 
 #ifndef PRISM_PAGE_SIZE
     #define PRISM_PAGE_SIZE 0x1000
@@ -175,11 +175,10 @@ export extern "C++"
             }
 
             PM_UNUSED inline void Poison(Pointer object)
-            { Memory::Fill(object, 0xde, m_ObjectSize - 2 * CANARY_SIZE); }
+            { Memory::Fill(object, FREE_POISON, m_ObjectSize - 2 * CANARY_SIZE); }
             PM_UNUSED inline bool IsPoisoned(Pointer object)
             {
-                for (usize i = 0;
-                     i < (m_ObjectSize - 2 * CANARY_SIZE) / sizeof(u64); i++)
+                for (usize i = 0; i < m_ObjectSize - 2 * CANARY_SIZE; i++)
                     if (object.As<u8>()[i] != FREE_POISON) return false;
 
                 return true;

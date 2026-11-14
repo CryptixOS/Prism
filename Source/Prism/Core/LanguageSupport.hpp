@@ -1127,3 +1127,17 @@ namespace std
     };
 } // namespace std
 #endif
+
+// Prism's names for them. This is the only place Prism spells std:: outside
+// the PRISM_STD_INTEROP bridges.
+namespace Prism
+{
+    // The comparison categories and std::initializer_list are part of the
+    // language: the compiler requires these exact types for `<=>` and braced
+    // initialization, so Prism can only alias them.
+    using PartialOrdering = std::partial_ordering;
+    using WeakOrdering    = std::weak_ordering;
+    using StrongOrdering  = std::strong_ordering;
+    template <typename T>
+    using InitializerList = std::initializer_list<T>;
+} // namespace Prism

@@ -7,7 +7,6 @@
 module;
 
 #include <Prism/Core/Types.hpp>
-#include <cassert>
 
 export module Prism.String.StringView;
 

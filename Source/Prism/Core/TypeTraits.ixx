@@ -9,8 +9,6 @@ module;
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
 
-#include <functional>
-
 export module Prism.Core.TypeTraits;
 
 export extern "C++"
@@ -450,7 +448,7 @@ export extern "C++"
 #endif
 #ifdef __STDCPP_BFLOAT16_T__
         template <>
-        struct IsFloatingPointHelper<__gnu_cxx::__bfloat16_t> : public TrueType
+        struct IsFloatingPointHelper<decltype(0.0bf16)> : public TrueType
         {
         };
 #endif
