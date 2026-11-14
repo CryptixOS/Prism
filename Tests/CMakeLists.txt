@@ -75,6 +75,7 @@ prism_add_tests(Debug Log)
 prism_add_tests(Math Matrix Vector)
 prism_add_tests(Memory Memory Ref Scope SlabAllocator WeakRef)
 prism_add_tests(Ranges Views)
-prism_add_tests(String BasicString BasicStringView Format StringBuilder StringUtils)
+prism_add_tests(String BasicString BasicStringView Format FormatGolden StringBuilder
+  StringUtils)
 prism_add_tests(Test Framework)
 prism_add_tests(Utility Atomic AtomicBuiltins Delegate Enum Mutex Path SimdIntrinsics)

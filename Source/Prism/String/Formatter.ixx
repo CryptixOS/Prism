@@ -385,6 +385,11 @@ export extern "C++"
                     case FormatArgType::eInt:
                         if (specs.Type == FormatPresentation::eChar)
                             return WriteChar(out, static_cast<char>(arg.Int), specs);
+                        // Lenient, like the kernel needs: an integer with 'p'
+                        // is an address (fmt rejects it).
+                        if (specs.Type == FormatPresentation::ePointer)
+                            return WritePointer(out, static_cast<u64>(arg.Int),
+                                                specs);
                         return WriteInteger(
                             out,
                             arg.Int < 0 ? 0 - static_cast<u64>(arg.Int)
@@ -394,6 +399,8 @@ export extern "C++"
                         if (specs.Type == FormatPresentation::eChar)
                             return WriteChar(out, static_cast<char>(arg.UInt),
                                              specs);
+                        if (specs.Type == FormatPresentation::ePointer)
+                            return WritePointer(out, arg.UInt, specs);
                         return WriteInteger(out, arg.UInt, false, specs);
                     case FormatArgType::eBool:
                         if (IsIntegerPresentation(specs.Type))
