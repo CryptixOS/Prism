@@ -6,7 +6,7 @@
 #*/
 
 core_tests = [
-  # 'NumericLimits', 
+  'NumericLimits',
   'TypeTraits', 
 ]
 

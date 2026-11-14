@@ -65,12 +65,12 @@ function(prism_add_tests suite)
 endfunction()
 
 # Keep these lists in sync with Tests/<Suite>/meson.build.
-prism_add_tests(Algorithm Random SearchString Sort)
+prism_add_tests(Algorithm Find Random SearchString Sort)
 prism_add_tests(Containers
   BitSpan Bitmap Deque DoublyLinkedList IntrusiveList IntrusiveListV3
   IntrusiveRedBlackTree IntrusiveRefList Queue RedBlackTree RingBuffer Stack
   Tuple UnorderedMap Vector)
-prism_add_tests(Core TypeTraits)
+prism_add_tests(Core NumericLimits TypeTraits)
 prism_add_tests(Debug Log)
 prism_add_tests(Math Matrix Vector)
 prism_add_tests(Memory Memory Ref Scope SlabAllocator WeakRef)
@@ -78,4 +78,5 @@ prism_add_tests(Ranges Views)
 prism_add_tests(String BasicString BasicStringView Format FormatGolden StringBuilder
   StringUtils)
 prism_add_tests(Test Framework)
-prism_add_tests(Utility Atomic AtomicBuiltins Delegate Enum Mutex Path SimdIntrinsics)
+prism_add_tests(Utility Atomic AtomicBuiltins Delegate Enum Mutex OptionParser Path
+  SimdIntrinsics Variant)

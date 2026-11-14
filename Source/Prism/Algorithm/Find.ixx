@@ -541,6 +541,8 @@ export extern "C++"
     using Prism::Count;
     using Prism::CountIf;
     using Prism::CountIfIter;
+    using Prism::CountIfNot;
+    using Prism::CountIfNotIter;
     using Prism::EraseIf;
     using Prism::Find;
     using Prism::FindFirstOf;

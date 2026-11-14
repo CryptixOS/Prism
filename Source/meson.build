@@ -14,6 +14,7 @@ srcs = files(
   'Prism/Memory/Memory.cpp',
   'Prism/String/Printf.cpp',
 
+  'Prism/Utility/OptionParser.cpp',
   'Prism/Utility/Path.cpp',
   'Prism/Utility/PathView.cpp',
   'Prism/Utility/Time.cpp',

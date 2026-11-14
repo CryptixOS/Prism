@@ -5,17 +5,47 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <getopt.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 import Prism.Test.Test;
 import Prism.Utility.OptionParser;
 
-using namespace Prism;
+// The getopt conformance suite from mlibc, run against Prism::OptionParser:
+// these names map getopt's globals and functions onto one parser.
+static Prism::OptionParser g_Parser;
+
+// Like getopt, the parser permutes the argv pointers, never the strings.
+static char** Mutable(const char** argv) { return const_cast<char**>(argv); }
+static int    TestGetopt(int argc, const char** argv, const char* options)
+{
+    return g_Parser.Next(argc, Mutable(argv), options);
+}
+static int TestGetoptLong(int argc, const char** argv, const char* options,
+                          const Prism::LongOption* longOptions, int* index)
+{
+    return g_Parser.Next(argc, Mutable(argv), options, longOptions, index,
+                         false);
+}
+static int TestGetoptLongOnly(int argc, const char** argv,
+                              const char*              options,
+                              const Prism::LongOption* longOptions, int* index)
+{
+    return g_Parser.Next(argc, Mutable(argv), options, longOptions, index,
+                         true);
+}
+
+#define optind           g_Parser.Index
+#define opterr           g_Parser.PrintErrors
+#define optopt           g_Parser.Option
+#define optarg           g_Parser.Argument
+#define getopt           TestGetopt
+#define getopt_long      TestGetoptLong
+#define getopt_long_only TestGetoptLongOnly
+using option                          = Prism::LongOption;
+static constexpr int no_argument       = Prism::LongOption::eNoArgument;
+static constexpr int required_argument = Prism::LongOption::eRequiredArgument;
+static constexpr int optional_argument = Prism::LongOption::eOptionalArgument;
 
 #define COUNT_OF(x)                                                            \
     ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
@@ -41,12 +71,12 @@ using namespace Prism;
 TEST_CASE(test1){
     const char*         shortopts = "b:cdef";
 
-    const struct option longopts[]
+    const option longopts[]
         = {{"foo", required_argument, NULL, 'f'}, {NULL, no_argument, NULL, 0}};
 
     int   test_argc   = 7;
 
-    char* test_argv[] = {"dummy", "--foo", "abc", "-b", "abc", "abc", "abc"};
+    const char* test_argv[] = {"dummy", "--foo", "abc", "-b", "abc", "abc", "abc"};
 
     optind            = 0;
     int c = getopt_long(test_argc, test_argv, shortopts, longopts, NULL);
@@ -59,17 +89,17 @@ TEST_CASE(test1){
     c = getopt_long(test_argc, test_argv, shortopts, longopts, NULL);
     dump(c);
     EXPECT_EQ(c, -1);
-    EXPECT_EQ(optarg, NULL);
+    EXPECT(!optarg);
 
     // we have 2 non-option arguments
     EXPECT_EQ(((optind + 2)), test_argc);
 }
 
 TEST_CASE(test2){
-    const struct option longopts[]
+    const option longopts[]
         = {{"foo", required_argument, NULL, 'f'}, {NULL, no_argument, NULL, 0}};
 
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-c",
     };
@@ -115,10 +145,10 @@ TEST_CASE(test2){
 }
 
 TEST_CASE(test3){
-    const struct option longopts[]
+    const option longopts[]
         = {{"foo", required_argument, NULL, 'f'}, {NULL, no_argument, NULL, 0}};
 
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-cmanagarm",
     };
@@ -136,10 +166,10 @@ TEST_CASE(test3){
 }
 
 TEST_CASE(test4){
-    const struct option longopts[]
+    const option longopts[]
         = {{"foo", required_argument, NULL, 'f'}, {NULL, no_argument, NULL, 0}};
 
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-acmanagarm",
     };
@@ -158,10 +188,10 @@ TEST_CASE(test4){
 }
 
 TEST_CASE(test5){
-    const struct option longopts[]
+    const option longopts[]
         = {{"foo", required_argument, NULL, 'f'}, {NULL, no_argument, NULL, 0}};
 
-    char* test_argv[] = {"su", "-", "managarm", 0};
+    const char* test_argv[] = {"su", "-", "managarm", 0};
 
     int   test_argc   = 3;
 
@@ -180,12 +210,12 @@ TEST_CASE(test5){
 }
 
 TEST_CASE(test6){
-    char* test_argv[] = {"telescope", "gemini://electrode.codes", "-S", 0};
+    const char* test_argv[] = {"telescope", "gemini://electrode.codes", "-S", 0};
 
     int   test_argc   = 3;
     optind            = 0;
 
-    const struct option longopts[] = {
+    const option longopts[] = {
         {"colors", no_argument, NULL, 'C'},
         {"colours", no_argument, NULL, 'C'},
         {"help", no_argument, NULL, 'h'},
@@ -208,16 +238,16 @@ TEST_CASE(test6){
 TEST_CASE(test7){
     int                        c;
 
-    static const struct option options[] = {{"debug", no_argument, NULL, 'd'},
+    static const option options[] = {{"debug", no_argument, NULL, 'd'},
                                             {"help", no_argument, NULL, 'h'},
                                             {"version", no_argument, NULL, 'V'},
                                             {}};
     const char*                command;
 
-    char*                      test_argv[] = {"udevadm", "hwdb", "--update", 0};
+    const char*                      test_argv[] = {"udevadm", "hwdb", "--update", 0};
 
     int                        test_argc   = 3;
-    setenv("POSIXLY_CORRECT", "1", 1);
+    g_Parser.PosixlyCorrect = true;
     optind = 0;
 
     while ((c = getopt_long(test_argc, test_argv, "+dhV", options, NULL)) >= 0)
@@ -235,7 +265,7 @@ TEST_CASE(test7){
     command = test_argv[optind];
     EXPECT(command);
     EXPECT(!strcmp(command, "hwdb"));
-    unsetenv("POSIXLY_CORRECT");
+    g_Parser.PosixlyCorrect = false;
 }
 
 TEST_CASE(test8){
@@ -244,19 +274,15 @@ TEST_CASE(test8){
     int                 foo        = false;
     int                 bar        = false;
 
-    const struct option longopts[] = {{"foo", required_argument, &foo, 'x'},
+    const option longopts[] = {{"foo", required_argument, &foo, 'x'},
                                       {"bar", required_argument, &bar, 'y'},
                                       {NULL, no_argument, NULL, 0}};
 
     int                 test_argc  = 6;
 
-    char* test_argv[] = {"dummy", "-foo", "abc", "-bar=def", "ghi", "jkl"};
+    const char* test_argv[] = {"dummy", "-foo", "abc", "-bar=def", "ghi", "jkl"};
 
-#ifdef __GLIBC__
     optind = 0;
-#else
-    optreset = 1;
-#endif
     optopt = 0;
     int c  = getopt_long_only(test_argc, test_argv, shortopts, longopts, NULL);
     dump(c);
@@ -270,10 +296,10 @@ TEST_CASE(test8){
 }
 
 TEST_CASE(test9){
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "foo",
     };
-    struct option opts[] = {{0}};
+    option opts[] = {{}};
     optind               = 0;
     int c                = getopt_long(1, test_argv, "abc", opts, NULL);
     dump(c);
@@ -281,10 +307,10 @@ TEST_CASE(test9){
 }
 
 TEST_CASE(test10){
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "foo", "nonoption", "-a", "nonoption2", "nonoption3", "-b", "-c",
     };
-    struct option opts[] = {{0}};
+    option opts[] = {{}};
     optind               = 2;
     dump(0);
     int c = getopt_long(COUNT_OF(test_argv), test_argv, "abc", opts, NULL);
@@ -314,17 +340,17 @@ TEST_CASE(test10){
 }
 
 TEST_CASE(test11){
-    const struct option longopts[]
+    const option longopts[]
         = {{"op", optional_argument, NULL, 'o'}, {NULL, 0, NULL, 0}};
 
-    char* test_argv[] = {"dummy", "--op", "--op=arg", "non-option", "--op"};
+    const char* test_argv[] = {"dummy", "--op", "--op=arg", "non-option", "--op"};
 
     fputs("Situation: optional argument to long option\n", stderr);
 
     optind = 0;
     int c  = getopt_long(COUNT_OF(test_argv), test_argv, "", longopts, NULL);
     EXPECT_EQ(c, 'o');
-    EXPECT_EQ(optarg, NULL);
+    EXPECT(!optarg);
 
     c = getopt_long(COUNT_OF(test_argv), test_argv, "", longopts, NULL);
     EXPECT_EQ(c, 'o');
@@ -332,11 +358,11 @@ TEST_CASE(test11){
 
     c = getopt_long(COUNT_OF(test_argv), test_argv, "", longopts, NULL);
     EXPECT_EQ(c, 'o');
-    EXPECT_EQ(optarg, NULL);
+    EXPECT(!optarg);
 }
 
 TEST_CASE(test12){
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy", "-a", "-b", "arg", "-carg", "arg",
     };
 
@@ -345,7 +371,7 @@ TEST_CASE(test12){
     optind = 0;
     int c  = getopt_long(COUNT_OF(test_argv), test_argv, "ab::c::", NULL, NULL);
     EXPECT_EQ(c, 'a');
-    EXPECT_EQ(optarg, NULL);
+    EXPECT(!optarg);
 
     c = getopt_long(COUNT_OF(test_argv), test_argv, "ab::c::", NULL, NULL);
     EXPECT_EQ(c, 'b');
@@ -362,12 +388,12 @@ TEST_CASE(test12){
 }
 
 TEST_CASE(test13){
-    const struct option longopts[]
+    const option longopts[]
         = {{"ambiguous-opt", no_argument, NULL, 0},
            {"ambiguous-option", no_argument, NULL, 1},
            {NULL, 0, NULL, 0}};
 
-    char* test_argv[] = {"dummy", "--ambiguous-o"};
+    const char* test_argv[] = {"dummy", "--ambiguous-o"};
 
     fputs("Situation: ambiguous long option\n", stderr);
 
@@ -378,10 +404,10 @@ TEST_CASE(test13){
 }
 
 TEST_CASE(test14){
-    const struct option longopts[]
+    const option longopts[]
         = {{"foo", required_argument, NULL, 'f'}, {NULL, 0, NULL, 0}};
 
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-Wfoo=bar",
     };
@@ -395,7 +421,7 @@ TEST_CASE(test14){
 }
 
 TEST_CASE(test15){
-    char* test_argv[] = {"dummy", "-c", "-a", "--", "-b"};
+    const char* test_argv[] = {"dummy", "-c", "-a", "--", "-b"};
 
     fputs("Situation: -- to stop option processing\n", stderr);
 
@@ -415,11 +441,11 @@ TEST_CASE(test15){
 }
 
 TEST_CASE(test16){
-    const struct option longopts[]  = {{"add", required_argument, NULL, 'a'},
+    const option longopts[]  = {{"add", required_argument, NULL, 'a'},
                                        {"append", no_argument, NULL, 'p'},
                                        {NULL, 0, NULL, 0}};
 
-    char*               test_argv[] = {"dummy", "--ad=foo", "--appe"};
+    const char*               test_argv[] = {"dummy", "--ad=foo", "--appe"};
 
     fputs("Situation: non-ambiguous long option prefix\n", stderr);
 
@@ -430,14 +456,14 @@ TEST_CASE(test16){
 
     c = getopt_long(COUNT_OF(test_argv), test_argv, "", longopts, NULL);
     EXPECT_EQ(c, 'p');
-    EXPECT_EQ(optarg, NULL);
+    EXPECT(!optarg);
 }
 
 TEST_CASE(test17){
-    const struct option longopts[]
+    const option longopts[]
         = {{"foo", no_argument, NULL, 'l'}, {NULL, 0, NULL, 0}};
 
-    char* test_argv[] = {"dummy", "-foo"};
+    const char* test_argv[] = {"dummy", "-foo"};
 
     fputs(
         "Situation: getopt_long_only with what could be short opts or a long "
@@ -451,7 +477,7 @@ TEST_CASE(test17){
     EXPECT_EQ(c, 'l');
 
     // Case 2: long option "foo" does not exist.
-    const struct option longopts2[]
+    const option longopts2[]
         = {{"bar", no_argument, NULL, 'b'}, {NULL, 0, NULL, 0}};
     optind = 0;
     c      = getopt_long_only(COUNT_OF(test_argv), test_argv, "f:o", longopts2,
@@ -461,10 +487,10 @@ TEST_CASE(test17){
 }
 
 TEST_CASE(test18){
-    const struct option longopts[]
+    const option longopts[]
         = {{"op", optional_argument, NULL, 'o'}, {NULL, 0, NULL, 0}};
 
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-Wop=val",
     };
@@ -479,7 +505,7 @@ TEST_CASE(test18){
     EXPECT_EQ(c, 'o');
     EXPECT(!strcmp(optarg, "val"));
 
-    char* test_argv2[] = {
+    const char* test_argv2[] = {
         "dummy",
         "-Wop",
     };
@@ -492,11 +518,11 @@ TEST_CASE(test18){
     optind = 0;
     c = getopt_long(COUNT_OF(test_argv2), test_argv2, "W;", longopts, NULL);
     EXPECT_EQ(c, 'o');
-    EXPECT_EQ(optarg, NULL);
+    EXPECT(!optarg);
 }
 
 TEST_CASE(test19){
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-a",
         "non-option",
@@ -516,10 +542,10 @@ TEST_CASE(test19){
 }
 
 TEST_CASE(test20){
-    const struct option longopts[]
+    const option longopts[]
         = {{"option", required_argument, NULL, 'o'}, {NULL, 0, NULL, 0}};
 
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "--option",
         "-x",
@@ -536,11 +562,11 @@ TEST_CASE(test20){
 }
 
 TEST_CASE(test21){
-    const struct option longopts[]  = {{"ambig-one", no_argument, NULL, '1'},
+    const option longopts[]  = {{"ambig-one", no_argument, NULL, '1'},
                                        {"ambig-two", no_argument, NULL, '2'},
                                        {NULL, 0, NULL, 0}};
 
-    char*               test_argv[] = {
+    const char*               test_argv[] = {
         "dummy",
         "-ambig",
     };
@@ -555,10 +581,10 @@ TEST_CASE(test21){
 }
 
 TEST_CASE(test22){
-    const struct option longopts[]
+    const option longopts[]
         = {{"foo", no_argument, NULL, 'f'}, {NULL, 0, NULL, 0}};
 
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-Wbar",
     };
@@ -573,10 +599,10 @@ TEST_CASE(test22){
 }
 
 TEST_CASE(test23){
-    const struct option longopts[]
+    const option longopts[]
         = {{"foo", required_argument, NULL, 'f'}, {NULL, 0, NULL, 0}};
 
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-foo",
         "val1",
@@ -599,7 +625,7 @@ TEST_CASE(test23){
 }
 
 TEST_CASE(test24){
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-W",
     };
@@ -614,10 +640,10 @@ TEST_CASE(test24){
 }
 
 TEST_CASE(test25){
-    const struct option longopts[]
+    const option longopts[]
         = {{"foo", required_argument, NULL, 'f'}, {NULL, 0, NULL, 0}};
 
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-Wfoo",
     };
@@ -636,12 +662,12 @@ TEST_CASE(test25){
 }
 
 TEST_CASE(test26){
-    const struct option longopts[]  = {{"foo", no_argument, NULL, 0},
+    const option longopts[]  = {{"foo", no_argument, NULL, 0},
                                        {"ambig-one", no_argument, NULL, 1},
                                        {"ambig-two", no_argument, NULL, 2},
                                        {NULL, 0, NULL, 0}};
 
-    char*               test_argv[] = {
+    const char*               test_argv[] = {
         "dummy",
         "-W",
     };
@@ -657,12 +683,12 @@ TEST_CASE(test26){
 }
 
 TEST_CASE(test27){
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-Wambig",
     };
 
-    const struct option longopts[] = {{"foo", no_argument, NULL, 0},
+    const option longopts[] = {{"foo", no_argument, NULL, 0},
                                       {"ambig-one", no_argument, NULL, 1},
                                       {"ambig-two", no_argument, NULL, 2},
                                       {NULL, 0, NULL, 0}};
@@ -677,13 +703,13 @@ TEST_CASE(test27){
 }
 
 TEST_CASE(test28){
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "-Wfoo=bar",
         "-Wfoo=",
     };
 
-    const struct option longopts[] = {{"foo", no_argument, NULL, 0},
+    const option longopts[] = {{"foo", no_argument, NULL, 0},
                                       {"ambig-one", no_argument, NULL, 1},
                                       {"ambig-two", no_argument, NULL, 2},
                                       {NULL, 0, NULL, 0}};
@@ -708,12 +734,12 @@ TEST_CASE(test28){
 }
 
 TEST_CASE(test29){
-    char* test_argv[] = {
+    const char* test_argv[] = {
         "dummy",
         "--a",
     };
 
-    const struct option longopts[] = {
+    const option longopts[] = {
         {"load-credentials", no_argument, NULL, 0x103},
         {NULL, 0, NULL, 0},
     };
@@ -728,10 +754,10 @@ TEST_CASE(test29){
 }
 
 TEST_CASE(test30){
-    const struct option longopts[]
+    const option longopts[]
         = {{"long-opt", required_argument, NULL, 'l'}, {NULL, 0, NULL, 0}};
 
-    char* test_argv[]
+    const char* test_argv[]
         = {"getopt_test", "non-arg1", "--long-opt", "val", "non-arg2"};
 
     fputs("Situation: non-arguments before valid long arguments\n", stderr);

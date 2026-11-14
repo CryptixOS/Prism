@@ -5,9 +5,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Debug/Log.hpp>
 import Prism.Test.Test;
-import Prism.Debug.Log;
 import Prism.Utility.Variant;
 using namespace Prism;
 
@@ -54,7 +52,7 @@ struct NonTrivial
     bool operator==(const NonTrivial& o) const { return val == o.val; }
 };
 
-void TestConstructionAndHas()
+TEST_CASE(TestConstructionAndHas)
 {
     Prism::Variant<i32, f64, A> v1{42};
     EXPECT(v1.Has<i32>());
@@ -67,7 +65,7 @@ void TestConstructionAndHas()
     EXPECT(v2.Get<A>().x == 123);
 }
 
-void TestSetAndGet()
+TEST_CASE(TestSetAndGet)
 {
     Prism::Variant<i32, String> v{123};
     EXPECT(v.Has<i32>());
@@ -80,7 +78,7 @@ void TestSetAndGet()
     EXPECT(v.Get<i32>() == 456);
 }
 
-void TestCopyAndMove()
+TEST_CASE(TestCopyAndMove)
 {
     Prism::Variant<NonTrivial, i32> v1{NonTrivial{10}};
     Prism::Variant<NonTrivial, i32> v2{v1}; // copy ctor
@@ -102,7 +100,7 @@ void TestCopyAndMove()
     EXPECT(v3.Get<NonTrivial>().val == 10);
 }
 
-void TestEquality()
+TEST_CASE(TestEquality)
 {
     Prism::Variant<i32, A> v1{42};
     Prism::Variant<i32, A> v2{42};
@@ -114,7 +112,7 @@ void TestEquality()
     EXPECT(!(v3 == v4));
 }
 
-void TestVisit()
+TEST_CASE(TestVisit)
 {
     Prism::Variant<i32, String> v{123};
 
@@ -130,16 +128,4 @@ void TestVisit()
     v.Visit([&](i32) { visitedInt = true; },
             [&](const String& s) { visitedString = (s == "test"); });
     EXPECT(visitedString);
-}
-
-i32 main()
-{
-    TestConstructionAndHas();
-    TestSetAndGet();
-    TestCopyAndMove();
-    TestEquality();
-    TestVisit();
-
-    PrismInfo("All Variant tests passed.\n");
-    return 0;
 }

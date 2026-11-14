@@ -510,6 +510,25 @@ export extern "C++"
 
                 return m_Data + index;
             }
+            /**
+             * @brief Removes the elements in [first, last).
+             * @return Iterator to the element that followed the last removed
+             * one.
+             */
+            constexpr Iterator Erase(Iterator first, Iterator last)
+            {
+                assert(first >= begin() && first <= last && last <= end());
+                usize index = first - m_Data;
+                usize count = last - first;
+                if (count == 0) return m_Data + index;
+
+                for (usize i = index; i + count < m_Size; ++i)
+                    m_Data[i] = Move(m_Data[i + count]);
+                for (usize i = m_Size - count; i < m_Size; ++i) m_Data[i].~T();
+                m_Size -= count;
+
+                return m_Data + index;
+            }
 
             /**
              * @brief Adds an element to the end.

@@ -188,13 +188,14 @@ set(PRISM_SOURCES
   Source/Prism/Debug/Stacktrace.cpp
   Source/Prism/Memory/Memory.cpp
   Source/Prism/String/Printf.cpp
+  Source/Prism/Utility/OptionParser.cpp
   Source/Prism/Utility/Path.cpp
   Source/Prism/Utility/PathView.cpp
   Source/Prism/Utility/Time.cpp
 )
 # Module interface units, one named module per file (Prism.<Dir>.<Name>).
 # Projects that compile Prism from source (CryptixOS) add these to their own
-# FILE_SET CXX_MODULES. Variant.ixx is left out: it doesn't compile yet.
+# FILE_SET CXX_MODULES.
 set(PRISM_MODULE_INTERFACES
   Source/Prism/Algorithm/FNV1aHash.ixx
   Source/Prism/Algorithm/Find.ixx
@@ -302,6 +303,7 @@ set(PRISM_MODULE_INTERFACES
   Source/Prism/Utility/SimdIntrinsics.ixx
   Source/Prism/Utility/SimdVector.ixx
   Source/Prism/Utility/Time.ixx
+  Source/Prism/Utility/Variant.ixx
 )
 # SIMD is off limits in the kernel (SimdIntrinsics.ixx #errors there).
 if(PRISM_TARGET STREQUAL "cryptix")

@@ -11,8 +11,10 @@ utility_tests = [
   'Delegate',
   'Enum',
   'Mutex',
+  'OptionParser',
   'Path',
   'SimdIntrinsics',
+  'Variant',
 ]
 
 foreach name : utility_tests

@@ -80,10 +80,6 @@ export extern "C++"
             constexpr bool operator==(Empty const&) const = default;
         };
 
-        template <typename ReferenceType, typename T>
-        using CopyConst = ConditionalType<IsConstV<ReferenceType>, AddConstType<T>,
-                                          RemoveConstType<T>>;
-
         namespace Details
         {
             template <typename T, typename IndexType, IndexType InitialIndex,
@@ -206,7 +202,7 @@ export extern "C++"
                                               Visitor::Types::Size>()))
                             return visitor(*BitCast<AddConstType<T>*>(data));
 
-                        return visitor(*BitCast<CopyConst<Self, T>*>(data));
+                        return visitor(*BitCast<CopyConstType<Self, T>*>(data));
                     }
 
                     if constexpr ((CurrentIndex + 1) < sizeof...(Args))

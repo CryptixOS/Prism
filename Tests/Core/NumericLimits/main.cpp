@@ -147,3 +147,9 @@ constexpr void RunAllTests()
 
 // Entry point for build
 constexpr int _static_asserts_trigger = (RunAllTests(), 0);
+
+TEST_CASE(limits_match_std)
+{
+    // The checks are the static_asserts above; this case only reports them.
+    EXPECT(_static_asserts_trigger == 0);
+}
