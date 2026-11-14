@@ -9,10 +9,11 @@ module;
 #include <Prism/Core/Types.hpp>
 export module Prism.Ranges.Ranges;
 
+export import Prism.Ranges.Access;
 export import Prism.Ranges.Range;
 export import Prism.Ranges.Views;
 
-// Everything ranges: range access and concepts, ViewInterface, Subrange,
+// Everything ranges: Begin/End-style access, range concepts, ViewInterface, Subrange,
 // the views in Prism::Views and Ranges::To.
 
 export extern "C++"

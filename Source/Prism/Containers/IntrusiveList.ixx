@@ -1,6 +1,6 @@
 /*
- * Created by v1tr10l7 on 26.04.2025.
- * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
+ * Created by v1tr10l7 on 04.11.2026.
+ * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
@@ -12,575 +12,796 @@ module;
 export module Prism.Containers.IntrusiveList;
 
 export import Prism.Core.Iterator;
+export import Prism.Memory.Ref;
+export import Prism.Memory.Scope;
 
 /**
- * @deprecated Superseded by Prism::V3::IntrusiveList in
- * <Prism/Containers/IntrusiveListV3.hpp>. Nothing in Prism uses this
- * header any more; it is kept only until it is deleted.
+ * Intrusive doubly-linked list: nodes carry their own links (a hook member),
+ * so linking and unlinking never allocate.
+ *
+ * The ownership policy is selected by the hook's Pointer parameter:
+ *  - IntrusiveListHook<T>           (T*)       : non-owning, the list never
+ *                                                frees nodes.
+ *  - IntrusiveListHook<T, Ref<T>>   (Ref<T>)   : the list holds exactly one
+ *                                                strong reference per node
+ *                                                (IntrusiveRefListHook<T>).
+ *  - IntrusiveListHook<T, Scope<T>> (Scope<T>) : the list owns its nodes and
+ *                                                deletes them on removal
+ *                                                (IntrusiveOwningListHook<T>).
+ *
+ * Links are always raw T* pointers, so Ref-based lists never form reference
+ * cycles and traversal never touches reference counts.
  */
 
 export extern "C++"
 {
     namespace Prism
     {
-        template <typename T, typename HookType>
-        class IntrusiveList;
-
         /**
-         * @brief Hook structure embedded in list elements for intrusive linking.
+         * @brief Describes how a list takes and gives back ownership of a node.
          *
-         * @tparam T Type of the node that contains this hook.
+         * Specialize it to support custom smart pointers. A policy has to provide:
+         *  - PointerType                 : what users push and what Pop* returns
+         *  - static T*  Raw(const P&)    : access the node without changing
+         *                                  ownership
+         *  - static T*  Leak(P&&)        : transfer ownership into the list
+         *  - static P   Adopt(T*)        : transfer ownership back out of the list
+         *  - static void Release(T*)     : drop the list's ownership
+         *  - static constexpr bool IsOwning
          */
-        template <typename T>
-        struct IntrusiveListHook
-        {
-            IntrusiveList<T, IntrusiveListHook<T>>* Owner    = nullptr;
-            T*                                      Previous = nullptr;
-            T*                                      Next     = nullptr;
+        template <typename Pointer>
+        struct IntrusivePointerPolicy;
 
-            /**
-             * @brief Access the hook from the containing node.
-             *
-             * @param node Pointer to node.
-             * @return IntrusiveListHook& Reference to the hook.
-             */
-            static IntrusiveListHook& Hook(T* node) { return node->Hook; }
-            /**
-             * @brief Check if the node is currently part of a list.
-             *
-             * @return true If linked.
-             * @return false If not linked.
-             */
-            constexpr bool            IsLinked() const { return Owner; }
-            /**
-             * @brief Unlinks the node from its list.
-             *
-             * @param self Pointer to the node.
-             */
-            void                      Unlink(T* self);
+        template <typename T>
+        struct IntrusivePointerPolicy<T*>
+        {
+            using ElementType = T;
+            using PointerType = T*;
+            static constexpr bool IsOwning = false;
+
+            static constexpr T*   Raw(T* ptr) PM_NOEXCEPT { return ptr; }
+            static constexpr T*   Leak(T* ptr) PM_NOEXCEPT { return ptr; }
+            static constexpr T*   Adopt(T* ptr) PM_NOEXCEPT { return ptr; }
+            static constexpr void Release(T*) PM_NOEXCEPT {}
         };
 
+        template <typename T>
+        struct IntrusivePointerPolicy<Ref<T>>
+        {
+            using ElementType = T;
+            using PointerType = Ref<T>;
+            static constexpr bool IsOwning = true;
+
+            static T*      Raw(const Ref<T>& ptr) PM_NOEXCEPT { return ptr.Raw(); }
+            static T*      Leak(Ref<T>&& ptr) PM_NOEXCEPT { return ptr.Leak(); }
+            static Ref<T>  Adopt(T* ptr) PM_NOEXCEPT
+            {
+                return ptr ? Ref<T>(AdoptRef, ptr) : Ref<T>();
+            }
+            static void Release(T* ptr) PM_NOEXCEPT
+            {
+                if (ptr) ptr->Unref();
+            }
+        };
+
+        template <typename T>
+        struct IntrusivePointerPolicy<Scope<T>>
+        {
+            using ElementType = T;
+            using PointerType = Scope<T>;
+            static constexpr bool IsOwning = true;
+
+            static T* Raw(const Scope<T>& ptr) PM_NOEXCEPT { return ptr.Raw(); }
+            static T* Leak(Scope<T>&& ptr) PM_NOEXCEPT { return ptr.Release(); }
+            static Scope<T> Adopt(T* ptr) PM_NOEXCEPT { return Scope<T>(ptr); }
+            static void     Release(T* ptr) PM_NOEXCEPT { DefaultDelete<T>{}(ptr); }
+        };
+
+        template <typename T, typename Pointer = T*>
+        class IntrusiveListHook;
+        template <typename T, auto HookMember = &T::Hook>
+        class IntrusiveList;
+
+        namespace Details
+        {
+            /**
+             * @brief State shared between a list and the hooks it links.
+             *
+             * Hooks point at this rather than at the list class, so a hook does
+             * not need to know which member of T it is. That lets a hook unlink
+             * itself (keeping Size() correct) without the caller passing `this`.
+             */
+            template <typename T, typename Pointer>
+            struct IntrusiveListState
+            {
+                using HookType = IntrusiveListHook<T, Pointer>;
+
+                T*    Head = nullptr;
+                T*    Tail = nullptr;
+                usize Size = 0;
+                HookType& (*HookOf)(T*) = nullptr;
+            };
+        } // namespace Details
+
         /**
-         * @brief Doubly-linked list implementation using intrusive hooks.
+         * @brief Hook embedded in list elements for intrusive linking.
          *
-         * @tparam T Node type.
-         * @tparam HookType Type of the intrusive hook (defaults to
-         * IntrusiveListHook<T>).
+         * Copying a node never copies its link state: the copy starts out
+         * unlinked. A non-owning hook unlinks itself on destruction. An owning
+         * hook asserts that it isn't linked, because a list still holds
+         * ownership of the node.
+         *
+         * @tparam T Type of the node that contains this hook.
+         * @tparam Pointer Ownership policy (T*, Ref<T>, Scope<T>, ...).
          */
-        template <typename T, typename HookType = IntrusiveListHook<T>>
-        class IntrusiveList
+        template <typename T, typename Pointer>
+        class IntrusiveListHook
         {
           public:
-            /**
-             * @brief Forward iterator for IntrusiveList.
-             */
-            struct Iterator
+            using ElementType = T;
+            using Policy      = IntrusivePointerPolicy<Pointer>;
+            using PointerType = typename Policy::PointerType;
+            using StateType   = Details::IntrusiveListState<T, Pointer>;
+
+            constexpr IntrusiveListHook() PM_NOEXCEPT = default;
+            constexpr IntrusiveListHook(const IntrusiveListHook&) PM_NOEXCEPT {}
+            constexpr IntrusiveListHook&
+            operator=(const IntrusiveListHook&) PM_NOEXCEPT
             {
+                return *this;
+            }
+            ~IntrusiveListHook();
+
+            /// @brief Whether the node is currently part of a list.
+            PM_NODISCARD constexpr bool IsLinked() const PM_NOEXCEPT
+            {
+                return m_Owner != nullptr;
+            }
+            /// @brief Next node in the list, or nullptr.
+            PM_NODISCARD constexpr T* Next() const PM_NOEXCEPT { return m_Next; }
+            /// @brief Previous node in the list, or nullptr.
+            PM_NODISCARD constexpr T* Previous() const PM_NOEXCEPT
+            {
+                return m_Previous;
+            }
+
+            /**
+             * @brief Removes the node from whatever list it's in.
+             *
+             * For owning policies the list's ownership is released, which may
+             * destroy the node (and with it this hook), so don't touch the node
+             * afterwards unless you hold your own reference.
+             */
+            void Unlink();
+
+          private:
+            template <typename U, auto HookMember>
+            friend class IntrusiveList;
+
+            /// Detaches the node and returns it without releasing ownership.
+            T*         Detach();
+
+            StateType* m_Owner    = nullptr;
+            T*         m_Previous = nullptr;
+            T*         m_Next     = nullptr;
+        };
+
+        template <typename T>
+        using IntrusiveRefListHook = IntrusiveListHook<T, Ref<T>>;
+        template <typename T>
+        using IntrusiveOwningListHook = IntrusiveListHook<T, Scope<T>>;
+
+        namespace Details
+        {
+            template <typename M>
+            struct HookMemberTraits;
+            template <typename T, typename Hook>
+            struct HookMemberTraits<Hook T::*>
+            {
+                using ElementType = T;
+                using HookType    = Hook;
+            };
+        } // namespace Details
+
+        /**
+         * @brief Intrusive doubly-linked list.
+         *
+         * @tparam T Node type.
+         * @tparam HookMember Pointer to the hook member of T. Its type picks the
+         * ownership policy. Defaults to &T::Hook.
+         */
+        template <typename T, auto HookMember>
+        class IntrusiveList
+        {
+            using MemberTraits = Details::HookMemberTraits<decltype(HookMember)>;
+            static_assert(IsSameV<typename MemberTraits::ElementType, T>,
+                          "HookMember must be a member of T");
+
+          public:
+            using HookType    = typename MemberTraits::HookType;
+            using Policy      = typename HookType::Policy;
+            using PointerType = typename Policy::PointerType;
+            using StateType   = typename HookType::StateType;
+            using ValueType   = T;
+            using SizeType    = usize;
+
+            template <bool Const>
+            class BasicIterator
+            {
+              public:
                 using IteratorCategory = BidirectionalIteratorTag;
                 using ValueType        = T;
                 using DifferenceType   = ptrdiff;
-                using Pointer          = T*;
-                using Reference        = T&;
+                using Pointer          = ConditionalType<Const, const T*, T*>;
+                using Reference        = ConditionalType<Const, const T&, T&>;
 
-                ///> Current node.
-                T*                   Current = nullptr;
-                ///> Owning list, needed to step back from end().
-                const IntrusiveList* List    = nullptr;
-
-                /// @brief Default constructor.
-                constexpr Iterator() = default;
-                /**
-                 * @brief Constructs an iterator from a node.
-                 *
-                 * @param node Pointer to the node.
-                 */
-                constexpr explicit Iterator(T* node, const IntrusiveList* list
-                                                     = nullptr)
-                    : Current(node)
-                    , List(list)
+                constexpr BasicIterator() = default;
+                constexpr BasicIterator(const StateType* list, T* node)
+                    : m_List(list)
+                    , m_Current(node)
+                {
+                }
+                /// Non-const to const conversion.
+                template <bool OtherConst>
+                    requires(Const && !OtherConst)
+                constexpr BasicIterator(const BasicIterator<OtherConst>& other)
+                    : m_List(other.m_List)
+                    , m_Current(other.m_Current)
                 {
                 }
 
-                /**
-                 * @brief Special end iterator.
-                 *
-                 * @return Iterator The end iterator.
-                 */
-                constexpr static Iterator UniversalEnd()
+                constexpr Reference operator*() const
                 {
-                    return Iterator(nullptr);
+                    assert(m_Current && "Dereferencing end iterator");
+                    return *m_Current;
+                }
+                constexpr Pointer operator->() const { return m_Current; }
+                /// @brief The node this iterator points to (nullptr for end).
+                constexpr Pointer Node() const { return m_Current; }
+
+                constexpr BasicIterator& operator++()
+                {
+                    if (m_Current) m_Current = HookOf(m_Current).Next();
+                    return *this;
+                }
+                constexpr BasicIterator operator++(int)
+                {
+                    auto copy = *this;
+                    ++*this;
+                    return copy;
+                }
+                constexpr BasicIterator& operator--()
+                {
+                    m_Current = m_Current ? HookOf(m_Current).Previous()
+                                          : (m_List ? m_List->Tail : nullptr);
+                    return *this;
+                }
+                constexpr BasicIterator operator--(int)
+                {
+                    auto copy = *this;
+                    --*this;
+                    return copy;
                 }
 
-                /// @brief Dereference operator.
-                constexpr T&        operator*() const { return *Current; }
-                /// @brief Arrow operator.
-                constexpr T*        operator->() const { return Current; }
-
-                /// @brief Prefix increment.
-                constexpr Iterator& operator++();
-                /// @brief Postfix increment.
-                constexpr Iterator  operator++(int);
-                /// @brief Prefix decrement (from end() goes to the tail).
-                constexpr Iterator& operator--();
-                /// @brief Postfix decrement.
-                constexpr Iterator  operator--(int);
-
-                /// @brief Equality comparison.
-                constexpr bool      operator==(const Iterator& other) const
+                constexpr bool operator==(const BasicIterator& other) const
                 {
-                    return Current == other.Current;
+                    return m_Current == other.m_Current;
                 }
-                /// @brief Inequality comparison.
-                constexpr bool operator!=(const Iterator& other) const
+                constexpr bool operator!=(const BasicIterator& other) const
                 {
-                    return Current != other.Current;
+                    return m_Current != other.m_Current;
                 }
+
+              private:
+                friend class IntrusiveList;
+                template <bool>
+                friend class BasicIterator;
+
+                const StateType* m_List    = nullptr;
+                T*               m_Current = nullptr;
             };
-            /// @brief Reverse iterator type.
-            using ReverseIterator = ::Prism::ReverseIterator<Iterator>;
 
-            friend struct IntrusiveListHook<T>;
-            /// @brief Default constructor.
-            constexpr IntrusiveList() = default;
+            using Iterator             = BasicIterator<false>;
+            using ConstIterator        = BasicIterator<true>;
+            using ReverseIterator      = ::Prism::ReverseIterator<Iterator>;
+            using ConstReverseIterator = ::Prism::ReverseIterator<ConstIterator>;
 
-            /// @brief Not copyable: an intrusive list does not own its nodes.
-            IntrusiveList(const IntrusiveList& other) = delete;
-            /// @brief Move constructor.
-            constexpr IntrusiveList(IntrusiveList&& other);
+            constexpr IntrusiveList() PM_NOEXCEPT = default;
+            constexpr IntrusiveList(IntrusiveList&& other) PM_NOEXCEPT;
+            IntrusiveList(const IntrusiveList&)            = delete;
+            IntrusiveList& operator=(const IntrusiveList&) = delete;
+            constexpr IntrusiveList& operator=(IntrusiveList&& other) PM_NOEXCEPT;
+            ~IntrusiveList();
 
-            /// @brief Destructor.
-            constexpr ~IntrusiveList();
+            PM_NODISCARD constexpr bool  Empty() const PM_NOEXCEPT;
+            PM_NODISCARD constexpr usize Size() const PM_NOEXCEPT;
 
-            /// @brief Not copyable: an intrusive list does not own its nodes.
-            IntrusiveList& operator=(const IntrusiveList& other) = delete;
-            /// @brief Move assignment.
-            constexpr IntrusiveList& operator=(IntrusiveList&& other);
+            /// @brief First node, or nullptr when empty.
+            PM_NODISCARD constexpr T*       Head() PM_NOEXCEPT;
+            PM_NODISCARD constexpr const T* Head() const PM_NOEXCEPT;
+            /// @brief Last node, or nullptr when empty.
+            PM_NODISCARD constexpr T*       Tail() PM_NOEXCEPT;
+            PM_NODISCARD constexpr const T* Tail() const PM_NOEXCEPT;
 
-            /// @brief Returns whether the list is empty.
-            PM_ALWAYS_INLINE constexpr bool     Empty() const;
-            /// @brief Returns the number of elements in the list.
-            PM_ALWAYS_INLINE constexpr usize    Size() const;
+            /// @brief Whether `node` is linked into *this* list (O(1)).
+            PM_NODISCARD constexpr bool     Contains(const T& node) const;
 
-            /// @brief Returns pointer to the head node.
-            PM_ALWAYS_INLINE constexpr T*       Head();
-            /// @brief Const-qualified version of Head().
-            PM_ALWAYS_INLINE constexpr const T* Head() const;
-
-            /// @brief Returns pointer to the tail node.
-            PM_ALWAYS_INLINE constexpr T*       Tail();
-            /// @brief Const-qualified version of Tail().
-            PM_ALWAYS_INLINE constexpr const T* Tail() const;
-
-            /// @name Forward Iterators
+            /// @name Iterators
             /// @{
+            constexpr Iterator              begin() PM_NOEXCEPT;
+            constexpr ConstIterator         begin() const PM_NOEXCEPT;
+            constexpr ConstIterator         cbegin() const PM_NOEXCEPT;
+            constexpr Iterator              end() PM_NOEXCEPT;
+            constexpr ConstIterator         end() const PM_NOEXCEPT;
+            constexpr ConstIterator         cend() const PM_NOEXCEPT;
 
-            PM_ALWAYS_INLINE Iterator           begin();
-            PM_ALWAYS_INLINE const Iterator     begin() const;
-            PM_ALWAYS_INLINE const Iterator     cbegin() const PM_NOEXCEPT;
-
-            PM_ALWAYS_INLINE Iterator           end();
-            PM_ALWAYS_INLINE const Iterator     end() const;
-            PM_ALWAYS_INLINE const Iterator     cend() const PM_NOEXCEPT;
-
+            constexpr ReverseIterator       rbegin() PM_NOEXCEPT;
+            constexpr ConstReverseIterator  rbegin() const PM_NOEXCEPT;
+            constexpr ConstReverseIterator  crbegin() const PM_NOEXCEPT;
+            constexpr ReverseIterator       rend() PM_NOEXCEPT;
+            constexpr ConstReverseIterator  rend() const PM_NOEXCEPT;
+            constexpr ConstReverseIterator  crend() const PM_NOEXCEPT;
             /// @}
 
-            /// @name Reverse Iterators
-            /// @{
+            /// @brief Iterator to `node`, which must be linked into this list.
+            constexpr Iterator              IteratorTo(T& node);
 
-            PM_ALWAYS_INLINE ReverseIterator    rbegin();
-            PM_ALWAYS_INLINE const ReverseIterator rbegin() const;
-            PM_ALWAYS_INLINE const ReverseIterator
-                                                    crbegin() const PM_NOEXCEPT;
+            /// @brief Unlinks every node, releasing ownership (owning policies).
+            void                            Clear();
 
-            PM_ALWAYS_INLINE ReverseIterator rend();
-            PM_ALWAYS_INLINE const ReverseIterator rend() const;
-            PM_ALWAYS_INLINE const ReverseIterator crend() const PM_NOEXCEPT;
-
-            /// @}
-
-            /**
-             * @brief Removes all elements from the list.
-             */
-            constexpr void                                Clear();
-
+            /// @brief Links `node` at the front. It must not be linked anywhere.
+            Iterator                        PushFront(PointerType node);
+            /// @brief Links `node` at the back. It must not be linked anywhere.
+            Iterator                        PushBack(PointerType node);
+            /// @brief Links `node` before `position` (end() appends).
+            Iterator InsertBefore(ConstIterator position, PointerType node);
+            /// @brief Links `node` after `position` (end() prepends).
+            Iterator InsertAfter(ConstIterator position, PointerType node);
 
             /**
-             * @brief Inserts a node at the front of the list.
-             *
-             * @param node Pointer to the node.
-             * @return Iterator Iterator to the inserted node.
+             * @brief Creates a node and links it. Only for owning policies, since
+             * a non-owning list would leak the allocation.
              */
-            inline constexpr Iterator PushFront(T* node);
-            /**
-             * @brief Inserts a node at the back of the list.
-             *
-             * @param node Pointer to the node.
-             * @return Iterator Iterator to the inserted node.
-             */
-            inline constexpr Iterator PushBack(T* node);
+            template <typename... Args>
+                requires(Policy::IsOwning)
+            Iterator EmplaceFront(Args&&... args);
+            template <typename... Args>
+                requires(Policy::IsOwning)
+            Iterator    EmplaceBack(Args&&... args);
+
+            /// @brief Unlinks the front node, releasing ownership. No-op if empty.
+            void        PopFront();
+            /// @brief Unlinks the back node, releasing ownership. No-op if empty.
+            void        PopBack();
+            /// @brief Unlinks and returns the front node (null/empty if empty).
+            PointerType TakeFront();
+            /// @brief Unlinks and returns the back node (null/empty if empty).
+            PointerType TakeBack();
+            /// @brief Unlinks `node` and hands its ownership back to the caller.
+            PointerType Take(T& node);
+
+            /// @brief Compatibility alias for TakeFront().
+            PointerType PopFrontElement() { return TakeFront(); }
+            /// @brief Compatibility alias for TakeBack().
+            PointerType PopBackElement() { return TakeBack(); }
 
             /**
-             * @brief Removes the front node from the list.
+             * @brief Unlinks the node at `it` and releases ownership.
+             * @return Iterator to the following node.
              */
-            inline constexpr void     PopFront();
+            Iterator    Erase(ConstIterator it);
             /**
-             * @brief Removes the back node from the list.
+             * @brief Unlinks `node` if it belongs to this list.
+             * @return true if the node was removed.
              */
-            inline constexpr void     PopBack();
+            bool        Erase(T& node);
+            bool        Erase(T* node) { return node && Erase(*node); }
 
-            /**
-             * @brief Removes and returns the front node.
-             *
-             * @return T* Pointer to the removed node.
-             */
-            inline constexpr T*       PopFrontElement();
-            /**
-             * @brief Removes and returns the back node.
-             *
-             * @return T* Pointer to the removed node.
-             */
-            inline constexpr T*       PopBackElement();
-
-            /**
-             * @brief Removes the node pointed to by an iterator.
-             *
-             * @param it Iterator to the node to erase.
-             * @return Iterator Iterator to the next node.
-             */
-            inline constexpr Iterator Erase(Iterator it);
-            /**
-             * @brief Removes a specific node from the list.
-             *
-             * @param node Pointer to the node.
-             */
-            inline constexpr void     Erase(T* node);
+            /// @brief Moves every node of `other` to the end of this list (O(n)
+            /// because each hook's owner has to be updated).
+            void        Splice(IntrusiveList& other);
 
           private:
-            ///> Pointer to the first element.
-            T*    m_Head = nullptr;
-            ///> Pointer to the last element.
-            T*    m_Tail = nullptr;
-            ///> Number of elements in the list.
-            usize m_Size = 0;
+            static HookType& HookOf(T* node) { return node->*HookMember; }
+            static const HookType& HookOf(const T* node)
+            {
+                return node->*HookMember;
+            }
+
+            void      Link(T* position, T* node);
+            void      AdoptAll(T* head);
+
+            StateType m_State{nullptr, nullptr, 0, &IntrusiveList::HookOf};
         };
-    }; // namespace Prism
+    } // namespace Prism
 
 
     namespace Prism
     {
         // IntrusiveListHook
-        template <typename T>
-        void IntrusiveListHook<T>::Unlink([[maybe_unused]] T* self)
+        template <typename T, typename Pointer>
+        IntrusiveListHook<T, Pointer>::~IntrusiveListHook()
         {
-            if (!Owner) return;
-
-            if (Previous) Hook(Previous).Next = Next;
-            else Owner->m_Head = Next;
-
-            if (Next) Hook(Next).Previous = Previous;
-            else Owner->m_Tail = Previous;
-
-            --Owner->m_Size;
-
-            Previous = nullptr;
-            Next     = nullptr;
-            Owner    = nullptr;
+            if constexpr (Policy::IsOwning)
+                assert(!IsLinked()
+                       && "Destroying a node still owned by an IntrusiveList");
+            else Detach();
         }
 
-        // IntrusiveList::Iterator
-        template <typename T, typename HookType>
-        constexpr IntrusiveList<T, HookType>::Iterator&
-        IntrusiveList<T, HookType>::Iterator::operator++()
+        template <typename T, typename Pointer>
+        T* IntrusiveListHook<T, Pointer>::Detach()
         {
-            if (Current) Current = HookType::Hook(Current).Next;
+            StateType* owner = m_Owner;
+            if (!owner) return nullptr;
 
-            return *this;
+            T* self = m_Previous ? owner->HookOf(m_Previous).m_Next : owner->Head;
+
+            if (m_Previous) owner->HookOf(m_Previous).m_Next = m_Next;
+            else owner->Head = m_Next;
+
+            if (m_Next) owner->HookOf(m_Next).m_Previous = m_Previous;
+            else owner->Tail = m_Previous;
+
+            --owner->Size;
+            m_Owner    = nullptr;
+            m_Previous = nullptr;
+            m_Next     = nullptr;
+
+            return self;
         }
-        template <typename T, typename HookType>
-        constexpr IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::Iterator::operator++(int)
+
+        template <typename T, typename Pointer>
+        void IntrusiveListHook<T, Pointer>::Unlink()
         {
-            Iterator temp = *this;
-            ++(*this);
-
-            return temp;
-        }
-
-        template <typename T, typename HookType>
-        constexpr IntrusiveList<T, HookType>::Iterator&
-        IntrusiveList<T, HookType>::Iterator::operator--()
-        {
-            if (Current) Current = HookType::Hook(Current).Previous;
-            else if (List) Current = List->m_Tail;
-
-            return *this;
-        }
-        template <typename T, typename HookType>
-        constexpr IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::Iterator::operator--(int)
-        {
-            Iterator temp = *this;
-            --(*this);
-
-            return temp;
+            // Detach fully before releasing: Release may destroy the node, and
+            // with it this hook.
+            Policy::Release(Detach());
         }
 
         // IntrusiveList
-        template <typename T, typename HookType>
-        inline constexpr IntrusiveList<T, HookType>::IntrusiveList(
-            IntrusiveList&& other)
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::IntrusiveList(
+            IntrusiveList&& other) PM_NOEXCEPT
         {
-            *this = Move(other);
+            AdoptAll(other.m_State.Head);
+            other.m_State.Head = nullptr;
+            other.m_State.Tail = nullptr;
+            other.m_State.Size = 0;
         }
 
-        template <typename T, typename HookType>
-        inline constexpr IntrusiveList<T, HookType>::~IntrusiveList()
-        {
-            Clear();
-        }
-
-        template <typename T, typename HookType>
-        constexpr IntrusiveList<T, HookType>&
-        IntrusiveList<T, HookType>::operator=(IntrusiveList&& other)
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>&
+        IntrusiveList<T, HookMember>::operator=(IntrusiveList&& other) PM_NOEXCEPT
         {
             if (this == &other) return *this;
+
             Clear();
-
-            m_Head       = Move(other.m_Head);
-            m_Tail       = Move(other.m_Tail);
-            m_Size       = other.m_Size;
-
-            other.m_Head = nullptr;
-            other.m_Tail = nullptr;
-            other.m_Size = 0;
-
-            // Change ownership
-            for (T* current = m_Head; current; current = current->Hook.Next)
-                current->Hook.Owner = this;
+            AdoptAll(other.m_State.Head);
+            other.m_State.Head = nullptr;
+            other.m_State.Tail = nullptr;
+            other.m_State.Size = 0;
 
             return *this;
         }
 
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE constexpr bool
-        IntrusiveList<T, HookType>::Empty() const
+        template <typename T, auto HookMember>
+        IntrusiveList<T, HookMember>::~IntrusiveList()
         {
-            return !m_Head;
-        }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE constexpr usize
-        IntrusiveList<T, HookType>::Size() const
-        {
-            return m_Size;
+            Clear();
         }
 
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE constexpr T* IntrusiveList<T, HookType>::Head()
+        template <typename T, auto HookMember>
+        void IntrusiveList<T, HookMember>::AdoptAll(T* head)
         {
-            return m_Head;
-        }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE constexpr const T*
-        IntrusiveList<T, HookType>::Head() const
-        {
-            return m_Head;
+            assert(Empty());
+            if (!head) return;
+
+            // Re-own every node; `head` belongs to another list's state.
+            auto* source  = HookOf(head).m_Owner;
+            m_State.Head  = source->Head;
+            m_State.Tail  = source->Tail;
+            m_State.Size  = source->Size;
+
+            for (T* node = head; node; node = HookOf(node).m_Next)
+                HookOf(node).m_Owner = &m_State;
         }
 
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE constexpr T* IntrusiveList<T, HookType>::Tail()
+        template <typename T, auto HookMember>
+        constexpr bool IntrusiveList<T, HookMember>::Empty() const PM_NOEXCEPT
         {
-            return m_Tail;
+            return m_State.Size == 0;
         }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE constexpr const T*
-        IntrusiveList<T, HookType>::Tail() const
+        template <typename T, auto HookMember>
+        constexpr usize IntrusiveList<T, HookMember>::Size() const PM_NOEXCEPT
         {
-            return m_Tail;
-        }
-
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::begin()
-        {
-            return Iterator(m_Head, this);
-        }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE const IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::begin() const
-        {
-            return Iterator(m_Head, this);
-        }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE const IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::cbegin() const PM_NOEXCEPT
-        {
-            return Iterator(m_Head, this);
+            return m_State.Size;
         }
 
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::end()
+        template <typename T, auto HookMember>
+        constexpr T* IntrusiveList<T, HookMember>::Head() PM_NOEXCEPT
         {
-            return Iterator(nullptr, this);
+            return m_State.Head;
         }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE const IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::end() const
+        template <typename T, auto HookMember>
+        constexpr const T* IntrusiveList<T, HookMember>::Head() const PM_NOEXCEPT
         {
-            return Iterator(nullptr, this);
+            return m_State.Head;
         }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE const IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::cend() const PM_NOEXCEPT
+        template <typename T, auto HookMember>
+        constexpr T* IntrusiveList<T, HookMember>::Tail() PM_NOEXCEPT
         {
-            return Iterator(nullptr, this);
+            return m_State.Tail;
+        }
+        template <typename T, auto HookMember>
+        constexpr const T* IntrusiveList<T, HookMember>::Tail() const PM_NOEXCEPT
+        {
+            return m_State.Tail;
         }
 
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE IntrusiveList<T, HookType>::ReverseIterator
-        IntrusiveList<T, HookType>::rbegin()
+        template <typename T, auto HookMember>
+        constexpr bool IntrusiveList<T, HookMember>::Contains(const T& node) const
+        {
+            return HookOf(&node).m_Owner == &m_State;
+        }
+
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::Iterator
+        IntrusiveList<T, HookMember>::begin() PM_NOEXCEPT
+        {
+            return Iterator(&m_State, m_State.Head);
+        }
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::ConstIterator
+        IntrusiveList<T, HookMember>::begin() const PM_NOEXCEPT
+        {
+            return ConstIterator(&m_State, m_State.Head);
+        }
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::ConstIterator
+        IntrusiveList<T, HookMember>::cbegin() const PM_NOEXCEPT
+        {
+            return begin();
+        }
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::Iterator
+        IntrusiveList<T, HookMember>::end() PM_NOEXCEPT
+        {
+            return Iterator(&m_State, nullptr);
+        }
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::ConstIterator
+        IntrusiveList<T, HookMember>::end() const PM_NOEXCEPT
+        {
+            return ConstIterator(&m_State, nullptr);
+        }
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::ConstIterator
+        IntrusiveList<T, HookMember>::cend() const PM_NOEXCEPT
+        {
+            return end();
+        }
+
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::ReverseIterator
+        IntrusiveList<T, HookMember>::rbegin() PM_NOEXCEPT
         {
             return ReverseIterator(end());
         }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE const IntrusiveList<T, HookType>::ReverseIterator
-        IntrusiveList<T, HookType>::rbegin() const
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::ConstReverseIterator
+        IntrusiveList<T, HookMember>::rbegin() const PM_NOEXCEPT
         {
-            return ReverseIterator(end());
+            return ConstReverseIterator(end());
         }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE const IntrusiveList<T, HookType>::ReverseIterator
-        IntrusiveList<T, HookType>::crbegin() const PM_NOEXCEPT
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::ConstReverseIterator
+        IntrusiveList<T, HookMember>::crbegin() const PM_NOEXCEPT
         {
-            return ReverseIterator(end());
+            return rbegin();
         }
-
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE IntrusiveList<T, HookType>::ReverseIterator
-        IntrusiveList<T, HookType>::rend()
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::ReverseIterator
+        IntrusiveList<T, HookMember>::rend() PM_NOEXCEPT
         {
             return ReverseIterator(begin());
         }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE const IntrusiveList<T, HookType>::ReverseIterator
-        IntrusiveList<T, HookType>::rend() const
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::ConstReverseIterator
+        IntrusiveList<T, HookMember>::rend() const PM_NOEXCEPT
         {
-            return ReverseIterator(begin());
+            return ConstReverseIterator(begin());
         }
-        template <typename T, typename HookType>
-        PM_ALWAYS_INLINE const IntrusiveList<T, HookType>::ReverseIterator
-        IntrusiveList<T, HookType>::crend() const PM_NOEXCEPT
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::ConstReverseIterator
+        IntrusiveList<T, HookMember>::crend() const PM_NOEXCEPT
         {
-            return ReverseIterator(begin());
-        }
-
-        template <typename T, typename HookType>
-        constexpr void IntrusiveList<T, HookType>::Clear()
-        {
-            while (m_Head) HookType::Hook(m_Head).Unlink(m_Head);
+            return rend();
         }
 
-        template <typename T, typename HookType>
-        constexpr IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::PushFront(T* node)
+        template <typename T, auto HookMember>
+        constexpr IntrusiveList<T, HookMember>::Iterator
+        IntrusiveList<T, HookMember>::IteratorTo(T& node)
         {
-            auto& hook = HookType::Hook(node);
-            assert(!hook.IsLinked());
+            assert(Contains(node));
+            return Iterator(&m_State, &node);
+        }
 
-            hook.Previous = nullptr;
-            hook.Next     = m_Head;
-            hook.Owner    = this;
+        template <typename T, auto HookMember>
+        void IntrusiveList<T, HookMember>::Clear()
+        {
+            while (m_State.Head) PopFront();
+        }
 
-            if (m_Head)
+        template <typename T, auto HookMember>
+        void IntrusiveList<T, HookMember>::Link(T* position, T* node)
+        {
+            auto& hook = HookOf(node);
+            assert(!hook.IsLinked() && "Node is already linked into a list");
+
+            T* previous     = position ? HookOf(position).m_Previous : m_State.Tail;
+
+            hook.m_Owner    = &m_State;
+            hook.m_Previous = previous;
+            hook.m_Next     = position;
+
+            if (previous) HookOf(previous).m_Next = node;
+            else m_State.Head = node;
+
+            if (position) HookOf(position).m_Previous = node;
+            else m_State.Tail = node;
+
+            ++m_State.Size;
+        }
+
+        template <typename T, auto HookMember>
+        IntrusiveList<T, HookMember>::Iterator
+        IntrusiveList<T, HookMember>::PushFront(PointerType node)
+        {
+            return InsertBefore(begin(), Move(node));
+        }
+        template <typename T, auto HookMember>
+        IntrusiveList<T, HookMember>::Iterator
+        IntrusiveList<T, HookMember>::PushBack(PointerType node)
+        {
+            return InsertBefore(end(), Move(node));
+        }
+
+        template <typename T, auto HookMember>
+        IntrusiveList<T, HookMember>::Iterator
+        IntrusiveList<T, HookMember>::InsertBefore(ConstIterator position,
+                                                   PointerType   node)
+        {
+            assert(position.m_List == &m_State && "Iterator from another list");
+            T* raw = Policy::Raw(node);
+            assert(raw && "Pushing a null node");
+            if (!raw) return end();
+
+            // A node that's already linked is a bug. Leaving the caller's
+            // ownership untouched means a misuse can't leak or double-free.
+            if (HookOf(raw).IsLinked())
             {
-                auto& headHook    = HookType::Hook(m_Head);
-                headHook.Previous = node;
+                assert(!"Node is already linked into a list");
+                return end();
             }
-            else m_Tail = node;
 
-            m_Head = node;
-            ++m_Size;
-            return Iterator(node, this);
+            Link(position.m_Current, Policy::Leak(Move(node)));
+            return Iterator(&m_State, raw);
+        }
+        template <typename T, auto HookMember>
+        IntrusiveList<T, HookMember>::Iterator
+        IntrusiveList<T, HookMember>::InsertAfter(ConstIterator position,
+                                                  PointerType   node)
+        {
+            T* next = position.m_Current ? HookOf(position.m_Current).m_Next
+                                         : m_State.Head;
+            return InsertBefore(ConstIterator(&m_State, next), Move(node));
         }
 
-        template <typename T, typename HookType>
-        constexpr IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::PushBack(T* node)
+        template <typename T, auto HookMember>
+        template <typename... Args>
+            requires(IntrusiveList<T, HookMember>::Policy::IsOwning)
+        IntrusiveList<T, HookMember>::Iterator
+        IntrusiveList<T, HookMember>::EmplaceFront(Args&&... args)
         {
-            auto& hook = HookType::Hook(node);
-            assert(!hook.IsLinked());
+            return PushFront(Policy::Adopt(new T(Forward<Args>(args)...)));
+        }
+        template <typename T, auto HookMember>
+        template <typename... Args>
+            requires(IntrusiveList<T, HookMember>::Policy::IsOwning)
+        IntrusiveList<T, HookMember>::Iterator
+        IntrusiveList<T, HookMember>::EmplaceBack(Args&&... args)
+        {
+            return PushBack(Policy::Adopt(new T(Forward<Args>(args)...)));
+        }
 
-            hook.Next     = nullptr;
-            hook.Previous = m_Tail;
-            hook.Owner    = this;
+        template <typename T, auto HookMember>
+        void IntrusiveList<T, HookMember>::PopFront()
+        {
+            if (m_State.Head) HookOf(m_State.Head).Unlink();
+        }
+        template <typename T, auto HookMember>
+        void IntrusiveList<T, HookMember>::PopBack()
+        {
+            if (m_State.Tail) HookOf(m_State.Tail).Unlink();
+        }
 
-            if (m_Tail)
+        template <typename T, auto HookMember>
+        IntrusiveList<T, HookMember>::PointerType
+        IntrusiveList<T, HookMember>::TakeFront()
+        {
+            if (!m_State.Head) return Policy::Adopt(nullptr);
+            return Take(*m_State.Head);
+        }
+        template <typename T, auto HookMember>
+        IntrusiveList<T, HookMember>::PointerType
+        IntrusiveList<T, HookMember>::TakeBack()
+        {
+            if (!m_State.Tail) return Policy::Adopt(nullptr);
+            return Take(*m_State.Tail);
+        }
+        template <typename T, auto HookMember>
+        IntrusiveList<T, HookMember>::PointerType
+        IntrusiveList<T, HookMember>::Take(T& node)
+        {
+            if (!Contains(node))
             {
-                auto& tailHook = HookType::Hook(m_Tail);
-                tailHook.Next  = node;
+                assert(!"Node is not linked into this list");
+                return Policy::Adopt(nullptr);
             }
-            else m_Head = node;
-
-            m_Tail = node;
-            ++m_Size;
-            return Iterator(node, this);
+            return Policy::Adopt(HookOf(&node).Detach());
         }
 
-        template <typename T, typename HookType>
-        constexpr void IntrusiveList<T, HookType>::PopFront()
+        template <typename T, auto HookMember>
+        IntrusiveList<T, HookMember>::Iterator
+        IntrusiveList<T, HookMember>::Erase(ConstIterator it)
         {
-            if (!m_Head) return;
-            Erase(m_Head);
+            T* node = it.m_Current;
+            if (!node || !Contains(*node))
+            {
+                assert(!"Erasing an invalid iterator");
+                return end();
+            }
+
+            T* next = HookOf(node).m_Next;
+            HookOf(node).Unlink();
+            return Iterator(&m_State, next);
         }
-        template <typename T, typename HookType>
-        constexpr void IntrusiveList<T, HookType>::PopBack()
+        template <typename T, auto HookMember>
+        bool IntrusiveList<T, HookMember>::Erase(T& node)
         {
-            if (!m_Tail) return;
-            Erase(m_Tail);
+            if (!Contains(node)) return false;
+            HookOf(&node).Unlink();
+            return true;
         }
 
-        template <typename T, typename HookType>
-        constexpr T* IntrusiveList<T, HookType>::PopFrontElement()
+        template <typename T, auto HookMember>
+        void IntrusiveList<T, HookMember>::Splice(IntrusiveList& other)
         {
-            auto head = Head();
-            PopFront();
+            if (&other == this || other.Empty()) return;
 
-            return head;
+            for (T* node = other.m_State.Head; node; node = HookOf(node).m_Next)
+                HookOf(node).m_Owner = &m_State;
+
+            if (m_State.Tail)
+            {
+                HookOf(m_State.Tail).m_Next            = other.m_State.Head;
+                HookOf(other.m_State.Head).m_Previous = m_State.Tail;
+            }
+            else m_State.Head = other.m_State.Head;
+
+            m_State.Tail       = other.m_State.Tail;
+            m_State.Size      += other.m_State.Size;
+
+            other.m_State.Head = nullptr;
+            other.m_State.Tail = nullptr;
+            other.m_State.Size = 0;
         }
-        template <typename T, typename HookType>
-        constexpr T* IntrusiveList<T, HookType>::PopBackElement()
-        {
-            auto tail = Tail();
-            PopBack();
-
-            return tail;
-        }
-
-        template <typename T, typename HookType>
-        constexpr IntrusiveList<T, HookType>::Iterator
-        IntrusiveList<T, HookType>::Erase(Iterator it)
-        {
-            if (!it.Current) return end();
-            auto& hook = HookType::Hook(it.Current);
-            if (hook.Owner != this) return end();
-
-            T* next = hook.Next;
-            hook.Unlink(it.Current);
-            return Iterator(next, this);
-        }
-        template <typename T, typename HookType>
-        constexpr void IntrusiveList<T, HookType>::Erase(T* node)
-        {
-            if (!node) return;
-            auto& hook = HookType::Hook(node);
-            if (hook.Owner != this) return;
-
-            hook.Unlink(node);
-        }
-    }; // namespace Prism
+    } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
     using Prism::IntrusiveList;
     using Prism::IntrusiveListHook;
+    using Prism::IntrusiveOwningListHook;
+    using Prism::IntrusiveRefListHook;
 #endif
 }

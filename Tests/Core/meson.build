@@ -7,7 +7,8 @@
 
 core_tests = [
   'NumericLimits',
-  'TypeTraits', 
+  'TypeTraits',
+  'Version',
 ]
 
 foreach name : core_tests

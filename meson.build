@@ -88,13 +88,15 @@ versionConf.set('arch', host_machine.cpu_family())
 cxx = meson.get_compiler('cpp')
 versionConf.set('compiler', cxx.get_id())
 versionConf.set('compiler_version', cxx.version())
+versionConf.set('build_date', run_command('date', '+%b %d %Y', check: true).stdout().strip())
+versionConf.set('build_time', run_command('date', '+%H:%M:%S', check: true).stdout().strip())
 
 library_version_string_template = '@0@.@1@.@2@-@3@'
 versionConf.set('library_version_string', library_version_string_template.format(version[0], version[1], version[2], git_tag))
 
 configure_file(
-  input: 'Source/Prism/Core/Version.hpp.in', 
-  output: 'Version.hpp',
+  input: 'Source/Prism/Core/Version.ixx.in',
+  output: 'Version.ixx',
   configuration: versionConf)
 
 # ==============================================================================
@@ -174,9 +176,7 @@ install_headers(
   'Source/Prism/Containers/DoublyLinkedList.ixx',
   'Source/Prism/Containers/IntervalTree.ixx',
   'Source/Prism/Containers/IntrusiveList.ixx',
-  'Source/Prism/Containers/IntrusiveListV3.ixx',
   'Source/Prism/Containers/IntrusiveRedBlackTree.ixx',
-  'Source/Prism/Containers/IntrusiveRefList.ixx',
   'Source/Prism/Containers/KeyValuePair.ixx',
   'Source/Prism/Containers/Queue.ixx',
   'Source/Prism/Containers/RadixTree.ixx',
@@ -210,13 +210,11 @@ install_headers(
   'Source/Prism/Core/NonMovable.ixx',
   'Source/Prism/Core/ParameterPack.ixx',
   'Source/Prism/Core/Platform.hpp',
-  'Source/Prism/Core/Ranges.ixx',
   'Source/Prism/Core/Singleton.ixx',
   'Source/Prism/Core/Types.hpp',
   'Source/Prism/Core/TypeTraits.ixx',
   'Source/Prism/Core/TypeTraitsForward.ixx',
   'Source/Prism/Core/UUID.ixx',
-  # meson.build_root() / 'Version.hpp',
 
   subdir: 'Prism/Core'
 )
@@ -260,6 +258,7 @@ install_headers(
 )
 
 install_headers(
+  'Source/Prism/Ranges/Access.ixx',
   'Source/Prism/Ranges/Range.ixx',
   'Source/Prism/Ranges/Ranges.ixx',
   'Source/Prism/Ranges/Views.ixx',
@@ -306,7 +305,6 @@ install_headers(
   'Source/Prism/Utility/Delegate.ixx',
   'Source/Prism/Utility/Enum.ixx',
   'Source/Prism/Utility/Expected.ixx',
-  'Source/Prism/Utility/Hash.ixx',
   'Source/Prism/Utility/LockingPolicy.ixx',
   'Source/Prism/Utility/Math.ixx',
   'Source/Prism/Utility/Mutex.ixx',
@@ -316,7 +314,6 @@ install_headers(
   'Source/Prism/Utility/PathView.ixx',
   'Source/Prism/Utility/RangeAllocator.ixx',
   'Source/Prism/Utility/SimdIntrinsics.ixx',
-  'Source/Prism/Utility/SimdVector.ixx',
   'Source/Prism/Utility/Time.ixx',
   'Source/Prism/Utility/Variant.ixx',
   subdir: 'Prism/Utility'

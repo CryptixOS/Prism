@@ -142,7 +142,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # ==============================================================================
-### Version.hpp (same values as meson's configuration_data)
+### Prism.Core.Version (same values as meson's configuration_data)
 execute_process(
   COMMAND git rev-parse HEAD
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -160,18 +160,25 @@ if(compiler STREQUAL "gnu")
   set(compiler "gcc")
 endif()
 set(compiler_version "${CMAKE_CXX_COMPILER_VERSION}")
+# Honors SOURCE_DATE_EPOCH, for reproducible builds.
+string(TIMESTAMP build_date "%b %d %Y")
+string(TIMESTAMP build_time "%H:%M:%S")
 set(library_version_string
   "${PM_VERSION_MAJOR}.${PM_VERSION_MINOR}.${PM_VERSION_PATCH}-${git_tag}")
 
 # The template uses meson's `#mesondefine`; turn it into a plain #define.
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/Source/Prism/Core/Version.hpp.in"
+# The generated module goes to <build>/Generated/Prism/Core/Version.ixx.
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/Source/Prism/Core/Version.ixx.in"
   PRISM_VERSION_TEMPLATE)
 string(REGEX REPLACE "#mesondefine ([A-Za-z0-9_]+)" "#define \\1 @\\1@"
   PRISM_VERSION_TEMPLATE "${PRISM_VERSION_TEMPLATE}")
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp.cmake.in"
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/Version.ixx.cmake.in"
   "${PRISM_VERSION_TEMPLATE}")
-configure_file("${CMAKE_CURRENT_BINARY_DIR}/Version.hpp.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp" @ONLY)
+set(PRISM_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/Generated")
+configure_file("${CMAKE_CURRENT_BINARY_DIR}/Version.ixx.cmake.in"
+  "${PRISM_GENERATED_DIR}/Prism/Core/Version.ixx" @ONLY)
+set(PRISM_GENERATED_MODULE_INTERFACES
+  "${PRISM_GENERATED_DIR}/Prism/Core/Version.ixx")
 
 # ==============================================================================
 ### Library
@@ -211,9 +218,7 @@ set(PRISM_MODULE_INTERFACES
   Source/Prism/Containers/DoublyLinkedList.ixx
   Source/Prism/Containers/IntervalTree.ixx
   Source/Prism/Containers/IntrusiveList.ixx
-  Source/Prism/Containers/IntrusiveListV3.ixx
   Source/Prism/Containers/IntrusiveRedBlackTree.ixx
-  Source/Prism/Containers/IntrusiveRefList.ixx
   Source/Prism/Containers/KeyValuePair.ixx
   Source/Prism/Containers/Queue.ixx
   Source/Prism/Containers/RadixTree.ixx
@@ -239,7 +244,6 @@ set(PRISM_MODULE_INTERFACES
   Source/Prism/Core/NonCopyable.ixx
   Source/Prism/Core/NonMovable.ixx
   Source/Prism/Core/ParameterPack.ixx
-  Source/Prism/Core/Ranges.ixx
   Source/Prism/Core/Singleton.ixx
   Source/Prism/Core/TypeTraits.ixx
   Source/Prism/Core/TypeTraitsForward.ixx
@@ -270,6 +274,7 @@ set(PRISM_MODULE_INTERFACES
   Source/Prism/Memory/SlobAllocator.ixx
   Source/Prism/Memory/WeakRef.ixx
   Source/Prism/Network/IPv4Address.ixx
+  Source/Prism/Ranges/Access.ixx
   Source/Prism/Ranges/Range.ixx
   Source/Prism/Ranges/Ranges.ixx
   Source/Prism/Ranges/Views.ixx
@@ -291,7 +296,6 @@ set(PRISM_MODULE_INTERFACES
   Source/Prism/Utility/Delegate.ixx
   Source/Prism/Utility/Enum.ixx
   Source/Prism/Utility/Expected.ixx
-  Source/Prism/Utility/Hash.ixx
   Source/Prism/Utility/LockingPolicy.ixx
   Source/Prism/Utility/Math.ixx
   Source/Prism/Utility/Mutex.ixx
@@ -301,7 +305,6 @@ set(PRISM_MODULE_INTERFACES
   Source/Prism/Utility/PathView.ixx
   Source/Prism/Utility/RangeAllocator.ixx
   Source/Prism/Utility/SimdIntrinsics.ixx
-  Source/Prism/Utility/SimdVector.ixx
   Source/Prism/Utility/Time.ixx
   Source/Prism/Utility/Variant.ixx
 )
@@ -334,8 +337,9 @@ add_library(prism STATIC
   "${PRISM_DEMANGLER_DIR}/source/demangler.cpp"
 )
 add_library(Prism::Prism ALIAS prism)
-target_sources(prism PUBLIC FILE_SET CXX_MODULES BASE_DIRS Source
-  FILES ${PRISM_MODULE_INTERFACES})
+target_sources(prism PUBLIC FILE_SET CXX_MODULES
+  BASE_DIRS Source "${PRISM_GENERATED_DIR}"
+  FILES ${PRISM_MODULE_INTERFACES} ${PRISM_GENERATED_MODULE_INTERFACES})
 add_library(Prism ALIAS prism) # target name of the previous CMakeLists.txt
 target_include_directories(prism PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Source>"
@@ -386,8 +390,6 @@ install(EXPORT PrismTargets NAMESPACE Prism::
 
 install(DIRECTORY Source/Prism DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl" PATTERN "*.ixx")
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Prism/Core)
 # Bundled header-only dependencies used by Prism's public headers.
 install(DIRECTORY "${PRISM_MAGIC_ENUM_DIR}/include/magic_enum"
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

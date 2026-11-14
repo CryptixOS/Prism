@@ -34,7 +34,8 @@ list(TRANSFORM PRISM_MODULE_INTERFACES PREPEND "${PROJECT_SOURCE_DIR}/"
 list(TRANSFORM PRISM_TEST_MODULE_INTERFACES PREPEND "${PROJECT_SOURCE_DIR}/"
   OUTPUT_VARIABLE PRISM_TEST_MODULE_INTERFACES_ABS)
 target_sources(prism_test_support PUBLIC FILE_SET CXX_MODULES
-  BASE_DIRS "${PROJECT_SOURCE_DIR}/Source" FILES ${PRISM_MODULE_INTERFACES_ABS}
+  BASE_DIRS "${PROJECT_SOURCE_DIR}/Source" "${PRISM_GENERATED_DIR}"
+  FILES ${PRISM_MODULE_INTERFACES_ABS} ${PRISM_GENERATED_MODULE_INTERFACES}
   ${PRISM_TEST_MODULE_INTERFACES_ABS})
 target_include_directories(prism_test_support PUBLIC
   "${PROJECT_SOURCE_DIR}/Source" "${PROJECT_BINARY_DIR}")
@@ -67,10 +68,10 @@ endfunction()
 # Keep these lists in sync with Tests/<Suite>/meson.build.
 prism_add_tests(Algorithm Find Random SearchString Sort)
 prism_add_tests(Containers
-  BitSpan Bitmap Deque DoublyLinkedList IntrusiveList IntrusiveListV3
-  IntrusiveRedBlackTree IntrusiveRefList Queue RedBlackTree RingBuffer Stack
+  BitSpan Bitmap Deque DoublyLinkedList IntrusiveList
+  IntrusiveRedBlackTree Queue RedBlackTree RingBuffer Stack
   Tuple UnorderedMap Vector)
-prism_add_tests(Core NumericLimits TypeTraits)
+prism_add_tests(Core NumericLimits TypeTraits Version)
 prism_add_tests(Debug Log)
 prism_add_tests(Math Matrix Vector)
 prism_add_tests(Memory Memory Ref Scope SlabAllocator WeakRef)

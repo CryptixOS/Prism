@@ -15,7 +15,7 @@ module;
 export module Prism.Containers.UnorderedMap;
 
 export import Prism.Containers.DoublyLinkedList;
-export import Prism.Containers.IntrusiveListV3;
+export import Prism.Containers.IntrusiveList;
 export import Prism.Containers.Vector;
 export import Prism.Core.Iterator;
 export import Prism.Core.NonCopyable;
@@ -115,7 +115,7 @@ export extern "C++"
                 KeyValuePair                Entry;
 
                 ///> Hook for intrusive list linking.
-                V3::IntrusiveListHook<Node> Hook;
+                IntrusiveListHook<Node> Hook;
 
                 /**
                  * @brief Default constructor, enabled if key and value types are
@@ -147,7 +147,7 @@ export extern "C++"
             };
 
             using NodeType   = Node;
-            using BucketType = V3::IntrusiveList<Node>;
+            using BucketType = IntrusiveList<Node>;
 
             /**
              * @brief Forward iterator for the UnorderedMap.

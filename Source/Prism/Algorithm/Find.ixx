@@ -10,7 +10,7 @@ module;
 export module Prism.Algorithm.Find;
 
 export import Prism.Core.Concepts;
-export import Prism.Core.Ranges;
+export import Prism.Ranges.Access;
 
 export extern "C++"
 {

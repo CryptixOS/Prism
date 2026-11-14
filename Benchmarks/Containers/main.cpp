@@ -24,7 +24,7 @@
 import Prism.Containers.Bitmap;
 import Prism.Containers.Deque;
 import Prism.Containers.DoublyLinkedList;
-import Prism.Containers.IntrusiveListV3;
+import Prism.Containers.IntrusiveList;
 import Prism.Containers.Queue;
 import Prism.Containers.RedBlackTree;
 import Prism.Containers.Set;
@@ -357,7 +357,7 @@ static void RegisterQueues()
 struct ListNode
 {
     u64                                     Value;
-    Prism::V3::IntrusiveListHook<ListNode> Hook;
+    Prism::IntrusiveListHook<ListNode> Hook;
     explicit ListNode(u64 v)
         : Value(v)
     {
@@ -439,7 +439,7 @@ static void RegisterLists()
             r.Compare(
                 n,
                 [&] {
-                    Prism::V3::IntrusiveList<ListNode> l;
+                    Prism::IntrusiveList<ListNode> l;
                     for (auto& node : nodes) l.PushBack(&node);
                     u64 sum = 0;
                     while (ListNode* node = l.TakeFront()) sum += node->Value;
@@ -466,7 +466,7 @@ static void RegisterLists()
             // memory sequentially. std::list allocates its nodes in order;
             // sorting by a random rank relinks them without moving them.
             auto order = UniqueKeys(n);
-            Prism::V3::IntrusiveList<ListNode>  pl;
+            Prism::IntrusiveList<ListNode>  pl;
             std::list<std::pair<u64, u64>>      sl;
             for (size_t i = 0; i < n; ++i)
             {

@@ -7,7 +7,11 @@
 module;
 
 #include <Prism/Core/Types.hpp>
-export module Prism.Core.Ranges;
+export module Prism.Ranges.Access;
+
+// Range access for containers and arrays, like std::begin/std::end:
+// Begin, End, ConstBegin, ReverseBegin, Size, Empty, ... The range concepts
+// and Ranges::Begin & co. (std::ranges) are in Prism.Ranges.Range.
 
 export import Prism.Core.Iterator;
 export import Prism.Core.TypeTraits;
