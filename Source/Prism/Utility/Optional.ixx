@@ -379,12 +379,12 @@ export extern "C++"
                 if (m_Pointer) return Value();
                 return fallback;
             }
-
+            /// A copy of the value, or the fallback (e.g. a temporary).
             PM_NODISCARD PM_ALWAYS_INLINE constexpr RemoveCvRefType<T>
-                         value_or(RemoveCvRefType<T> fallback) const
+                         ValueOr(RemoveCvRefType<T>&& fallback) const
             {
                 if (m_Pointer) return Value();
-                return fallback;
+                return Move(fallback);
             }
 
             PM_NODISCARD PM_ALWAYS_INLINE constexpr T ReleaseValue()

@@ -549,11 +549,6 @@ export extern "C++"
             {
                 return m_HasValue;
             }
-            [[nodiscard]]
-            constexpr bool has_value() const noexcept
-            {
-                return m_HasValue;
-            }
 
             constexpr const T& Value() const&
             {
@@ -678,26 +673,6 @@ export extern "C++"
 
             template <typename U>
             constexpr T ValueOr(U&& value) && noexcept
-            {
-                static_assert(IsMoveConstructibleV<T>);
-                static_assert(IsConvertibleV<U, T>);
-
-                if (m_HasValue) return Move(m_Value);
-                return static_cast<T>(Forward<U>(value));
-            }
-
-            template <typename U>
-            constexpr T value_or(U&& value) const& noexcept
-            {
-                static_assert(IsCopyConstructibleV<T>);
-                static_assert(IsConvertibleV<U, T>);
-
-                if (m_HasValue) return m_Value;
-                return static_cast<T>(Forward<U>(value));
-            }
-
-            template <typename U>
-            constexpr T value_or(U&& value) && noexcept
             {
                 static_assert(IsMoveConstructibleV<T>);
                 static_assert(IsConvertibleV<U, T>);
@@ -1285,11 +1260,6 @@ export extern "C++"
 
             [[nodiscard]]
             constexpr bool HasValue() const noexcept
-            {
-                return m_HasValue;
-            }
-            [[nodiscard]]
-            constexpr bool has_value() const noexcept
             {
                 return m_HasValue;
             }

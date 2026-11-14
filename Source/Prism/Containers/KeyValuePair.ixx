@@ -77,14 +77,15 @@ export extern "C++"
             }
         };
 
-        inline constexpr SynthThreeWay synth_three_way{};
+        /// Three-way comparison through <=> or, without it, through <.
+        inline constexpr SynthThreeWay SynthThreeWayCompare{};
 
         template <typename T1, typename T2, typename U1, typename U2>
         constexpr auto operator<=>(const KeyValuePair<T1, T2>& lhs,
                                    const KeyValuePair<U1, U2>& rhs)
         {
-            if (auto cmp = synth_three_way(lhs.Key, rhs.Key); cmp != 0) return cmp;
-            return synth_three_way(lhs.Value, rhs.Value);
+            if (auto cmp = SynthThreeWayCompare(lhs.Key, rhs.Key); cmp != 0) return cmp;
+            return SynthThreeWayCompare(lhs.Value, rhs.Value);
         }
     }; // namespace Prism
 
