@@ -16,6 +16,7 @@ export module Prism.Containers.UnorderedMap;
 export import Prism.Containers.DoublyLinkedList;
 export import Prism.Containers.IntrusiveList;
 export import Prism.Containers.Vector;
+export import Prism.Core.Checked;
 export import Prism.Core.Iterator;
 export import Prism.Core.NonCopyable;
 export import Prism.Core.NonMovable;
@@ -524,14 +525,14 @@ export extern "C++"
         constexpr V& UnorderedMap<K, V, H>::At(const KeyType& key)
         {
             auto it = Find(key);
-            assert(it != end() && "UnorderedMap::At(): key not found");
+            PrismCheck(it != end() && "UnorderedMap::At(): key not found");
             return it->Value;
         }
         template <typename K, typename V, typename H>
         constexpr const V& UnorderedMap<K, V, H>::At(const KeyType& key) const
         {
             auto it = Find(key);
-            assert(it != end() && "UnorderedMap::At(): key not found");
+            PrismCheck(it != end() && "UnorderedMap::At(): key not found");
             return it->Value;
         }
         template <typename K, typename V, typename H>
@@ -634,7 +635,7 @@ export extern "C++"
         constexpr void UnorderedMap<K, V, H>::EnsureCapacity()
         {
             if (m_Size * 4 >= m_Buckets.Size() * 3)
-                Rehash(Capacity() == 0 ? 8 : Capacity() * 2);
+                Rehash(GrowCapacity(Capacity(), Capacity() + 1, 8));
         }
 
         template <typename K, typename V, typename H>

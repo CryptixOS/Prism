@@ -22,6 +22,24 @@ extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
              : (void)0)
 #endif
 
+/**
+ * PrismCheck(condition): a precondition of Prism's own code, like an index
+ * being in bounds. With PRISM_HARDENED it is always checked and a failure
+ * traps (no message, so it costs one compare and branch and works before
+ * anything else is set up); otherwise it is an assert(). The condition must
+ * not have side effects: without PRISM_HARDENED, release builds drop it.
+ */
+#if PRISM_HARDENED != 0
+    #define PrismCheck(condition)                                              \
+        (__builtin_expect(!(condition), 0) ? __builtin_trap() : (void)0)
+#elif defined(NDEBUG)
+    // Not evaluated, but still referenced so variables used only in checks
+    // don't warn. Conditions must therefore have no side effects.
+    #define PrismCheck(condition) ((void)sizeof(!(condition)))
+#else
+    #define PrismCheck(condition) assert(condition)
+#endif
+
 #include <Prism/Core/LanguageSupport.hpp>
 
 #define PrismStringifyInner(x) #x

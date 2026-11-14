@@ -485,7 +485,7 @@ export extern "C++"
             T& Get()
                 requires(CanContain<T>())
             {
-                assert(Has<T>());
+                PrismCheck(Has<T>());
                 return *BitCast<T*>(&m_Data);
             }
 
@@ -501,7 +501,7 @@ export extern "C++"
             T const& Get() const
                 requires(CanContain<T>())
             {
-                assert(Has<T>());
+                PrismCheck(Has<T>());
                 return *BitCast<T const*>(&m_Data);
             }
 
@@ -559,7 +559,7 @@ export extern "C++"
                                 instance.Set(Prism::Move(value),
                                              Details::VariantNoClearTag{});
                         });
-                    assert(instance.m_Index != instance.INVALID_INDEX);
+                    PrismCheck(instance.m_Index != instance.INVALID_INDEX);
                     return instance;
                 }
             }
@@ -582,7 +582,7 @@ export extern "C++"
                                               RemoveCvRefType<decltype(value)>>())
                                 instance.Set(value, Details::VariantNoClearTag{});
                         });
-                    assert(instance.m_Index != instance.INVALID_INDEX);
+                    PrismCheck(instance.m_Index != instance.INVALID_INDEX);
                     return instance;
                 }
             }

@@ -51,7 +51,7 @@ namespace Prism
     {
         const usize byte = index / 8;
         const usize bit  = index % 8;
-        assert(byte < m_Size);
+        PrismCheck(byte < m_Size);
 
         if (value) m_Data[byte] |= Bit(bit);
         else m_Data[byte] &= ~Bit(bit);

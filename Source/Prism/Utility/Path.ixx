@@ -526,7 +526,7 @@ export extern "C++"
             }
             template <typename StringViewLike>
             PM_NODISCARD constexpr usize RFind(const StringViewLike& pattern,
-                                               usize pos = 0) const PM_NOEXCEPT
+                                               usize pos = NPos) const PM_NOEXCEPT
             {
                 return m_Path.RFind(pattern, pos);
             }

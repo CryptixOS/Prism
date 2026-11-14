@@ -65,7 +65,7 @@ export extern "C++"
 
             virtual ErrorOr<void> Initialize(usize chunkSize)
             {
-                assert(Math::IsPowerOfTwo(chunkSize));
+                PrismCheck(Math::IsPowerOfTwo(chunkSize));
 
                 PM_UNUSED auto guard = m_Lock.Lock();
                 m_ObjectSize         = chunkSize;

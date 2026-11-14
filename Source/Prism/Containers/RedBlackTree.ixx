@@ -205,7 +205,7 @@ export extern "C++"
             static Node* GetSuccessor(Node* node);
             static Node* GetPredecessor(Node* node);
 
-          private:
+          protected:
             CompareOp m_Comparator{};
             Node*     m_Root      = nullptr;
             usize     m_Size      = 0;
@@ -297,7 +297,7 @@ export extern "C++"
         V& RedBlackTree<K, V, CompareOp>::At(const K& key)
         {
             auto node = Find(m_Root, key);
-            assert(node);
+            PrismCheck(node);
 
             return node->Value();
         }
@@ -305,7 +305,7 @@ export extern "C++"
         const V& RedBlackTree<K, V, CompareOp>::At(const K& key) const
         {
             auto node = Find(m_Root, key);
-            assert(node);
+            PrismCheck(node);
 
             return node;
         }
@@ -463,7 +463,7 @@ export extern "C++"
         template <typename K, typename V, typename CompareOp>
         bool RedBlackTree<K, V, CompareOp>::Erase(Node* node)
         {
-            assert(node);
+            PrismCheck(node);
 
             if (m_Size == 1)
             {
@@ -633,7 +633,7 @@ export extern "C++"
         typename RedBlackTree<K, V, CompareOp>::Node*
         RedBlackTree<K, V, CompareOp>::GetSuccessor(Node* node)
         {
-            assert(node);
+            PrismCheck(node);
             if (node->RightChild)
             {
                 node = node->RightChild;
@@ -652,7 +652,7 @@ export extern "C++"
         typename RedBlackTree<K, V, CompareOp>::Node*
         RedBlackTree<K, V, CompareOp>::GetPredecessor(Node* node)
         {
-            assert(node);
+            PrismCheck(node);
             if (node->LeftChild)
             {
                 node = node->LeftChild;
@@ -671,7 +671,7 @@ export extern "C++"
         template <typename K, typename V, typename CompareOp>
         void RedBlackTree<K, V, CompareOp>::InsertFix(Node* node)
         {
-            assert(node && node->IsRed());
+            PrismCheck(node && node->IsRed());
 
             while (node->Parent && node->Parent->Color == Color::eRed)
             {
@@ -804,9 +804,9 @@ export extern "C++"
         template <typename K, typename V, typename CompareOp>
         void RedBlackTree<K, V, CompareOp>::RotateLeft(Node* node)
         {
-            assert(node);
+            PrismCheck(node);
             auto* pivot = node->RightChild;
-            assert(pivot);
+            PrismCheck(pivot);
             auto* parent     = node->Parent;
 
             // stage 1 - node's right child is now pivot's left child
@@ -826,9 +826,9 @@ export extern "C++"
         template <typename K, typename V, typename CompareOp>
         void RedBlackTree<K, V, CompareOp>::RotateRight(Node* node)
         {
-            assert(node);
+            PrismCheck(node);
             auto* pivot = node->LeftChild;
-            assert(pivot);
+            PrismCheck(pivot);
             auto* parent    = node->Parent;
 
             // stage 1 - node's left child is now pivot's right child

@@ -109,7 +109,7 @@ export extern "C++"
                 Span(It first, usize count) PM_NOEXCEPT : m_Data(ToAddress(first)),
                                                           m_Extent(count)
             {
-                if constexpr (Extent != DynamicExtent) assert(count == Extent);
+                if constexpr (Extent != DynamicExtent) PrismCheck(count == Extent);
             }
 
             template <ContiguousIterator It, SizedSentinelFor<It> End>
@@ -153,7 +153,7 @@ export extern "C++"
                 : Span(Ranges::Data(range), Ranges::Size(range))
             {
                 if constexpr (Extent != DynamicExtent)
-                    assert(Ranges::Size(range) == Extent);
+                    PrismCheck(Ranges::Size(range) == Extent);
             }
 
             explicit(Extent != DynamicExtent) constexpr Span(
@@ -170,7 +170,7 @@ export extern "C++"
                 Span(const Span<U, N>& s) PM_NOEXCEPT : m_Extent(s.Size()),
                                                         m_Data(s.Raw())
             {
-                if constexpr (Extent != DynamicExtent) assert(s.Size() == Extent);
+                if constexpr (Extent != DynamicExtent) PrismCheck(s.Size() == Extent);
             }
             constexpr Span(const Span& other) PM_NOEXCEPT               = default;
 
@@ -214,17 +214,17 @@ export extern "C++"
 
             constexpr Reference Front() const
             {
-                assert(!Empty());
+                PrismCheck(!Empty());
                 return m_Data[0];
             }
             constexpr Reference Back() const
             {
-                assert(!Empty());
+                PrismCheck(!Empty());
                 return m_Data[Size() - 1];
             }
             constexpr Reference At(SizeType pos) const
             {
-                assert(pos < Size());
+                PrismCheck(pos < Size());
                 return m_Data[pos];
             }
             constexpr Reference operator[](SizeType index) const
@@ -246,34 +246,39 @@ export extern "C++"
             template <usize Count>
             constexpr Span<ElementType, Count> First() const
             {
-                return {m_Data, Size()};
+                PrismCheck(Count <= Size());
+                return Span<ElementType, Count>(m_Data, Count);
             }
             constexpr Span<ElementType, DynamicExtent> First(SizeType count) const
             {
-                assert(count <= Size());
+                PrismCheck(count <= Size());
                 return {m_Data, count};
             }
 
             template <usize Count>
             constexpr Span<ElementType, Count> Last() const
             {
-                return {m_Data + Size() - Count, Count};
+                PrismCheck(Count <= Size());
+                return Span<ElementType, Count>(m_Data + Size() - Count, Count);
             }
             constexpr Span<ElementType, DynamicExtent> Last(SizeType count) const
             {
-                assert(count <= Size());
+                PrismCheck(count <= Size());
                 return {m_Data + Size() - count, count};
             }
+            /// Count = DynamicExtent means everything from Offset on.
             template <usize Offset, usize Count = DynamicExtent>
             constexpr Span<ElementType> SubSpan() const
             {
-                assert(Offset + Count <= Size());
-                return {m_Data + Offset, Count};
+                return SubSpan(Offset, Count);
             }
+            /// count = DynamicExtent means everything from offset on.
             constexpr Span<ElementType, DynamicExtent>
             SubSpan(SizeType offset, SizeType count = DynamicExtent) const
             {
-                assert(offset + count <= Size());
+                PrismCheck(offset <= Size());
+                if (count == DynamicExtent) count = Size() - offset;
+                PrismCheck(count <= Size() - offset);
                 return {m_Data + offset, count};
             }
 

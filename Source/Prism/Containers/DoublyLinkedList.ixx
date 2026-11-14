@@ -115,7 +115,7 @@ export extern "C++"
 
             inline T& operator[](usize index)
             {
-                assert(index < m_Size);
+                PrismCheck(index < m_Size);
 
                 Node* node = index < m_Size / 2 ? m_Head : m_Tail;
                 if (node == m_Head)

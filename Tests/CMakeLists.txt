@@ -66,12 +66,12 @@ function(prism_add_tests suite)
 endfunction()
 
 # Keep these lists in sync with Tests/<Suite>/meson.build.
-prism_add_tests(Algorithm Find Random SearchString Sort)
+prism_add_tests(Algorithm Find Random SearchString SipHash Sort)
 prism_add_tests(Containers
-  BitSpan Bitmap Deque DoublyLinkedList IntrusiveList
+  BitSpan Bitmap Deque DoublyLinkedList EdgeCases IntrusiveList
   IntrusiveRedBlackTree Queue RedBlackTree RingBuffer Stack
   Tuple UnorderedMap Vector)
-prism_add_tests(Core NumericLimits TypeTraits Version)
+prism_add_tests(Core Checked Hardening NumericLimits TypeTraits Version)
 prism_add_tests(Debug Log)
 prism_add_tests(Math Matrix Vector)
 prism_add_tests(Memory Memory Ref Scope SlabAllocator WeakRef)
@@ -99,3 +99,14 @@ target_include_directories(prism_header_check PRIVATE
 target_compile_options(prism_header_check PRIVATE
   ${PRISM_CXX_ARGS} ${PRISM_WARNING_ARGS})
 set_target_properties(prism_header_check PROPERTIES CXX_SCAN_FOR_MODULES OFF)
+
+# A format string that doesn't match its arguments must not compile, and the
+# error must name the problem.
+add_library(prism_format_compile_fail OBJECT EXCLUDE_FROM_ALL
+  "${CMAKE_CURRENT_SOURCE_DIR}/String/FormatCompileFail/main.cpp")
+target_link_libraries(prism_format_compile_fail PRIVATE prism_test_support)
+add_test(NAME String/FormatCompileFail
+  COMMAND "${CMAKE_COMMAND}" --build "${PROJECT_BINARY_DIR}"
+          --target prism_format_compile_fail)
+set_tests_properties(String/FormatCompileFail PROPERTIES LABELS String
+  TIMEOUT 120 PASS_REGULAR_EXPRESSION "argument not found")

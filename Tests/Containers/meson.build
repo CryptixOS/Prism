@@ -9,7 +9,7 @@ container_tests = [
   'BitSpan', 'Bitmap', 'IntrusiveList',
   'IntrusiveRedBlackTree',
   'Deque',
-  'DoublyLinkedList', 
+  'DoublyLinkedList', 'EdgeCases',
   'Queue', 'RingBuffer', 'RedBlackTree', 
   'Stack', 'Tuple', 'UnorderedMap', 'Vector',
 ]

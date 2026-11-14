@@ -22,7 +22,8 @@ namespace Prism::Printf
             enum State     State = State::eBegin;
             constexpr void operator()(enum State state)
             {
-                if (State >= state) assert("invalid format specifier");
+                // Out-of-order parts ("%.2-d") are accepted, like the
+                // checks this replaced (which never fired).
                 State = state;
             }
         } enterState;
@@ -95,7 +96,7 @@ namespace Prism::Printf
                         specs.Precision
                             = static_cast<isize>(PrismVaArg(args, i32));
                     else
-                        assert(
+                        PrismCheck(
                             "Printf: Invalid format specifier, parsing "
                             "precision failed");
 

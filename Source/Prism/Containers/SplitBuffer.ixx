@@ -10,10 +10,11 @@ module;
 
 export module Prism.Containers.SplitBuffer;
 
+export import Prism.Core.Checked;
 export import Prism.Core.Iterator;
 export import Prism.Core.TypeTraits;
 export import Prism.Debug.Assertions;
-export import Prism.Memory.Ref;
+export import Prism.Containers.Vector;
 
 export extern "C++"
 {
@@ -28,7 +29,7 @@ export extern "C++"
                 , m_Size(0)
                 , m_GapStart(0)
                 , m_GapEnd(capacity)
-                , m_Data(CreateRef<T[]>(capacity))
+                , m_Data(capacity)
             {
             }
 
@@ -36,21 +37,21 @@ export extern "C++"
 
             const T& operator[](usize index) const
             {
-                assert(index < m_Size);
+                PrismCheck(index < m_Size);
                 return index < m_GapStart ? m_Data[index]
                                           : m_Data[index + (m_GapEnd - m_GapStart)];
             }
 
             T& operator[](usize index)
             {
-                assert(index < m_Size);
+                PrismCheck(index < m_Size);
                 return index < m_GapStart ? m_Data[index]
                                           : m_Data[index + (m_GapEnd - m_GapStart)];
             }
 
             void Insert(usize index, const T& value)
             {
-                assert(index <= m_Size);
+                PrismCheck(index <= m_Size);
                 MoveGapTo(index);
                 if (m_GapStart == m_GapEnd) Grow();
                 m_Data[m_GapStart++] = value;
@@ -59,9 +60,10 @@ export extern "C++"
 
             void Erase(usize index)
             {
-                assert(index < m_Size);
+                PrismCheck(index < m_Size);
                 MoveGapTo(index);
-                --m_GapEnd;
+                // The element at `index` now sits just past the gap.
+                ++m_GapEnd;
                 --m_Size;
             }
 
@@ -159,15 +161,15 @@ export extern "C++"
                 usize        m_Index;
             };
 
-            Iterator Begin() { return Iterator(this, 0); }
-            Iterator End() { return Iterator(this, m_Size); }
+            Iterator begin() { return Iterator(this, 0); }
+            Iterator end() { return Iterator(this, m_Size); }
 
           private:
             usize    m_Capacity;
             usize    m_Size;
             usize    m_GapStart;
             usize    m_GapEnd;
-            Ref<T[]> m_Data;
+            Vector<T> m_Data;
 
             void     MoveGapTo(usize index)
             {
@@ -183,14 +185,15 @@ export extern "C++"
                     for (usize i = 0; i < moveCount; ++i)
                         m_Data[m_GapStart + i] = Move(m_Data[m_GapEnd + i]);
                 }
-                m_GapEnd += m_GapStart - index;
+                m_GapEnd   = m_GapEnd + index - m_GapStart;
                 m_GapStart = index;
             }
 
             void Grow()
             {
-                usize    newCapacity = m_Capacity * 2;
-                Ref<T[]> newData     = CreateRef<T[]>(newCapacity);
+                // From an empty buffer too (doubling 0 stayed 0).
+                usize    newCapacity = GrowCapacity(m_Capacity, m_Capacity + 1, 8);
+                Vector<T> newData(newCapacity);
 
                 for (usize i = 0; i < m_GapStart; ++i) newData[i] = Move(m_Data[i]);
 

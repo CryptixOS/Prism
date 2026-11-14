@@ -45,7 +45,11 @@ export extern "C++"
                                               CharType ch)
             {
                 if (count == 0) return dest;
-                if (IsConstantEvaluated()) return Assign(dest, count, ch);
+                if (IsConstantEvaluated())
+                {
+                    for (usize i = 0; i < count; ++i) Assign(dest[i], ch);
+                    return dest;
+                }
 
                 return static_cast<CharType*>(Memory::Fill(dest, ch, count));
             }
@@ -62,7 +66,7 @@ export extern "C++"
             constexpr static CharType* Move(CharType* dest, const CharType* src,
                                             usize count)
             {
-                assert(src && dest);
+                PrismCheck(src && dest);
                 if (count == 0) return dest;
                 if (IsConstantEvaluated())
                 {

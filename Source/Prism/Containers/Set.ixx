@@ -187,14 +187,18 @@ export extern "C++"
             constexpr KeyValuePair<Iterator, bool> Insert(const ValueType& value)
             {
                 auto it = m_Tree.Find(value);
-                if (it != m_Tree.end()) return {it, false};
+                if (it != m_Tree.end()) return {Iterator(it), false};
 
-                return {m_Tree.Insert(value, const_cast<ValueType&>(value)), true};
+                ValueType copy = value;
+                return {Iterator(m_Tree.Insert(value, Move(copy))), true};
             }
             constexpr KeyValuePair<Iterator, bool> Insert(ValueType&& value)
             {
-                auto treeIt = m_Tree.Insert(value, Move(value));
-                return {Iterator(treeIt), true};
+                auto it = m_Tree.Find(value);
+                if (it != m_Tree.end()) return {Iterator(it), false};
+
+                ValueType key = value;
+                return {Iterator(m_Tree.Insert(Move(key), Move(value))), true};
             }
             constexpr Iterator Insert(ConstIterator, const ValueType& value)
             {
@@ -220,11 +224,11 @@ export extern "C++"
                 if (!nh) return {end(), false, {}};
 
                 auto it = m_Tree.Find(nh.Node->Key());
-                if (it != end()) return {it, false, Move(nh)};
+                if (it != m_Tree.end()) return {Iterator(it), false, Move(nh)};
 
                 auto pos = m_Tree.Insert(nh.Node);
                 nh.Node  = nullptr;
-                return {pos, true, {}};
+                return {Iterator(pos), true, {}};
             }
             constexpr Iterator Insert(ConstIterator, NodeType&& nh)
             {
@@ -232,12 +236,16 @@ export extern "C++"
                 return result.Position;
             }
             template <typename K>
+                requires(!IsSameV<RemoveCvRefType<K>, ValueType>
+                         && !IsSameV<RemoveCvRefType<K>, NodeType>)
             constexpr KeyValuePair<Iterator, bool> Insert(K&& x)
             {
                 ValueType value(Forward<K>(x));
                 return Insert(Move(value));
             }
             template <typename K>
+                requires(!IsSameV<RemoveCvRefType<K>, ValueType>
+                         && !IsSameV<RemoveCvRefType<K>, NodeType>)
             constexpr Iterator Insert(ConstIterator, K&& x)
             {
                 auto result = Insert(Forward<K>(x));
@@ -248,7 +256,7 @@ export extern "C++"
             constexpr KeyValuePair<Iterator, bool> Emplace(Args&&... args)
             {
                 ValueType value(Forward<Args>(args)...);
-                return Insert(value);
+                return Insert(Move(value));
             }
 
             SizeType Erase(const KeyType& key) { return m_Tree.Erase(key) ? 1 : 0; }
@@ -257,7 +265,9 @@ export extern "C++"
             {
                 auto next = pos;
                 ++next;
-                m_Tree.Erase(static_cast<typename TreeType::Node*>(pos));
+                auto* node = static_cast<typename TreeType::Node*>(pos.Implementation);
+                m_Tree.Erase(node);
+                delete node;
                 return next;
             }
 
@@ -268,7 +278,7 @@ export extern "C++"
 
                 auto* node = static_cast<typename TreeType::Node*>(it);
                 m_Tree.Erase(node);
-                return node_type(node);
+                return NodeType(node);
             }
 
             void Merge(Set& other)
@@ -280,11 +290,11 @@ export extern "C++"
                     Insert(Move(nh));
                 }
             }
-            Iterator      Find(const KeyType& key) { return m_Tree.Find(key); }
+            Iterator Find(const KeyType& key) { return Iterator(m_Tree.Find(key)); }
 
             ConstIterator Find(const KeyType& key) const
             {
-                return m_Tree.Find(key);
+                return ConstIterator(m_Tree.Find(key));
             }
 
             bool Contains(const KeyType& key) const { return m_Tree.Contains(key); }
@@ -296,7 +306,7 @@ export extern "C++"
 
             Iterator LowerBound(const KeyType& key)
             {
-                return m_Tree.FindLargestNotAbove(key);
+                return Iterator(m_Tree.FindLargestNotAbove(key));
             }
 
             Iterator UpperBound(const KeyType& key)

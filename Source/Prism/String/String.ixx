@@ -40,7 +40,7 @@ export extern "C++"
             explicit constexpr BasicString() PM_NOEXCEPT { ShortInit(); }
             constexpr BasicString(SizeType count, ValueType ch)
             {
-                assert(count <= MaxSize());
+                PrismCheck(count <= MaxSize());
                 EnsureCapacity(count);
                 Assign(count, ch);
                 SetSize(count);
@@ -137,29 +137,45 @@ export extern "C++"
 
             C& At(usize pos)
             {
-                assert(pos < Size());
+                PrismCheck(pos < Size());
                 return Raw()[pos];
             }
             const C& At(usize pos) const
             {
-                assert(pos < Size());
+                PrismCheck(pos < Size());
                 return Raw()[pos];
             }
             C& operator[](usize pos)
             {
-                assert(pos < Size());
+                PrismCheck(pos < Size());
                 return Raw()[pos];
             }
             const C& operator[](usize pos) const
             {
-                assert(pos < Size());
+                PrismCheck(pos < Size());
                 return Raw()[pos];
             }
 
-            constexpr C&       Front() { return Raw()[0]; }
-            constexpr const C& Front() const { return Raw()[0]; }
-            constexpr C&       Back() { return Raw()[Size() - 1]; }
-            constexpr const C& Back() const { return Raw()[Size() - 1]; }
+            constexpr C& Front()
+            {
+                PrismCheck(!Empty());
+                return Raw()[0];
+            }
+            constexpr const C& Front() const
+            {
+                PrismCheck(!Empty());
+                return Raw()[0];
+            }
+            constexpr C& Back()
+            {
+                PrismCheck(!Empty());
+                return Raw()[Size() - 1];
+            }
+            constexpr const C& Back() const
+            {
+                PrismCheck(!Empty());
+                return Raw()[Size() - 1];
+            }
 
             constexpr C*       Raw() PM_NOEXCEPT
             {
@@ -179,38 +195,38 @@ export extern "C++"
                 return View();
             }
 
-            constexpr C*       begin() PM_NOEXCEPT { return &Front(); }
-            constexpr const C* begin() const PM_NOEXCEPT { return &Front(); }
-            constexpr const C* cbegin() const PM_NOEXCEPT { return &Front(); }
+            constexpr C*       begin() PM_NOEXCEPT { return Raw(); }
+            constexpr const C* begin() const PM_NOEXCEPT { return Raw(); }
+            constexpr const C* cbegin() const PM_NOEXCEPT { return Raw(); }
 
-            constexpr C*       end() PM_NOEXCEPT { return &Back() + 1; }
-            constexpr const C* end() const PM_NOEXCEPT { return &Back() + 1; }
-            constexpr const C* cend() const PM_NOEXCEPT { return &Back() + 1; }
+            constexpr C*       end() PM_NOEXCEPT { return Raw() + Size(); }
+            constexpr const C* end() const PM_NOEXCEPT { return Raw() + Size(); }
+            constexpr const C* cend() const PM_NOEXCEPT { return Raw() + Size(); }
 
             constexpr Prism::ReverseIterator<C*> rbegin() PM_NOEXCEPT
             {
-                return &Back() + 1;
+                return Raw() + Size();
             }
             constexpr Prism::ReverseIterator<const C*> rbegin() const PM_NOEXCEPT
             {
-                return &Back() + 1;
+                return Raw() + Size();
             }
             constexpr Prism::ReverseIterator<const C*> crbegin() const PM_NOEXCEPT
             {
-                return &Back() + 1;
+                return Raw() + Size();
             }
 
             constexpr Prism::ReverseIterator<C*> rend() PM_NOEXCEPT
             {
-                return &Front();
+                return Raw();
             }
             constexpr Prism::ReverseIterator<const C*> rend() const PM_NOEXCEPT
             {
-                return &Front();
+                return Raw();
             }
             constexpr Prism::ReverseIterator<const C*> crend() const PM_NOEXCEPT
             {
-                return &Front();
+                return Raw();
             }
 
             constexpr bool  Empty() const PM_NOEXCEPT { return Size() == 0; }
@@ -223,38 +239,60 @@ export extern "C++"
             constexpr BasicString& Insert(SizeType pos, SizeType count,
                                           ValueType ch)
             {
-                assert(Size() + count <= MaxSize());
-                assert(pos <= Size());
+                PrismCheck(pos <= Size());
+                usize newSize = 0;
+                bool  fits    = CheckedAdd(Size(), count, newSize);
+                PrismCheck(fits);
 
-                usize newSize = Max(pos + count, Size());
-
-                EnsureCapacity(newSize);
-                TraitsType::Assign(Raw() + pos, ch, count);
+                usize tail    = Size() - pos;
+                GrowToFit(newSize);
+                TraitsType::Move(Raw() + pos + count, Raw() + pos, tail);
+                TraitsType::Assign(Raw() + pos, count, ch);
 
                 SetSize(newSize);
                 Raw()[Size()] = 0;
 
                 return *this;
             }
-            constexpr BasicString& Insert(SizeType pos, const ValueType* str)
+            constexpr BasicString& Insert(SizeType pos, const ValueType* str,
+                                          SizeType len)
             {
-                assert(pos <= Size());
-                assert(str);
+                PrismCheck(pos <= Size());
+                PrismCheck(str || len == 0);
 
-                usize len     = Traits::Length(str);
-                usize newSize = Max(pos + len, Size());
+                // Growing and shifting would move `str` if it points into us.
+                if (len > 0 && str >= Raw() && str <= Raw() + Size())
+                {
+                    BasicString copy(str, len);
+                    return Insert(pos, copy.Raw(), len);
+                }
 
-                assert(Size() + len <= MaxSize());
+                usize newSize = 0;
+                bool  fits    = CheckedAdd(Size(), len, newSize);
+                PrismCheck(fits);
 
-                EnsureCapacity(newSize);
+                usize tail    = Size() - pos;
+                GrowToFit(newSize);
+                TraitsType::Move(Raw() + pos + len, Raw() + pos, tail);
+                TraitsType::Copy(Raw() + pos, str, len);
+
                 SetSize(newSize);
                 Raw()[newSize] = 0;
 
                 return *this;
             }
+            constexpr BasicString& Insert(SizeType pos, const ValueType* str)
+            {
+                PrismCheck(str);
+                return Insert(pos, str, Traits::Length(str));
+            }
+            constexpr BasicString& Insert(SizeType pos, BasicStringView<C, Traits> str)
+            {
+                return Insert(pos, str.Raw(), str.Size());
+            }
             constexpr BasicString& Erase(SizeType index = 0, SizeType count = NPos)
             {
-                assert(index <= Size());
+                PrismCheck(index <= Size());
 
                 if (count == 0 || index == Size()) return *this;
 
@@ -274,7 +312,7 @@ export extern "C++"
             }
             constexpr Iterator Erase(ConstIterator position)
             {
-                assert(position >= begin() && position < end());
+                PrismCheck(position >= begin() && position < end());
 
                 SizeType index = position - begin();
                 Erase(index, 1);
@@ -282,9 +320,9 @@ export extern "C++"
             }
             constexpr Iterator Erase(ConstIterator first, ConstIterator last)
             {
-                assert(first >= begin());
-                assert(last <= end());
-                assert(first <= last);
+                PrismCheck(first >= begin());
+                PrismCheck(last <= end());
+                PrismCheck(first <= last);
 
                 SizeType index = first - begin();
                 SizeType count = last - first;
@@ -295,7 +333,7 @@ export extern "C++"
 
             constexpr void Reserve(usize newCapacity)
             {
-                assert(newCapacity <= MaxSize());
+                PrismCheck(newCapacity <= MaxSize());
                 EnsureCapacity(newCapacity);
             }
             constexpr usize Capacity() const PM_NOEXCEPT
@@ -320,7 +358,7 @@ export extern "C++"
             }
             constexpr void Resize(SizeType count, ValueType ch)
             {
-                assert(Size() + count <= MaxSize());
+                PrismCheck(Size() + count <= MaxSize());
 
                 usize oldSize = Size();
                 Resize(count);
@@ -598,13 +636,14 @@ export extern "C++"
             constexpr BasicString Substr(SizeType pos   = 0,
                                          SizeType count = NPos) const
             {
-                assert(pos < Size());
+                PrismCheck(pos <= Size());
+                count = Min(count, Size() - pos);
                 return BasicString(BasicStringView{Raw() + pos, count});
             }
             constexpr SizeType Copy(ValueType* str, SizeType count,
                                     SizeType pos = 0) const
             {
-                assert(pos <= Size());
+                PrismCheck(pos <= Size());
                 return View().Copy(str, count, pos);
             }
             /**
@@ -662,7 +701,7 @@ export extern "C++"
                 {
                     usize size    = Size();
                     usize newSize = 2 * size;
-                    EnsureCapacity(newSize);
+                    GrowToFit(newSize);
                     Traits::Move(Raw() + pos, Raw(), size);
                     SetSize(newSize);
                     Raw()[Size()] = 0;
@@ -670,7 +709,7 @@ export extern "C++"
                 }
 
                 usize newSize = Size() + rhs.Size();
-                EnsureCapacity(newSize);
+                GrowToFit(newSize);
                 SetSize(newSize);
                 Raw()[Size()] = 0;
 
@@ -682,7 +721,7 @@ export extern "C++"
                 auto  pos     = Size();
                 usize newSize = Size() + 1;
 
-                EnsureCapacity(newSize);
+                GrowToFit(newSize);
                 Raw()[pos] = ch;
 
                 SetSize(newSize);
@@ -794,7 +833,11 @@ export extern "C++"
             constexpr void Reallocate(usize newCapacity, bool copyOld)
             {
                 constexpr usize ALIGNMENT = sizeof(ValueType*);
-                newCapacity = (newCapacity + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
+                // Room for the rounding and the terminator, checked.
+                usize           rounded   = 0;
+                bool            fits      = CheckedAdd(newCapacity, ALIGNMENT, rounded);
+                PrismCheck(fits);
+                newCapacity = (rounded - 1) & ~(ALIGNMENT - 1);
                 if (newCapacity == Capacity()) return;
 
                 usize newSize = Size();
@@ -816,6 +859,13 @@ export extern "C++"
             {
                 if (Capacity() >= newCapacity) return;
                 Reallocate(newCapacity, true);
+            }
+            /// For appends: grows geometrically, so n appends cost O(n) in
+            /// total instead of one reallocation (and copy) each.
+            constexpr void GrowToFit(usize newSize)
+            {
+                if (Capacity() >= newSize) return;
+                Reallocate(GrowCapacity(Capacity(), newSize), true);
             }
             constexpr void ResizeIfNeededOverwrite(const C* string, usize length)
             {

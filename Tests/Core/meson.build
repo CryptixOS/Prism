@@ -6,6 +6,8 @@
 #*/
 
 core_tests = [
+  'Checked',
+  'Hardening',
   'NumericLimits',
   'TypeTraits',
   'Version',

@@ -184,6 +184,7 @@ export extern "C++"
 
             constexpr T& operator[](usize index)
             {
+                PrismCheck(index < Size());
                 usize flatIndex  = m_FrontOffset + index;
                 usize blockIndex = flatIndex / BlockSize;
                 usize offset     = flatIndex % BlockSize;
@@ -192,6 +193,7 @@ export extern "C++"
 
             constexpr const T& operator[](usize index) const
             {
+                PrismCheck(index < Size());
                 usize flatIndex  = m_FrontOffset + index;
                 usize blockIndex = flatIndex / BlockSize;
                 usize offset     = flatIndex % BlockSize;
@@ -273,6 +275,7 @@ export extern "C++"
 
             constexpr T PopBackElement()
             {
+                PrismCheck(!Empty());
                 if (m_BackOffset == 0)
                 {
                     --m_BackIndex;
@@ -282,6 +285,7 @@ export extern "C++"
             }
             constexpr void PopBack()
             {
+                PrismCheck(!Empty());
                 if (m_BackOffset == 0)
                 {
                     --m_BackIndex;
@@ -292,6 +296,7 @@ export extern "C++"
 
             constexpr T PopFrontElement()
             {
+                PrismCheck(!Empty());
                 T value = (*m_Blocks[m_FrontIndex])[m_FrontOffset++];
                 if (m_FrontOffset == BlockSize)
                 {
@@ -302,6 +307,7 @@ export extern "C++"
             }
             constexpr void PopFront()
             {
+                PrismCheck(!Empty());
                 ++m_FrontOffset;
                 if (m_FrontOffset == BlockSize)
                 {
@@ -312,10 +318,12 @@ export extern "C++"
 
             constexpr T& Front()
             {
+                PrismCheck(!Empty());
                 return (*m_Blocks[m_FrontIndex])[m_FrontOffset];
             }
             constexpr const T& Front() const
             {
+                PrismCheck(!Empty());
                 return (*m_Blocks[m_FrontIndex])[m_FrontOffset];
             }
 
@@ -323,12 +331,14 @@ export extern "C++"
             // then the end of the previous block.
             constexpr T& Back()
             {
+                PrismCheck(!Empty());
                 if (m_BackOffset == 0)
                     return (*m_Blocks[m_BackIndex - 1])[BlockSize - 1];
                 return (*m_Blocks[m_BackIndex])[m_BackOffset - 1];
             }
             constexpr const T& Back() const
             {
+                PrismCheck(!Empty());
                 if (m_BackOffset == 0)
                     return (*m_Blocks[m_BackIndex - 1])[BlockSize - 1];
                 return (*m_Blocks[m_BackIndex])[m_BackOffset - 1];

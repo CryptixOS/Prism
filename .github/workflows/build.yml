@@ -90,3 +90,82 @@ jobs:
 
       - name: Install
         run: DESTDIR="$PWD/staging" cmake --install build
+
+  # Hardened (PRISM_HARDENED) build of the tests, under ASan and UBSan.
+  sanitize:
+    name: sanitize / ${{ matrix.compiler }}
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm --needed git cmake ninja clang compiler-rt
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: |
+          if [ "${{ matrix.compiler }}" = clang ]; then
+            export CC=clang CXX=clang++
+          fi
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DPRISM_TARGET=app \
+            -DPRISM_BUILD_TESTS=ON \
+            -DPRISM_HARDENED=ON \
+            -DPRISM_SANITIZE=address,undefined
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        env:
+          ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: ctest --test-dir build --output-on-failure
+
+  # A short libFuzzer run of every Fuzz/ target.
+  fuzz:
+    name: fuzz
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm --needed git cmake ninja clang compiler-rt
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: |
+          CC=clang CXX=clang++ cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DPRISM_TARGET=app \
+            -DPRISM_HARDENED=ON \
+            -DPRISM_BUILD_FUZZERS=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Fuzz
+        run: |
+          for target in Format Path OptionParser Number String; do
+            mkdir -p "corpus/$target"
+            echo "== $target"
+            build/Fuzz/$target -max_total_time=60 -timeout=10 \
+              -rss_limit_mb=2048 "corpus/$target"
+          done
+
+      - name: Upload crashes
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes
+          path: |
+            crash-*
+            timeout-*
+            oom-*

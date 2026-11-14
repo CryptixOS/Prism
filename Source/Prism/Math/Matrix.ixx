@@ -109,11 +109,11 @@ export extern "C++"
             constexpr Matrix<C, R, T>::Matrix(
                 InitializerList<InitializerList<T>> columns)
             {
-                assert(columns.size() == C && "Initializer must have C columns");
+                PrismCheck(columns.size() == C && "Initializer must have C columns");
                 usize c = 0;
                 for (auto const& col : columns)
                 {
-                    assert(col.size() == R
+                    PrismCheck(col.size() == R
                            && "Each column must have exactly R elements");
                     usize r = 0;
                     for (auto const& v : col) Columns[c][r++] = v;
@@ -124,7 +124,7 @@ export extern "C++"
             template <usize C, usize R, typename T>
             constexpr Matrix<C, R, T>::Matrix(InitializerList<Vector<R, T>> columns)
             {
-                assert(columns.size() == C && "Initializer must have C columns");
+                PrismCheck(columns.size() == C && "Initializer must have C columns");
                 usize c = 0;
                 for (auto const& vec : columns) { Columns[c++] = vec; }
             }
@@ -133,11 +133,11 @@ export extern "C++"
             constexpr Matrix<C, R, T>&
             Matrix<C, R, T>::operator=(InitializerList<InitializerList<T>> columns)
             {
-                assert(columns.size() == C && "Initializer must have C columns");
+                PrismCheck(columns.size() == C && "Initializer must have C columns");
                 usize c = 0;
                 for (auto const& col : columns)
                 {
-                    assert(col.size() == R
+                    PrismCheck(col.size() == R
                            && "Each column must have exactly R elements");
                     usize r = 0;
                     for (auto const& v : col) Columns[c][r++] = v;
@@ -150,7 +150,7 @@ export extern "C++"
             constexpr Matrix<C, R, T>&
             Matrix<C, R, T>::operator=(InitializerList<Vector<R, T>> columns)
             {
-                assert(columns.size() == C && "Initializer must have C columns");
+                PrismCheck(columns.size() == C && "Initializer must have C columns");
                 usize c = 0;
                 for (auto const& vec : columns) Columns[c++] = vec;
                 return *this;
@@ -162,7 +162,7 @@ export extern "C++"
             template <usize C, usize R, typename T>
             constexpr Vector<R, T>& Matrix<C, R, T>::operator[](usize col)
             {
-                assert(col < C);
+                PrismCheck(col < C);
                 return Columns[col];
             }
 
@@ -170,14 +170,14 @@ export extern "C++"
             constexpr const Vector<R, T>&
             Matrix<C, R, T>::operator[](usize col) const
             {
-                assert(col < C);
+                PrismCheck(col < C);
                 return Columns[col];
             }
 
             template <usize C, usize R, typename T>
             constexpr T& Matrix<C, R, T>::operator()(usize row, usize col)
             {
-                assert(row < R && col < C);
+                PrismCheck(row < R && col < C);
                 return Columns[col][row];
             }
 
@@ -185,7 +185,7 @@ export extern "C++"
             constexpr const T& Matrix<C, R, T>::operator()(usize row,
                                                            usize col) const
             {
-                assert(row < R && col < C);
+                PrismCheck(row < R && col < C);
                 return Columns[col][row];
             }
 
@@ -447,7 +447,7 @@ export extern "C++"
                 static_assert(N > 0, "Cannot invert empty matrix");
 
                 T det = Determinant();
-                assert(
+                PrismCheck(
                     det != T(0)
                     && "Matrix is singular (determinant is zero), cannot invert");
 

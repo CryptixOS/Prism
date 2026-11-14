@@ -4,12 +4,12 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
+#include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Types.hpp>
 
 #if PRISM_TARGET_CARBONC == 0
     #include <demangler.hpp>
 #endif
-#include <Prism/Core/Compiler.hpp>
-#include <Prism/Core/Types.hpp>
 import Prism.Debug.Stacktrace;
 import Prism.String.String;
 import Prism.Utility.Math;

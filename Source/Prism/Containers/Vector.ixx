@@ -11,6 +11,7 @@ module;
 
 export module Prism.Containers.Vector;
 
+export import Prism.Core.Checked;
 export import Prism.Core.Iterator;
 export import Prism.Core.Limits;
 export import Prism.Memory.Memory;
@@ -194,42 +195,47 @@ export extern "C++"
              */
             constexpr ReferenceType At(SizeType pos)
             {
-                assert(pos < m_Size);
+                PrismCheck(pos < m_Size);
                 return m_Data[pos];
             }
             constexpr ConstReferenceType At(SizeType pos) const
             {
-                assert(pos < m_Size);
+                PrismCheck(pos < m_Size);
                 return m_Data[pos];
             }
 
             /** @brief Element access operator. */
-            constexpr ReferenceType operator[](SizeType pos) { return m_Data[pos]; }
+            constexpr ReferenceType operator[](SizeType pos)
+            {
+                PrismCheck(pos < m_Size);
+                return m_Data[pos];
+            }
             constexpr ConstReferenceType operator[](SizeType pos) const
             {
+                PrismCheck(pos < m_Size);
                 return m_Data[pos];
             }
 
             /** @brief Returns a reference to the first element. */
             constexpr ReferenceType Front()
             {
-                assert(m_Size > 0);
+                PrismCheck(m_Size > 0);
                 return m_Data[0];
             }
             constexpr ConstReferenceType Front() const
             {
-                assert(m_Size > 0);
+                PrismCheck(m_Size > 0);
                 return m_Data[0];
             }
             /** @brief Returns a reference to the last element. */
             constexpr ReferenceType Back()
             {
-                assert(m_Size > 0);
+                PrismCheck(m_Size > 0);
                 return m_Data[m_Size - 1];
             }
             constexpr ConstReferenceType Back() const
             {
-                assert(m_Size > 0);
+                PrismCheck(m_Size > 0);
                 return m_Data[m_Size - 1];
             }
 
@@ -325,9 +331,9 @@ export extern "C++"
             constexpr void FillRange(const ValueType& value, usize start,
                                      usize count = usize(-1))
             {
-                assert(start < m_Size);
+                PrismCheck(start < m_Size);
                 if (count == usize(-1)) count = m_Size - start;
-                assert(start + count <= m_Size);
+                PrismCheck(start + count <= m_Size);
 
                 usize endIdx = start + count;
                 for (usize i = start; i < endIdx; i++) m_Data[i] = value;
@@ -348,9 +354,9 @@ export extern "C++"
             constexpr Iterator Insert(ConstIterator pos, T&& value)
             {
                 SizeType index = pos - m_Data;
-                assert(index <= m_Size);
+                PrismCheck(index <= m_Size);
 
-                if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
+                if (m_Size >= m_Capacity) Reserve(GrowCapacity(m_Capacity, m_Size + 1));
 
                 if (index < m_Size)
                 {
@@ -369,7 +375,7 @@ export extern "C++"
                                       const T& value)
             {
                 SizeType index = pos - m_Data;
-                assert(index <= m_Size);
+                PrismCheck(index <= m_Size);
                 if (count == 0) return m_Data + index;
 
                 Reserve(m_Size + count);
@@ -416,7 +422,7 @@ export extern "C++"
                                       InputIt last)
             {
                 SizeType index = pos - m_Data;
-                assert(index <= m_Size);
+                PrismCheck(index <= m_Size);
                 SizeType count = Distance(first, last);
                 if (count == 0) return m_Data + index;
 
@@ -475,9 +481,9 @@ export extern "C++"
             constexpr Iterator Emplace(ConstIterator pos, Args&&... args)
             {
                 SizeType index = pos - m_Data;
-                assert(index <= m_Size);
+                PrismCheck(index <= m_Size);
 
-                if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
+                if (m_Size >= m_Capacity) Reserve(GrowCapacity(m_Capacity, m_Size + 1));
 
                 if (index < m_Size)
                 {
@@ -499,7 +505,7 @@ export extern "C++"
              */
             constexpr Iterator Erase(Iterator pos)
             {
-                assert(pos >= begin() && pos < end());
+                PrismCheck(pos >= begin() && pos < end());
                 usize index = pos - m_Data;
 
                 for (usize i = index; i < (m_Size - 1); i++)
@@ -517,7 +523,7 @@ export extern "C++"
              */
             constexpr Iterator Erase(Iterator first, Iterator last)
             {
-                assert(first >= begin() && first <= last && last <= end());
+                PrismCheck(first >= begin() && first <= last && last <= end());
                 usize index = first - m_Data;
                 usize count = last - first;
                 if (count == 0) return m_Data + index;
@@ -536,14 +542,14 @@ export extern "C++"
              */
             void PushBack(const T& value)
             {
-                if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
+                if (m_Size >= m_Capacity) Reserve(GrowCapacity(m_Capacity, m_Size + 1));
                 new (m_Data + m_Size) T(value);
                 ++m_Size;
             }
 
             void PushBack(T&& value)
             {
-                if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
+                if (m_Size >= m_Capacity) Reserve(GrowCapacity(m_Capacity, m_Size + 1));
                 new (m_Data + m_Size) T(Move(value));
                 ++m_Size;
             }
@@ -556,7 +562,7 @@ export extern "C++"
             template <typename... Args>
             T& EmplaceBack(Args&&... args)
             {
-                if (m_Size >= m_Capacity) Reserve(m_Capacity ? m_Capacity * 2 : 1);
+                if (m_Size >= m_Capacity) Reserve(GrowCapacity(m_Capacity, m_Size + 1));
                 T* element = new (m_Data + m_Size) T(Forward<Args>(args)...);
                 ++m_Size;
                 return *element;
@@ -576,7 +582,7 @@ export extern "C++"
              */
             constexpr T PopBackElement()
             {
-                assert(m_Size > 0);
+                PrismCheck(m_Size > 0);
                 T value = Move(m_Data[m_Size - 1]);
                 PopBack();
                 return value;
@@ -630,7 +636,7 @@ export extern "C++"
 
                 // Allocate uninitialized storage memory layout explicitly
                 T* newData
-                    = reinterpret_cast<T*>(::operator new(newCapacity * sizeof(T)));
+                    = reinterpret_cast<T*>(::operator new(AllocationSize<T>(newCapacity)));
 
                 for (SizeType i = 0; i < m_Size; ++i)
                 {
@@ -658,7 +664,7 @@ export extern "C++"
                 }
 
                 T* newData
-                    = reinterpret_cast<T*>(::operator new(m_Size * sizeof(T)));
+                    = reinterpret_cast<T*>(::operator new(AllocationSize<T>(m_Size)));
                 for (SizeType i = 0; i < m_Size; i++)
                 {
                     new (newData + i) T(Move(m_Data[i]));

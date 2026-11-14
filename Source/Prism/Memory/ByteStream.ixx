@@ -62,7 +62,7 @@ export extern "C++"
             template <Integral T>
             T Read()
             {
-                assert(m_Offset + sizeof(T) <= m_Size);
+                PrismCheck(m_Offset <= m_Size && sizeof(T) <= m_Size - m_Offset);
 
                 T value;
                 Memory::Copy(&value, m_Data + m_Offset, sizeof(T));
@@ -73,7 +73,7 @@ export extern "C++"
             template <typename T>
             void Read(T* dest, usize size)
             {
-                assert(m_Offset + size <= m_Size);
+                PrismCheck(m_Offset + size <= m_Size);
 
                 Memory::Copy(dest, m_Data + m_Offset, size);
                 m_Offset += size;
@@ -81,7 +81,7 @@ export extern "C++"
 
             void Write(ByteStream<E>& inStream, usize size)
             {
-                assert(m_Offset + size <= m_Size);
+                PrismCheck(m_Offset + size <= m_Size);
 
                 inStream.Read(m_Data + m_Offset, size);
                 m_Offset += size;
@@ -89,7 +89,7 @@ export extern "C++"
             template <typename T>
             void Write(T* data, usize size)
             {
-                assert(m_Offset + size <= m_Size);
+                PrismCheck(m_Offset + size <= m_Size);
 
                 Memory::Copy(m_Data + m_Offset, data, size);
                 m_Offset += size;
@@ -97,7 +97,7 @@ export extern "C++"
             template <typename T, usize Size>
             void operator>>(T (&dest)[Size])
             {
-                assert(m_Offset + Size <= m_Size);
+                PrismCheck(m_Offset + Size <= m_Size);
 
                 Memory::Copy(reinterpret_cast<void*>(dest), m_Data + m_Offset,
                              Size);
@@ -108,7 +108,7 @@ export extern "C++"
             void operator>>(T& dest)
                 requires(sizeof(T) > 8)
             {
-                assert(m_Offset + sizeof(T) <= m_Size);
+                PrismCheck(m_Offset <= m_Size && sizeof(T) <= m_Size - m_Offset);
 
                 Memory::Copy(&dest, m_Data + m_Offset, sizeof(T));
                 m_Offset += sizeof(T);
@@ -117,7 +117,7 @@ export extern "C++"
             void operator>>(T& dest)
                 requires(sizeof(T) <= 8)
             {
-                assert(m_Offset + sizeof(T) <= m_Size);
+                PrismCheck(m_Offset <= m_Size && sizeof(T) <= m_Size - m_Offset);
 
                 T value;
                 Memory::Copy(&value, m_Data + m_Offset, sizeof(T));

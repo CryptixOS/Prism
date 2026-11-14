@@ -65,34 +65,58 @@ export extern "C++"
             //--------------------------------------------------------------------------
             constexpr Reference At(SizeType pos)
             {
-                assert(pos < N);
+                PrismCheck(pos < N);
 
                 return Raw()[pos];
             }
             constexpr ConstReference At(SizeType pos) const
             {
-                assert(pos < N);
+                PrismCheck(pos < N);
 
                 return Raw()[pos];
             }
             constexpr Reference operator[](SizeType pos)
             {
-                assert(pos < N);
+                PrismCheck(pos < N);
 
                 return Raw()[pos];
             }
             constexpr ConstReference operator[](SizeType pos) const
             {
-                assert(pos < N);
+                PrismCheck(pos < N);
 
                 return Raw()[pos];
             }
-            constexpr Reference       Front() { return Raw()[0]; }
-            constexpr ConstReference  Front() const { return Raw()[0]; }
-            constexpr Reference       Back() { return Raw()[N - 1]; }
-            constexpr ConstReference  Back() const { return Raw()[N - 1]; }
-            constexpr T*              Raw() PM_NOEXCEPT { return Data; }
-            constexpr const T*        Raw() const PM_NOEXCEPT { return Data; }
+            constexpr Reference Front()
+            {
+                static_assert(N > 0, "Front() of an empty Array");
+                return Raw()[0];
+            }
+            constexpr ConstReference Front() const
+            {
+                static_assert(N > 0, "Front() of an empty Array");
+                return Raw()[0];
+            }
+            constexpr Reference Back()
+            {
+                static_assert(N > 0, "Back() of an empty Array");
+                return Raw()[N - 1];
+            }
+            constexpr ConstReference Back() const
+            {
+                static_assert(N > 0, "Back() of an empty Array");
+                return Raw()[N - 1];
+            }
+            constexpr T* Raw() PM_NOEXCEPT
+            {
+                if constexpr (N == 0) return nullptr;
+                else return Data;
+            }
+            constexpr const T* Raw() const PM_NOEXCEPT
+            {
+                if constexpr (N == 0) return nullptr;
+                else return Data;
+            }
 
             //--------------------------------------------------------------------------
             // Iterators
@@ -160,7 +184,7 @@ export extern "C++"
             }
             constexpr void Swap(Array& other) PM_NOEXCEPT
             {
-                assert(other.Size() <= N);
+                PrismCheck(other.Size() <= N);
                 for (usize i = 0; auto& v : other) Swap(v, Raw()[i++]);
             }
             constexpr auto operator<=>(const Array<T, N>& other) const = default;

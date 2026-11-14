@@ -588,7 +588,7 @@ export extern "C++"
                     : m_A(a)
                     , m_B(b)
                 {
-                    assert(m_A <= m_B);
+                    PrismCheck(m_A <= m_B);
                 }
 
                 ResultType  A() const { return m_A; }

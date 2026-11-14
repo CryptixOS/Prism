@@ -27,7 +27,7 @@ export extern "C++"
 
             PM_ALWAYS_INLINE void Ref() const PM_NOEXCEPT
             {
-                assert(m_RefCount.Load() > 0);
+                PrismCheck(m_RefCount.Load() > 0);
                 ++m_RefCount;
             }
 
@@ -39,11 +39,11 @@ export extern "C++"
           protected:
             constexpr RefCountedBase() PM_NOEXCEPT = default;
 
-            ~RefCountedBase() { assert(m_RefCount.Load() == 0); }
+            ~RefCountedBase() { PrismCheck(m_RefCount.Load() == 0); }
 
             PM_ALWAYS_INLINE usize DerefBase() const PM_NOEXCEPT
             {
-                assert(m_RefCount.Load() > 0);
+                PrismCheck(m_RefCount.Load() > 0);
                 return --m_RefCount;
             }
 
@@ -77,13 +77,13 @@ export extern "C++"
 
             void Ref() const PM_NOEXCEPT
             {
-                assert(m_RefCount.Load() > 0 && "Ref() on a dead object");
+                PrismCheck(m_RefCount.Load() > 0 && "Ref() on a dead object");
                 ++m_RefCount;
             }
             /// @return true if this call destroyed the object.
             bool Unref() const
             {
-                assert(m_RefCount.Load() > 0 && "Unref() underflow");
+                PrismCheck(m_RefCount.Load() > 0 && "Unref() underflow");
                 if (--m_RefCount != 0) return false;
 
                 auto* self = const_cast<T*>(static_cast<const T*>(this));
@@ -109,7 +109,7 @@ export extern "C++"
             // Virtual so a Ref<Base> can delete a Derived.
             virtual ~RefCounted()
             {
-                assert(m_RefCount.Load() == 0
+                PrismCheck(m_RefCount.Load() == 0
                        && "Destroying an object that still has references");
             }
 

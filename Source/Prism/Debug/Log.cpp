@@ -61,12 +61,14 @@ namespace Prism::Log
             isize nwritten = 0;
             T     value    = PrismVaArg(args, T);
 
+            String str = StringUtils::ToString(value, spec.Base);
+            // The sign is printed separately, after the padding decision
+            // (negating value would overflow for the minimum).
             if (value < 0 && spec.Base == 10)
             {
                 spec.Sign = Sign::eMinus;
-                value *= -1;
+                str       = str.Substr(1);
             }
-            String str     = StringUtils::ToString(value, spec.Base);
 
             char   padding = spec.ZeroPad ? '0' : ' ';
             if (spec.Sign != Sign::eNone && spec.Length > 0) spec.Length--;
@@ -180,8 +182,8 @@ namespace Prism::Log
         return nwritten;
     }
 
-    isize PrintArgument(StringView::Iterator&, VaList& args,
-                        PrintfFormatSpec& specs)
+    static isize PrintArgument(StringView::Iterator&, VaList& args,
+                               PrintfFormatSpec& specs)
     {
         isize nwritten = 0;
 

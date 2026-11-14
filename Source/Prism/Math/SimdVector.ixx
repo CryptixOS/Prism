@@ -91,7 +91,7 @@ export extern "C++"
             // -------- scalar access (slow path) --------
             PM_ALWAYS_INLINE constexpr f32 operator[](usize index) const
             {
-                assert(index < N);
+                PrismCheck(index < N);
                 alignas(32) f32 tmp[N];
                 Store(tmp);
                 return tmp[index];

@@ -162,6 +162,7 @@ install_headers(
   'Source/Prism/Algorithm/FNV1aHash.ixx',
   'Source/Prism/Algorithm/Hash.ixx',
   'Source/Prism/Algorithm/SearchString.ixx',
+  'Source/Prism/Algorithm/SipHash.ixx',
   'Source/Prism/Algorithm/Sort.ixx',
 
   subdir: 'Prism/Algorithm'
@@ -195,6 +196,7 @@ install_headers(
 install_headers(
   'Source/Prism/Core/AllocatorTraits.ixx',
   'Source/Prism/Core/Bits.ixx',
+  'Source/Prism/Core/Checked.ixx',
   'Source/Prism/Core/Compiler.hpp',
   'Source/Prism/Core/Concepts.ixx',
   'Source/Prism/Core/Config.hpp',

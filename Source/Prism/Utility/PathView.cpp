@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
+#include <Prism/Core/Types.hpp>
 
 // The kernel's limit when built inside its tree, 255 otherwise.
 #if PRISM_TARGET_CRYPTIX != 0 && __has_include(<API/Limits.hpp>)
@@ -12,8 +13,6 @@
 #else
     #define PRISM_MAX_PATH 255
 #endif
-
-#include <Prism/Core/Types.hpp>
 import Prism.String.Formatter;
 import Prism.String.String;
 import Prism.String.StringView;

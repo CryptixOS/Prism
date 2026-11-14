@@ -98,9 +98,9 @@ export extern "C++"
 
             void RotateLeft(Node* SubtreeRoot)
             {
-                assert(SubtreeRoot);
+                PrismCheck(SubtreeRoot);
                 auto* pivot = SubtreeRoot->RightChild;
-                assert(pivot);
+                PrismCheck(pivot);
                 auto* Parent            = SubtreeRoot->Parent;
 
                 // stage 1 - SubtreeRoot's right child is now pivot's left child
@@ -124,9 +124,9 @@ export extern "C++"
 
             void RotateRight(Node* SubtreeRoot)
             {
-                assert(SubtreeRoot);
+                PrismCheck(SubtreeRoot);
                 auto* pivot = SubtreeRoot->LeftChild;
-                assert(pivot);
+                PrismCheck(pivot);
                 auto* Parent           = SubtreeRoot->Parent;
 
                 // stage 1 - SubtreeRoot's left child is now pivot's right child
@@ -190,7 +190,7 @@ export extern "C++"
 
             void Insert(Node* node)
             {
-                assert(node);
+                PrismCheck(node);
                 Node* Parent = nullptr;
                 Node* temp   = m_Root;
                 while (temp)
@@ -223,7 +223,7 @@ export extern "C++"
 
             void InsertFixups(Node* node)
             {
-                assert(node && node->Color == Color::Red);
+                PrismCheck(node && node->Color == Color::Red);
                 while (node->Parent && node->Parent->Color == Color::Red)
                 {
                     auto* grandParent = node->Parent->Parent;
@@ -275,7 +275,7 @@ export extern "C++"
 
             void Remove(Node* node)
             {
-                assert(node);
+                PrismCheck(node);
 
                 // special case: deleting the only node
                 if (m_Size == 1)
@@ -441,7 +441,7 @@ export extern "C++"
 
             static Node* Successor(Node* node)
             {
-                assert(node);
+                PrismCheck(node);
                 if (node->RightChild)
                 {
                     node = node->RightChild;
@@ -459,7 +459,7 @@ export extern "C++"
 
             static Node* Predecessor(Node* node)
             {
-                assert(node);
+                PrismCheck(node);
                 if (node->LeftChild)
                 {
                     node = node->LeftChild;
@@ -543,7 +543,7 @@ export extern "C++"
                 void Insert(K key, V& value)
                 {
                     auto& node = value.*Member;
-                    assert(!node.m_In_tree);
+                    PrismCheck(!node.m_In_tree);
                     static_cast<typename BaseTree::Node&>(node).key = key;
                     BaseTree::Insert(&node);
                     // Note: Self-reference ensures that the
@@ -583,12 +583,12 @@ export extern "C++"
                     }
                     ElementType& operator*()
                     {
-                        assert(m_Node);
+                        PrismCheck(m_Node);
                         return *NodeToValue(*m_Node);
                     }
                     auto operator->()
                     {
-                        assert(m_Node);
+                        PrismCheck(m_Node);
                         return NodeToValue(*m_Node);
                     }
                     PM_NODISCARD bool IsEnd() const { return !m_Node; }
@@ -683,7 +683,7 @@ export extern "C++"
             class IntrusiveRedBlackTreeNode : public BaseRedBlackTree<K>::Node
             {
               public:
-                ~IntrusiveRedBlackTreeNode() { assert(!IsInTree()); }
+                ~IntrusiveRedBlackTreeNode() { PrismCheck(!IsInTree()); }
 
                 PM_NODISCARD bool IsInTree() const { return m_In_tree; }
 

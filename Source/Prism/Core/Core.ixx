@@ -142,7 +142,7 @@ export extern "C++"
             PM_NOEXCEPT(::new (reinterpret_cast<void*>(0)) T(DeclVal<Args>()...)))
             -> decltype(::new (reinterpret_cast<void*>(0)) T(DeclVal<Args>()...))
         {
-            assert(location);
+            PrismCheck(location);
             return ::new (reinterpret_cast<void*>(location))
                 T(Forward<Args>(args)...);
         }

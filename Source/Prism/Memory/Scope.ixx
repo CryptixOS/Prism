@@ -130,12 +130,12 @@ export extern "C++"
             constexpr AddLValueReferenceType<T> operator*() const
                 PM_NOEXCEPT(PM_NOEXCEPT(*DeclVal<T*>()))
             {
-                assert(m_Instance);
+                PrismCheck(m_Instance);
                 return *m_Instance;
             }
             constexpr T* operator->() const PM_NOEXCEPT
             {
-                assert(m_Instance);
+                PrismCheck(m_Instance);
                 return m_Instance;
             }
             constexpr T& operator[](usize i) const { return m_Instance[i]; }
@@ -252,7 +252,7 @@ export extern "C++"
 
             constexpr T& operator[](usize i) const
             {
-                assert(m_Instance);
+                PrismCheck(m_Instance);
                 return m_Instance[i];
             }
 

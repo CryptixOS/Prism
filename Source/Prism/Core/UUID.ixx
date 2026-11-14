@@ -80,7 +80,7 @@ export extern "C++"
             constexpr      operator u128() const { return Raw(); }
             constexpr u64  operator[](usize index) const
             {
-                assert(index < 2);
+                PrismCheck(index < 2);
                 return m_UUID[index];
             }
 

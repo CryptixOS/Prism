@@ -9,6 +9,8 @@
 // Macros only: the code lives in module Prism.Test.Macros, which
 // files using these macros import too.
 
+#include <Prism/Core/Config.hpp>
+
 /// The current test fails unless `x` is true.
 #define EXPECT(...)                                                            \
     do                                                                         \
@@ -204,6 +206,38 @@
         if (!::Prism::Test::Crash::Run(test_message, test_func, signal))       \
             ::Prism::Test::CurrentTestCaseDidFail();                           \
     } while (false)
+
+/**
+ * PRISM_TEST_CHECKS_ENABLED: whether a failed PrismCheck stops the program in
+ * this build (always with PRISM_HARDENED, otherwise only without NDEBUG).
+ * PRISM_TEST_CHECK_SIGNAL: the signal it stops with. A hardened check is
+ * __builtin_trap (SIGILL on x86, SIGTRAP on aarch64), an assert is SIGABRT.
+ */
+#if PRISM_HARDENED != 0
+    #define PRISM_TEST_CHECKS_ENABLED 1
+    #if defined(__aarch64__) || defined(__arm__)
+        #define PRISM_TEST_CHECK_SIGNAL 5
+    #else
+        #define PRISM_TEST_CHECK_SIGNAL 4
+    #endif
+#elif defined(NDEBUG)
+    #define PRISM_TEST_CHECKS_ENABLED 0
+    #define PRISM_TEST_CHECK_SIGNAL   6
+#else
+    #define PRISM_TEST_CHECKS_ENABLED 1
+    #define PRISM_TEST_CHECK_SIGNAL   6
+#endif
+
+/// Expects `test_func` to fail a PrismCheck. Does nothing in builds where
+/// PrismCheck is compiled out (release without PRISM_HARDENED).
+#if PRISM_TEST_CHECKS_ENABLED
+    #define EXPECT_CHECK_FAILURE(test_message, test_func)                      \
+        EXPECT_CRASH_WITH_SIGNAL(test_message, PRISM_TEST_CHECK_SIGNAL,        \
+                                 test_func)
+#else
+    #define EXPECT_CHECK_FAILURE(test_message, test_func)                      \
+        do {} while (false)
+#endif
 
 #define EXPECT_NO_CRASH(test_message, test_func)                               \
     do                                                                         \

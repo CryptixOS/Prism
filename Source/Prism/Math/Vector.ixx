@@ -116,7 +116,7 @@ export extern "C++"
             template <usize N, typename T>
             constexpr Vector<N, T>::Vector(InitializerList<T> values)
             {
-                assert(values.size() == N && "Initializer size mismatch");
+                PrismCheck(values.size() == N && "Initializer size mismatch");
                 usize i = 0;
                 for (auto& v : values) Data[i++] = v;
             }
@@ -125,7 +125,7 @@ export extern "C++"
             constexpr Vector<N, T>&
             Vector<N, T>::operator=(InitializerList<T> values)
             {
-                assert(values.size() == N && "Initializer size mismatch");
+                PrismCheck(values.size() == N && "Initializer size mismatch");
                 usize i = 0;
                 for (auto& v : values) Data[i++] = v;
                 return *this;
@@ -137,14 +137,14 @@ export extern "C++"
             template <usize N, typename T>
             constexpr T& Vector<N, T>::operator[](usize i)
             {
-                assert(i < N);
+                PrismCheck(i < N);
                 return Data[i];
             }
 
             template <usize N, typename T>
             constexpr const T& Vector<N, T>::operator[](usize i) const
             {
-                assert(i < N);
+                PrismCheck(i < N);
                 return Data[i];
             }
 
@@ -311,7 +311,7 @@ export extern "C++"
             Vector<N, T> Vector<N, T>::Normalized() const
             {
                 T len = Length();
-                assert(len != T(0));
+                PrismCheck(len != T(0));
                 return *this / len;
             }
 
@@ -319,7 +319,7 @@ export extern "C++"
             void Vector<N, T>::Normalize()
             {
                 T len = Length();
-                assert(len != T(0));
+                PrismCheck(len != T(0));
                 *this /= len;
             }
 #endif

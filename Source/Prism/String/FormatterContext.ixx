@@ -80,10 +80,17 @@ export extern "C++"
 
         namespace Details
         {
-            /// Never defined as constexpr on purpose: reaching it while a format
-            /// string is checked at compile time makes the call ill-formed, and
-            /// the compiler points at the offending format string.
-            inline void FormatStringError(const char* message) { (void)message; }
+            /// Never constexpr on purpose: reaching it while a format string is
+            /// checked at compile time makes the call ill-formed. Compilers name
+            /// this function in the first note and the reason (`message`) in
+            /// the next, right under the error at the offending format string:
+            ///
+            ///   error: call to consteval function 'BasicFormatString<...>' ...
+            ///   note: non-constexpr function 'InvalidFormatString' cannot ...
+            ///   note: in call to 'ReportFormatError(&"argument not found"[0])'
+            ///
+            /// Tests/String/FormatCompileFail checks that this stays so.
+            inline void InvalidFormatString(const char* message) { (void)message; }
 
             /// Reports a malformed format string. At compile time this is a hard
             /// error; at run time (Runtime() format strings) the faulty field is
@@ -92,7 +99,7 @@ export extern "C++"
             {
                 if consteval
                 {
-                    FormatStringError(message);
+                    InvalidFormatString(message);
                 }
                 (void)message;
             }

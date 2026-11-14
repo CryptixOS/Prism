@@ -175,7 +175,7 @@ export extern "C++"
             PM_NODISCARD
             constexpr ConstReferenceType operator[](SizeType pos) const PM_NOEXCEPT
             {
-                assert(pos < m_Size);
+                PrismCheck(pos < m_Size);
                 return Raw()[pos];
             }
             /**
@@ -186,19 +186,19 @@ export extern "C++"
             PM_NODISCARD
             constexpr ConstReferenceType At(SizeType pos) const PM_NOEXCEPT
             {
-                assert(pos < m_Size);
+                PrismCheck(pos < m_Size);
                 return Raw()[pos];
             }
             PM_NODISCARD
             constexpr ConstReferenceType Front() const PM_NOEXCEPT
             {
-                assert(m_Size > 0);
+                PrismCheck(m_Size > 0);
                 return m_Data[0];
             }
             PM_NODISCARD
             constexpr ConstReferenceType Back() const PM_NOEXCEPT
             {
-                assert(m_Size > 0);
+                PrismCheck(m_Size > 0);
                 return m_Data[Size() - 1];
             }
             /**
@@ -238,7 +238,7 @@ export extern "C++"
              */
             constexpr void RemovePrefix(SizeType n) PM_NOEXCEPT
             {
-                assert(n < m_Size);
+                PrismCheck(n <= m_Size);
                 m_Data += n;
                 m_Size -= n;
             }
@@ -248,7 +248,7 @@ export extern "C++"
              */
             constexpr void RemoveSuffix(SizeType n) PM_NOEXCEPT
             {
-                assert(n > m_Size);
+                PrismCheck(n <= m_Size);
                 m_Size -= n;
             }
             /**
@@ -275,13 +275,14 @@ export extern "C++"
              */
             constexpr SizeType Copy(C* str, SizeType count, SizeType pos = 0) const
             {
-                assert(pos <= m_Size);
+                PrismCheck(pos <= m_Size);
                 usize copied = Min(count, Size() - pos);
 
                 TraitsType::Copy(str, Raw() + pos, copied);
 
-                if (copied < count) TraitsType::Assign(str + copied, 0, 1);
-                return count;
+                // NUL-terminate when there is room (Assign is dest, count, ch).
+                if (copied < count) TraitsType::Assign(str + copied, 1, C(0));
+                return copied;
             }
 
             /**
@@ -366,7 +367,7 @@ export extern "C++"
             constexpr BasicStringView
             Substr(SizeType pos = 0, SizeType count = NPos) const PM_NOEXCEPT
             {
-                assert(pos < m_Size);
+                PrismCheck(pos <= m_Size);
                 count = Min(count, Size() - pos);
                 return BasicStringView(Raw() + pos, count);
             }
@@ -633,21 +634,22 @@ export extern "C++"
              */
             template <typename StringViewLike>
             PM_NODISCARD constexpr SizeType
-            RFind(const StringViewLike& pattern, SizeType pos = 0) const PM_NOEXCEPT
+            RFind(const StringViewLike& pattern,
+                  SizeType              pos = NPos) const PM_NOEXCEPT
             {
-                if (pattern.Size() > Size()) return NPos;
+                // The last match that starts at or before `pos`.
+                usize length = pattern.Size();
+                if (length > Size()) return NPos;
 
-                usize limit = (pos >= Size() ? Size() : pos + 1);
-                usize start = limit - pattern.Size();
-
-                do
+                usize start = Min(pos, Size() - length);
+                for (;;)
                 {
-                    auto substr = Substr(start);
-                    if (Algorithm::FindStringKMP(substr, pattern) == 0)
+                    if (TraitsType::Compare(Raw() + start, pattern.Raw(), length)
+                        == 0)
                         return start;
-                } while (start-- > 0);
-
-                return NPos;
+                    if (start == 0) return NPos;
+                    --start;
+                }
             }
 
             /**

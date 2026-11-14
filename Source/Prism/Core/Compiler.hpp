@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include <Prism/Core/Config.hpp>
+
 #ifndef PM_DISABLE_NOEXCEPT
     #define PM_NOEXCEPT noexcept
 #else

@@ -208,12 +208,12 @@ export extern "C++"
 
             PM_NODISCARD PM_ALWAYS_INLINE T& Value() &
             {
-                assert(m_HasValue);
+                PrismCheck(m_HasValue);
                 return *Launder(reinterpret_cast<T*>(&m_Storage));
             }
             constexpr T const& Value() const&
             {
-                assert(m_HasValue);
+                PrismCheck(m_HasValue);
                 return *Launder(reinterpret_cast<T const*>(&m_Storage));
             }
             constexpr T Value() && { return ReleaseValue(); }
@@ -224,7 +224,7 @@ export extern "C++"
             }
             constexpr T ReleaseValue()
             {
-                assert(m_HasValue);
+                PrismCheck(m_HasValue);
                 T releasedValue = Move(Value());
 
                 Value().~T();
@@ -361,13 +361,13 @@ export extern "C++"
 
             PM_NODISCARD PM_ALWAYS_INLINE constexpr T Value()
             {
-                assert(m_Pointer);
+                PrismCheck(m_Pointer);
                 return *m_Pointer;
             }
 
             PM_NODISCARD PM_ALWAYS_INLINE constexpr AddConstType<T> Value() const
             {
-                assert(m_Pointer);
+                PrismCheck(m_Pointer);
                 return *m_Pointer;
             }
 

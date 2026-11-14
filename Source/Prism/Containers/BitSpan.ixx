@@ -63,7 +63,7 @@ export extern "C++"
              */
             bool     Test(usize bit) const
             {
-                assert(bit < BitCount);
+                PrismCheck(bit < BitCount);
                 return m_Data[bit / BitsPerWord]
                      & (usize(1) << (bit % BitsPerWord));
             }
@@ -75,7 +75,7 @@ export extern "C++"
              */
             void Set(usize bit)
             {
-                assert(bit < BitCount);
+                PrismCheck(bit < BitCount);
                 m_Data[bit / BitsPerWord] |= (usize(1) << (bit % BitsPerWord));
             }
 
@@ -86,7 +86,7 @@ export extern "C++"
              */
             void Clear(usize bit)
             {
-                assert(bit < BitCount);
+                PrismCheck(bit < BitCount);
                 m_Data[bit / BitsPerWord] &= ~(usize(1) << (bit % BitsPerWord));
             }
 
@@ -116,7 +116,7 @@ export extern "C++"
 
             bool TestRange(usize base, usize length) const
             {
-                assert(base + length <= BitCount);
+                PrismCheck(base + length <= BitCount);
 
                 for (usize i = 0; i < length; ++i)
                 {
@@ -127,14 +127,14 @@ export extern "C++"
 
             void SetRange(usize base, usize length)
             {
-                assert(base + length <= BitCount);
+                PrismCheck(base + length <= BitCount);
 
                 for (usize i = 0; i < length; ++i) Set(base + i);
             }
 
             void ClearRange(usize base, usize length)
             {
-                assert(base + length <= BitCount);
+                PrismCheck(base + length <= BitCount);
 
                 for (usize i = 0; i < length; ++i) Clear(base + i);
             }
@@ -153,7 +153,7 @@ export extern "C++"
              */
             isize FindFreeRange(usize length) const
             {
-                assert(length > 0);
+                PrismCheck(length > 0);
 
                 usize bit = 0;
 

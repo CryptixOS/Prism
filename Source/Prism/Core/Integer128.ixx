@@ -85,7 +85,7 @@ export extern "C++"
             }
             friend Integer128 operator*(const Integer128& lhs, u32 rhs)
             {
-                assert(lhs.m_High == 0);
+                PrismCheck(lhs.m_High == 0);
                 ValueType hi     = (lhs.m_Low >> 32) * rhs;
                 ValueType lo     = (lhs.m_Low & ~u32()) * rhs;
                 ValueType new_lo = (hi << 32) + lo;
@@ -121,7 +121,7 @@ export extern "C++"
             {
                 ValueType newLow  = m_Low + n.m_Low;
                 ValueType newHigh = m_High + n.m_High + (newLow < m_Low ? 1 : 0);
-                assert(newHigh >= m_High);
+                PrismCheck(newHigh >= m_High);
                 m_Low  = newLow;
                 m_High = newHigh;
             }

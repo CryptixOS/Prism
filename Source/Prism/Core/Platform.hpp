@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include <Prism/Core/Config.hpp>
+
 /* =========================
  * Operating System
  * ========================= */
@@ -98,8 +100,10 @@
  * Build Context
  * ========================= */
 #if defined(PRISM_BUILD_CRYPTIX_KERNEL)
-    #define PM_CONTEXT_KERNEL 1
+    #define PM_CONTEXT_KERNEL    1
+    #define PM_CONTEXT_USERSPACE 0
 #else
+    #define PM_CONTEXT_KERNEL    0
     #define PM_CONTEXT_USERSPACE 1
 #endif
 

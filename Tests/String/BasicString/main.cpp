@@ -578,3 +578,69 @@ TEST_CASE(String_Trim)
     EXPECT_EQ(sso.Trim(), "a");
 }
 
+
+TEST_CASE(String_Insert)
+{
+    // Insert shifts the tail; it used to overwrite it (count, ch) or not
+    // copy the text at all (const char*).
+    String s = "held";
+    s.Insert(2, 2, 'l');
+    EXPECT_EQ(s, "hellld"_sv);
+    s.Erase(2, 1);
+    s.Insert(4, " wor");
+    EXPECT_EQ(s, "hell word"_sv);
+    s.Insert(0, ">");
+    s.Insert(s.Size(), "<");
+    EXPECT_EQ(s, ">hell word<"_sv);
+    s.Insert(5, "o"_sv);
+    EXPECT_EQ(s, ">hello word<"_sv);
+
+    // Past the short-string buffer, and from the string itself.
+    String big;
+    for (int i = 0; i < 100; ++i) big.Insert(0, "ab");
+    EXPECT_EQ(big.Size(), 200u);
+    EXPECT_EQ(big.Substr(0, 4), "abab"_sv);
+    String self = "xyz";
+    self.Insert(1, self.Raw(), self.Size());
+    EXPECT_EQ(self, "xxyzyz"_sv);
+
+    // Appending one char at a time grows geometrically.
+    String grown;
+    usize  reallocations = 0;
+    usize  capacity      = grown.Capacity();
+    for (int i = 0; i < 10000; ++i)
+    {
+        grown += 'x';
+        if (grown.Capacity() != capacity) ++reallocations;
+        capacity = grown.Capacity();
+    }
+    EXPECT(reallocations < 40);
+}
+
+TEST_CASE(StringView_Copy)
+{
+    char buffer[8];
+    for (char& c : buffer) c = 'z';
+    EXPECT_EQ("abc"_sv.Copy(buffer, sizeof(buffer)), 3u);
+    EXPECT_EQ(StringView(buffer), "abc"_sv); // terminated
+    EXPECT_EQ("abcdef"_sv.Copy(buffer, 2, 3), 2u);
+    EXPECT_EQ(buffer[0], 'd');
+    EXPECT_EQ(buffer[1], 'e');
+}
+
+TEST_CASE(StringView_RFind)
+{
+    StringView text = "abcabcab";
+    EXPECT_EQ(text.RFind("ab"_sv), 6u); // from the end by default
+    EXPECT_EQ(text.RFind("ab"_sv, 5), 3u);
+    EXPECT_EQ(text.RFind("ab"_sv, 0), 0u);
+    EXPECT_EQ(text.RFind("bc"_sv, 0), StringView::NPos);
+    EXPECT_EQ(text.RFind(""_sv), text.Size());
+    EXPECT_EQ(text.RFind("abcabcabc"_sv), StringView::NPos);
+    EXPECT_EQ(text.RFind('c'), 5u);
+    EXPECT_EQ(text.RFind("cab"), 5u);
+    // Found by Fuzz/String: a pattern longer than pos + 1 underflowed.
+    EXPECT_EQ("--?:"_sv.RFind("--?"_sv, 1), 0u);
+    EXPECT_EQ(""_sv.RFind("x"_sv), StringView::NPos);
+    EXPECT_EQ(String("abab").RFind(String("ab")), 2u);
+}

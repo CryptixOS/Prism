@@ -62,78 +62,80 @@ export extern "C++"
                 return true;
             }
 
-            template <ArithmeticType T>
+            /// Writes value in `base` (2 to 36) to dest, NUL-terminated, and
+            /// returns the digits. dest needs room for 66 characters (64
+            /// binary digits, a sign and the NUL). Only base 10 shows a sign;
+            /// other bases print the two's complement bits, like printf's %x.
+            template <Integral T>
             constexpr StringView ToString(T value, char* dest, i32 base = 10)
             {
-                const bool isNegative = value < 0 && base == 10;
+                PrismCheck(base >= 2 && base <= 36);
+                using Unsigned        = MakeUnsignedType<
+                           ConditionalType<IsSameV<T, bool>, u8, T>>;
+                const bool isNegative = IsSignedV<T> && value < 0 && base == 10;
+                // The magnitude, computed without negating T (which overflows
+                // for the minimum value).
+                Unsigned   magnitude  = static_cast<Unsigned>(value);
+                if (isNegative) magnitude = Unsigned(0) - magnitude;
 
-                char*      str        = dest;
-                T          i          = 0;
-                if (value == 0)
-                {
-                    str[i++] = '0';
-                    str[i]   = 0;
-                    return str;
-                }
+                char  digits[64];
+                usize count = 0;
+                do {
+                    u32 digit       = static_cast<u32>(magnitude % Unsigned(base));
+                    digits[count++] = static_cast<char>(
+                        digit < 10 ? '0' + digit : 'a' + (digit - 10));
+                    magnitude /= Unsigned(base);
+                } while (magnitude != 0);
 
-                if (isNegative) value = -value;
+                usize length = 0;
+                if (isNegative) dest[length++] = '-';
+                while (count > 0) dest[length++] = digits[--count];
+                dest[length] = '\0';
 
-                while (value != '\0')
-                {
-                    T rem    = value % base;
-                    str[i++] = (rem > 9) ? static_cast<char>((rem - 10) + 'a')
-                                         : static_cast<char>(rem + '0');
-                    value    = value / base;
-                }
-
-                if (isNegative) str[i++] = '-';
-                str[i]       = '\0';
-                usize length = i;
-
-                T     start  = 0;
-                T     end    = i - 1;
-                while (start < end)
-                {
-                    Swap(*(str + start), *(str + end));
-                    ++start;
-                    --end;
-                }
-
-                return {str, length};
+                return {dest, length};
             }
-            template <ArithmeticType T>
+            template <Integral T>
             constexpr String ToString(T value, i32 base = 10)
             {
-                const bool  isNegative = value < 0 && base == 10;
-                const usize size       = GetDigitCount(value) + isNegative + 1;
-
-                String      string;
-                string.Reserve(size);
-
-                return ToString(value, string.Raw(), base);
+                char buffer[72];
+                return String(ToString(value, buffer, base));
             }
 
             template <EnumType T>
             constexpr StringView ToString(T enumerator)
             { return EnumName(enumerator); }
 
-            template <ArithmeticType T>
+            /**
+             * @brief Parses an integer in `base` (2 to 36) from the start of
+             * `string`, with an optional leading '-', stopping at the first
+             * character that isn't a digit of the base. Values out of range
+             * wrap around like unsigned arithmetic (no undefined behaviour);
+             * "" and "-" give 0.
+             */
+            template <Integral T>
             constexpr T ToNumber(StringView string, usize base = 10)
             {
-                if (string.Empty()) return {};
-                bool isNegative = string[0] == '-';
+                PrismCheck(base >= 2 && base <= 36);
+                using Unsigned  = MakeUnsignedType<
+                     ConditionalType<IsSameV<T, bool>, u8, T>>;
+                bool     isNegative = !string.Empty() && string[0] == '-';
 
-                T    number     = 0;
+                Unsigned number     = 0;
                 for (usize i = isNegative; i < string.Size(); ++i)
                 {
-                    u8 c     = string[i];
-                    T  digit = ToDigit<T>(c);
+                    char  c     = string[i];
+                    usize digit = base;
+                    if (c >= '0' && c <= '9') digit = c - '0';
+                    else if (c >= 'a' && c <= 'z') digit = 10 + (c - 'a');
+                    else if (c >= 'A' && c <= 'Z') digit = 10 + (c - 'A');
+                    if (digit >= base) break;
 
-                    if (static_cast<usize>(digit) >= base) break;
-                    number = number * base + digit;
+                    number = static_cast<Unsigned>(number * Unsigned(base)
+                                                   + Unsigned(digit));
                 }
 
-                return isNegative ? -number : number;
+                if (isNegative) number = Unsigned(0) - number;
+                return static_cast<T>(number);
             }
         }; // namespace StringUtils
     }; // namespace Prism

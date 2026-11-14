@@ -80,6 +80,26 @@ cmake --build build-tests && ctest --test-dir build-tests
 A test binary can also be run directly, e.g.
 `build-tests/Tests/String/Format --list` or `... 'join*'`.
 
+## Hardening
+
+- `-DPRISM_HARDENED=ON` keeps the containers', views' and strings' bounds
+  and precondition checks (`PrismCheck`) on in release builds, where a
+  failed check traps, and adds `_FORTIFY_SOURCE`, the stack protector and
+  zero-initialized locals. Sizes are computed with `Prism::Checked` and
+  `AllocationSize`, so they can't overflow into a short allocation.
+- `-DPRISM_SANITIZE=address,undefined` builds everything with sanitizers.
+- `-DPRISM_BUILD_FUZZERS=ON` (clang) builds the libFuzzer targets in
+  `Fuzz/`: format strings, paths, command lines, number parsing and strings.
+  `build/Fuzz/Format -max_total_time=60` runs one.
+- `SipHasher<T>` (`Prism.Algorithm.SipHash`) is a seeded hash for map keys
+  that come from outside.
+
+CI runs the hardened tests under ASan and UBSan and fuzzes every target on
+each push. The configuration macros are listed in
+[Documentation/Configuration.md](Documentation/Configuration.md), the
+symbols a freestanding consumer must provide in
+[Core/PlatformHooks.hpp](Source/Prism/Core/PlatformHooks.hpp).
+
 ## Installation
 
 On Arch Linux, install [`prism-cxx-git`](https://aur.archlinux.org/packages/prism-cxx-git)
@@ -122,9 +142,14 @@ Prism is integrated with CryptixOS, but it can be used in any freestanding or em
       - Utility
   - subprojects => **bundled dependencies**
   - Tests => **Unit Tests**
+  - Benchmarks => **Prism vs std benchmarks**
+  - Fuzz => **libFuzzer targets**
+  - Documentation => **roadmap details and configuration reference**
   - CMakeLists.txt => **Main Build Script**
   - meson.build => **meson Build Script** (deprecated, kept for backward compatibility)
   - Meta/aur => **AUR package**
+  - Meta/ci => **CI helpers** (platform hook check, kernel header stand-ins)
+  - Meta/format-golden => **regenerates the Format golden tests from fmt 10.2**
   - typos.toml => **typos configuration**
 
 ---

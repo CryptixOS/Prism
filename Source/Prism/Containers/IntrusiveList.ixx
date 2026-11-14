@@ -252,7 +252,7 @@ export extern "C++"
 
                 constexpr Reference operator*() const
                 {
-                    assert(m_Current && "Dereferencing end iterator");
+                    PrismCheck(m_Current && "Dereferencing end iterator");
                     return *m_Current;
                 }
                 constexpr Pointer operator->() const { return m_Current; }
@@ -423,7 +423,7 @@ export extern "C++"
         IntrusiveListHook<T, Pointer>::~IntrusiveListHook()
         {
             if constexpr (Policy::IsOwning)
-                assert(!IsLinked()
+                PrismCheck(!IsLinked()
                        && "Destroying a node still owned by an IntrusiveList");
             else Detach();
         }
@@ -493,7 +493,7 @@ export extern "C++"
         template <typename T, auto HookMember>
         void IntrusiveList<T, HookMember>::AdoptAll(T* head)
         {
-            assert(Empty());
+            PrismCheck(Empty());
             if (!head) return;
 
             // Re-own every node; `head` belongs to another list's state.
@@ -622,7 +622,7 @@ export extern "C++"
         constexpr IntrusiveList<T, HookMember>::Iterator
         IntrusiveList<T, HookMember>::IteratorTo(T& node)
         {
-            assert(Contains(node));
+            PrismCheck(Contains(node));
             return Iterator(&m_State, &node);
         }
 
@@ -636,7 +636,7 @@ export extern "C++"
         void IntrusiveList<T, HookMember>::Link(T* position, T* node)
         {
             auto& hook = HookOf(node);
-            assert(!hook.IsLinked() && "Node is already linked into a list");
+            PrismCheck(!hook.IsLinked() && "Node is already linked into a list");
 
             T* previous     = position ? HookOf(position).m_Previous : m_State.Tail;
 
@@ -671,16 +671,16 @@ export extern "C++"
         IntrusiveList<T, HookMember>::InsertBefore(ConstIterator position,
                                                    PointerType   node)
         {
-            assert(position.m_List == &m_State && "Iterator from another list");
+            PrismCheck(position.m_List == &m_State && "Iterator from another list");
             T* raw = Policy::Raw(node);
-            assert(raw && "Pushing a null node");
+            PrismCheck(raw && "Pushing a null node");
             if (!raw) return end();
 
             // A node that's already linked is a bug. Leaving the caller's
             // ownership untouched means a misuse can't leak or double-free.
             if (HookOf(raw).IsLinked())
             {
-                assert(!"Node is already linked into a list");
+                PrismCheck(!"Node is already linked into a list");
                 return end();
             }
 
@@ -745,7 +745,7 @@ export extern "C++"
         {
             if (!Contains(node))
             {
-                assert(!"Node is not linked into this list");
+                PrismCheck(!"Node is not linked into this list");
                 return Policy::Adopt(nullptr);
             }
             return Policy::Adopt(HookOf(&node).Detach());
@@ -758,7 +758,7 @@ export extern "C++"
             T* node = it.m_Current;
             if (!node || !Contains(*node))
             {
-                assert(!"Erasing an invalid iterator");
+                PrismCheck(!"Erasing an invalid iterator");
                 return end();
             }
 

@@ -63,7 +63,7 @@ export extern "C++"
             template <PointerHolder T>
             void Read(usize offset, T dest, usize bytes)
             {
-                assert(offset + bytes <= m_Buffer.Size());
+                PrismCheck(offset + bytes <= m_Buffer.Size());
 
                 if constexpr (IsSameV<T, Pointer>)
                     Memory::Copy(dest.Raw(), Raw() + offset, bytes);
@@ -71,14 +71,14 @@ export extern "C++"
             }
             void Write(usize offset, const Byte* src, usize bytes)
             {
-                assert((offset + bytes) <= m_Buffer.Size());
+                PrismCheck((offset + bytes) <= m_Buffer.Size());
                 Memory::Copy(Raw() + offset, src, bytes);
             }
 
             void Fill(Byte value) { Memory::Fill(Raw(), value, Size()); }
             void Fill(usize offset, Byte value)
             {
-                assert(offset < Size());
+                PrismCheck(offset < Size());
 
                 Memory::Fill(Raw() + offset, value, Size() - offset);
             }

@@ -412,10 +412,15 @@ namespace
             RefList first, second;
             auto    node = Prism::CreateRef<RefNode>(1);
             first.PushBack(node);
-            // Pushing a node that's already linked must not take another
-            // reference (it would leak) and must not relink it. This path
-            // also asserts in debug builds, so only exercise it with NDEBUG.
-#ifdef NDEBUG
+            // Pushing a node that's already linked fails a PrismCheck. Where
+            // checks are compiled out it must not take another reference (it
+            // would leak) and must not relink it.
+#if PRISM_TEST_CHECKS_ENABLED
+            EXPECT_CHECK_FAILURE("PushBack() of a linked node", ([&] {
+                RefList third;
+                third.PushBack(node);
+            }));
+#else
             second.PushBack(node);
             EXPECT(second.Empty() && node.RefCount() == 2);
 #endif

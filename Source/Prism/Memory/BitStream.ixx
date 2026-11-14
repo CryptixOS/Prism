@@ -49,7 +49,8 @@ export extern "C++"
             template <Integral T>
             inline T Read()
             {
-                assert(m_CurrentPointer + sizeof(T) <= m_StreamEnd);
+                PrismCheck(m_CurrentPointer <= m_StreamEnd
+                           && sizeof(T) <= usize(m_StreamEnd - m_CurrentPointer));
 
                 T value;
                 Memory::Copy(&value, m_CurrentPointer, sizeof(T));
@@ -60,7 +61,7 @@ export extern "C++"
             template <typename T>
             inline usize Read(T* dest, usize count)
             {
-                assert(m_CurrentPointer + count <= m_StreamEnd);
+                PrismCheck(m_CurrentPointer + count <= m_StreamEnd);
                 AlignToByteBoundary();
 
                 u8*   destBuffer = reinterpret_cast<u8*>(dest);

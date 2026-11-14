@@ -223,7 +223,7 @@ export extern "C++"
 
             ReturnValue Invoke(Args... args) const
             {
-                assert(IsBound() && "Trying to invoke unbound delegate.");
+                PrismCheck(IsBound() && "Trying to invoke unbound delegate.");
                 return m_Stub(m_Object, Forward<Args>(args)...);
             }
             ReturnValue operator()(Args... args) const
@@ -322,7 +322,7 @@ export extern "C++"
                             self->m_Object = new (self->m_Storage)
                                 F(*static_cast<const F*>(other->m_Object));
                         else
-                            assert(false && "Copying a move-only callable");
+                            PrismCheck(false && "Copying a move-only callable");
                         break;
                     case Operation::eMove:
                     {
@@ -346,7 +346,7 @@ export extern "C++"
                             self->m_Object
                                 = new F(*static_cast<const F*>(other->m_Object));
                         else
-                            assert(false && "Copying a move-only callable");
+                            PrismCheck(false && "Copying a move-only callable");
                         break;
                     case Operation::eMove:
                         self->m_Object = other->m_Object;

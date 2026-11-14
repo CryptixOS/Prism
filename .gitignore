@@ -6,3 +6,5 @@ subprojects/*.wraplock
 
 nohup.out
 build/
+# CTest run from the source root
+Testing/

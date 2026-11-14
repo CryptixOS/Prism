@@ -233,7 +233,7 @@ export extern "C++"
             if (x == 0 || x == 1) return 1;
             auto shiftExponent = Nd - CountLeftZero(static_cast<T>(x - 1u));
             if (!IsConstantEvaluated())
-                assert(shiftExponent != IntegerTraits<T>::Digits);
+                PrismCheck(shiftExponent != IntegerTraits<T>::Digits);
 
             using PromotedType = decltype(x << 1);
             if constexpr (!IsSameV<PromotedType, T>)

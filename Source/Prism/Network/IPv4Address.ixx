@@ -99,7 +99,7 @@ export extern "C++"
 
             constexpr u8 operator[](usize index) const
             {
-                assert(index < 4);
+                PrismCheck(index < 4);
 
                 const u32 net   = m_Address.Load();
                 const u32 shift = 24 - (index * 8);

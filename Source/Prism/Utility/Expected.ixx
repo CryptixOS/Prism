@@ -499,42 +499,42 @@ export extern "C++"
             [[nodiscard]]
             constexpr const T* operator->() const noexcept
             {
-                assert(m_HasValue);
+                PrismCheck(m_HasValue);
                 return AddressOf(m_Value);
             }
 
             [[nodiscard]]
             constexpr T* operator->() noexcept
             {
-                assert(m_HasValue);
+                PrismCheck(m_HasValue);
                 return AddressOf(m_Value);
             }
 
             [[nodiscard]]
             constexpr const T& operator*() const& noexcept
             {
-                assert(m_HasValue);
+                PrismCheck(m_HasValue);
                 return m_Value;
             }
 
             [[nodiscard]]
             constexpr T& operator*() & noexcept
             {
-                assert(m_HasValue);
+                PrismCheck(m_HasValue);
                 return m_Value;
             }
 
             [[nodiscard]]
             constexpr const T&& operator*() const&& noexcept
             {
-                assert(m_HasValue);
+                PrismCheck(m_HasValue);
                 return Move(m_Value);
             }
 
             [[nodiscard]]
             constexpr T&& operator*() && noexcept
             {
-                assert(m_HasValue);
+                PrismCheck(m_HasValue);
                 return Move(m_Value);
             }
 
@@ -554,7 +554,7 @@ export extern "C++"
             {
                 if (m_HasValue) [[likely]]
                     return m_Value;
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
 
@@ -562,7 +562,7 @@ export extern "C++"
             {
                 if (m_HasValue) [[likely]]
                     return m_Value;
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
 
@@ -570,7 +570,7 @@ export extern "C++"
             {
                 if (m_HasValue) [[likely]]
                     return Move(m_Value);
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
 
@@ -578,14 +578,14 @@ export extern "C++"
             {
                 if (m_HasValue) [[likely]]
                     return Move(m_Value);
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
             constexpr const T& value() const&
             {
                 if (m_HasValue) [[likely]]
                     return m_Value;
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
 
@@ -593,7 +593,7 @@ export extern "C++"
             {
                 if (m_HasValue) [[likely]]
                     return m_Value;
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
 
@@ -601,7 +601,7 @@ export extern "C++"
             {
                 if (m_HasValue) [[likely]]
                     return Move(m_Value);
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
 
@@ -609,55 +609,55 @@ export extern "C++"
             {
                 if (m_HasValue) [[likely]]
                     return Move(m_Value);
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
 
             constexpr const E& Error() const& noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return m_Unexpected;
             }
 
             constexpr E& Error() & noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return m_Unexpected;
             }
 
             constexpr const E&& Error() const&& noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return Move(m_Unexpected);
             }
 
             constexpr E&& Error() && noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return Move(m_Unexpected);
             }
 
             constexpr const E& error() const& noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return m_Unexpected;
             }
 
             constexpr E& error() & noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return m_Unexpected;
             }
 
             constexpr const E&& error() const&& noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return Move(m_Unexpected);
             }
 
             constexpr E&& error() && noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return Move(m_Unexpected);
             }
 
@@ -1264,13 +1264,13 @@ export extern "C++"
                 return m_HasValue;
             }
 
-            constexpr void operator*() const noexcept { assert(m_HasValue); }
+            constexpr void operator*() const noexcept { PrismCheck(m_HasValue); }
 
             constexpr void Value() const&
             {
                 if (m_HasValue) [[likely]]
                     return;
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
 
@@ -1278,14 +1278,14 @@ export extern "C++"
             {
                 if (m_HasValue) [[likely]]
                     return;
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
             constexpr void value() const&
             {
                 if (m_HasValue) [[likely]]
                     return;
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
 
@@ -1293,55 +1293,55 @@ export extern "C++"
             {
                 if (m_HasValue) [[likely]]
                     return;
-                assert(false);
+                PrismCheck(false);
                 __builtin_unreachable();
             }
 
             constexpr const E& Error() const& noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return m_Unexpected;
             }
 
             constexpr E& Error() & noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return m_Unexpected;
             }
 
             constexpr const E&& Error() const&& noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return Move(m_Unexpected);
             }
 
             constexpr E&& Error() && noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return Move(m_Unexpected);
             }
 
             constexpr const E& error() const& noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return m_Unexpected;
             }
 
             constexpr E& error() & noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return m_Unexpected;
             }
 
             constexpr const E&& error() const&& noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return Move(m_Unexpected);
             }
 
             constexpr E&& error() && noexcept
             {
-                assert(!m_HasValue);
+                PrismCheck(!m_HasValue);
                 return Move(m_Unexpected);
             }
 

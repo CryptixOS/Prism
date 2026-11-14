@@ -27,6 +27,12 @@ set(PRISM_EXTRA_INCS "" CACHE STRING "Extra include directory")
 option(PRISM_BUILD_TESTS "Build the unit tests" OFF)
 option(PRISM_BUILD_BENCHMARKS "Build the benchmarks (hosted targets only)" OFF)
 option(PRISM_WERROR "Treat warnings as errors (meson: werror=true)" ON)
+option(PRISM_HARDENED
+  "Always-on bounds and overflow checks (PRISM_HARDENED=1), plus _FORTIFY_SOURCE, \
+stack protector and zero-initialized locals" OFF)
+set(PRISM_SANITIZE "" CACHE STRING
+  "Sanitizers for everything built here, e.g. address,undefined")
+option(PRISM_BUILD_FUZZERS "Build the libFuzzer targets in Fuzz/ (clang)" OFF)
 option(PRISM_STRICT_FREESTANDING
   "Compile Prism's own sources with -nostdinc++ (kernel targets): proves no \
 hosted C++ header is needed" OFF)
@@ -95,6 +101,32 @@ target_include_directories(prism_deps SYSTEM INTERFACE
 )
 
 # ==============================================================================
+### Sanitizers and fuzzers
+#
+# They apply to every target, Prism included, so instrumentation and the
+# sanitizer runtime agree.
+if(PRISM_BUILD_FUZZERS)
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    message(FATAL_ERROR "PRISM_BUILD_FUZZERS needs clang (libFuzzer)")
+  endif()
+  if(NOT PRISM_HOSTED)
+    message(FATAL_ERROR "PRISM_BUILD_FUZZERS needs a hosted PRISM_TARGET")
+  endif()
+  add_compile_options(-fsanitize=fuzzer-no-link)
+  if(NOT PRISM_SANITIZE)
+    set(PRISM_SANITIZE "address,undefined")
+  endif()
+endif()
+if(PRISM_SANITIZE)
+  if(NOT PRISM_HOSTED)
+    message(FATAL_ERROR "PRISM_SANITIZE needs a hosted PRISM_TARGET")
+  endif()
+  add_compile_options(-fsanitize=${PRISM_SANITIZE} -fno-sanitize-recover=all
+    -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=${PRISM_SANITIZE})
+endif()
+
+# ==============================================================================
 ### Flags (same as meson.build's cxx_args)
 #
 # PRISM_DEFINES are part of Prism's interface and are exported to installed
@@ -104,6 +136,9 @@ set(PRISM_DEFINES
   MAGIC_ENUM_RANGE_MAX=0x8a00
   PRISM_LOG_ENABLE=true
 )
+if(PRISM_HARDENED)
+  list(APPEND PRISM_DEFINES PRISM_HARDENED=1)
+endif()
 if(PRISM_TARGET STREQUAL "cryptix" OR PRISM_TARGET STREQUAL "carbonc")
   list(APPEND PRISM_DEFINES PRISM_USE_NAMESPACE)
   if(PRISM_TARGET STREQUAL "cryptix")
@@ -127,6 +162,15 @@ set(PRISM_CODEGEN_ARGS
 if(NOT PRISM_HOSTED)
   list(APPEND PRISM_CODEGEN_ARGS -ffreestanding)
 endif()
+if(PRISM_HARDENED)
+  list(APPEND PRISM_CODEGEN_ARGS -fstack-protector-strong
+    -ftrivial-auto-var-init=zero)
+  # glibc warns about _FORTIFY_SOURCE without optimizations.
+  if(PRISM_HOSTED)
+    list(APPEND PRISM_CODEGEN_ARGS
+      "$<$<NOT:$<CONFIG:Debug>>:-U_FORTIFY_SOURCE;-D_FORTIFY_SOURCE=3>")
+  endif()
+endif()
 if(PRISM_EXTRA_INCS)
   list(APPEND PRISM_CODEGEN_ARGS "-I${PRISM_EXTRA_INCS}")
 endif()
@@ -135,9 +179,9 @@ endif()
 list(TRANSFORM PRISM_DEFINES PREPEND "-D" OUTPUT_VARIABLE PRISM_DEFINE_ARGS)
 set(PRISM_CXX_ARGS ${PRISM_CODEGEN_ARGS} ${PRISM_DEFINE_ARGS})
 
-# -Wmissing-declarations -Wundef)
 set(PRISM_CORE_WARNING_ARGS -Wall -Wextra -Wnon-virtual-dtor -Wsuggest-override -Wcast-align -Wnull-dereference -Wimplicit-fallthrough)
-set(PRISM_WARNING_ARGS ${PRISM_CORE_WARNING_ARGS} -Wold-style-cast -Wcast-align -Wnull-dereference -Wdouble-promotion)
+set(PRISM_WARNING_ARGS ${PRISM_CORE_WARNING_ARGS} -Wold-style-cast -Wcast-align
+  -Wnull-dereference -Wdouble-promotion -Wundef -Wmissing-declarations)
 if(PRISM_WERROR)
   list(APPEND PRISM_WARNING_ARGS -Werror)
 endif()
@@ -145,6 +189,8 @@ endif()
 # synthesize for module consumers; clang warns it is unused.
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   list(APPEND PRISM_WARNING_ARGS -Wno-unused-command-line-argument)
+  # GCC's -Wmissing-declarations (functions without a prior declaration).
+  list(APPEND PRISM_WARNING_ARGS -Wmissing-prototypes)
 endif()
 
 # ==============================================================================
@@ -215,6 +261,7 @@ set(PRISM_MODULE_INTERFACES
   Source/Prism/Algorithm/Hash.ixx
   Source/Prism/Algorithm/Random.ixx
   Source/Prism/Algorithm/SearchString.ixx
+  Source/Prism/Algorithm/SipHash.ixx
   Source/Prism/Algorithm/Sort.ixx
   Source/Prism/Containers/Array.ixx
   Source/Prism/Containers/BitSpan.ixx
@@ -239,6 +286,7 @@ set(PRISM_MODULE_INTERFACES
   Source/Prism/Containers/Vector.ixx
   Source/Prism/Core/AllocatorTraits.ixx
   Source/Prism/Core/Bits.ixx
+  Source/Prism/Core/Checked.ixx
   Source/Prism/Core/Concepts.ixx
   Source/Prism/Core/Core.ixx
   Source/Prism/Core/Error.ixx
@@ -343,15 +391,21 @@ add_library(prism STATIC
   "${PRISM_DEMANGLER_DIR}/source/demangler.cpp"
 )
 add_library(Prism::Prism ALIAS prism)
+# No missing-declaration warnings for the bundled demangler (not Prism's
+# code) or the UBSan runtime (entry points only the compiler calls).
+set_source_files_properties("${PRISM_DEMANGLER_DIR}/source/demangler.cpp"
+  Source/Prism/Debug/Ubsan.cpp
+  PROPERTIES COMPILE_OPTIONS
+  "$<IF:$<CXX_COMPILER_ID:GNU>,-Wno-missing-declarations,-Wno-missing-prototypes>")
 if(PRISM_STRICT_FREESTANDING)
   if(PRISM_HOSTED)
     message(FATAL_ERROR "PRISM_STRICT_FREESTANDING needs PRISM_TARGET=cryptix or carbonc")
   endif()
   # Not the bundled demangler: it uses <cstddef> & co., which the kernel's
   # KLibC++ provides.
-  set_source_files_properties(${PRISM_SOURCES} ${PRISM_MODULE_INTERFACES}
+  set_property(SOURCE ${PRISM_SOURCES} ${PRISM_MODULE_INTERFACES}
     ${PRISM_GENERATED_MODULE_INTERFACES}
-    PROPERTIES COMPILE_OPTIONS -nostdinc++)
+    APPEND PROPERTY COMPILE_OPTIONS -nostdinc++)
 endif()
 target_sources(prism PUBLIC FILE_SET CXX_MODULES
   BASE_DIRS Source "${PRISM_GENERATED_DIR}"
@@ -461,6 +515,12 @@ if(PRISM_BUILD_TESTS)
   endif()
   enable_testing()
   add_subdirectory(Tests)
+endif()
+
+# ==============================================================================
+### Fuzzers
+if(PRISM_BUILD_FUZZERS)
+  add_subdirectory(Fuzz)
 endif()
 
 # ==============================================================================

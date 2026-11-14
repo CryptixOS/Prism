@@ -70,17 +70,36 @@ export extern "C++"
                 }
             };
 
+            IntervalTree() = default;
+            ~IntervalTree()
+            {
+                // The base would delete these through Node*, which is not
+                // an IntervalNode's real type.
+                DeleteSubtree(static_cast<IntervalNode*>(this->m_Root));
+                this->m_Root      = nullptr;
+                this->m_LeastNode = nullptr;
+                this->m_Size      = 0;
+            }
+
             void InsertInterval(K lower, K upper, V value)
             {
-                assert(lower <= upper
-                             && "Lower bound must be <= upper bound");
+                PrismCheck(lower <= upper);
 
                 auto* newNode = new IntervalNode(lower, upper, Move(value));
                 this->Insert(newNode);
 
-                // After standard RB-Insert, we must update SubtreeMax up to the
-                // root
-                UpdateSubtreeMax(newNode);
+                // Rebalancing rotates the new node's parent and grandparent,
+                // which can leave one of them as a child of the path rather
+                // than on it; refresh the path and its children.
+                for (auto* node = newNode; node;
+                     node       = static_cast<IntervalNode*>(node->Parent))
+                {
+                    if (node->LeftChild)
+                        Refresh(static_cast<IntervalNode*>(node->LeftChild));
+                    if (node->RightChild)
+                        Refresh(static_cast<IntervalNode*>(node->RightChild));
+                    Refresh(node);
+                }
             }
 
             /**
@@ -97,31 +116,23 @@ export extern "C++"
             }
 
           private:
-            void UpdateSubtreeMax(IntervalNode* node)
+            static void Refresh(IntervalNode* node)
             {
-                while (node)
-                {
-                    K newMax = node->UpperBound;
-
-                    if (node->LeftChild)
-                    {
-                        newMax = Max(newMax,
-                                     static_cast<IntervalNode*>(node->LeftChild)
-                                         ->SubtreeMax);
-                    }
-                    if (node->RightChild)
-                    {
-                        newMax = Max(newMax,
-                                     static_cast<IntervalNode*>(node->RightChild)
-                                         ->SubtreeMax);
-                    }
-
-                    if (node->SubtreeMax == newMax)
-                        break; // Optimization: stop if no change
-
-                    node->SubtreeMax = newMax;
-                    node             = static_cast<IntervalNode*>(node->Parent);
-                }
+                K max = node->UpperBound;
+                if (node->LeftChild)
+                    max = Max(max,
+                              static_cast<IntervalNode*>(node->LeftChild)->SubtreeMax);
+                if (node->RightChild)
+                    max = Max(
+                        max, static_cast<IntervalNode*>(node->RightChild)->SubtreeMax);
+                node->SubtreeMax = max;
+            }
+            static void DeleteSubtree(IntervalNode* node)
+            {
+                if (!node) return;
+                DeleteSubtree(static_cast<IntervalNode*>(node->LeftChild));
+                DeleteSubtree(static_cast<IntervalNode*>(node->RightChild));
+                delete node;
             }
 
             template <typename F>

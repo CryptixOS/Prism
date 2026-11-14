@@ -9,6 +9,7 @@ algorithm_tests = [
   'Find',
   'Random',
   'SearchString',
+  'SipHash',
   'Sort',
 ]
 
