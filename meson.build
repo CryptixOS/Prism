@@ -7,7 +7,7 @@
 # DEPRECATED: CMake (CMakeLists.txt) is Prism's build system now. This file
 # is only kept for backward compatibility and will be removed eventually.
 project('prism', ['c', 'cpp'],
-  version: '0.0.1', license: 'GPL-2.0-or-later',
+  version: '0.2.0', license: 'GPL-2.0-or-later',
   default_options: [
     'c_std=c17',
     'cpp_std=c++23',

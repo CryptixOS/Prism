@@ -15,7 +15,7 @@
 # Prism::TestMain for unit tests).
 cmake_minimum_required(VERSION 3.24)
 
-project(prism VERSION 0.0.1 LANGUAGES C CXX)
+project(prism VERSION 0.2.0 LANGUAGES C CXX)
 
 set(PRISM_TARGETS cryptix-app app cryptix carbonc)
 set(PRISM_TARGET "cryptix-app" CACHE STRING "Target (${PRISM_TARGETS})")

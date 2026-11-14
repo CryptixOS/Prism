@@ -13,12 +13,12 @@ using namespace Prism;
 TEST_CASE(version_matches_the_build)
 {
     EXPECT_EQ(VERSION.Major, 0);
-    EXPECT_EQ(VERSION.Minor, 0);
-    EXPECT_EQ(VERSION.Patch, 1);
+    EXPECT_EQ(VERSION.Minor, 2);
+    EXPECT_EQ(VERSION.Patch, 0);
     EXPECT(LIBRARY_NAME == "prism");
-    EXPECT(VERSION_STRING.StartsWith("0.0.1-"));
-    EXPECT(Format("{}", VERSION) == "0.0.1");
-    EXPECT(static_cast<String>(VERSION) == "0.0.1");
+    EXPECT(VERSION_STRING.StartsWith("0.2.0-"));
+    EXPECT(Format("{}", VERSION) == "0.2.0");
+    EXPECT(static_cast<String>(VERSION) == "0.2.0");
 }
 
 TEST_CASE(versions_order)
