@@ -36,8 +36,8 @@ export extern "C++"
              * returning an unsigned type.
              *
              * This prevents undefined behavior associated with computing the
-             * absolute value of the minimum representable value of a signed integer
-             * type (e.g., INT_MIN).
+             * absolute value of the minimum representable value of a signed
+             * integer type (e.g., INT_MIN).
              *
              * @tparam T An integral type.
              * @tparam UT The corresponding unsigned integral type (deduced
@@ -48,9 +48,11 @@ export extern "C++"
             template <Integral T, UnsignedIntegral UT = MakeUnsigned<T>::Type>
             constexpr UT Absolute(T value)
             {
-                // Negate in the unsigned type: -value overflows for the minimum.
-                return value < 0 ? static_cast<UT>(UT(0) - static_cast<UT>(value))
-                                 : static_cast<UT>(value);
+                // Negate in the unsigned type: -value overflows for the
+                // minimum.
+                return value < 0
+                         ? static_cast<UT>(UT(0) - static_cast<UT>(value))
+                         : static_cast<UT>(value);
             }
 #if PRISM_TARGET_CRYPTIX == 0
             /**
@@ -81,18 +83,16 @@ export extern "C++"
              */
             template <FloatingPoint T>
             constexpr T Absolute(T value)
-            {
-                return FAbs(value);
-            }
+            { return FAbs(value); }
 #endif
 
             /**
-             * @brief Clamps a value between an upper and lower bound using default
-             * comparison.
+             * @brief Clamps a value between an upper and lower bound using
+             * default comparison.
              *
-             * If the value is less than the lower bound, returns the lower bound.
-             * If the value is greater than the upper bound, returns the upper
-             * bound. Otherwise, returns a reference to the value itself.
+             * If the value is less than the lower bound, returns the lower
+             * bound. If the value is greater than the upper bound, returns the
+             * upper bound. Otherwise, returns a reference to the value itself.
              *
              * @tparam T The type of the values to compare.
              * @param value The value to be clamped.
@@ -101,13 +101,12 @@ export extern "C++"
              * @return A constant reference to the clamped value.
              */
             template <typename T>
-            constexpr const T& Clamp(const T& value, const T& low, const T& high)
-            {
-                return Min(Max(value, low), high);
-            }
+            constexpr const T& Clamp(const T& value, const T& low,
+                                     const T& high)
+            { return Min(Max(value, low), high); }
             /**
-             * @brief Clamps a value between an upper and lower bound using a custom
-             * comparator.
+             * @brief Clamps a value between an upper and lower bound using a
+             * custom comparator.
              *
              * Evaluates the boundaries using the provided binary comparison
              * functor.
@@ -122,14 +121,16 @@ export extern "C++"
              * @return A constant reference to the clamped value.
              */
             template <typename T, typename Compare>
-            constexpr const T& Clamp(const T& value, const T& low, const T& high,
-                                     Compare comp)
+            constexpr const T& Clamp(const T& value, const T& low,
+                                     const T& high, Compare comp)
             {
-                return comp(value, low) ? low : comp(high, value) ? high : value;
+                return comp(value, low)  ? low
+                     : comp(high, value) ? high
+                                         : value;
             }
             /**
-             * @brief Aligns a value down to the nearest multiple of the specified
-             * alignment.
+             * @brief Aligns a value down to the nearest multiple of the
+             * specified alignment.
              *
              * @note The alignment parameter must be a power of two.
              *
@@ -138,9 +139,7 @@ export extern "C++"
              * @return The aligned value.
              */
             constexpr usize AlignDown(usize value, usize alignment)
-            {
-                return value & ~(alignment - 1);
-            }
+            { return value & ~(alignment - 1); }
             /**
              * @brief Aligns a value up to the nearest multiple of the specified
              * alignment.
@@ -152,12 +151,10 @@ export extern "C++"
              * @return The aligned value.
              */
             constexpr usize AlignUp(usize value, usize alignment)
-            {
-                return AlignDown(value + alignment - 1, alignment);
-            }
+            { return AlignDown(value + alignment - 1, alignment); }
             /**
-             * @brief Performs integer division, rounding the fractional result up
-             * to the next integer.
+             * @brief Performs integer division, rounding the fractional result
+             * up to the next integer.
              *
              * Commonly used to calculate required buffer allocations or thread
              * group counts.
@@ -167,23 +164,20 @@ export extern "C++"
              * @return The result of the division rounded up.
              */
             constexpr auto DivRoundUp(auto value, auto alignment)
-            {
-                return (value + alignment - 1) / alignment;
-            }
+            { return (value + alignment - 1) / alignment; }
             /**
-             * @brief Checks whether an unsigned integer is a valid power of two.
+             * @brief Checks whether an unsigned integer is a valid power of
+             * two.
              *
              * @param value The value to check.
              * @return True if the value is a power of two, false otherwise
              * (including 0).
              */
             constexpr bool IsPowerOfTwo(usize value)
-            {
-                return value != 0 && !(value & (value - 1));
-            }
+            { return value != 0 && !(value & (value - 1)); }
             /**
-             * @brief Rounds a value up to the next power of two using a dedicated
-             * exponent boundary multiplier.
+             * @brief Rounds a value up to the next power of two using a
+             * dedicated exponent boundary multiplier.
              *
              * @tparam T An integral type for the base value.
              * @tparam U An integral type for the exponent expression.
@@ -194,11 +188,10 @@ export extern "C++"
             template <typename T, typename U>
             constexpr auto RoundUpToPowerOfTwo(T value, U exponent)
                 requires(IsIntegralV<T> && IsIntegralV<U>)
-            {
-                return ((value - 1) & ~(exponent - 1)) + exponent;
-            }
+            { return ((value - 1) & ~(exponent - 1)) + exponent; }
             /**
-             * @brief Computes the value of a base raised to an integer exponent.
+             * @brief Computes the value of a base raised to an integer
+             * exponent.
              *
              * Handles both positive and negative integer exponents.
              *
@@ -219,8 +212,8 @@ export extern "C++"
                 return (invert) ? 1 / powMult : powMult;
             }
             /**
-             * @brief Calculates the integer square root of a signed integer using a
-             * bitwise digit-by-digit algorithm.
+             * @brief Calculates the integer square root of a signed integer
+             * using a bitwise digit-by-digit algorithm.
              *
              * @param n The input integer.
              * @return The integer square root, or -1 if the input is negative.
@@ -247,8 +240,8 @@ export extern "C++"
                 return result;
             }
             /**
-             * @brief Computes the base-2 logarithm of an integer using De Bruijn
-             * bit-multiplication sequence lookup tables.
+             * @brief Computes the base-2 logarithm of an integer using De
+             * Bruijn bit-multiplication sequence lookup tables.
              *
              * Highly optimized approach bypassing traditional loops or hardware
              * instructions.
@@ -287,18 +280,16 @@ export extern "C++"
              */
             template <typename T>
             consteval T Log2CEval(const T value)
-            {
-                return Log2(value);
-            }
+            { return Log2(value); }
 
 #if PRISM_TARGET_CRYPTIX == 0
             /**
              * @brief Calculates the square root of a floating-point type using
              * architectural assembly or compiler builtins.
              *
-             * Uses inline assembly extensions for x86_64 or AArch64 targets during
-             * runtime, and fallbacks to compiler intrinsics during constant
-             * evaluation contexts.
+             * Uses inline assembly extensions for x86_64 or AArch64 targets
+             * during runtime, and fallbacks to compiler intrinsics during
+             * constant evaluation contexts.
              *
              * @tparam T Floating-point variant type.
              * @param value The value to pass.
@@ -309,12 +300,15 @@ export extern "C++"
             {
                 if (IsConstantEvaluated())
                 {
-                    if constexpr (IsSameV<T, long double>) return __builtin_sqrtl(value);
-                    else if constexpr (IsSameV<T, f64>) return __builtin_sqrt(value);
-                    else if constexpr (IsSameV<T, f32>) return __builtin_sqrtf(value);
+                    if constexpr (IsSameV<T, long double>)
+                        return __builtin_sqrtl(value);
+                    else if constexpr (IsSameV<T, f64>)
+                        return __builtin_sqrt(value);
+                    else if constexpr (IsSameV<T, f32>)
+                        return __builtin_sqrtf(value);
                 }
 
-        #ifdef PRISM_TARGET_X86_64
+    #ifdef PRISM_TARGET_X86_64
                 if constexpr (IsSameV<T, f32>)
                 {
                     f32 res;
@@ -331,33 +325,31 @@ export extern "C++"
                 T res;
                 __asm__ volatile("fsqrt" : "=t"(res) : "0"(value));
                 return res;
-        #elifdef PRISM_TARGET_AARCH64
-                if constexpr (IsSameV<T, long double>) PrismToDo();
-                if constexpr (IsSameV<T, f64>)
+    #elifdef PRISM_TARGET_AARCH64
+                if constexpr (IsSameV<T, long double>) { PrismToDo(); }
+                else if constexpr (IsSameV<T, f64>)
                 {
                     f64 res;
                     __asm__ volatile("fsqrt %d0, %d1" : "=w"(res) : "w"(value));
                     return res;
                 }
-                if constexpr (IsSameV<T, f32>)
+                else if constexpr (IsSameV<T, f32>)
                 {
                     f32 res;
-                    __asm__ volatile("fsqrt %s0, %s1"
-                                     : "=w"(res)
-                                     : "w"(value));
+                    __asm__ volatile("fsqrt %s0, %s1" : "=w"(res) : "w"(value));
                     return res;
                 }
 
-        #else
+    #else
                 return __builtin_sqrt(value);
-        #endif
+    #endif
             }
 #endif
 
 #if PRISM_TARGET_CRYPTIX == 0
             /**
-             * @brief Computes the smallest integer value not less than the input
-             * argument.
+             * @brief Computes the smallest integer value not less than the
+             * input argument.
              *
              * @tparam T A floating-point type.
              * @param value The input floating-point value.
@@ -375,30 +367,34 @@ export extern "C++"
                              ? static_cast<i64>(value)
                              : static_cast<i64>(value) + ((value > 0) ? 1 : 0);
                 }
-        #ifdef PRISM_TARGET_AARCH64
+    #ifdef PRISM_TARGET_AARCH64
                 T res;
 
-                if constexpr (IsSameV<T, long double>) PrismToDo();
+                if constexpr (IsSameV<T, long double>) { PrismToDo(); }
                 else if constexpr (IsSameV<T, double>)
                 {
-                    __asm__ volatile("frintp %d0, %d1" : "=w"(res) : "w"(value));
+                    __asm__ volatile("frintp %d0, %d1"
+                                     : "=w"(res)
+                                     : "w"(value));
                     return res;
                 }
                 if constexpr (IsSameV<T, float>)
                 {
-                    __asm__ volatile("frintp %s0, %s1" : "=w"(res) : "w"(value));
+                    __asm__ volatile("frintp %s0, %s1"
+                                     : "=w"(res)
+                                     : "w"(value));
                     return res;
                 }
-        #else
+    #else
                 if constexpr (IsSameV<T, long double>)
                     return __builtin_ceill(value);
                 if constexpr (IsSameV<T, double>) return __builtin_ceil(value);
                 if constexpr (IsSameV<T, float>) return __builtin_ceilf(value);
-        #endif
+    #endif
             }
             /**
-             * @brief Computes the largest integer value not greater than the input
-             * argument.
+             * @brief Computes the largest integer value not greater than the
+             * input argument.
              *
              * @tparam T A floating-point type.
              * @param value The input floating-point value.
@@ -416,62 +412,69 @@ export extern "C++"
                              ? static_cast<i64>(value)
                              : static_cast<i64>(value) - ((value > 0) ? 0 : 1);
                 }
-        #ifdef PRISM_TARGET_AARCH64
+    #ifdef PRISM_TARGET_AARCH64
                 T res;
 
-                if constexpr (IsSameV<T, long double>) PrismToDo();
-                if constexpr (IsSameV<T, double>)
+                if constexpr (IsSameV<T, long double>)
                 {
-                    __asm__ volatile("frintm %d0, %d1" : "=w"(res) : "w"(value));
-                    return res;
-                }
-                if constexpr (IsSameV<T, float>)
-                {
-                    __asm__ volatile("frintm %s0, %s1" : "=w"(res) : "w"(value));
-                    return res;
-                }
-        #else
+                    PrismToDo();
+                    else if constexpr (IsSameV<T, double>)
+                    {
+                        __asm__ volatile("frintm %d0, %d1"
+                                         : "=w"(res)
+                                         : "w"(value));
+                        return res;
+                    }
+                    else if constexpr (IsSameV<T, float>)
+                    {
+                        __asm__ volatile("frintm %s0, %s1"
+                                         : "=w"(res)
+                                         : "w"(value));
+                        return res;
+                    }
+    #else
                 if constexpr (IsSameV<T, long double>)
                     return __builtin_floorl(value);
                 if constexpr (IsSameV<T, double>) return __builtin_floor(value);
                 if constexpr (IsSameV<T, float>) return __builtin_floorf(value);
-        #endif
-            }
-
-            /**
-             * @brief Rounds a numerical value to the nearest integer, rounding
-             * halfway cases away from zero.
-             *
-             * This function is overloaded via templates to handle integers,
-             * floating-point numbers, and custom numeric types efficiently.
-             *
-             * @tparam T Any numeric type (floating-point or integral).
-             * @param value The value to round.
-             * @return The rounded value matching the input type.
-             */
-            template <typename T>
-            PM_NODISCARD constexpr T Round(T value) PM_NOEXCEPT
-            {
-                if (IsConstantEvaluated())
-                {
-                    if constexpr (IsSameV<T, double>) return __builtin_round(value);
-                    else if constexpr (IsSameV<T, float>)
-                        return __builtin_roundf(value);
-                    else if constexpr (IsSameV<T, long double>)
-                        return __builtin_roundl(value);
+    #endif
                 }
 
-                if constexpr (IsIntegralV<T>) return value;
+                /**
+                 * @brief Rounds a numerical value to the nearest integer,
+                 * rounding halfway cases away from zero.
+                 *
+                 * This function is overloaded via templates to handle integers,
+                 * floating-point numbers, and custom numeric types efficiently.
+                 *
+                 * @tparam T Any numeric type (floating-point or integral).
+                 * @param value The value to round.
+                 * @return The rounded value matching the input type.
+                 */
+                template <typename T>
+                PM_NODISCARD constexpr T Round(T value) PM_NOEXCEPT
+                {
+                    if (IsConstantEvaluated())
+                    {
+                        if constexpr (IsSameV<T, double>)
+                            return __builtin_round(value);
+                        else if constexpr (IsSameV<T, float>)
+                            return __builtin_roundf(value);
+                        else if constexpr (IsSameV<T, long double>)
+                            return __builtin_roundl(value);
+                    }
 
-                if (value == 0.) return value;
-                if (value > 0.) return Floor(value + .5);
-                return Ceil(value - .5);
-            }
+                    if constexpr (IsIntegralV<T>) return value;
+
+                    if (value == 0.) return value;
+                    if (value > 0.) return Floor(value + .5);
+                    return Ceil(value - .5);
+                }
 #endif
-        }; // namespace Math
-    } // namespace Prism
+            }; // namespace Math
+        } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-    namespace Math = Prism::Math;
+        namespace Math = Prism::Math;
 #endif
-}
+    }
