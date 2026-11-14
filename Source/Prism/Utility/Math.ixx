@@ -415,66 +415,64 @@ export extern "C++"
     #ifdef PRISM_TARGET_AARCH64
                 T res;
 
-                if constexpr (IsSameV<T, long double>)
+                if constexpr (IsSameV<T, long double>) { PrismToDo(); }
+                else if constexpr (IsSameV<T, double>)
                 {
-                    PrismToDo();
-                    else if constexpr (IsSameV<T, double>)
-                    {
-                        __asm__ volatile("frintm %d0, %d1"
-                                         : "=w"(res)
-                                         : "w"(value));
-                        return res;
-                    }
-                    else if constexpr (IsSameV<T, float>)
-                    {
-                        __asm__ volatile("frintm %s0, %s1"
-                                         : "=w"(res)
-                                         : "w"(value));
-                        return res;
-                    }
+                    __asm__ volatile("frintm %d0, %d1"
+                                     : "=w"(res)
+                                     : "w"(value));
+                    return res;
+                }
+                else if constexpr (IsSameV<T, float>)
+                {
+                    __asm__ volatile("frintm %s0, %s1"
+                                     : "=w"(res)
+                                     : "w"(value));
+                    return res;
+                }
     #else
                 if constexpr (IsSameV<T, long double>)
                     return __builtin_floorl(value);
                 if constexpr (IsSameV<T, double>) return __builtin_floor(value);
                 if constexpr (IsSameV<T, float>) return __builtin_floorf(value);
     #endif
-                }
+            }
 
-                /**
-                 * @brief Rounds a numerical value to the nearest integer,
-                 * rounding halfway cases away from zero.
-                 *
-                 * This function is overloaded via templates to handle integers,
-                 * floating-point numbers, and custom numeric types efficiently.
-                 *
-                 * @tparam T Any numeric type (floating-point or integral).
-                 * @param value The value to round.
-                 * @return The rounded value matching the input type.
-                 */
-                template <typename T>
-                PM_NODISCARD constexpr T Round(T value) PM_NOEXCEPT
+            /**
+             * @brief Rounds a numerical value to the nearest integer, rounding
+             * halfway cases away from zero.
+             *
+             * This function is overloaded via templates to handle integers,
+             * floating-point numbers, and custom numeric types efficiently.
+             *
+             * @tparam T Any numeric type (floating-point or integral).
+             * @param value The value to round.
+             * @return The rounded value matching the input type.
+             */
+            template <typename T>
+            PM_NODISCARD constexpr T Round(T value) PM_NOEXCEPT
+            {
+                if (IsConstantEvaluated())
                 {
-                    if (IsConstantEvaluated())
-                    {
-                        if constexpr (IsSameV<T, double>)
-                            return __builtin_round(value);
-                        else if constexpr (IsSameV<T, float>)
-                            return __builtin_roundf(value);
-                        else if constexpr (IsSameV<T, long double>)
-                            return __builtin_roundl(value);
-                    }
-
-                    if constexpr (IsIntegralV<T>) return value;
-
-                    if (value == 0.) return value;
-                    if (value > 0.) return Floor(value + .5);
-                    return Ceil(value - .5);
+                    if constexpr (IsSameV<T, double>)
+                        return __builtin_round(value);
+                    else if constexpr (IsSameV<T, float>)
+                        return __builtin_roundf(value);
+                    else if constexpr (IsSameV<T, long double>)
+                        return __builtin_roundl(value);
                 }
+
+                if constexpr (IsIntegralV<T>) return value;
+
+                if (value == 0.) return value;
+                if (value > 0.) return Floor(value + .5);
+                return Ceil(value - .5);
+            }
 #endif
-            }; // namespace Math
-        } // namespace Prism
+        }; // namespace Math
+    } // namespace Prism
 
 #if PRISM_USE_NAMESPACE != 0
-        namespace Math = Prism::Math;
+    namespace Math = Prism::Math;
 #endif
-    }
+}
