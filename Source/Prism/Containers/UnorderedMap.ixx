@@ -422,7 +422,7 @@ export extern "C++"
 
             /**
              * @brief Constructs a key-value pair in-place, if it doesn't already
-             * eixst. If it exists, it does nothing
+             * exist. If it exists, it does nothing
              *
              * @tparam Args Argument types for key/value.
              * @param args Arguments to forward to constructor.

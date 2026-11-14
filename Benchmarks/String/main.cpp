@@ -144,10 +144,10 @@ static void RegisterString()
             std::string   needle = "prismneedle!";
             std::string   text   = RandomText(n, 4) + needle;
             Prism::String ps(text.c_str());
-            Prism::String pn(needle.c_str());
+            Prism::String pneedle(needle.c_str());
             r.Bytes(double(text.size()));
             r.Compare(
-                1, [&] { return u64(ps.Find(pn)); },
+                1, [&] { return u64(ps.Find(pneedle)); },
                 [&] { return u64(text.find(needle)); });
         });
         // aaaa...ab in aaaa...: worst case for a naive search.
@@ -155,10 +155,10 @@ static void RegisterString()
             std::string   needle = std::string(31, 'a') + 'b';
             std::string   text   = std::string(n, 'a') + needle;
             Prism::String ps(text.c_str());
-            Prism::String pn(needle.c_str());
+            Prism::String pneedle(needle.c_str());
             r.Bytes(double(text.size()));
             r.Compare(
-                1, [&] { return u64(ps.Find(pn)); },
+                1, [&] { return u64(ps.Find(pneedle)); },
                 [&] { return u64(text.find(needle)); });
         });
     }

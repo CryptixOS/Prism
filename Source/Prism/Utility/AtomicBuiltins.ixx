@@ -160,7 +160,7 @@ export extern "C++"
          *[successMemoryOrder]. The are no restriction on what memory order can be
          *used here.
          *
-         *  Otherwise, false is returned and memoy is affected to
+         *  Otherwise, false is returned and memory is affected to
          *  failureMemoryOrder. This memory order cannot be eRelease nor
          *  eAcqRel. It also cannot be a stronger order than that specified by
          *  [successMemoryOrder]

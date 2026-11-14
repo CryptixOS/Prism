@@ -180,6 +180,11 @@ set(PRISM_WARNING_ARGS ${PRISM_CORE_WARNING_ARGS} -Wold-style-cast -Wcast-align 
 if(PRISM_WERROR)
   list(APPEND PRISM_WARNING_ARGS -Werror)
 endif()
+# Some CMake versions pass -c to clang's --precompile step for the BMIs they
+# synthesize for module consumers; clang warns it is unused.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  list(APPEND PRISM_WARNING_ARGS -Wno-unused-command-line-argument)
+endif()
 
 # ==============================================================================
 ### Version.hpp (same values as meson's configuration_data)

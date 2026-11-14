@@ -464,7 +464,7 @@ export extern "C++"
              * operations are performed on the arguments. The container capacity is
              * automatically expanded if the current size equals capacity.
              *
-             * @tparam Args... Varadic template types for the constructor arguments.
+             * @tparam Args... Variadic template types for the constructor arguments.
              * @param pos Iterator pointing to the position where the element will
              * be inserted.
              * @param args Arguments forwarded to the constructor of the element.
