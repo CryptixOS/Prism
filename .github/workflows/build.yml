@@ -23,7 +23,6 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x86_64, aarch64]
-        # app uses the system fmt, cryptix-app the bundled, patched fmt 10.2.
         # cryptix and carbonc are freestanding: library only, no tests.
         target: [app, cryptix-app, cryptix, carbonc]
         compiler: [gcc, clang]
@@ -44,10 +43,10 @@ jobs:
       - name: Install dependencies
         run: |
           if [ -f /etc/arch-release ]; then
-            pacman -Syu --noconfirm --needed git cmake ninja fmt clang patch
+            pacman -Syu --noconfirm --needed git cmake ninja clang
           else
             dnf install -y git cmake ninja-build gcc gcc-c++ libstdc++-devel \
-              libstdc++-static clang clang-tools-extra fmt-devel patch
+              libstdc++-static clang clang-tools-extra
           fi
 
       - name: Checkout code

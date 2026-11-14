@@ -56,15 +56,15 @@ cmake --build build
 
 `PRISM_TARGET` selects what Prism is built for:
 
-| Target        | Environment                    | fmt                         |
-|---------------|--------------------------------|-----------------------------|
-| `app`         | host (Linux, ...)              | system fmt                  |
-| `cryptix-app` | CryptixOS userspace (default)  | bundled, patched fmt 10.2   |
-| `cryptix`     | CryptixOS kernel               | bundled, patched fmt 10.2   |
-| `carbonc`     | carbonc                        | bundled, patched fmt 10.2   |
+| Target        | Environment                    |
+|---------------|--------------------------------|
+| `app`         | host (Linux, ...)              |
+| `cryptix-app` | CryptixOS userspace (default)  |
+| `cryptix`     | CryptixOS kernel               |
+| `carbonc`     | carbonc                        |
 
-The fmt choice can be overridden with `-DPRISM_USE_SYSTEM_FMT=ON|OFF`.
-Bundled dependencies (patched fmt, magic_enum, demangler) are taken from
+Prism has no fmt dependency: `Prism::Format` replaces it. Bundled
+dependencies (magic_enum, demangler) are taken from
 `subprojects/` when present, otherwise they're downloaded at configure time.
 
 > **meson is deprecated.** `meson.build` is still there for backward
@@ -133,7 +133,7 @@ Prism is integrated with CryptixOS, but it can be used in any freestanding or em
 
 Prism is licensed under the **GNU General Public License v2.0 or later**
 (`GPL-2.0-or-later`), see [LICENSE](LICENSE). Bundled dependencies keep their
-own licenses: fmt and magic_enum (MIT), demangler (Apache-2.0).
+own licenses: magic_enum (MIT), demangler (Apache-2.0).
 
 ---
 

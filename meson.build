@@ -35,23 +35,7 @@ warning_args = [
 ]
 target = get_option('target')
 
-# The patched fmt 10.2 (fmt-10.2.0.patch) is only needed on CryptixOS; host
-# builds (target=app) use the host's fmt.
-use_system_fmt = target == 'app'
-fmt_macros = []
-if not use_system_fmt
-  fmt_macros = [
-    '-DFMT_STATIC_THOUSANDS_SEPARATOR=1',
-    '-DFMT_USE_LONG_DOUBLE=0',
-    '-DFMT_USE_DOUBLE=0',
-    '-DFMT_USE_FLOAT=0',
-    '-DFMT_USE_FLOAT128=0',
-    '-DFMT_USE_EXCEPTIONS=0',
-    '-DFMT_HEADER_ONLY=1',
-  ]
-endif
 macros = [
-  fmt_macros,
   '-DMAGIC_ENUM_RANGE_MAX=0x8a00',
   '-DPRISM_LOG_ENABLE=true',
 ]
@@ -115,13 +99,7 @@ configure_file(
 
 # ==============================================================================
 ### Dependencies
-if use_system_fmt
-  fmt_dep = dependency('fmt')
-else
-  fmt_dep = subproject('fmt-10.2.0').get_variable('fmt_dep')
-endif
 deps = [
-  fmt_dep,
   dependency('demangler'),
   dependency('magic_enum', default_options: [
     'test=false',

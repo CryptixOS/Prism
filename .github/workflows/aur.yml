@@ -39,7 +39,7 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: pacman -Syu --noconfirm --needed git openssh cmake ninja fmt
+        run: pacman -Syu --noconfirm --needed git openssh cmake ninja
 
       - name: Checkout code
         uses: actions/checkout@v4

@@ -11,8 +11,6 @@ pkgdesc="Freestanding C++23 standard library and runtime for kernel-space develo
 arch=('x86_64' 'aarch64')
 url="https://github.com/CryptixOS/Prism"
 license=('GPL-2.0-or-later' 'MIT' 'Apache-2.0')
-# Host builds use the system fmt; Prism's public headers include it.
-depends=('fmt')
 makedepends=('git' 'cmake' 'ninja')
 optdepends=('clang: C++23 compiler for building against Prism (or gcc)')
 provides=('prism-cxx')
