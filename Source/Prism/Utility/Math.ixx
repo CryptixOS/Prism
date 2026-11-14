@@ -309,9 +309,9 @@ export extern "C++"
             {
                 if (IsConstantEvaluated())
                 {
-                    if (IsSameV<T, long double>) return __builtin_sqrtl(value);
-                    if (IsSameV<T, f64>) return __builtin_sqrt(value);
-                    if (IsSameV<T, f32>) return __builtin_sqrtf(value);
+                    if constexpr (IsSameV<T, long double>) return __builtin_sqrtl(value);
+                    else if constexpr (IsSameV<T, f64>) return __builtin_sqrt(value);
+                    else if constexpr (IsSameV<T, f32>) return __builtin_sqrtf(value);
                 }
 
         #ifdef PRISM_TARGET_X86_64
@@ -342,7 +342,7 @@ export extern "C++"
                 if constexpr (IsSameV<T, f32>)
                 {
                     f32 res;
-                    __asm__ volatile(#instruction " %s0, %s1"
+                    __asm__ volatile("fsqrt %s0, %s1"
                                      : "=w"(res)
                                      : "w"(value));
                     return res;
@@ -378,7 +378,7 @@ export extern "C++"
         #ifdef PRISM_TARGET_AARCH64
                 T res;
 
-                if constexpr (IsSameV<T, long double>) TODO();
+                if constexpr (IsSameV<T, long double>) PrismToDo();
                 else if constexpr (IsSameV<T, double>)
                 {
                     __asm__ volatile("frintp %d0, %d1" : "=w"(res) : "w"(value));
@@ -419,7 +419,7 @@ export extern "C++"
         #ifdef PRISM_TARGET_AARCH64
                 T res;
 
-                if constexpr (IsSameV<T, long double>) TODO();
+                if constexpr (IsSameV<T, long double>) PrismToDo();
                 if constexpr (IsSameV<T, double>)
                 {
                     __asm__ volatile("frintm %d0, %d1" : "=w"(res) : "w"(value));

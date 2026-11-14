@@ -28,7 +28,7 @@ namespace Prism
         m_EntryCount = entryCount;
 
         m_Size       = Math::DivRoundUp(entryCount, 8);
-        m_Data       = new u8[m_Size];
+        m_Data       = new u8[m_Size]();
     }
     void Bitmap::Free()
     {

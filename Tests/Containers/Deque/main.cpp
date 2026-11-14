@@ -142,3 +142,30 @@ TEST_CASE(TestErase){
 }
 
 
+
+// Elements start mid-block (offset 32 of 64): 32 pushes fill the back block
+// exactly, and iteration must stop at end() instead of running past it.
+TEST_CASE(TestIterateFullBackBlock){
+    for (int count : {32, 96, 160})
+    {
+        Deque<int> dq;
+        for (int i = 0; i < count; ++i) dq.PushBack(i);
+        int seen = 0;
+        for (int val : dq) EXPECT_EQ(val, seen++);
+        EXPECT_EQ(seen, count);
+        EXPECT_EQ(dq.end() - dq.begin(), count);
+    }
+}
+
+// Popping back to a block boundary leaves the back offset at 0, where
+// Back() is the last element of the previous block.
+TEST_CASE(TestBackAfterPopAcrossBlocks){
+    Deque<int> dq;
+    for (int i = 0; i < 200; ++i) dq.PushBack(i);
+    for (int i = 199; i > 0; --i)
+    {
+        EXPECT_EQ(dq.Back(), i);
+        dq.PopBack();
+    }
+    EXPECT_EQ(dq.Back(), 0);
+}

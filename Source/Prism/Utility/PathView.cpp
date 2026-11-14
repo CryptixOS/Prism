@@ -5,7 +5,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#if PRISM_TARGET_CRYPTIX != 0
+// The kernel's limit when built inside its tree, 255 otherwise.
+#if PRISM_TARGET_CRYPTIX != 0 && __has_include(<API/Limits.hpp>)
     #include <API/Limits.hpp>
     #define PRISM_MAX_PATH Limits::MAX_PATH_LENGTH
 #else

@@ -28,6 +28,8 @@ T& Alias(T& value)
 
 using namespace Prism;
 
+// Each test declares its nodes before its lists: a list's destructor unlinks
+// whatever is still on it, so the nodes have to outlive it.
 struct Node
 {
     i32                     Value;
@@ -42,8 +44,8 @@ struct Node
 };
 
 TEST_CASE(IntrusiveList_TestPushAndIteration){
-    Node::List list;
     Node       a(1), b(2), c(3);
+    Node::List list;
 
     list.PushBack(&a);
     list.PushBack(&b);
@@ -63,8 +65,8 @@ TEST_CASE(IntrusiveList_TestPushAndIteration){
 }
 
 TEST_CASE(IntrusiveList_TestUnlinkMiddle){
-    Node::List list;
     Node       a(10), b(20), c(30);
+    Node::List list;
 
     list.PushBack(&a);
     list.PushBack(&b);
@@ -92,8 +94,8 @@ TEST_CASE(IntrusiveList_TestUnlinkMiddle){
 }
 
 TEST_CASE(IntrusiveList_TestUnlinkHead){
-    Node::List list;
     Node       a(100), b(200), c(300);
+    Node::List list;
 
     list.PushBack(&a);
     list.PushBack(&b);
@@ -110,8 +112,8 @@ TEST_CASE(IntrusiveList_TestUnlinkHead){
 }
 
 TEST_CASE(IntrusiveList_TestUnlinkTail){
-    Node::List list;
     Node       a(1000), b(2000), c(3000);
+    Node::List list;
 
     list.PushBack(&a);
     list.PushBack(&b);
@@ -128,8 +130,8 @@ TEST_CASE(IntrusiveList_TestUnlinkTail){
 }
 
 TEST_CASE(IntrusiveList_TestClear){
-    Node::List list;
     Node       a(1), b(2), c(3);
+    Node::List list;
 
     list.PushBack(&a);
     list.PushBack(&b);
@@ -149,8 +151,8 @@ TEST_CASE(IntrusiveList_TestClear){
 
 // Regression: IntrusiveListHook::Unlink() didn't update the owner's size.
 TEST_CASE(IntrusiveList_TestHookUnlinkUpdatesSize){
-    Node::List list;
     Node       a(1), b(2), c(3);
+    Node::List list;
     list.PushBack(&a);
     list.PushBack(&b);
     list.PushBack(&c);
@@ -165,8 +167,8 @@ TEST_CASE(IntrusiveList_TestHookUnlinkUpdatesSize){
 // Regression: Erase() decremented the size even when the node wasn't in
 // this list, underflowing it.
 TEST_CASE(IntrusiveList_TestEraseForeignNode){
-    Node::List first, second;
     Node       a(1), b(2), unlinked(3);
+    Node::List first, second;
     first.PushBack(&a);
     second.PushBack(&b);
 
@@ -204,8 +206,8 @@ TEST_CASE(IntrusiveList_TestMovePreservesSizeAndOwner){
 // Regression: lists stored in a Vector (as UnorderedMap does) must survive
 // reallocation; relocation goes through the move constructor.
 TEST_CASE(IntrusiveList_TestVectorRelocation){
-    Vector<Node::List> buckets;
     Node               a(1), b(2);
+    Vector<Node::List> buckets;
     buckets.Resize(1);
     buckets[0].PushBack(&a);
     buckets[0].PushBack(&b);
@@ -220,8 +222,8 @@ TEST_CASE(IntrusiveList_TestVectorRelocation){
 // Regression: rbegin()/rend() were wired to the wrong ends and the iterator
 // couldn't be decremented, so reverse iteration didn't compile.
 TEST_CASE(IntrusiveList_TestReverseIteration){
-    Node::List list;
     Node       a(1), b(2), c(3);
+    Node::List list;
     list.PushBack(&a);
     list.PushBack(&b);
     list.PushBack(&c);
@@ -238,8 +240,8 @@ TEST_CASE(IntrusiveList_TestReverseIteration){
 
 // Erase(iterator) must return the following node.
 TEST_CASE(IntrusiveList_TestEraseReturnsNext){
-    Node::List list;
     Node       a(1), b(2), c(3);
+    Node::List list;
     list.PushBack(&a);
     list.PushBack(&b);
     list.PushBack(&c);

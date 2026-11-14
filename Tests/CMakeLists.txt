@@ -67,7 +67,7 @@ endfunction()
 # Keep these lists in sync with Tests/<Suite>/meson.build.
 prism_add_tests(Algorithm Random SearchString Sort)
 prism_add_tests(Containers
-  BitSpan Deque DoublyLinkedList IntrusiveList IntrusiveListV3
+  BitSpan Bitmap Deque DoublyLinkedList IntrusiveList IntrusiveListV3
   IntrusiveRedBlackTree IntrusiveRefList Queue RedBlackTree RingBuffer Stack
   Tuple UnorderedMap Vector)
 prism_add_tests(Core TypeTraits)

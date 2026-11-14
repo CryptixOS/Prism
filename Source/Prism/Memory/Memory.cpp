@@ -27,6 +27,8 @@ namespace Prism
             const u8* s = source.As<const u8>();
             usize     i = 0;
 
+            // The loop tests at the bottom: it must not be entered with 0.
+            if (count != 0)
             __asm__ volatile(
                 "1:\n"
                 "ldrb w9, [%[src], %[i]]\n"
@@ -90,6 +92,8 @@ namespace Prism
             u8    val = static_cast<u8>(value);
             usize i   = 0;
 
+            // The loop tests at the bottom: it must not be entered with 0.
+            if (count != 0)
             __asm__ volatile(
                 "1:\n"
                 "strb %w[val], [%[ptr], %[i]]\n"
@@ -147,12 +151,10 @@ namespace Prism
         Pointer ScanForCharacter(const Pointer memory, u8 c, usize size)
         {
             const unsigned char* current = memory.As<unsigned char>();
-            while (size-- > 0 && *current != static_cast<unsigned char>(c))
-                ++current;
+            for (; size > 0; --size, ++current)
+                if (*current == c) return current;
 
-            return size > 0 && *current == static_cast<unsigned char>(c)
-                     ? current - 1
-                     : nullptr;
+            return nullptr;
         }
     }; // namespace Memory
 }; // namespace Prism

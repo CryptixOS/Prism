@@ -319,12 +319,18 @@ export extern "C++"
                 return (*m_Blocks[m_FrontIndex])[m_FrontOffset];
             }
 
+            // After PopBack the back offset can be 0: the last element is
+            // then the end of the previous block.
             constexpr T& Back()
             {
+                if (m_BackOffset == 0)
+                    return (*m_Blocks[m_BackIndex - 1])[BlockSize - 1];
                 return (*m_Blocks[m_BackIndex])[m_BackOffset - 1];
             }
             constexpr const T& Back() const
             {
+                if (m_BackOffset == 0)
+                    return (*m_Blocks[m_BackIndex - 1])[BlockSize - 1];
                 return (*m_Blocks[m_BackIndex])[m_BackOffset - 1];
             }
 
@@ -332,8 +338,12 @@ export extern "C++"
             {
                 return Iterator<>(&m_Blocks, m_FrontIndex, m_FrontOffset);
             }
+            // A full back block is {BackIndex, BlockSize}, but ++ reaches
+            // it as {BackIndex + 1, 0}: hand out the form ++ produces.
             constexpr Iterator<> end()
             {
+                if (m_BackOffset == BlockSize)
+                    return Iterator<>(&m_Blocks, m_BackIndex + 1, 0);
                 return Iterator<>(&m_Blocks, m_BackIndex, m_BackOffset);
             }
 
@@ -343,6 +353,8 @@ export extern "C++"
             }
             constexpr ConstIterator end() const
             {
+                if (m_BackOffset == BlockSize)
+                    return ConstIterator(&m_Blocks, m_BackIndex + 1, 0);
                 return ConstIterator(&m_Blocks, m_BackIndex, m_BackOffset);
             }
 

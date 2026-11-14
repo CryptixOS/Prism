@@ -19,8 +19,9 @@ export extern "C++"
         template <typename T>
         struct IntegerTraits
         {
-            static constexpr i32 Digits = NumericLimits<T>::Digits;
-            static constexpr T   Max    = NumericLimits<T>::Max();
+            static constexpr i32  Digits   = NumericLimits<T>::Digits;
+            static constexpr T    Max      = NumericLimits<T>::Max();
+            static constexpr bool IsSigned = NumericLimits<T>::IsSigned;
         };
 
         template <typename T, typename U>

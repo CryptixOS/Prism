@@ -757,14 +757,20 @@ export extern "C++"
             }
             else if (urngRange < urange)
             {
-                UCType tmp;
-                do {
-                    const UCType uerngrange = urngRange + 1;
-                    tmp                     = (uerngrange
-                           * operator()(urng,
-                                        ParameterType(0, urange / uerngrange)));
-                    result                  = tmp + (UCType(urng()) - urngMin);
-                } while (result > urange || result < tmp);
+                // Unreachable when the generator spans all of UCType, where
+                // urngRange + 1 would wrap to 0: don't compile it then.
+                if constexpr (urngRange != UCType(~UCType(0)))
+                {
+                    UCType tmp;
+                    do {
+                        const UCType uerngrange = urngRange + 1;
+                        tmp                     = (uerngrange
+                               * operator()(urng,
+                                            ParameterType(0, urange / uerngrange)));
+                        result                  = tmp + (UCType(urng()) - urngMin);
+                    } while (result > urange || result < tmp);
+                }
+                else __builtin_unreachable();
             }
             else result = UCType(urng()) - urngMin;
 

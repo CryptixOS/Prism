@@ -563,6 +563,7 @@ export extern "C++"
                 if (m_HasValue) [[likely]]
                     return m_Value;
                 assert(false);
+                __builtin_unreachable();
             }
 
             constexpr T& Value() &
@@ -570,6 +571,7 @@ export extern "C++"
                 if (m_HasValue) [[likely]]
                     return m_Value;
                 assert(false);
+                __builtin_unreachable();
             }
 
             constexpr const T&& Value() const&&
@@ -577,6 +579,7 @@ export extern "C++"
                 if (m_HasValue) [[likely]]
                     return Move(m_Value);
                 assert(false);
+                __builtin_unreachable();
             }
 
             constexpr T&& Value() &&
@@ -584,12 +587,14 @@ export extern "C++"
                 if (m_HasValue) [[likely]]
                     return Move(m_Value);
                 assert(false);
+                __builtin_unreachable();
             }
             constexpr const T& value() const&
             {
                 if (m_HasValue) [[likely]]
                     return m_Value;
                 assert(false);
+                __builtin_unreachable();
             }
 
             constexpr T& value() &
@@ -597,6 +602,7 @@ export extern "C++"
                 if (m_HasValue) [[likely]]
                     return m_Value;
                 assert(false);
+                __builtin_unreachable();
             }
 
             constexpr const T&& value() const&&
@@ -604,6 +610,7 @@ export extern "C++"
                 if (m_HasValue) [[likely]]
                     return Move(m_Value);
                 assert(false);
+                __builtin_unreachable();
             }
 
             constexpr T&& value() &&
@@ -611,6 +618,7 @@ export extern "C++"
                 if (m_HasValue) [[likely]]
                     return Move(m_Value);
                 assert(false);
+                __builtin_unreachable();
             }
 
             constexpr const E& Error() const& noexcept
@@ -1296,6 +1304,7 @@ export extern "C++"
                 if (m_HasValue) [[likely]]
                     return;
                 assert(false);
+                __builtin_unreachable();
             }
 
             constexpr void Value() &&
@@ -1303,12 +1312,14 @@ export extern "C++"
                 if (m_HasValue) [[likely]]
                     return;
                 assert(false);
+                __builtin_unreachable();
             }
             constexpr void value() const&
             {
                 if (m_HasValue) [[likely]]
                     return;
                 assert(false);
+                __builtin_unreachable();
             }
 
             constexpr void value() &&
@@ -1316,6 +1327,7 @@ export extern "C++"
                 if (m_HasValue) [[likely]]
                     return;
                 assert(false);
+                __builtin_unreachable();
             }
 
             constexpr const E& Error() const& noexcept

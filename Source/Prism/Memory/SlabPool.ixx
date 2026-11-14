@@ -31,8 +31,10 @@ export extern "C++"
 
             virtual bool           Initialize() override
             {
+                // Not inside assert(): NDEBUG builds would drop the call
+                // and leave every bucket uninitialized.
                 for (usize i = 0; i < BucketCount; i++)
-                    assert(m_Buckets[i].Initialize(8 << i));
+                    if (!m_Buckets[i].Initialize(8 << i)) return false;
 
                 return true;
             }

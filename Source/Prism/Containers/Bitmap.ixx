@@ -70,15 +70,19 @@ export extern "C++"
             }
 
             bool  At(const usize index) const;
+            // end < 0 searches to the last bit.
             isize FindFirstSet(isize start = 0, isize end = -1)
             {
+                if (end < 0) end = static_cast<isize>(m_EntryCount);
                 for (isize i = start; i < end; i++)
                     if (At(i)) return i;
 
                 return -1;
             }
+            // end < 0 searches to the last bit.
             isize FindFirstNotSet(isize start = 0, isize end = -1)
             {
+                if (end < 0) end = static_cast<isize>(m_EntryCount);
                 for (isize i = start; i < end; i++)
                     if (!At(i)) return i;
 

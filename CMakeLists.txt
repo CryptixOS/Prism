@@ -25,6 +25,7 @@ if(NOT PRISM_TARGET IN_LIST PRISM_TARGETS)
 endif()
 set(PRISM_EXTRA_INCS "" CACHE STRING "Extra include directory")
 option(PRISM_BUILD_TESTS "Build the unit tests" OFF)
+option(PRISM_BUILD_BENCHMARKS "Build the benchmarks (hosted targets only)" OFF)
 option(PRISM_WERROR "Treat warnings as errors (meson: werror=true)" ON)
 
 # The patched fmt 10.2 (fmt-10.2.0.patch) is only needed on CryptixOS; host
@@ -342,6 +343,12 @@ set(PRISM_MODULE_INTERFACES
   Source/Prism/Utility/SimdVector.ixx
   Source/Prism/Utility/Time.ixx
 )
+# SIMD is off limits in the kernel (SimdIntrinsics.ixx #errors there).
+if(PRISM_TARGET STREQUAL "cryptix")
+  list(REMOVE_ITEM PRISM_MODULE_INTERFACES
+    Source/Prism/Math/SimdVector.ixx
+    Source/Prism/Utility/SimdIntrinsics.ixx)
+endif()
 # The test framework's modules (Prism.Test.*), built into prism_test.
 set(PRISM_TEST_MODULE_INTERFACES
   Source/Prism/Test/CrashTest.ixx
@@ -490,4 +497,13 @@ if(PRISM_BUILD_TESTS)
   endif()
   enable_testing()
   add_subdirectory(Tests)
+endif()
+
+# ==============================================================================
+### Benchmarks
+if(PRISM_BUILD_BENCHMARKS)
+  if(NOT PRISM_HOSTED)
+    message(FATAL_ERROR "PRISM_BUILD_BENCHMARKS requires a hosted PRISM_TARGET (app or cryptix-app)")
+  endif()
+  add_subdirectory(Benchmarks)
 endif()

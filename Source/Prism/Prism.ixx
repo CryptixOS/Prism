@@ -73,7 +73,9 @@ export import Prism.Debug.Logger;
 export import Prism.Debug.SourceLocation;
 export import Prism.Debug.Stacktrace;
 export import Prism.Math.Matrix;
+#if PRISM_TARGET_CRYPTIX == 0 // no SIMD in the kernel
 export import Prism.Math.SimdVector;
+#endif
 export import Prism.Math.Vector;
 export import Prism.Memory.Allocator;
 export import Prism.Memory.BitStream;
@@ -122,6 +124,8 @@ export import Prism.Utility.Optional;
 export import Prism.Utility.Path;
 export import Prism.Utility.PathView;
 export import Prism.Utility.RangeAllocator;
+#if PRISM_TARGET_CRYPTIX == 0 // no SIMD in the kernel
 export import Prism.Utility.SimdIntrinsics;
+#endif
 export import Prism.Utility.SimdVector;
 export import Prism.Utility.Time;

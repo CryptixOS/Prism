@@ -1,0 +1,19 @@
+/*
+ * Created by v1tr10l7 on 14.11.2026.
+ * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+#pragma once
+
+// Stand-ins for the CryptixOS kernel headers Prism uses with
+// PRISM_TARGET=cryptix, so CI can build that target outside the kernel tree
+// (cmake -DPRISM_EXTRA_INCS=Meta/ci/cryptix-include). Mirrors
+// CryptixOS/Kernel/Library/KLibC++/cerrno.
+
+#include <errno.h>
+
+namespace std
+{
+    using errno_t = int;
+};
