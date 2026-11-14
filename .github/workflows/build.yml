@@ -61,11 +61,17 @@ jobs:
           ${CXX:-c++} --version
           hosted=OFF
           case "${{ matrix.target }}" in app|cryptix-app) hosted=ON ;; esac
+          # Outside the kernel tree, cryptix gets stand-ins for the few
+          # CryptixOS headers it includes.
+          extra=
+          if [ "${{ matrix.target }}" = cryptix ]; then
+            extra="-DPRISM_EXTRA_INCS=$PWD/Meta/ci/cryptix-include"
+          fi
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake-build-type }} \
             -DPRISM_TARGET=${{ matrix.target }} \
             -DPRISM_BUILD_TESTS=$hosted \
-            -DPRISM_BUILD_BENCHMARKS=$hosted
+            -DPRISM_BUILD_BENCHMARKS=$hosted $extra
 
       - name: Build
         run: cmake --build build

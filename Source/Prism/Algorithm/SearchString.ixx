@@ -29,6 +29,7 @@ export extern "C++"
             {
                 usize size = pattern.Size();
                 lpsArray.Resize(size);
+                if (size == 0) return;
                 lpsArray[0]      = 0;
 
                 isize patternPos = 0;
@@ -44,6 +45,17 @@ export extern "C++"
             constexpr usize FindStringKMP(const BasicStringView<C, Traits>& string,
                                           const BasicStringView<C, Traits>& pattern)
             {
+                if (pattern.Empty()) return 0;
+                // A plain scan, and it keeps GCC's -Warray-bounds from
+                // flagging the KMP loop once it's inlined with a
+                // one-character pattern (e.g. FindLastOf(char)).
+                if (pattern.Size() == 1)
+                {
+                    for (usize i = 0; i < string.Size(); i++)
+                        if (string[i] == pattern[0]) return i;
+                    return -1;
+                }
+
                 Vector<isize> lpsArray;
                 ComputeLPSArray(pattern, lpsArray);
 
