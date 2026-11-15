@@ -15,6 +15,18 @@
 # Prism::TestMain for unit tests).
 cmake_minimum_required(VERSION 3.24)
 
+# Prism never does `import std`. CMake 4.5 otherwise builds the standard
+# library's std module for every target with scanned sources, with that
+# target's flags: libstdc++'s std.cc fails Prism's -Wundef -Werror and, for
+# freestanding targets, needs hosted headers. With an import-std error message
+# CMake makes `std` an error-only target, which only errors if some source
+# actually imports std. Set before project() so it is recorded with the
+# compiler and try_compile() projects (check_cxx_compiler_flag) see it too;
+# CMake caches the std metadata process-wide once a try_compile loads it.
+# Older CMake versions ignore the variable.
+set(PRISM_NO_IMPORT_STD "Prism does not support `import std`")
+set(CMAKE_CXX_COMPILER_IMPORT_STD_ERROR_MESSAGE "${PRISM_NO_IMPORT_STD}")
+
 project(prism VERSION 0.2.0 LANGUAGES C CXX)
 
 set(PRISM_TARGETS cryptix-app app cryptix carbonc)
@@ -50,13 +62,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 # Prism/Utility is made of C++20 named modules (Source/Prism/Utility/*.ixx).
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
-# Prism never does `import std`. CMake 4.5 otherwise builds the standard
-# library's std module for every target with scanned sources, with Prism's
-# warning flags (libstdc++'s std.cc fails -Wundef -Werror) and, for
-# freestanding targets, against hosted headers. An empty modules JSON makes
-# CMake create an error-only `std` target instead, which only errors if some
-# source actually imports std. Older CMake versions ignore the variable.
-set(CMAKE_CXX_STDLIB_MODULES_JSON "")
+# Again after project(): when Prism is add_subdirectory()'d, the parent
+# project has already detected the compiler.
+set(CMAKE_CXX_COMPILER_IMPORT_STD_ERROR_MESSAGE "${PRISM_NO_IMPORT_STD}")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
