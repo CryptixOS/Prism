@@ -50,10 +50,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 # Prism/Utility is made of C++20 named modules (Source/Prism/Utility/*.ixx).
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
-# Prism never does `import std`. CMake 4.5 otherwise builds libstdc++'s std
-# module for every C++23 target, with Prism's warning flags (it fails
-# -Wundef -Werror) and, for freestanding targets, against hosted headers.
-set(CMAKE_CXX_MODULE_STD OFF)
+# Prism never does `import std`. CMake 4.5 otherwise builds the standard
+# library's std module for every target with scanned sources, with Prism's
+# warning flags (libstdc++'s std.cc fails -Wundef -Werror) and, for
+# freestanding targets, against hosted headers. An empty modules JSON makes
+# CMake create an error-only `std` target instead, which only errors if some
+# source actually imports std. Older CMake versions ignore the variable.
+set(CMAKE_CXX_STDLIB_MODULES_JSON "")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
