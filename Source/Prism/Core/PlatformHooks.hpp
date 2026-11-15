@@ -29,6 +29,9 @@
  *                                    Placement new comes from
  *                                    Core/LanguageSupport.hpp unless
  *                                    PRISM_NO_PLACEMENT_NEW=1.
+ *   __cxa_pure_virtual()             vtables of abstract classes (LogSink)
+ *                                    point at it; unoptimized builds keep
+ *                                    the reference
  *   std::terminate()                 only if the consumer's code needs it
  *
  * ## Prism hooks
@@ -51,8 +54,10 @@
  *
  *   __assert_fail(const char* expr, const char* file, unsigned line,
  *                 const char* function)
- *       Only without <assert.h>: Types.hpp's assert() calls it. Assertions.cpp
- *       defines it on top of PrismAssert.
+ *       Builds without NDEBUG and without PRISM_HARDENED: PrismCheck is an
+ *       assert(), and both <assert.h> and Types.hpp's fallback assert() call
+ *       it. Without <assert.h>, Assertions.cpp defines it on top of
+ *       PrismAssert; otherwise the consumer does.
  *
  * Time, threads and files are not needed by the core library.
  */

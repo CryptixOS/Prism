@@ -70,6 +70,14 @@
     #define PRISM_TARGET_STRING "loongarch64"
 #endif
 
+// Each SIMD flag is only probed on its own architecture; elsewhere it is 0.
+#ifndef PRISM_SIMD_SSE2_PRESENT
+    #define PRISM_SIMD_SSE2_PRESENT 0
+#endif
+#ifndef PRISM_SIMD_NEON_PRESENT
+    #define PRISM_SIMD_NEON_PRESENT 0
+#endif
+
 /* =========================
  * Endianness
  * ========================= */

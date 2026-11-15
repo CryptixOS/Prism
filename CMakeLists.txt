@@ -50,6 +50,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 # Prism/Utility is made of C++20 named modules (Source/Prism/Utility/*.ixx).
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+# Prism never does `import std`. CMake 4.5 otherwise builds libstdc++'s std
+# module for every C++23 target, with Prism's warning flags (it fails
+# -Wundef -Werror) and, for freestanding targets, against hosted headers.
+set(CMAKE_CXX_MODULE_STD OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
@@ -161,6 +165,12 @@ set(PRISM_CODEGEN_ARGS
 )
 if(NOT PRISM_HOSTED)
   list(APPEND PRISM_CODEGEN_ARGS -ffreestanding)
+  # aarch64 compilers default to -moutline-atomics, which calls
+  # __aarch64_*_acq helpers from libgcc / compiler-rt. Freestanding code
+  # gets the atomics inline.
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
+    list(APPEND PRISM_CODEGEN_ARGS -mno-outline-atomics)
+  endif()
 endif()
 if(PRISM_HARDENED)
   list(APPEND PRISM_CODEGEN_ARGS -fstack-protector-strong
