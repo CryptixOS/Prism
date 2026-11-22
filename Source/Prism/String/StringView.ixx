@@ -238,6 +238,7 @@ export extern "C++"
              */
             constexpr void RemovePrefix(SizeType n) PM_NOEXCEPT
             {
+                // All of it is fine: the view becomes empty
                 PrismCheck(n <= m_Size);
                 m_Data += n;
                 m_Size -= n;

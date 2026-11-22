@@ -44,6 +44,30 @@ TEST_CASE(TestWraparound){
     EXPECT_EQ((CharTraits<char>::Compare(out2, "CD", 2)), 0);
 }
 
+// Head and tail run modulo twice the capacity: once the tail has wrapped
+// and the head hasn't, Used() read more than the capacity, Free()
+// underflowed and Write() copied past the buffer (a pipe, after 128 KiB)
+TEST_CASE(TestIndicesWrap){
+    RingBuffer buffer(8);
+    u8         in[3], out[3];
+    u8         next = 0, expected = 0;
+    for (int round = 0; round < 100; ++round)
+    {
+        for (auto& b : in) b = next++;
+        EXPECT_EQ((buffer.Write(in, 3)), 3);
+        EXPECT(buffer.Used() <= buffer.Capacity());
+        EXPECT_EQ(buffer.Used() + buffer.Free(), buffer.Capacity());
+        EXPECT_EQ((buffer.Read(out, 3)), 3);
+        for (auto b : out) EXPECT_EQ(b, expected++);
+        EXPECT_EQ(buffer.Used(), 0);
+    }
+    // Full across the wrap point too
+    u8 fill[8] = {};
+    EXPECT_EQ((buffer.Write(fill, 8)), 8);
+    EXPECT_EQ(buffer.Used(), 8);
+    EXPECT_EQ(buffer.Free(), 0);
+}
+
 TEST_CASE(TestFullBuffer){
     RingBuffer buffer(4);
 

@@ -24,10 +24,15 @@ export extern "C++"
             constexpr usize Capacity() const { return m_Capacity; }
             constexpr usize Used() const
             {
+                // Both run modulo twice the capacity (so full and empty
+                // differ): a tail that wrapped is 2 * capacity ahead. It
+                // read capacity - (tail - head), more than the capacity once
+                // the indices wrapped: Free() underflowed and Write() copied
+                // far past both buffers (seen after 128KiB through a pipe)
                 auto head = m_Head.Load();
                 auto tail = m_Tail.Load(MemoryOrder::eRelaxed);
                 return (tail >= head) ? (tail - head)
-                                      : (m_Capacity - (tail - head));
+                                      : (2 * m_Capacity - (head - tail));
             }
             constexpr usize Free() const { return m_Capacity - Used(); }
 
