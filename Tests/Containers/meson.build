@@ -2,14 +2,14 @@
 #* Created by v1tr10l7 on 01.03.2025.
 #* Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
 #*
-#* SPDX-License-Identifier: GPL-3
+#* SPDX-License-Identifier: GPL-2.0-or-later
 #*/
 
 container_tests = [
-  'BitSpan', 'IntrusiveList', 'IntrusiveListV3', 'IntrusiveRefList',
+  'BitSpan', 'Bitmap', 'IntrusiveList',
   'IntrusiveRedBlackTree',
   'Deque',
-  'DoublyLinkedList', 
+  'DoublyLinkedList', 'EdgeCases',
   'Queue', 'RingBuffer', 'RedBlackTree', 
   'Stack', 'Tuple', 'UnorderedMap', 'Vector',
 ]

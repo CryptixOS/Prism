@@ -4,10 +4,11 @@
 
 ---
 
-![License](https://img.shields.io/github/license/CryptixOS/CryptixOS)
+![License](https://img.shields.io/github/license/CryptixOS/Prism)
 ![Architecture](https://img.shields.io/badge/arch-x86__64%20%7C%20aarch64-blue)
-[![Build](https://github.com/CryptixOS/CryptixOS/actions/workflows/build.yml/badge.svg)](https://github.com/CryptixOS/CryptixOS/actions/workflows/build.yml)
-[![Check-Typos](https://github.com/CryptixOS/CryptixOS/actions/workflows/typos.yml/badge.svg)](https://github.com/CryptixOS/CryptixOS/actions/workflows/typos.yml)
+[![Build](https://github.com/CryptixOS/Prism/actions/workflows/build.yml/badge.svg)](https://github.com/CryptixOS/Prism/actions/workflows/build.yml)
+[![Check-Typos](https://github.com/CryptixOS/Prism/actions/workflows/typos.yml/badge.svg)](https://github.com/CryptixOS/Prism/actions/workflows/typos.yml)
+[![AUR](https://img.shields.io/aur/version/prism-cxx-git)](https://aur.archlinux.org/packages/prism-cxx-git)
 
 
 
@@ -45,43 +46,78 @@
 
 ---
 
-## Building the Kernel & Image
+## Building
 
-Just initialize the build directory with: 
+Prism is built with CMake:
 ```
-meson setup build --buildtype=debugoptimized
-```
-and then you can build the Prism library like so
-```
-ninja -C build
-```
-
-Or with CMake:
-```
-cmake -S . -B build -G Ninja
+cmake -S . -B build -G Ninja -DPRISM_TARGET=app
 cmake --build build
 ```
+
+`PRISM_TARGET` selects what Prism is built for:
+
+| Target        | Environment                    |
+|---------------|--------------------------------|
+| `app`         | host (Linux, ...)              |
+| `cryptix-app` | CryptixOS userspace (default)  |
+| `cryptix`     | CryptixOS kernel               |
+| `carbonc`     | carbonc                        |
+
+Prism has no fmt dependency: `Prism::Format` replaces it. Bundled
+dependencies (magic_enum, demangler) are taken from
+`subprojects/` when present, otherwise they're downloaded at configure time.
+
+> **meson is deprecated.** `meson.build` is still there for backward
+> compatibility (`meson setup build -Dtarget=app && ninja -C build`), but new
+> options and features only land in CMake.
 
 ## Running the tests
 
 ```
-meson setup build-tests -Dbuild_tests=true
-meson test -C build-tests
-```
-or
-```
-cmake -S . -B build-tests -G Ninja -DPRISM_BUILD_TESTS=ON
+cmake -S . -B build-tests -G Ninja -DPRISM_TARGET=app -DPRISM_BUILD_TESTS=ON
 cmake --build build-tests && ctest --test-dir build-tests
 ```
 A test binary can also be run directly, e.g.
 `build-tests/Tests/String/Format --list` or `... 'join*'`.
 
-## Installation 
+## Hardening
 
-To install Prism you just run this just after you've built it
+- `-DPRISM_HARDENED=ON` keeps the containers', views' and strings' bounds
+  and precondition checks (`PrismCheck`) on in release builds, where a
+  failed check traps, and adds `_FORTIFY_SOURCE`, the stack protector and
+  zero-initialized locals. Sizes are computed with `Prism::Checked` and
+  `AllocationSize`, so they can't overflow into a short allocation.
+- `-DPRISM_SANITIZE=address,undefined` builds everything with sanitizers.
+- `-DPRISM_BUILD_FUZZERS=ON` (clang) builds the libFuzzer targets in
+  `Fuzz/`: format strings, paths, command lines, number parsing and strings.
+  `build/Fuzz/Format -max_total_time=60` runs one.
+- `SipHasher<T>` (`Prism.Algorithm.SipHash`) is a seeded hash for map keys
+  that come from outside.
+
+CI runs the hardened tests under ASan and UBSan and fuzzes every target on
+each push. The configuration macros are listed in
+[Documentation/Configuration.md](Documentation/Configuration.md), the
+symbols a freestanding consumer must provide in
+[Core/PlatformHooks.hpp](Source/Prism/Core/PlatformHooks.hpp).
+
+## Installation
+
+On Arch Linux, install [`prism-cxx-git`](https://aur.archlinux.org/packages/prism-cxx-git)
+from the AUR. It installs headers to `/usr/include/prism-cxx` and the
+libraries to `/usr/lib/prism-cxx`.
+
+From source:
 ```
-ninja -C build install
+cmake --install build
 ```
+
+Then use it from CMake:
+```cmake
+find_package(Prism REQUIRED)
+target_link_libraries(app PRIVATE Prism::Prism)  # Prism::Test, Prism::TestMain
+```
+or with pkg-config: `pkg-config --cflags --libs prism` (`prism-cxx` for the
+AUR package).
 
 ## Usage
 
@@ -93,7 +129,7 @@ Prism is integrated with CryptixOS, but it can be used in any freestanding or em
 
 ## Project Structure
 
-  - CrossFiles => **meson config files for cross compilation**
+  - CrossFiles => **meson config files for cross compilation** (deprecated)
   - Source/ => **Source Root**
     - Prism/
       - Algorithm/ 
@@ -104,17 +140,25 @@ Prism is integrated with CryptixOS, but it can be used in any freestanding or em
       - String/
       - Test/ => **unit testing framework**
       - Utility
-  - subprojects => **meson subprojects**
+  - subprojects => **bundled dependencies**
   - Tests => **Unit Tests**
-  - meson.build => **Main Build Script**
-  - CMakeLists.txt => **CMake Build Script** (kept equivalent to meson.build)
+  - Benchmarks => **Prism vs std benchmarks**
+  - Fuzz => **libFuzzer targets**
+  - Documentation => **roadmap details and configuration reference**
+  - CMakeLists.txt => **Main Build Script**
+  - meson.build => **meson Build Script** (deprecated, kept for backward compatibility)
+  - Meta/aur => **AUR package**
+  - Meta/ci => **CI helpers** (platform hook check, kernel header stand-ins)
+  - Meta/format-golden => **regenerates the Format golden tests from fmt 10.2**
   - typos.toml => **typos configuration**
 
 ---
 
 ## License
 
-Prism is licensed under the **GPL-3 License** 
+Prism is licensed under the **GNU General Public License v2.0 or later**
+(`GPL-2.0-or-later`), see [LICENSE](LICENSE). Bundled dependencies keep their
+own licenses: magic_enum (MIT), demangler (Apache-2.0).
 
 ---
 

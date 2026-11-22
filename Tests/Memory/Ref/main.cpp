@@ -2,13 +2,14 @@
  * Created by v1tr10l7 on 09.05.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #include <Prism/Test/Test.hpp>
-#include <Prism/Memory/Ref.hpp>
 #include <cstdio>
 #include <cstdlib>
+import Prism.Test.Test;
+import Prism.Memory.Ref;
 
 // Unlike EXPECT(), this still fires when NDEBUG is defined (release builds).
 

@@ -2,12 +2,14 @@
  * Created by v1tr10l7 on 07.11.2026.
  * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Core/Error.hpp>
 #include <Prism/Test/Test.hpp>
 
 #include <signal.h>
+import Prism.Core.Error;
+import Prism.Test.Test;
 
 using namespace Prism;
 
@@ -100,7 +102,13 @@ TEST_CASE(failing_expectations_fail_the_test)
 TEST_CASE(crash_tests)
 {
     EXPECT_CRASH("abort", [] { __builtin_abort(); });
-    EXPECT_CRASH_WITH_SIGNAL("trap", SIGILL, [] { __builtin_trap(); });
+    // x86_64 traps with ud2 (SIGILL), aarch64 with brk (SIGTRAP).
+#if defined(__aarch64__)
+    constexpr int trapSignal = SIGTRAP;
+#else
+    constexpr int trapSignal = SIGILL;
+#endif
+    EXPECT_CRASH_WITH_SIGNAL("trap", trapSignal, [] { __builtin_trap(); });
     EXPECT_CRASH_WITH_SIGNAL("any signal", Test::Crash::AnySignal,
                              [] { raise(SIGTERM); });
     EXPECT_NO_CRASH("returns normally", [] {});

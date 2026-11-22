@@ -2,10 +2,12 @@
  * Created by v1tr10l7 on 24.03.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/String/Printf.hpp>
-#include <Prism/String/StringUtils.hpp>
+#include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.String.Printf;
+import Prism.String.StringUtils;
 
 namespace Prism::Printf
 {
@@ -20,7 +22,8 @@ namespace Prism::Printf
             enum State     State = State::eBegin;
             constexpr void operator()(enum State state)
             {
-                if (State >= state) assert("invalid format specifier");
+                // Out-of-order parts ("%.2-d") are accepted, like the
+                // checks this replaced (which never fired).
                 State = state;
             }
         } enterState;
@@ -93,7 +96,7 @@ namespace Prism::Printf
                         specs.Precision
                             = static_cast<isize>(PrismVaArg(args, i32));
                     else
-                        assert(
+                        PrismCheck(
                             "Printf: Invalid format specifier, parsing "
                             "precision failed");
 

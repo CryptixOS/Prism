@@ -2,10 +2,12 @@
 #* Created by v1tr10l7 on 20.02.2025.
 #* Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
 #*
-#* SPDX-License-Identifier: GPL-3
+#* SPDX-License-Identifier: GPL-2.0-or-later
 #*/
+# DEPRECATED: CMake (CMakeLists.txt) is Prism's build system now. This file
+# is only kept for backward compatibility and will be removed eventually.
 project('prism', ['c', 'cpp'],
-  version: 'v0.0.1', license: 'GPL-3', 
+  version: '0.2.0', license: 'GPL-2.0-or-later',
   default_options: [
     'c_std=c17',
     'cpp_std=c++23',
@@ -13,6 +15,8 @@ project('prism', ['c', 'cpp'],
     'werror=true',
     'default_library=static',
 ],)
+
+warning('Building Prism with meson is deprecated, use CMake instead (see README.md)')
 
 if not meson.get_compiler('cpp').has_argument('-std=gnu++23')
   error('C++23 support is needed. Please install clang 17 or higher.')
@@ -29,14 +33,9 @@ warning_args = [
   '-Wno-frame-address',
   '-Wno-unused-parameter',
 ]
+target = get_option('target')
+
 macros = [
-  '-DFMT_STATIC_THOUSANDS_SEPARATOR=1',
-  '-DFMT_USE_LONG_DOUBLE=0',
-  '-DFMT_USE_DOUBLE=0',
-  '-DFMT_USE_FLOAT=0',
-  '-DFMT_USE_FLOAT128=0',
-  '-DFMT_USE_EXCEPTIONS=0',
-  '-DFMT_HEADER_ONLY=1',
   '-DMAGIC_ENUM_RANGE_MAX=0x8a00',
   '-DPRISM_LOG_ENABLE=true',
 ]
@@ -57,7 +56,6 @@ cxx_args = [
 ]
 
 incs = [ include_directories('Source') ]
-target = get_option('target')
 extraincs = get_option('extra_incs')
 build_tests = get_option('build_tests')
 
@@ -79,7 +77,7 @@ else
 endif
 git_tag = run_command('git', 'rev-parse', 'HEAD').stdout().strip()
 
-version = meson.project_version().substring(1).split('.')
+version = meson.project_version().split('.')
 versionConf = configuration_data()
 versionConf.set('library_name', 'prism')
 versionConf.set('PM_VERSION_MAJOR', version[0])
@@ -90,19 +88,20 @@ versionConf.set('arch', host_machine.cpu_family())
 cxx = meson.get_compiler('cpp')
 versionConf.set('compiler', cxx.get_id())
 versionConf.set('compiler_version', cxx.version())
+versionConf.set('build_date', run_command('date', '+%b %d %Y', check: true).stdout().strip())
+versionConf.set('build_time', run_command('date', '+%H:%M:%S', check: true).stdout().strip())
 
 library_version_string_template = '@0@.@1@.@2@-@3@'
 versionConf.set('library_version_string', library_version_string_template.format(version[0], version[1], version[2], git_tag))
 
 configure_file(
-  input: 'Source/Prism/Core/Version.hpp.in', 
-  output: 'Version.hpp',
+  input: 'Source/Prism/Core/Version.ixx.in',
+  output: 'Version.ixx',
   configuration: versionConf)
 
 # ==============================================================================
 ### Dependencies
 deps = [
-  subproject('fmt-10.2.0').get_variable('fmt_dep'),
   dependency('demangler'),
   dependency('magic_enum', default_options: [
     'test=false',
@@ -127,7 +126,10 @@ prism_dep = declare_dependency(
   compile_args: cxx_args,
   dependencies: deps, 
 )
-pkg.generate(prism)
+pkg.generate(prism,
+  description: 'Freestanding C++23 standard library and runtime for kernel-space development',
+  url: 'https://github.com/CryptixOS/Prism',
+)
 
 # Unit testing framework (Prism/Test), only for hosted targets.
 if target == 'app' or target == 'cryptix-app'
@@ -151,165 +153,172 @@ if target == 'app' or target == 'cryptix-app'
     link_with: [prism_test, prism_test_main, prism],
   )
 endif
+# Prism is made of C++20 named modules (.ixx), apart from the few headers that
+# hold macros. meson can't build named modules, so this build only installs the
+# sources; build Prism with CMake.
 install_headers(
   #'Source/Prism/Algorithm/Random.hpp',
-  'Source/Prism/Algorithm/Find.hpp',
-  'Source/Prism/Algorithm/FNV1aHash.hpp',
-  'Source/Prism/Algorithm/Hash.hpp',
-  'Source/Prism/Algorithm/SearchString.hpp',
-  'Source/Prism/Algorithm/Sort.hpp',
+  'Source/Prism/Algorithm/Find.ixx',
+  'Source/Prism/Algorithm/FNV1aHash.ixx',
+  'Source/Prism/Algorithm/Hash.ixx',
+  'Source/Prism/Algorithm/SearchString.ixx',
+  'Source/Prism/Algorithm/SipHash.ixx',
+  'Source/Prism/Algorithm/Sort.ixx',
 
   subdir: 'Prism/Algorithm'
 )
 install_headers(
   # 'Source/Prism/Containers/Any.hpp',
-  'Source/Prism/Containers/Array.hpp',
-  'Source/Prism/Containers/Bitmap.hpp',
-  'Source/Prism/Containers/CircularQueue.hpp',
-  'Source/Prism/Containers/Deque.hpp',
-  'Source/Prism/Containers/DoublyLinkedList.hpp',
-  'Source/Prism/Containers/IntrusiveList.hpp',
-  'Source/Prism/Containers/IntrusiveList.inl',
-  'Source/Prism/Containers/IntrusiveListV3.hpp',
-  'Source/Prism/Containers/IntrusiveListV3.inl',
-  'Source/Prism/Containers/IntrusiveRefList.hpp',
-  'Source/Prism/Containers/IntrusiveRefList.inl',
-  'Source/Prism/Containers/KeyValuePair.hpp',
-  'Source/Prism/Containers/Queue.hpp',
-  'Source/Prism/Containers/Queue.inl',
-  'Source/Prism/Containers/RedBlackTree.hpp',
-  'Source/Prism/Containers/RedBlackTree.inl',
-  'Source/Prism/Containers/RingBuffer.hpp',
-  'Source/Prism/Containers/Set.hpp',
-  'Source/Prism/Containers/Span.hpp',
-  'Source/Prism/Containers/SplitBuffer.hpp',
-  'Source/Prism/Containers/Stack.hpp',
-  'Source/Prism/Containers/Stack.inl',
-  'Source/Prism/Containers/Tuple.hpp',
-  'Source/Prism/Containers/UnorderedMap.hpp',
-  'Source/Prism/Containers/UnorderedMap.inl',
-  'Source/Prism/Containers/Vector.hpp',
+  'Source/Prism/Containers/Array.ixx',
+  'Source/Prism/Containers/BitSpan.ixx',
+  'Source/Prism/Containers/Bitmap.ixx',
+  'Source/Prism/Containers/CircularQueue.ixx',
+  'Source/Prism/Containers/Deque.ixx',
+  'Source/Prism/Containers/DoublyLinkedList.ixx',
+  'Source/Prism/Containers/IntervalTree.ixx',
+  'Source/Prism/Containers/IntrusiveList.ixx',
+  'Source/Prism/Containers/IntrusiveRedBlackTree.ixx',
+  'Source/Prism/Containers/KeyValuePair.ixx',
+  'Source/Prism/Containers/Queue.ixx',
+  'Source/Prism/Containers/RadixTree.ixx',
+  'Source/Prism/Containers/RedBlackTree.ixx',
+  'Source/Prism/Containers/RingBuffer.ixx',
+  'Source/Prism/Containers/Set.ixx',
+  'Source/Prism/Containers/Span.ixx',
+  'Source/Prism/Containers/SplitBuffer.ixx',
+  'Source/Prism/Containers/Stack.ixx',
+  'Source/Prism/Containers/Tuple.ixx',
+  'Source/Prism/Containers/UnorderedMap.ixx',
+  'Source/Prism/Containers/Vector.ixx',
 
   subdir: 'Prism/Containers'
 )
 install_headers(
-  'Source/Prism/Core/AllocatorTraits.hpp',
-  'Source/Prism/Core/Bits.hpp',
+  'Source/Prism/Core/AllocatorTraits.ixx',
+  'Source/Prism/Core/Bits.ixx',
+  'Source/Prism/Core/Checked.ixx',
   'Source/Prism/Core/Compiler.hpp',
-  'Source/Prism/Core/Concepts.hpp',
+  'Source/Prism/Core/Concepts.ixx',
   'Source/Prism/Core/Config.hpp',
-  'Source/Prism/Core/Core.hpp',
+  'Source/Prism/Core/Core.ixx',
   'Source/Prism/Core/Error.hpp',
-  'Source/Prism/Core/Eternal.hpp',
-  'Source/Prism/Core/HashTraits.hpp',
-  'Source/Prism/Core/Integer128.hpp',
-  'Source/Prism/Core/Iterator.hpp',
-  'Source/Prism/Core/Limits.hpp',
-  'Source/Prism/Core/NonCopyable.hpp',
-  'Source/Prism/Core/NonMovable.hpp',
-  'Source/Prism/Core/ParameterPack.hpp',
+  'Source/Prism/Core/Error.ixx',
+  'Source/Prism/Core/Eternal.ixx',
+  'Source/Prism/Core/HashTraits.ixx',
+  'Source/Prism/Core/Integer128.ixx',
+  'Source/Prism/Core/Iterator.ixx',
+  'Source/Prism/Core/Limits.ixx',
+  'Source/Prism/Core/NonCopyable.ixx',
+  'Source/Prism/Core/NonMovable.ixx',
+  'Source/Prism/Core/ParameterPack.ixx',
   'Source/Prism/Core/Platform.hpp',
-  'Source/Prism/Core/Ranges.hpp',
-  'Source/Prism/Core/Singleton.hpp',
+  'Source/Prism/Core/PlatformHooks.hpp',
+  'Source/Prism/Core/Singleton.ixx',
   'Source/Prism/Core/Types.hpp',
-  'Source/Prism/Core/TypeTraits.hpp',
-  'Source/Prism/Core/TypeTraitsForward.hpp',
-  'Source/Prism/Core/UUID.hpp',
-  # meson.build_root() / 'Version.hpp',
+  'Source/Prism/Core/TypeTraits.ixx',
+  'Source/Prism/Core/TypeTraitsForward.ixx',
+  'Source/Prism/Core/UUID.ixx',
 
   subdir: 'Prism/Core'
 )
 install_headers(
-  'Source/Prism/Core/Details/CallableTraits.inl',
-  'Source/Prism/Core/Details/Conditional.inl',
-  'Source/Prism/Core/Details/Constructibility.inl',
-  'Source/Prism/Core/Details/CoreTraits.inl',
-  'Source/Prism/Core/Details/CVRefTraits.inl',
-  'Source/Prism/Core/Details/ExtendedTraits.inl',
   'Source/Prism/Core/Details/SignModifiers.inl',
-  'Source/Prism/Core/Details/TransformationTraits.inl',
-  'Source/Prism/Core/Details/TypeProperties.inl',
 
   subdir: 'Prism/Core/Details'
 )
 
 install_headers(
   'Source/Prism/Debug/Assertions.hpp',
+  'Source/Prism/Debug/Assertions.ixx',
   'Source/Prism/Debug/Log.hpp',
-  'Source/Prism/Debug/Logger.hpp',
-  'Source/Prism/Debug/LogSink.hpp',
-  'Source/Prism/Debug/SourceLocation.hpp',
-  'Source/Prism/Debug/Stacktrace.hpp',
+  'Source/Prism/Debug/Log.ixx',
+  'Source/Prism/Debug/Logger.ixx',
+  'Source/Prism/Debug/LogSink.ixx',
+  'Source/Prism/Debug/SourceLocation.ixx',
+  'Source/Prism/Debug/Stacktrace.ixx',
   subdir: 'Prism/Debug'
 )
 install_headers(
-  'Source/Prism/Memory/Allocator.hpp',
-  'Source/Prism/Memory/BitStream.hpp',
-  'Source/Prism/Memory/Buffer.hpp',
-  'Source/Prism/Memory/ByteStream.hpp',
-  'Source/Prism/Memory/Endian.hpp',
-  'Source/Prism/Memory/Memory.hpp',
-  'Source/Prism/Memory/Pointer.hpp',
-  'Source/Prism/Memory/Ref.hpp',
-  'Source/Prism/Memory/RefCounted.hpp',
-  'Source/Prism/Memory/Scope.hpp',
-  'Source/Prism/Memory/SlabAllocator.hpp',
-  'Source/Prism/Memory/SlabPool.hpp',
-  'Source/Prism/Memory/WeakRef.hpp',
+  'Source/Prism/Memory/Allocator.ixx',
+  'Source/Prism/Memory/BitStream.ixx',
+  'Source/Prism/Memory/Buffer.ixx',
+  'Source/Prism/Memory/ByteStream.ixx',
+  'Source/Prism/Memory/Endian.ixx',
+  'Source/Prism/Memory/Memory.ixx',
+  'Source/Prism/Memory/Pointer.ixx',
+  'Source/Prism/Memory/Ref.ixx',
+  'Source/Prism/Memory/RefCounted.ixx',
+  'Source/Prism/Memory/Scope.ixx',
+  'Source/Prism/Memory/SlabAllocator.ixx',
+  'Source/Prism/Memory/SlabPool.ixx',
+  'Source/Prism/Memory/WeakRef.ixx',
   subdir: 'Prism/Memory'
 )
 
 install_headers(
-  'Source/Prism/Network/IPv4Address.hpp',
+  'Source/Prism/Network/IPv4Address.ixx',
   subdir: 'Prism/Network'
 )
 
 install_headers(
-  'Source/Prism/String/CharTraits.hpp',
-  'Source/Prism/String/CodePoints.hpp',
-  'Source/Prism/String/FormatHandler.hpp',
-  'Source/Prism/String/FormatString.hpp',
-  'Source/Prism/String/FormatStyle.hpp',
-  'Source/Prism/String/Formatter.hpp',
-  'Source/Prism/String/FormatterContext.hpp',
-  'Source/Prism/String/Printf.hpp',
-  'Source/Prism/String/String.hpp',
-  'Source/Prism/String/StringBuilder.hpp',
-  'Source/Prism/String/StringUtils.hpp',
-  'Source/Prism/String/StringView.hpp',
-  'Source/Prism/String/StringView.inl',
+  'Source/Prism/Ranges/Access.ixx',
+  'Source/Prism/Ranges/Range.ixx',
+  'Source/Prism/Ranges/Ranges.ixx',
+  'Source/Prism/Ranges/Views.ixx',
+  subdir: 'Prism/Ranges'
+)
+install_headers(
+  'Source/Prism/String/CharTraits.ixx',
+  'Source/Prism/String/CodePoints.ixx',
+  'Source/Prism/String/FormatHandler.ixx',
+  'Source/Prism/String/FormatString.ixx',
+  'Source/Prism/String/Formatter.ixx',
+  'Source/Prism/String/FormatterContext.ixx',
+  'Source/Prism/String/Printf.ixx',
+  'Source/Prism/String/String.ixx',
+  'Source/Prism/String/StringBuilder.ixx',
+  'Source/Prism/String/StringUtils.ixx',
+  'Source/Prism/String/StringView.ixx',
+  'Source/Prism/String/StringView.ixx',
   subdir: 'Prism/String'
 )
 install_headers(
-  'Source/Prism/Test/CrashTest.hpp',
+  'Source/Prism/Test/CrashTest.ixx',
   'Source/Prism/Test/Macros.hpp',
+  'Source/Prism/Test/Macros.ixx',
   'Source/Prism/Test/Test.hpp',
+  'Source/Prism/Test/Test.ixx',
   'Source/Prism/Test/TestCase.hpp',
-  'Source/Prism/Test/TestResult.hpp',
-  'Source/Prism/Test/TestSuite.hpp',
+  'Source/Prism/Test/TestCase.ixx',
+  'Source/Prism/Test/TestResult.ixx',
+  'Source/Prism/Test/TestSuite.ixx',
   subdir: 'Prism/Test'
 )
 install_headers(
-  'Source/Prism/Test/Randomized/Generator.hpp',
-  'Source/Prism/Test/Randomized/RandomRun.hpp',
-  'Source/Prism/Test/Randomized/RandSource.hpp',
+  'Source/Prism/Test/Randomized/Generator.ixx',
+  'Source/Prism/Test/Randomized/RandomRun.ixx',
+  'Source/Prism/Test/Randomized/RandSource.ixx',
   subdir: 'Prism/Test/Randomized'
 )
 install_headers(
-  'Source/Prism/Utility/Atomic.hpp',
-  'Source/Prism/Utility/AtomicBuiltins.hpp',
-  'Source/Prism/Utility/Checksum.hpp',
-  'Source/Prism/Utility/Compare.hpp',
-  'Source/Prism/Utility/Delegate.hpp',
-  'Source/Prism/Utility/Expected.hpp',
-  'Source/Prism/Utility/Hash.hpp',
-  'Source/Prism/Utility/Math.hpp',
-  'Source/Prism/Utility/Optional.hpp',
-  #'Source/Prism/Utility/OptionParser.hpp',
-  'Source/Prism/Utility/Path.hpp',
-  'Source/Prism/Utility/PathView.hpp',
-  'Source/Prism/Utility/Time.hpp',
-  'Source/Prism/Utility/Variant.hpp',
+  'Source/Prism/Utility/Atomic.ixx',
+  'Source/Prism/Utility/AtomicBuiltins.ixx',
+  'Source/Prism/Utility/Checksum.ixx',
+  'Source/Prism/Utility/Compare.ixx',
+  'Source/Prism/Utility/Delegate.ixx',
+  'Source/Prism/Utility/Enum.ixx',
+  'Source/Prism/Utility/Expected.ixx',
+  'Source/Prism/Utility/LockingPolicy.ixx',
+  'Source/Prism/Utility/Math.ixx',
+  'Source/Prism/Utility/Mutex.ixx',
+  'Source/Prism/Utility/Optional.ixx',
+  'Source/Prism/Utility/OptionParser.ixx',
+  'Source/Prism/Utility/Path.ixx',
+  'Source/Prism/Utility/PathView.ixx',
+  'Source/Prism/Utility/RangeAllocator.ixx',
+  'Source/Prism/Utility/SimdIntrinsics.ixx',
+  'Source/Prism/Utility/Time.ixx',
+  'Source/Prism/Utility/Variant.ixx',
   subdir: 'Prism/Utility'
 )
 

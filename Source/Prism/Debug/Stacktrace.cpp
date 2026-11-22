@@ -2,15 +2,17 @@
  * Created by v1tr10l7 on 17.11.2024.
  * Copyright (c) 2024-2024, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/Debug/Stacktrace.hpp>
-#include <Prism/String/String.hpp>
-#include <Prism/Utility/Math.hpp>
+#include <Prism/Core/Compiler.hpp>
+#include <Prism/Core/Types.hpp>
 
 #if PRISM_TARGET_CARBONC == 0
     #include <demangler.hpp>
 #endif
+import Prism.Debug.Stacktrace;
+import Prism.String.String;
+import Prism.Utility.Math;
 
 namespace Prism
 {

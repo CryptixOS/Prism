@@ -2,13 +2,15 @@
  * Created by v1tr10l7 on 07.11.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
 #include <Prism/Debug/Assertions.hpp>
-#include <Prism/Math/Vector.hpp>
 
 #include <iostream>
+import Prism.Test.Test;
+import Prism.Debug.Assertions;
+import Prism.Math.Vector;
 
 using namespace Prism;
 

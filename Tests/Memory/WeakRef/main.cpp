@@ -2,13 +2,14 @@
  * Created by v1tr10l7 on 04.11.2026.
  * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Memory/WeakRef.hpp>
 
 #include <cstdio>
 #include <cstdlib>
+import Prism.Test.Test;
+import Prism.Memory.WeakRef;
 
 // Unlike EXPECT(), this still fires when NDEBUG is defined (release builds).
 

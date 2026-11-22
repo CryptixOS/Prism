@@ -2,37 +2,18 @@
  * Created by v1tr10l7 on 25.02.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #pragma once
 
 #include <Prism/Core/Config.hpp>
-
 #include <Prism/Debug/Log.hpp>
-#include <Prism/Debug/SourceLocation.hpp>
 
-#include <Prism/String/StringView.hpp>
+// Macros only: the code lives in module Prism.Debug.Assertions, which
+// files using these macros import too.
 
-#if PRISM_DISABLE_FMT == 0
-    #include <fmt/format.h>
-    #define PrismFmtFormat(...)  fmt::format(__VA_ARGS__)
-    #define PrismFmtCString(...) fmt::format(__VA_ARGS__).data()
-#else
-    #include <Prism/String/Formatter.hpp>
-    #define PrismFmtFormat(...)  Prism::Format(__VA_ARGS__)
-    #define PrismFmtCString(...) Prism::Format(__VA_ARGS__).Raw()
-#endif
-
-#if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
-namespace Prism
-{
-#endif
-    extern void earlyPanic(Prism::StringView msg);
-    PM_NORETURN
-    extern void panic(Prism::StringView msg);
-#if PRISM_TARGET_CRYPTIX == 0
-}; // namespace Prism
-#endif
+#define PrismFmtFormat(...)  Prism::Format(__VA_ARGS__)
+#define PrismFmtCString(...) Prism::Format(__VA_ARGS__).Raw()
 
 #if !defined(PRISM_TARGET_CRYPTIX) || PRISM_TARGET_CRYPTIX == 0
     #define PrismEarlyPanic(fmt, ...)                                          \

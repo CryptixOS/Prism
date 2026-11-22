@@ -2,10 +2,11 @@
  * Created by v1tr10l7 on 26.09.2026.
  * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/String/StringBuilder.hpp>
-#include <Prism/Utility/Time.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.String.StringBuilder;
+import Prism.Utility.Time;
 
 namespace Prism::Time
 {

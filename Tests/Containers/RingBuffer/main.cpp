@@ -2,10 +2,12 @@
  * Created by v1tr10l7 on 02.06.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Containers/RingBuffer.hpp>
+import Prism.Test.Test;
+import Prism.String.CharTraits;
+import Prism.Containers.RingBuffer;
 
 using namespace Prism;
 
@@ -22,7 +24,7 @@ TEST_CASE(TestBasicReadWrite){
 
     char out[4] = {};
     EXPECT_EQ((buffer.Read(reinterpret_cast<u8*>(out), 3)), 3);
-    EXPECT_EQ((memcmp(out, "ABC", 3)), 0);
+    EXPECT_EQ((CharTraits<char>::Compare(out, "ABC", 3)), 0);
     EXPECT_EQ(buffer.Used(), 0);
 }
 
@@ -39,7 +41,31 @@ TEST_CASE(TestWraparound){
 
     char out2[2] = {};
     EXPECT_EQ((buffer.Read(reinterpret_cast<u8*>(out2), 2)), 2);
-    EXPECT_EQ((memcmp(out2, "CD", 2)), 0);
+    EXPECT_EQ((CharTraits<char>::Compare(out2, "CD", 2)), 0);
+}
+
+// Head and tail run modulo twice the capacity: once the tail has wrapped
+// and the head hasn't, Used() read more than the capacity, Free()
+// underflowed and Write() copied past the buffer (a pipe, after 128 KiB)
+TEST_CASE(TestIndicesWrap){
+    RingBuffer buffer(8);
+    u8         in[3], out[3];
+    u8         next = 0, expected = 0;
+    for (int round = 0; round < 100; ++round)
+    {
+        for (auto& b : in) b = next++;
+        EXPECT_EQ((buffer.Write(in, 3)), 3);
+        EXPECT(buffer.Used() <= buffer.Capacity());
+        EXPECT_EQ(buffer.Used() + buffer.Free(), buffer.Capacity());
+        EXPECT_EQ((buffer.Read(out, 3)), 3);
+        for (auto b : out) EXPECT_EQ(b, expected++);
+        EXPECT_EQ(buffer.Used(), 0);
+    }
+    // Full across the wrap point too
+    u8 fill[8] = {};
+    EXPECT_EQ((buffer.Write(fill, 8)), 8);
+    EXPECT_EQ(buffer.Used(), 8);
+    EXPECT_EQ(buffer.Free(), 0);
 }
 
 TEST_CASE(TestFullBuffer){
@@ -78,7 +104,7 @@ void TestZeroCopyWriteRead()
     buffer.BeginRead(readPtr, readSize);
     EXPECT_EQ(readSize, writeSize);
     EXPECT(memset(readPtr, 'X', readSize) == nullptr
-           || memcmp(readPtr, "XXXXXXXX", readSize) == 0);
+           || CharTraits<char>::Compare(static_cast<const char*>(readPtr), "XXXXXXXX", readSize) == 0);
 
     buffer.EndRead(readSize);
     EXPECT_EQ(buffer.Used(), 0);

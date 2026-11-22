@@ -2,14 +2,15 @@
  * Created by v1tr10l7 on 17.07.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+import Prism.Test.Test;
+import Prism.Core.Limits;
 
-#include <Prism/Core/Limits.hpp>
 
 using namespace Prism;
 
@@ -127,14 +128,14 @@ constexpr void RunAllTests()
     TestIntegralLimits<unsigned long>();
     TestIntegralLimits<long long>();
     TestIntegralLimits<unsigned long long>();
-    TestIntegralLimits<std::int8_t>();
-    TestIntegralLimits<std::uint8_t>();
-    TestIntegralLimits<std::int16_t>();
-    TestIntegralLimits<std::uint16_t>();
-    TestIntegralLimits<std::int32_t>();
-    TestIntegralLimits<std::uint32_t>();
-    TestIntegralLimits<std::int64_t>();
-    TestIntegralLimits<std::uint64_t>();
+    TestIntegralLimits<i8>();
+    TestIntegralLimits<u8>();
+    TestIntegralLimits<i16>();
+    TestIntegralLimits<u16>();
+    TestIntegralLimits<i32>();
+    TestIntegralLimits<u32>();
+    TestIntegralLimits<i64>();
+    TestIntegralLimits<u64>();
 
 #if PRISM_TARGET_CRYPTIX == 0
     // Floating-point types
@@ -146,3 +147,9 @@ constexpr void RunAllTests()
 
 // Entry point for build
 constexpr int _static_asserts_trigger = (RunAllTests(), 0);
+
+TEST_CASE(limits_match_std)
+{
+    // The checks are the static_asserts above; this case only reports them.
+    EXPECT(_static_asserts_trigger == 0);
+}

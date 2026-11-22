@@ -1,0 +1,424 @@
+/*
+ * Created by v1tr10l7 on 26.04.2025.
+ * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+module;
+
+#include <Prism/Core/Types.hpp>
+export module Prism.Containers.Tuple;
+
+export import Prism.Core.Concepts;
+export import Prism.Core.Core;
+
+export extern "C++"
+{
+    namespace Prism
+    {
+        template <typename... Types>
+        struct TupleStorage;
+        template <typename T, typename... Types>
+        struct TupleStorage<T, Types...>
+        {
+            constexpr TupleStorage() = default;
+            constexpr TupleStorage(T value, Types... rest)
+                : Value(Forward<T>(value))
+                , Rest(Forward<Types>(rest)...)
+            {
+            }
+            template <typename... OtherTypes>
+            constexpr TupleStorage(const TupleStorage<OtherTypes...>& other)
+                : Value(other.Value)
+                , Rest(other.Rest)
+            {
+            }
+            template <typename... OtherTypes>
+            constexpr TupleStorage(TupleStorage<OtherTypes...>&& other)
+                : Value(Move(other.Value))
+                , Rest(Move(other.Rest))
+            {
+            }
+
+            T                      Value;
+            TupleStorage<Types...> Rest;
+        };
+        template <>
+        struct TupleStorage<>
+        {
+        };
+
+        template <usize Index, typename... Types>
+        struct TupleArgumentType;
+        template <usize Index, typename T, typename... Types>
+        struct TupleArgumentType<Index, T, Types...>
+        {
+            using Type = typename TupleArgumentType<Index - 1, Types...>::Type;
+        };
+        template <typename T, typename... Types>
+        struct TupleArgumentType<0, T, Types...>
+        {
+            using Type = T;
+        };
+        template <usize Index, typename... Types>
+        struct TupleAccessor;
+        template <usize Index, typename T, typename... Types>
+        struct TupleAccessor<Index, T, Types...>
+        {
+            static typename TupleArgumentType<Index - 1, Types...>::Type&
+            Access(TupleStorage<T, Types...>& storage)
+            {
+                return TupleAccessor<Index - 1, Types...>::Access(storage.Rest);
+            }
+            static const typename TupleArgumentType<Index - 1, Types...>::Type&
+            Access(const TupleStorage<T, Types...>& storage)
+            {
+                return TupleAccessor<Index - 1, Types...>::Access(storage.Rest);
+            }
+        };
+        template <typename T, typename... Types>
+        struct TupleAccessor<0, T, Types...>
+        {
+            static T& Access(TupleStorage<T, Types...>& storage)
+            {
+                return storage.Value;
+            }
+            static const T& Access(const TupleStorage<T, Types...>& storage)
+            {
+                return storage.Value;
+            }
+        };
+
+        template <typename... Types>
+        class Tuple
+        {
+          public:
+            constexpr Tuple() = default;
+
+            constexpr Tuple(Types... args)
+                : m_Storage(Forward<Types>(args)...)
+            {
+            }
+
+            template <typename... UTypes>
+            friend class Tuple;
+
+            template <usize Index, typename... UTypes>
+            struct TupleIsConstructible
+            {
+                static constexpr bool Value
+                    = IsConstructible<
+                          typename TupleArgumentType<Index, Types...>::Type,
+                          typename TupleArgumentType<Index, UTypes...>::Type>::Value
+                   && TupleIsConstructible<Index - 1, UTypes...>::Value;
+            };
+
+            template <typename... UTypes>
+            struct TupleIsConstructible<0, UTypes...>
+            {
+                static constexpr bool Value = IsConstructible<
+                    typename TupleArgumentType<0, Types...>::Type,
+                    typename TupleArgumentType<0, UTypes...>::Type>::Value;
+            };
+
+            template <typename... UTypes,
+                      typename = EnableIfType<TupleIsConstructible<
+                          sizeof...(UTypes) - 1, const UTypes&...>::Value>>
+            constexpr Tuple(const Tuple<UTypes...>& other)
+                : m_Storage(other.m_Storage)
+            {
+            }
+
+            template <typename... UTypes,
+                      typename = EnableIfType<TupleIsConstructible<
+                          sizeof...(UTypes) - 1, UTypes&&...>::Value>>
+            constexpr Tuple(Tuple<UTypes...>&& other)
+                : m_Storage(Move(other.m_Storage))
+            {
+            }
+
+            template <usize Index>
+            constexpr typename TupleArgumentType<Index, Types...>::Type& Get() &
+            {
+                return TupleAccessor<Index, Types...>::Access(m_Storage);
+            }
+            template <usize Index>
+            constexpr const typename TupleArgumentType<Index, Types...>::Type&
+            Get() const&
+            {
+                return TupleAccessor<Index, Types...>::Access(m_Storage);
+            }
+            template <usize Index>
+            constexpr typename TupleArgumentType<Index, Types...>::Type&& Get() &&
+            {
+                return static_cast<
+                    typename TupleArgumentType<Index, Types...>::Type&&>(
+                    TupleAccessor<Index, Types...>::Access(m_Storage));
+            }
+            template <usize Index>
+            constexpr const typename TupleArgumentType<Index, Types...>::Type&&
+            Get() const&&
+            {
+                return static_cast<
+                    const typename TupleArgumentType<Index, Types...>::Type&&>(
+                    TupleAccessor<Index, Types...>::Access(m_Storage));
+            }
+
+          private:
+            TupleStorage<Types...> m_Storage;
+        };
+
+        template <typename T>
+        struct TupleSize;
+
+        template <typename T>
+            requires requires { TupleSize<T>::Value; }
+        struct TupleSize<const T> : public TupleSize<T>
+        {
+        };
+
+        template <typename T>
+            requires requires { TupleSize<T>::Value; }
+        struct TupleSize<volatile T> : public TupleSize<T>
+        {
+        };
+
+        template <typename T>
+            requires requires { TupleSize<T>::Value; }
+        struct TupleSize<const volatile T> : public TupleSize<T>
+        {
+        };
+
+        template <typename T>
+        inline constexpr usize TupleSizeV = TupleSize<T>::Value;
+        template <typename... Types>
+        struct TupleSize<Tuple<Types...>>
+        {
+            static constexpr usize Value = sizeof...(Types);
+        };
+
+        template <usize Index, typename T>
+        struct TupleElement;
+
+        template <usize Index, typename T>
+        using TupleElementType = typename TupleElement<Index, T>::Type;
+
+        template <usize Index, typename T>
+        struct TupleElement<Index, const T>
+        {
+            using Type = const TupleElementType<Index, T>;
+        };
+
+        template <usize Index, typename T>
+        struct TupleElement<Index, volatile T>
+        {
+            using Type = volatile TupleElementType<Index, T>;
+        };
+
+        template <usize Index, typename T>
+        struct TupleElement<Index, const volatile T>
+        {
+            using Type = const volatile TupleElementType<Index, T>;
+        };
+
+        template <usize I, typename... Types>
+        struct TupleElement<I, Tuple<Types...>>
+        {
+            using Type = typename TupleArgumentType<I, Types...>::Type;
+        };
+
+        template <>
+        class Tuple<>
+        {
+        };
+
+        // Tuple is tuple-like, so Apply() and friends accept it by forwarding
+        // reference (mutable lvalues stay mutable, rvalues are moved from).
+        template <typename... Types>
+        struct IsTupleLikeHelper<Tuple<Types...>> : TrueType
+        {
+        };
+
+        // The generic Swap() excludes tuple-like types, so provide one here.
+        template <typename... Types>
+        constexpr void Swap(Tuple<Types...>& lhs, Tuple<Types...>& rhs)
+        {
+            if (&lhs == &rhs) return;
+
+            Tuple<Types...> temp = Move(lhs);
+            lhs                  = Move(rhs);
+            rhs                  = Move(temp);
+        }
+
+        template <typename... Types>
+        Tuple<RemoveReferenceType<Types>...> MakeTuple(Types&&... args)
+        {
+            return Tuple<RemoveReferenceType<Types>...>(Forward<Types>(args)...);
+        }
+
+        template <template <typename...> class Trait, typename T,
+                  typename TupleLike>
+        inline constexpr bool UnpackTuple = false;
+        template <template <typename...> class Trait, typename T, typename... U>
+        inline constexpr bool UnpackTuple<Trait, T, Tuple<U...>>
+            = Trait<T, U...>::Value;
+        template <template <typename...> class Trait, typename T, typename... U>
+        inline constexpr bool UnpackTuple<Trait, T, Tuple<U...>&>
+            = Trait<T, U&...>::Value;
+        template <template <typename...> class Trait, typename T, typename... U>
+        inline constexpr bool UnpackTuple<Trait, T, const Tuple<U...>>
+            = Trait<T, const U...>::Value;
+        template <template <typename...> class Trait, typename T, typename... U>
+        inline constexpr bool UnpackTuple<Trait, T, const Tuple<U...>&>
+            = Trait<T, const U&...>::Value;
+
+        namespace Details
+        {
+            template <typename Fn, typename TupleLike, usize... Index>
+            constexpr decltype(auto) ApplyImpl(Fn&& fn, TupleLike&& t,
+                                               IndexSequence<Index...>)
+            {
+                return Invoke(Forward<Fn>(fn),
+                              Forward<TupleLike>(t).template Get<Index>()...);
+            }
+        } // namespace Details
+
+        template <typename Fn, TupleLikeType TupleLike>
+        constexpr decltype(auto) Apply(Fn&& fn, TupleLike&& t)
+            PM_NOEXCEPT(UnpackTuple<IsNoThrowInvocable, Fn, TupleLike>)
+        {
+            using Indices
+                = MakeIndexSequence<TupleSizeV<RemoveReferenceType<TupleLike>>>;
+            return Details::ApplyImpl(Forward<Fn>(fn), Forward<TupleLike>(t),
+                                      Indices{});
+        }
+
+        template <typename F, typename... Args, usize... I>
+        auto Apply(F functor, const Tuple<Args...>& args, IndexSequence<I...>)
+        {
+            return functor(args.template Get<I>()...);
+        }
+
+        template <typename F, typename... Args, usize... I>
+        auto Apply(F functor, Tuple<Args...>&& args, IndexSequence<I...>)
+        {
+            return functor(Move(args.template Get<I>())...);
+        }
+
+        // Turns a set of Tuple-like types into a Tuple
+        template <usize, typename, typename, usize>
+        struct TupleBuilder;
+
+        template <usize Index, typename TupleT, typename... Types, usize Size>
+        struct TupleBuilder<Index, Tuple<Types...>, TupleT, Size>
+            : TupleBuilder<
+                  Index + 1,
+                  Tuple<Types..., typename TupleElement<Index, TupleT>::Type>,
+                  TupleT, Size>
+        {
+        };
+
+        template <usize Size, typename TupleT, typename... Types>
+        struct TupleBuilder<Size, Tuple<Types...>, TupleT, Size>
+        {
+            using Type = Tuple<Types...>;
+        };
+
+        template <typename T>
+        struct DoMakeTuple
+            : public TupleBuilder<0, Tuple<>, RemoveReferenceType<T>,
+                                  TupleSize<RemoveReferenceType<T>>::Value>
+        {
+        };
+
+        template <typename...>
+        struct TupleCombiner;
+
+        template <>
+        struct TupleCombiner<>
+        {
+            using Type = Tuple<>;
+        };
+
+        template <typename... Ts>
+        struct TupleCombiner<Tuple<Ts...>>
+        {
+            using Type = Tuple<Ts...>;
+        };
+
+        template <typename... T1, typename... T2, typename... Remainder>
+        struct TupleCombiner<Tuple<T1...>, Tuple<T2...>, Remainder...>
+        {
+            using Type =
+                typename TupleCombiner<Tuple<T1..., T2...>, Remainder...>::Type;
+        };
+
+        template <typename... Tuples>
+        struct TupleConcatenationResult
+        {
+            using Type =
+                typename TupleCombiner<typename DoMakeTuple<Tuples>::Type...>::Type;
+        };
+
+        template <typename...>
+        struct MakeIndicesFromFirst;
+
+        template <>
+        struct MakeIndicesFromFirst<>
+        {
+            using Type = MakeIndexSequence<0>;
+        };
+
+        template <typename Tuple, typename... Tuples>
+        struct MakeIndicesFromFirst<Tuple, Tuples...>
+        {
+            using Type = MakeIndexSequence<
+                TupleSize<typename RemoveReferenceType<Tuple>::Type>::Value>;
+        };
+
+        // Performs the actual concatenation for TupleConcatenate
+        template <typename Ret, typename Indices, typename... Tuples>
+        struct TupleConcatenator;
+
+        template <typename Ret, usize... Indices, typename Tuple,
+                  typename... Tuples>
+        struct TupleConcatenator<Ret, IndexSequence<Indices...>, Tuple, Tuples...>
+        {
+            template <typename... Res>
+            static constexpr Ret DoConcatenate(Tuple&& tp, Tuples&&... tps,
+                                               Res&&... res)
+            {
+                using Index = typename MakeIndicesFromFirst<Tuples...>::Type;
+                using Next  = TupleConcatenator<Ret, Index, Tuples...>;
+                return Next::DoConcatenate(Forward<Tuples>(tps)...,
+                                           Forward<Res>(res)...,
+                                           Move(tp.template Get<Indices>())...);
+            }
+        };
+
+        template <typename Ret>
+        struct TupleConcatenator<Ret, IndexSequence<>>
+        {
+            template <typename... Res>
+            static constexpr Ret DoConcatenate(Res&&... res)
+            {
+                return Ret(Forward<Res>(res)...);
+            }
+        };
+
+        template <typename... Tuples,
+                  typename Ret = typename TupleConcatenationResult<Tuples...>::Type>
+        Ret TupleConcatenate(Tuples&&... args)
+        {
+            using Index        = typename MakeIndicesFromFirst<Tuples...>::Type;
+            using Concatenator = TupleConcatenator<Ret, Index, Tuples...>;
+            return Concatenator::DoConcat(Forward<Tuples>(args)...);
+        }
+    }; // namespace Prism
+
+#if PRISM_TARGET_CRYPTIX != 0
+    using Prism::Apply;
+    using Prism::Tuple;
+    using Prism::TupleConcatenate;
+#endif
+}

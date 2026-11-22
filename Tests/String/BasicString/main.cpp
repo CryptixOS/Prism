@@ -2,17 +2,17 @@
  * Created by v1tr10l7 on 20.04.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/String/Formatter.hpp>
 #include <Prism/Test/Test.hpp>
-#include <Prism/String/String.hpp>
-#include <Prism/Utility/Path.hpp>
 #include <cassert>
 #include <ctime>
-#include <iomanip>
-#include <iostream>
-#include <vector>
+import Prism.String.Formatter;
+import Prism.Test.Test;
+import Prism.Debug.Log;
+import Prism.String.String;
+import Prism.String.StringUtils;
+import Prism.Utility.Path;
 
 using namespace Prism;
 using namespace Prism::Literals;
@@ -38,7 +38,7 @@ TEST_CASE(String_TestIteration)
 {
     String      s = "abc"_s;
 
-    std::string built;
+    String built;
     for (char c : s) built += c;
 
     EXPECT_EQ(built, "abc");
@@ -108,7 +108,7 @@ TEST_CASE(String_TestComparisons)
 
     EXPECT_EQ(a, b);
     EXPECT(a != c);
-    EXPECT_EQ((a <=> c), std::strong_ordering::less);
+    EXPECT_EQ((a <=> c), StrongOrdering::less);
 }
 
 TEST_CASE(String_TestSubstringAndResize)
@@ -154,10 +154,7 @@ Path String_TestPath(PathView path)
         //          segment.Size(), string.Raw(), string.Size(),
         //          (segment == string));
 
-        std::cout << "VFS: '" << std::setprecision(segment.Size())
-                  << segment.Raw() << "' == '"
-                  << std::setprecision(string.Size()) << string.Raw() << "'"
-                  << (segment == string) << "\n";
+        Println("VFS: '{}' == '{}'{}", segment, string, segment == string);
 
         if (i == segments.Size() - 1) return Path(segment);
     }
@@ -315,7 +312,7 @@ TEST_CASE(String_FuzzTestBasicString)
         const char* literal = "LiteralString";
         a                   = literal;
         EXPECT_EQ(a, "LiteralString");
-        EXPECT_EQ(a.Size(), strlen(literal));
+        EXPECT_EQ(a.Size(), StringUtils::Length(literal));
 
         // Assignment from single char
         b = 'X';
@@ -326,12 +323,12 @@ TEST_CASE(String_FuzzTestBasicString)
         StringView view("ViewContent");
         a = view;
         EXPECT_EQ(a, "ViewContent");
-        EXPECT_EQ(a.Size(), strlen("ViewContent"));
+        EXPECT_EQ(a.Size(), StringUtils::Length("ViewContent"));
 
         // Operator+
         String combined = a + b;
         EXPECT_EQ(combined, "ViewContentX");
-        EXPECT_EQ(combined.Size(), strlen("ViewContentX"));
+        EXPECT_EQ(combined.Size(), StringUtils::Length("ViewContentX"));
     }
 }
 
@@ -364,7 +361,7 @@ TEST_CASE(String_FuzzTestBasicString2)
         const char* literal = "LiteralString";
         a                   = literal;
         EXPECT_EQ(a, "LiteralString");
-        EXPECT_EQ(a.Size(), strlen(literal));
+        EXPECT_EQ(a.Size(), StringUtils::Length(literal));
 
         // --- Assignment from single char ---
         b = 'X';
@@ -375,17 +372,17 @@ TEST_CASE(String_FuzzTestBasicString2)
         StringView view("ViewContent");
         a = view;
         EXPECT_EQ(a, "ViewContent");
-        EXPECT_EQ(a.Size(), strlen("ViewContent"));
+        EXPECT_EQ(a.Size(), StringUtils::Length("ViewContent"));
 
         // --- Operator+ ---
         String combined = a + b;
         EXPECT_EQ(combined, "ViewContentX");
-        EXPECT_EQ(combined.Size(), strlen("ViewContentX"));
+        EXPECT_EQ(combined.Size(), StringUtils::Length("ViewContentX"));
 
         // --- Operator+= ---
         a += b;
         EXPECT_EQ(a, "ViewContentX");
-        EXPECT_EQ(a.Size(), strlen("ViewContentX"));
+        EXPECT_EQ(a.Size(), StringUtils::Length("ViewContentX"));
 
         // --- Assignment with empty string ---
         a = "";
@@ -419,27 +416,27 @@ TEST_CASE(String_MegaFuzzTestBasicString)
 {
     srand(static_cast<unsigned>(time(nullptr)));
 
-    std::vector<String> pool; // Pool of random strings
+    Vector<String> pool; // Pool of random strings
 
     for (int iteration = 0; iteration < 10000; iteration++) // Big stress
     {
         int op = rand() % 10;
 
-        if (pool.empty() || op < 2) // Force-create strings early
+        if (pool.Empty() || op < 2) // Force-create strings early
         {
-            pool.push_back(String_RandomString());
+            pool.PushBack(String_RandomString());
             continue;
         }
 
-        int    idxA = rand() % pool.size();
-        int    idxB = rand() % pool.size();
+        int    idxA = rand() % pool.Size();
+        int    idxB = rand() % pool.Size();
 
         String a    = pool[idxA];
         String b    = pool[idxB];
         if (a.Raw() == b.Raw())
         {
-            pool.push_back(String_RandomString());
-            b       = pool.back();
+            pool.PushBack(String_RandomString());
+            b       = pool.Back();
             pool[0] = pool[1];
             continue;
         }
@@ -499,13 +496,10 @@ TEST_CASE(String_MegaFuzzTestBasicString)
                 usize  oldSize = a.Size();
                 String before  = a;
 
-                std::cout << "OldSize: " << oldSize << "\n";
-                std::cout << std::setprecision(before.Size()) << before.Size()
-                          << "\n";
-                std::cout << "A(" << a.Size() << ") => '"
-                          << std::setprecision(a.Size()) << a.Raw() << "'\n";
-                std::cout << "B(" << b.Size() << ") => '"
-                          << std::setprecision(b.Size()) << b.Raw() << "'\n";
+                Println("OldSize: {}", oldSize);
+                Println("{}", before.Size());
+                Println("A({}) => '{}'", a.Size(), a);
+                Println("B({}) => '{}'", b.Size(), b);
                 a += b;
                 for (usize i = 0; i < oldSize; i++) EXPECT_EQ(a[i], before[i]);
                 for (usize i = 0; i < b.Size(); i++)
@@ -550,7 +544,7 @@ TEST_CASE(String_MegaFuzzTestBasicString)
         }
 
         // Every 1000 iterations, shuffle/reset
-        if (iteration % 1000 == 0) pool.clear();
+        if (iteration % 1000 == 0) pool.Clear();
     }
 }
 TEST_CASE(String_Trim)
@@ -584,3 +578,69 @@ TEST_CASE(String_Trim)
     EXPECT_EQ(sso.Trim(), "a");
 }
 
+
+TEST_CASE(String_Insert)
+{
+    // Insert shifts the tail; it used to overwrite it (count, ch) or not
+    // copy the text at all (const char*).
+    String s = "held";
+    s.Insert(2, 2, 'l');
+    EXPECT_EQ(s, "hellld"_sv);
+    s.Erase(2, 1);
+    s.Insert(4, " wor");
+    EXPECT_EQ(s, "hell word"_sv);
+    s.Insert(0, ">");
+    s.Insert(s.Size(), "<");
+    EXPECT_EQ(s, ">hell word<"_sv);
+    s.Insert(5, "o"_sv);
+    EXPECT_EQ(s, ">hello word<"_sv);
+
+    // Past the short-string buffer, and from the string itself.
+    String big;
+    for (int i = 0; i < 100; ++i) big.Insert(0, "ab");
+    EXPECT_EQ(big.Size(), 200u);
+    EXPECT_EQ(big.Substr(0, 4), "abab"_sv);
+    String self = "xyz";
+    self.Insert(1, self.Raw(), self.Size());
+    EXPECT_EQ(self, "xxyzyz"_sv);
+
+    // Appending one char at a time grows geometrically.
+    String grown;
+    usize  reallocations = 0;
+    usize  capacity      = grown.Capacity();
+    for (int i = 0; i < 10000; ++i)
+    {
+        grown += 'x';
+        if (grown.Capacity() != capacity) ++reallocations;
+        capacity = grown.Capacity();
+    }
+    EXPECT(reallocations < 40);
+}
+
+TEST_CASE(StringView_Copy)
+{
+    char buffer[8];
+    for (char& c : buffer) c = 'z';
+    EXPECT_EQ("abc"_sv.Copy(buffer, sizeof(buffer)), 3u);
+    EXPECT_EQ(StringView(buffer), "abc"_sv); // terminated
+    EXPECT_EQ("abcdef"_sv.Copy(buffer, 2, 3), 2u);
+    EXPECT_EQ(buffer[0], 'd');
+    EXPECT_EQ(buffer[1], 'e');
+}
+
+TEST_CASE(StringView_RFind)
+{
+    StringView text = "abcabcab";
+    EXPECT_EQ(text.RFind("ab"_sv), 6u); // from the end by default
+    EXPECT_EQ(text.RFind("ab"_sv, 5), 3u);
+    EXPECT_EQ(text.RFind("ab"_sv, 0), 0u);
+    EXPECT_EQ(text.RFind("bc"_sv, 0), StringView::NPos);
+    EXPECT_EQ(text.RFind(""_sv), text.Size());
+    EXPECT_EQ(text.RFind("abcabcabc"_sv), StringView::NPos);
+    EXPECT_EQ(text.RFind('c'), 5u);
+    EXPECT_EQ(text.RFind("cab"), 5u);
+    // Found by Fuzz/String: a pattern longer than pos + 1 underflowed.
+    EXPECT_EQ("--?:"_sv.RFind("--?"_sv, 1), 0u);
+    EXPECT_EQ(""_sv.RFind("x"_sv), StringView::NPos);
+    EXPECT_EQ(String("abab").RFind(String("ab")), 2u);
+}

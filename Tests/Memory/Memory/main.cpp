@@ -2,13 +2,14 @@
  * Created by v1tr10l7 on 08.07.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Memory/Memory.hpp>
 
 #include <stdio.h>  // for debugging if needed
 #include <string.h> // for memcmp in validation fallback
+import Prism.Test.Test;
+import Prism.Memory.Memory;
 
 using namespace Prism;
 
@@ -83,3 +84,14 @@ TEST_CASE(printf_All_Prism_Memory_tests_passed_n)
     printf("All Prism::Memory tests passed.\n");
 }
 
+
+TEST_CASE(TestScanForCharacter){
+    const u8 data[] = {'a', 'b', 'c', 'b', 'z'};
+    EXPECT(Memory::ScanForCharacter(data, 'a', 5).As<const u8>() == data);
+    EXPECT(Memory::ScanForCharacter(data, 'b', 5).As<const u8>() == data + 1);
+    // The last byte, and a match past `size`, which must not be seen.
+    EXPECT(Memory::ScanForCharacter(data, 'z', 5).As<const u8>() == data + 4);
+    EXPECT(!Memory::ScanForCharacter(data, 'z', 4));
+    EXPECT(!Memory::ScanForCharacter(data, 'q', 5));
+    EXPECT(!Memory::ScanForCharacter(data, 'a', 0));
+}

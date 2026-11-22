@@ -2,7 +2,7 @@
  * Created by v1tr10l7 on 25.02.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Core/Compiler.hpp>
 #include <Prism/Core/Types.hpp>
@@ -10,9 +10,12 @@
 #include <Prism/Debug/Log.hpp>
 
 #if PRISM_TARGET_CRYPTIX != 0 || PRISM_TARGET_CARBONC != 0
-    #if PRISM_TARGET_CRYPTIX != 0
+    // Only inside the kernel tree (a standalone CryptixOS build of Prism
+    // doesn't have it).
+    #if PRISM_TARGET_CRYPTIX != 0 && PrismHasInclude(<Library/Stacktrace.hpp>)
         #include <Library/Stacktrace.hpp>
     #endif
+import Prism.Debug.Log;
 
 namespace
 {
@@ -180,7 +183,7 @@ extern "C"
     }
 
     PM_USED void __ubsan_handle_type_mismatch_v1(TypeMismatchV1Data* data,
-                                                 uintptr_t           ptr)
+                                                 upointer           ptr)
     {
         if (ptr == 0) Warn("use of nullptr", data->Location);
         else if (ptr & ((1 << data->LogAlignment) - 1))
@@ -190,15 +193,15 @@ extern "C"
 
     PM_USED void
     __ubsan_handle_function_type_mismatch(FunctionTypeMismatchV1Data* data,
-                                          uintptr_t                   ptr)
+                                          [[maybe_unused]] upointer   ptr)
     {
         Warn("call to a function through pointer to incorrect function",
              data->Location);
     }
 
     PM_USED void __ubsan_handle_function_type_mismatch_v1(
-        FunctionTypeMismatchV1Data* data, uintptr_t ptr, uintptr_t calleeRTTI,
-        uintptr_t fnRTTI)
+        FunctionTypeMismatchV1Data* data, [[maybe_unused]] upointer ptr,
+        [[maybe_unused]] upointer calleeRTTI, [[maybe_unused]] upointer fnRTTI)
     {
         Warn("call to a function through pointer to incorrect function",
              data->Location);

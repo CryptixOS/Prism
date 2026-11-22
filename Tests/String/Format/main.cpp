@@ -2,12 +2,13 @@
  * Created by v1tr10l7 on 07.11.2026.
  * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/String/Formatter.hpp>
 #include <Prism/Test/Test.hpp>
 
 #include <string.h>
+import Prism.String.Formatter;
+import Prism.Test.Test;
 
 using namespace Prism;
 
@@ -153,6 +154,8 @@ TEST_CASE(strings)
     Expect("\"a\\tb\\n\\\"q\\\" \\\\ '\"", "{:?}", "a\tb\n\"q\" \\ '");
     Expect("\"\\x01\\x7f\"", "{:?}", "\x01\x7f");
     Expect("      \"hi\\n\"|", "{:>12?}|", "hi\n");
+    Expect("   'a'|", "{:>6?}|", 'a');
+    Expect("  \"żó\"|", "{:>6?}|", "żó");
     Expect("żół|żó   |", "{:.3}|{:5}|", "żółw", "żó");
     Expect("日本*", "{:*^5}", "日本");
     Expect("→→→1→→→", "{:→^7}", 1);
@@ -164,6 +167,11 @@ TEST_CASE(pointers)
     Expect("0x1234", "{:p}", (void*)0x1234);
     Expect("      0xff|", "{:>10}|", (const void*)0xff);
     Expect("0x0", "{}", nullptr);
+    // Unlike the patched fmt (see Tests/String/FormatGolden/Corpus.hpp):
+    // zeros go after the prefix, and integers work as addresses.
+    Expect("0x000000deadbeef", "{:#016p}", (void*)0xdeadbeef);
+    Expect("0x1000", "{:#p}", 0x1000ul);
+    Expect("0x00000000001000", "{:#016p}", 0x1000ul);
 }
 
 TEST_CASE(argument_ids_and_dynamic_specs)

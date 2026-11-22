@@ -2,9 +2,11 @@
  * Created by v1tr10l7 on 01.03.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #pragma once
+
+#include <Prism/Core/Config.hpp>
 
 /* =========================
  * Operating System
@@ -68,6 +70,14 @@
     #define PRISM_TARGET_STRING "loongarch64"
 #endif
 
+// Each SIMD flag is only probed on its own architecture; elsewhere it is 0.
+#ifndef PRISM_SIMD_SSE2_PRESENT
+    #define PRISM_SIMD_SSE2_PRESENT 0
+#endif
+#ifndef PRISM_SIMD_NEON_PRESENT
+    #define PRISM_SIMD_NEON_PRESENT 0
+#endif
+
 /* =========================
  * Endianness
  * ========================= */
@@ -98,8 +108,10 @@
  * Build Context
  * ========================= */
 #if defined(PRISM_BUILD_CRYPTIX_KERNEL)
-    #define PM_CONTEXT_KERNEL 1
+    #define PM_CONTEXT_KERNEL    1
+    #define PM_CONTEXT_USERSPACE 0
 #else
+    #define PM_CONTEXT_KERNEL    0
     #define PM_CONTEXT_USERSPACE 1
 #endif
 

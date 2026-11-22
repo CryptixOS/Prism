@@ -2,13 +2,14 @@
  * Created by v1tr10l7 on 08.08.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Memory/Scope.hpp>
-#include <Prism/Utility/Delegate.hpp>
 #include <cstdio>
 #include <cstdlib>
+import Prism.Test.Test;
+import Prism.Memory.Scope;
+import Prism.Utility.Delegate;
 
 // Unlike EXPECT(), this still fires when NDEBUG is defined (release builds).
 
@@ -100,7 +101,7 @@ TEST_CASE(DelegateTest_MoveConstructor)
 {
     Delegate<int(int, int)> d1([](int a, int b) { return a / b; });
     d1.BindLambda([](int a, int b) { return a / b; });
-    Delegate<int(int, int)> d2 = std::move(d1);
+    Delegate<int(int, int)> d2 = Move(d1);
     EXPECT_EQ((d2(8, 2)), 4);
 }
 TEST_CASE(DelegateTest_CopyAssignment)

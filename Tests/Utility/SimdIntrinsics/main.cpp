@@ -2,12 +2,12 @@
  * Created by v1tr10l7 on 09.05.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Utility/SimdIntrinsics.hpp>
-#include <cmath>
-#include <iostream>
+import Prism.Test.Test;
+import Prism.Utility.SimdIntrinsics;
+import Prism.Utility.Math;
 
 using namespace Prism;
 
@@ -28,7 +28,7 @@ TEST_CASE(TestSimdFloatAdd){
     StoreFloat(out, vc);
 
     for (usize i = 0; i < FloatWidth; ++i)
-        EXPECT(std::fabs(out[i] - (a[i] + b[i])) < 1e-5f);
+        EXPECT(Math::FAbs(out[i] - (a[i] + b[i])) < 1e-5f);
 }
 
 TEST_CASE(TestSimdFloatSub){
@@ -48,7 +48,7 @@ TEST_CASE(TestSimdFloatSub){
     StoreFloat(out, vc);
 
     for (usize i = 0; i < FloatWidth; ++i)
-        EXPECT(std::fabs(out[i] - (a[i] - b[i])) < 1e-5f);
+        EXPECT(Math::FAbs(out[i] - (a[i] - b[i])) < 1e-5f);
 }
 
 TEST_CASE(TestSimdFloatMul){
@@ -68,7 +68,7 @@ TEST_CASE(TestSimdFloatMul){
     StoreFloat(out, vc);
 
     for (usize i = 0; i < FloatWidth; ++i)
-        EXPECT(std::fabs(out[i] - (a[i] * b[i])) < 1e-5f);
+        EXPECT(Math::FAbs(out[i] - (a[i] * b[i])) < 1e-5f);
 }
 
 TEST_CASE(TestSimdFloatDiv){
@@ -88,7 +88,7 @@ TEST_CASE(TestSimdFloatDiv){
     StoreFloat(out, vc);
 
     for (usize i = 0; i < FloatWidth; ++i)
-        EXPECT(std::fabs(out[i] - (a[i] / b[i])) < 1e-5f);
+        EXPECT(Math::FAbs(out[i] - (a[i] / b[i])) < 1e-5f);
 }
 
 TEST_CASE(TestSimdFloatSet1){
@@ -98,7 +98,7 @@ TEST_CASE(TestSimdFloatSet1){
     StoreFloat(out, v);
 
     for (usize i = 0; i < FloatWidth; ++i)
-        EXPECT(std::fabs(out[i] - val) < 1e-5f);
+        EXPECT(Math::FAbs(out[i] - val) < 1e-5f);
 }
 
 

@@ -2,7 +2,7 @@
  * Created by v1tr10l7 on 07.11.2026.
  * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
 
@@ -16,18 +16,19 @@
 #ifdef __linux__
     #include <sys/prctl.h>
 #endif
+import Prism.Test.Test;
 
 namespace Prism::Test
 {
     bool Crash::RunImpl(StringView description, ThunkFn thunk, void* context,
                         int expectedSignal)
     {
-        if (IsReportingEnabled()) Warnln("Testing \"{}\"", description);
+        if (IsReportingEnabled()) Warn("Testing \"{}\"", description);
 
         pid_t pid = fork();
         if (pid < 0)
         {
-            Warnln("{}: fork() failed: {}", Details::FailTag(), strerror(errno));
+            Warn("{}: fork() failed: {}", Details::FailTag(), strerror(errno));
             return false;
         }
         if (pid == 0)
@@ -68,11 +69,11 @@ namespace Prism::Test
         if (!IsReportingEnabled()) return false;
 
         if (signalled)
-            Warnln("{}: \"{}\" {} (signal {}: {}, expected {})",
+            Warn("{}: \"{}\" {} (signal {}: {}, expected {})",
                    Details::FailTag(), description, problem, signal,
                    strsignal(signal), expectedSignal);
         else
-            Warnln("{}: \"{}\" {} (exit code {})", Details::FailTag(),
+            Warn("{}: \"{}\" {} (exit code {})", Details::FailTag(),
                    description, problem, code);
         return false;
     }

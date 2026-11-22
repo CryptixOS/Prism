@@ -2,17 +2,12 @@
  * Created by v1tr10l7 on 27.04.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Core/Details/CVRefTraits.inl>
-#include <Prism/Core/Details/CallableTraits.inl>
-#include <Prism/Core/Details/Conditional.inl>
-#include <Prism/Core/Details/Constructibility.inl>
-#include <Prism/Core/Details/CoreTraits.inl>
-#include <Prism/Core/Details/TransformationTraits.inl>
-#include <Prism/Core/Details/TypeProperties.inl>
-#include <Prism/Core/Limits.hpp>
+import Prism.Test.Test;
+import Prism.Core.TypeTraits;
+import Prism.Core.Limits;
 
 using namespace Prism;
 TEST_CASE(TypeTraits_TestIsSame){

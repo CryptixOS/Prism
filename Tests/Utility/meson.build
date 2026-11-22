@@ -2,15 +2,19 @@
 #* Created by v1tr10l7 on 08.08.2025.
 #* Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
 #*
-#* SPDX-License-Identifier: GPL-3
+#* SPDX-License-Identifier: GPL-2.0-or-later
 #*/
 
 utility_tests = [
   'Atomic',
   'AtomicBuiltins',
   'Delegate',
+  'Enum',
+  'Mutex',
+  'OptionParser',
   'Path',
   'SimdIntrinsics',
+  'Variant',
 ]
 
 foreach name : utility_tests

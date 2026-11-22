@@ -2,7 +2,7 @@
  * Created by v1tr10l7 on 16.11.2024.
  * Copyright (c) 2024-2024, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #pragma once
 
@@ -21,16 +21,26 @@ extern "C" PM_NORETURN void __assert_fail(const char* expr, const char* file,
              ? __assert_fail(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__)   \
              : (void)0)
 #endif
-#if PRISM_DISABLE_FMT == 0
-    #include <fmt/format.h>
+
+/**
+ * PrismCheck(condition): a precondition of Prism's own code, like an index
+ * being in bounds. With PRISM_HARDENED it is always checked and a failure
+ * traps (no message, so it costs one compare and branch and works before
+ * anything else is set up); otherwise it is an assert(). The condition must
+ * not have side effects: without PRISM_HARDENED, release builds drop it.
+ */
+#if PRISM_HARDENED != 0
+    #define PrismCheck(condition)                                              \
+        (__builtin_expect(!(condition), 0) ? __builtin_trap() : (void)0)
+#elif defined(NDEBUG)
+    // Not evaluated, but still referenced so variables used only in checks
+    // don't warn. Conditions must therefore have no side effects.
+    #define PrismCheck(condition) ((void)sizeof(!(condition)))
+#else
+    #define PrismCheck(condition) assert(condition)
 #endif
 
-#if PrismHasInclude(<compare>)
-    #include <compare>
-#endif
-#if PrismHasInclude(<initializer_list>)
-    #include <initializer_list>
-#endif
+#include <Prism/Core/LanguageSupport.hpp>
 
 #define PrismStringifyInner(x) #x
 #define PrismStringify(x)      PrismStringifyInner(x)
@@ -75,10 +85,8 @@ namespace Prism
         return lhs < rhs ? lhs : rhs;
     }
 
-    using WeakOrdering   = std::weak_ordering;
-    using StrongOrdering = std::strong_ordering;
-    template <typename T>
-    using InitializerList = std::initializer_list<T>;
+    // PartialOrdering, WeakOrdering, StrongOrdering and InitializerList come
+    // from Core/LanguageSupport.hpp.
     using VaList          = __builtin_va_list;
 #define PrismVaStart(args, format) __builtin_va_start(args, format)
 #define PrismVaEnd(args)           __builtin_va_end(args)

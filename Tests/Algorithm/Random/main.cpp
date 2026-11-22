@@ -2,11 +2,13 @@
  * Created by v1tr10l7 on 09.08.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Algorithm/Random.hpp>
-#include <Prism/Utility/Math.hpp>
+#include <Prism/Debug/Log.hpp>
+import Prism.Test.Test;
+import Prism.Algorithm.Random;
+import Prism.Utility.Math;
 
 using namespace Prism;
 using namespace Prism::Algorithm;
@@ -79,4 +81,24 @@ TEST_CASE(uniform_int_distribution_constructs)
     mt19937_64                                     rng;
     (void)dist;
     (void)rng;
+}
+
+// Drawing a value instantiates the 32-bit fast path (Nd), which needs
+// IntegerTraits<T>::IsSigned.
+TEST_CASE(uniform_int_distribution_stays_in_range)
+{
+    mt19937                     rng(42);
+    UniformIntDistribution<int> dist(-3, 9);
+    bool                        seen[13] = {};
+    for (int i = 0; i < 10000; ++i)
+    {
+        int value = dist(rng);
+        EXPECT(value >= -3 && value <= 9);
+        if (value >= -3 && value <= 9) seen[value + 3] = true;
+    }
+    for (bool hit : seen) EXPECT(hit);
+
+    mt19937_64                      rng64(7);
+    UniformIntDistribution<u64>     wide(0, ~u64(0) - 1);
+    for (int i = 0; i < 1000; ++i) EXPECT(wide(rng64) != ~u64(0));
 }

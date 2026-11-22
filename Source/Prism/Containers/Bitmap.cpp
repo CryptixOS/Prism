@@ -2,10 +2,11 @@
  * Created by v1tr10l7 on 14.07.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/Containers/Bitmap.hpp>
-#include <Prism/Utility/Math.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.Containers.Bitmap;
+import Prism.Utility.Math;
 
 namespace Prism
 {
@@ -27,7 +28,7 @@ namespace Prism
         m_EntryCount = entryCount;
 
         m_Size       = Math::DivRoundUp(entryCount, 8);
-        m_Data       = new u8[m_Size];
+        m_Data       = new u8[m_Size]();
     }
     void Bitmap::Free()
     {
@@ -50,7 +51,7 @@ namespace Prism
     {
         const usize byte = index / 8;
         const usize bit  = index % 8;
-        assert(byte < m_Size);
+        PrismCheck(byte < m_Size);
 
         if (value) m_Data[byte] |= Bit(bit);
         else m_Data[byte] &= ~Bit(bit);

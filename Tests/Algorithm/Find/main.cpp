@@ -2,14 +2,17 @@
  * Created by v1tr10l7 on 11.01.2026.
  * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #include <Prism/Test/Test.hpp>
-#include <Prism/Algorithm/Find.hpp>
-#include <Prism/Containers/Array.hpp>
-#include <Prism/Containers/Vector.hpp>
 #include <Prism/Debug/Assertions.hpp>
+import Prism.Test.Test;
+import Prism.Algorithm.Find;
+import Prism.Debug.Assertions;
+import Prism.Containers.Array;
+import Prism.Containers.Vector;
+import Prism.Containers.KeyValuePair;
 
 TEST_CASE(TestFind){
     Array<int, 5> arr = {1, 2, 3, 4, 5};
@@ -45,7 +48,7 @@ TEST_CASE(TestFindIter){
     // FindValueIter
     int value = 30;
     it        = FindValueIter(vec.begin(), vec.end(), value,
-                              [](auto i, int* v) { return *i == *v; });
+                              [](auto i, int& v) { return *i == v; });
     EXPECT(it != vec.end() && *it == 30);
 
     // FindIteratorIter
@@ -89,7 +92,7 @@ TEST_CASE(TestRemoveEraseIf){
 
     auto        newEnd
         = RemoveIf(vec.begin(), vec.end(), [](int x) { return x % 2 == 0; });
-    vec.erase(newEnd, vec.end());
+    vec.Erase(newEnd, vec.end());
     EXPECT((vec == Vector<int>{1, 3, 5}));
 
     // Refill
@@ -102,7 +105,7 @@ TEST_CASE(TestRemoveEraseIf){
     vec    = {1, 2, 3, 4, 5};
     newEnd = RemoveIfIter(vec.begin(), vec.end(),
                           [](auto it) { return *it % 2 == 1; });
-    vec.erase(newEnd, vec.end());
+    vec.Erase(newEnd, vec.end());
     EXPECT((vec == Vector<int>{2, 4}));
 }
 
@@ -121,15 +124,15 @@ TEST_CASE(TestFindFirstOf){
 }
 
 TEST_CASE(TestFindIfProj){
-    Vector<KeyValuePair<int, int>> vec = {{1, 2}, {3, 4}, {5, 6}};
+    Vector<Prism::KeyValuePair<int, int>> vec = {{1, 2}, {3, 4}, {5, 6}};
     auto                           it  = FindIfProj(
         vec.begin(), vec.end(), [](int x) { return x == 4; },
-        [](auto& p) { return p.second; });
-    EXPECT(it != vec.end() && it->second == 4);
+        [](auto& p) { return p.Value; });
+    EXPECT(it != vec.end() && it->Value == 4);
 
     it = FindIfProj(vec.begin(), vec.end(), EqualTo<>{}, 5,
-                    [](auto& p) { return p.first; });
-    EXPECT(it != vec.end() && it->first == 5);
+                    [](auto& p) { return p.Key; });
+    EXPECT(it != vec.end() && it->Key == 5);
 }
 
 

@@ -2,10 +2,11 @@
  * Created by v1tr10l7 on 23.06.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Debug/Log.hpp>
-#include <Prism/Debug/Logger.hpp>
+import Prism.Debug.Log;
+import Prism.Debug.Logger;
 
 namespace Prism
 {

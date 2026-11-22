@@ -2,9 +2,15 @@
  * Created by v1tr10l7 on 21.01.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
-#include <Prism/Utility/Path.hpp>
+#include <Prism/Core/Types.hpp>
+import Prism.String.Formatter;
+import Prism.String.String;
+import Prism.String.StringView;
+import Prism.Containers.Vector;
+import Prism.Utility.Path;
+
 
 namespace Prism
 {

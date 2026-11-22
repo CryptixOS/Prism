@@ -2,160 +2,19 @@
  * Created by v1tr10l7 on 07.11.2026.
  * Copyright (c) 2024-2026, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #pragma once
 
-#include <Prism/String/Formatter.hpp>
-#include <Prism/Test/CrashTest.hpp>
-#include <Prism/Test/Randomized/RandSource.hpp>
-#include <Prism/Test/TestResult.hpp>
+// Macros only: the code lives in module Prism.Test.Macros, which
+// files using these macros import too.
 
-namespace Prism::Test
-{
-    /// Writes to the test output (stderr).
-    void WriteOutput(StringView text);
-    /// Whether the test output is a terminal (enables colors).
-    bool OutputIsTerminal();
-
-    template <typename... Args>
-    void Warnln(FormatString<Args...> format, Args&&... args)
-    {
-        FormatToSink([](const char* data, usize size)
-                     { WriteOutput(StringView(data, size)); },
-                     format, Forward<Args>(args)...);
-        WriteOutput("\n");
-    }
-
-    namespace Details
-    {
-        /// "FAIL" in bold red when printing to a terminal.
-        StringView FailTag();
-
-        String     FormatDouble(double value);
-
-        template <typename T>
-        constexpr bool IsCharPointerV = ::Prism::Details::IsFormatCStringV<
-            ::Prism::Details::FormatKeyType<T>>;
-
-        /// Printable form of any value: uses Prism::Formatter when
-        /// available, falls back to the underlying value for enums and to
-        /// "<unprintable>" otherwise (like Serenity's FormatIfSupported).
-        template <typename T>
-        String ToPrintable(const T& value)
-        {
-            using U = RemoveCvRefType<T>;
-            if constexpr (IsFloatingPointV<U>)
-                return FormatDouble(static_cast<double>(value));
-            else if constexpr (Formattable<U>) return Format("{}", value);
-            else if constexpr (IsEnumV<U>)
-                return Format("{}", ToUnderlying(value));
-            else if constexpr (IsArrayV<U>
-                               || requires { value.begin() != value.end(); })
-            {
-                // Arrays and ranges print as [a, b, c].
-                String result = "[";
-                bool   first  = true;
-                for (const auto& element : value)
-                {
-                    if (!first) result += StringView(", ");
-                    first = false;
-                    result += ToPrintable(element);
-                }
-                result += StringView("]");
-                return result;
-            }
-            else return "<unprintable>";
-        }
-
-        /// `lhs == rhs`, except that C strings compare by content and
-        /// integers of different signedness compare by value.
-        template <typename L, typename R>
-        constexpr bool Equals(const L& lhs, const R& rhs)
-        {
-            if constexpr (IsCharPointerV<L> && IsCharPointerV<R>)
-            {
-                const char* a = lhs;
-                const char* b = rhs;
-                if (!a || !b) return a == b;
-                for (; *a && *a == *b; ++a, ++b);
-                return *a == *b;
-            }
-            else if constexpr (IsIntegralV<L> && IsIntegralV<R>
-                               && !IsSameV<L, bool> && !IsSameV<R, bool>
-                               && IsSignedV<L> != IsSignedV<R>)
-            {
-                if constexpr (IsSignedV<L>)
-                    return lhs >= 0 && static_cast<u64>(lhs) == static_cast<u64>(rhs);
-                else return rhs >= 0 && static_cast<u64>(lhs) == static_cast<u64>(rhs);
-            }
-            else return lhs == rhs;
-        }
-
-        template <typename L, typename R>
-        void ReportComparisonFailure(const char* macro, const char* lhsText,
-                                     const char* rhsText, const L& lhs,
-                                     const R& rhs, const char* file, u32 line)
-        {
-            if (IsReportingEnabled())
-                Warnln("{}: {}:{}: {}({}, {}) failed with lhs={} and rhs={}",
-                       FailTag(), file, line, macro, lhsText, rhsText,
-                       ToPrintable(lhs), ToPrintable(rhs));
-            CurrentTestCaseDidFail();
-        }
-
-        template <typename L, typename R>
-        void ReportTruthFailure(const char* lhsText, const char* rhsText,
-                                const L& lhs, const R& rhs, const char* file,
-                                u32 line)
-        {
-            if (IsReportingEnabled())
-                Warnln("{}: {}:{}: EXPECT_EQ_TRUTH({}, {}) failed with lhs={} "
-                       "({}) and rhs={} ({})",
-                       FailTag(), file, line, lhsText, rhsText, ToPrintable(lhs),
-                       static_cast<bool>(lhs), ToPrintable(rhs),
-                       static_cast<bool>(rhs));
-            CurrentTestCaseDidFail();
-        }
-
-        inline void ReportFailure(StringView message, const char* file,
-                                  u32 line)
-        {
-            if (IsReportingEnabled())
-                Warnln("{}: {}:{}: {}", FailTag(), file, line, message);
-            CurrentTestCaseDidFail();
-        }
-
-        void ReportApproximateFailure(const char* lhsText, const char* rhsText,
-                                      double lhs, double rhs,
-                                      const char* file, u32 line);
-
-        template <typename T>
-        void ReportGenerated(const char* name, const T& value)
-        {
-            if (IsReportingEnabled()) Warnln("{} = {}", name, ToPrintable(value));
-        }
-
-        /// Error text of an Expected-like value for TRY_OR_FAIL()/MUST().
-        template <typename R>
-        String DescribeError(const R& result)
-        {
-            if constexpr (requires { result.Error(); })
-                return ToPrintable(result.Error());
-            else return "empty value";
-        }
-
-        template <typename T>
-        T&& Identity(T&& value)
-        {
-            return Forward<T>(value);
-        }
-    } // namespace Details
-} // namespace Prism::Test
+#include <Prism/Core/Config.hpp>
 
 /// The current test fails unless `x` is true.
 #define EXPECT(...)                                                            \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         if (!static_cast<bool>(__VA_ARGS__))                                   \
             ::Prism::Test::Details::ReportFailure(                             \
                 "EXPECT(" #__VA_ARGS__ ") failed", __FILE__, __LINE__);        \
@@ -163,7 +22,8 @@ namespace Prism::Test
 
 /// The current test fails unless `a == b`; prints both values.
 #define EXPECT_EQ(a, b)                                                        \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         auto&& prismExpectLhs = (a);                                           \
         auto&& prismExpectRhs = (b);                                           \
         if (!::Prism::Test::Details::Equals(prismExpectLhs, prismExpectRhs))   \
@@ -174,7 +34,8 @@ namespace Prism::Test
 
 /// The current test fails unless `a` and `b` have the same truthiness.
 #define EXPECT_EQ_TRUTH(a, b)                                                  \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         auto&& prismExpectLhs = (a);                                           \
         auto&& prismExpectRhs = (b);                                           \
         if (static_cast<bool>(prismExpectLhs)                                  \
@@ -186,13 +47,13 @@ namespace Prism::Test
 /// Like EXPECT_EQ, but refuses to compile if the values aren't printable,
 /// for when EXPECT_EQ prints "<unprintable>".
 #define EXPECT_EQ_FORCE(a, b)                                                  \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         auto&& prismExpectLhs = (a);                                           \
         auto&& prismExpectRhs = (b);                                           \
-        static_assert(                                                         \
-            ::Prism::Formattable<decltype(prismExpectLhs)>                     \
-                && ::Prism::Formattable<decltype(prismExpectRhs)>,             \
-            "EXPECT_EQ_FORCE requires formattable values");                    \
+        static_assert(::Prism::Formattable<decltype(prismExpectLhs)>           \
+                          && ::Prism::Formattable<decltype(prismExpectRhs)>,   \
+                      "EXPECT_EQ_FORCE requires formattable values");          \
         if (!::Prism::Test::Details::Equals(prismExpectLhs, prismExpectRhs))   \
             ::Prism::Test::Details::ReportComparisonFailure(                   \
                 "EXPECT_EQ_FORCE", #a, #b, prismExpectLhs, prismExpectRhs,     \
@@ -201,7 +62,8 @@ namespace Prism::Test
 
 /// The current test fails if `a == b`.
 #define EXPECT_NE(a, b)                                                        \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         auto&& prismExpectLhs = (a);                                           \
         auto&& prismExpectRhs = (b);                                           \
         if (::Prism::Test::Details::Equals(prismExpectLhs, prismExpectRhs))    \
@@ -212,7 +74,8 @@ namespace Prism::Test
 
 /// The current test fails unless |a - b| <= err.
 #define EXPECT_APPROXIMATE_WITH_ERROR(a, b, err)                               \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         double prismExpectLhs = static_cast<double>(a);                        \
         double prismExpectRhs = static_cast<double>(b);                        \
         double prismExpectErr = static_cast<double>(err);                      \
@@ -231,10 +94,11 @@ namespace Prism::Test
 
 /// Rejects the generated input of a randomized test (the run doesn't count).
 #define REJECT(message)                                                        \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         if (::Prism::Test::IsReportingEnabled())                               \
-            ::Prism::Test::Warnln("REJECTED test case: {}",                    \
-                                  ::Prism::Test::Details::ToPrintable(message)); \
+            ::Prism::Test::Warn("REJECTED test case: {}",                      \
+                                ::Prism::Test::Details::ToPrintable(message)); \
         ::Prism::Test::SetCurrentTestResult(                                   \
             ::Prism::Test::TestResult::eRejected);                             \
     } while (false)
@@ -242,12 +106,13 @@ namespace Prism::Test
 /// Rejects the generated input of a randomized test unless `x` holds, and
 /// returns from the test.
 #define ASSUME(x)                                                              \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         if (!(x))                                                              \
         {                                                                      \
             if (::Prism::Test::IsReportingEnabled())                           \
-                ::Prism::Test::Warnln("{}:{}: Assumption failed: {}",          \
-                                      __FILE__, __LINE__, #x);                 \
+                ::Prism::Test::Warn("{}:{}: Assumption failed: {}", __FILE__,  \
+                                    __LINE__, #x);                             \
             ::Prism::Test::SetCurrentTestResult(                               \
                 ::Prism::Test::TestResult::eRejected);                         \
             return;                                                            \
@@ -276,13 +141,13 @@ namespace Prism::Test
     })
 
 #ifndef MUST
-    /// Unwraps an Expected/Optional; on error reports and aborts.
+  /// Unwraps an Expected/Optional; on error reports and aborts.
     #define MUST(expression)                                                   \
         ({                                                                     \
             auto&& prismMustResult = (expression);                             \
             if (!prismMustResult) [[unlikely]]                                 \
             {                                                                  \
-                ::Prism::Test::Warnln(                                         \
+                ::Prism::Test::Warn(                                           \
                     "{}: {}:{}: MUST({}) failed: {}",                          \
                     ::Prism::Test::Details::FailTag(), __FILE__, __LINE__,     \
                     #expression,                                               \
@@ -297,25 +162,28 @@ namespace Prism::Test
 // TODO() still abort, as the code after them can't run meaningfully.
 #undef VERIFY
 #define VERIFY(...)                                                            \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         if (!(__VA_ARGS__))                                                    \
             ::Prism::Test::Details::ReportFailure(                             \
                 "VERIFY(" #__VA_ARGS__ ") failed", __FILE__, __LINE__);        \
     } while (false)
 #undef VERIFY_NOT_REACHED
 #define VERIFY_NOT_REACHED()                                                   \
-    do {                                                                       \
-        ::Prism::Test::Warnln("{}: {}:{}: VERIFY_NOT_REACHED() called",        \
-                              ::Prism::Test::Details::FailTag(), __FILE__,     \
-                              __LINE__);                                       \
+    do                                                                         \
+    {                                                                          \
+        ::Prism::Test::Warn("{}: {}:{}: VERIFY_NOT_REACHED() called",          \
+                            ::Prism::Test::Details::FailTag(), __FILE__,       \
+                            __LINE__);                                         \
         __builtin_abort();                                                     \
     } while (false)
 #undef TODO
 #define TODO()                                                                 \
-    do {                                                                       \
-        ::Prism::Test::Warnln("{}: {}:{}: TODO() called",                      \
-                              ::Prism::Test::Details::FailTag(), __FILE__,     \
-                              __LINE__);                                       \
+    do                                                                         \
+    {                                                                          \
+        ::Prism::Test::Warn("{}: {}:{}: TODO() called",                        \
+                            ::Prism::Test::Details::FailTag(), __FILE__,       \
+                            __LINE__);                                         \
         __builtin_abort();                                                     \
     } while (false)
 
@@ -326,19 +194,54 @@ namespace Prism::Test
  * function may return void or Test::Crash::Failure.
  */
 #define EXPECT_CRASH(test_message, test_func)                                  \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         if (!::Prism::Test::Crash::Run(test_message, test_func))               \
             ::Prism::Test::CurrentTestCaseDidFail();                           \
     } while (false)
 
 #define EXPECT_CRASH_WITH_SIGNAL(test_message, signal, test_func)              \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         if (!::Prism::Test::Crash::Run(test_message, test_func, signal))       \
             ::Prism::Test::CurrentTestCaseDidFail();                           \
     } while (false)
 
+/**
+ * PRISM_TEST_CHECKS_ENABLED: whether a failed PrismCheck stops the program in
+ * this build (always with PRISM_HARDENED, otherwise only without NDEBUG).
+ * PRISM_TEST_CHECK_SIGNAL: the signal it stops with. A hardened check is
+ * __builtin_trap (SIGILL on x86, SIGTRAP on aarch64), an assert is SIGABRT.
+ */
+#if PRISM_HARDENED != 0
+    #define PRISM_TEST_CHECKS_ENABLED 1
+    #if defined(__aarch64__) || defined(__arm__)
+        #define PRISM_TEST_CHECK_SIGNAL 5
+    #else
+        #define PRISM_TEST_CHECK_SIGNAL 4
+    #endif
+#elif defined(NDEBUG)
+    #define PRISM_TEST_CHECKS_ENABLED 0
+    #define PRISM_TEST_CHECK_SIGNAL   6
+#else
+    #define PRISM_TEST_CHECKS_ENABLED 1
+    #define PRISM_TEST_CHECK_SIGNAL   6
+#endif
+
+/// Expects `test_func` to fail a PrismCheck. Does nothing in builds where
+/// PrismCheck is compiled out (release without PRISM_HARDENED).
+#if PRISM_TEST_CHECKS_ENABLED
+    #define EXPECT_CHECK_FAILURE(test_message, test_func)                      \
+        EXPECT_CRASH_WITH_SIGNAL(test_message, PRISM_TEST_CHECK_SIGNAL,        \
+                                 test_func)
+#else
+    #define EXPECT_CHECK_FAILURE(test_message, test_func)                      \
+        do {} while (false)
+#endif
+
 #define EXPECT_NO_CRASH(test_message, test_func)                               \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
         if (!::Prism::Test::Crash::Run(test_message, test_func, 0))            \
             ::Prism::Test::CurrentTestCaseDidFail();                           \
     } while (false)

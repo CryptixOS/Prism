@@ -2,15 +2,14 @@
  * Created by v1tr10l7 on 30.04.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Containers/Deque.hpp>
+import Prism.Test.Test;
+import Prism.Containers.Deque;
 
 using namespace Prism;
 
-#include <string>
-#include <utility>
 
 TEST_CASE(TestBasicOperations){
     Deque<int> dq;
@@ -35,7 +34,7 @@ TEST_CASE(TestBasicOperations){
 }
 
 TEST_CASE(TestPopElement){
-    Deque<std::string> dq;
+    Deque<String> dq;
     dq.PushBack("a");
     dq.PushBack("b");
     dq.PushBack("c");
@@ -85,12 +84,12 @@ TEST_CASE(TestMove){
     dq1.PushBack(42);
     dq1.PushBack(84);
 
-    Deque<int> dq2 = std::move(dq1);
+    Deque<int> dq2 = Move(dq1);
     EXPECT_EQ(dq2.Size(), 2);
     EXPECT_EQ(dq2[0], 42);
     EXPECT_EQ(dq2[1], 84);
 
-    dq1 = std::move(dq2);
+    dq1 = Move(dq2);
     EXPECT_EQ(dq1.Size(), 2);
     EXPECT_EQ(dq1[0], 42);
     EXPECT_EQ(dq1[1], 84);
@@ -143,3 +142,30 @@ TEST_CASE(TestErase){
 }
 
 
+
+// Elements start mid-block (offset 32 of 64): 32 pushes fill the back block
+// exactly, and iteration must stop at end() instead of running past it.
+TEST_CASE(TestIterateFullBackBlock){
+    for (int count : {32, 96, 160})
+    {
+        Deque<int> dq;
+        for (int i = 0; i < count; ++i) dq.PushBack(i);
+        int seen = 0;
+        for (int val : dq) EXPECT_EQ(val, seen++);
+        EXPECT_EQ(seen, count);
+        EXPECT_EQ(dq.end() - dq.begin(), count);
+    }
+}
+
+// Popping back to a block boundary leaves the back offset at 0, where
+// Back() is the last element of the previous block.
+TEST_CASE(TestBackAfterPopAcrossBlocks){
+    Deque<int> dq;
+    for (int i = 0; i < 200; ++i) dq.PushBack(i);
+    for (int i = 199; i > 0; --i)
+    {
+        EXPECT_EQ(dq.Back(), i);
+        dq.PopBack();
+    }
+    EXPECT_EQ(dq.Back(), 0);
+}

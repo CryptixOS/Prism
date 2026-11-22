@@ -2,15 +2,15 @@
  * Created by v1tr10l7 on 26.04.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Test/Test.hpp>
-#include <Prism/Algorithm/SearchString.hpp>
 #include <Prism/Debug/Assertions.hpp>
-#include <Prism/String/String.hpp>
+import Prism.Test.Test;
+import Prism.Algorithm.SearchString;
+import Prism.Debug.Assertions;
+import Prism.String.String;
 
-#include <iomanip>
-#include <iostream>
 
 using namespace Prism;
 using namespace Prism::Literals;
@@ -65,10 +65,8 @@ void test_KMPearch_SingleMatch()
 isize KMP_Search(const String& text, const String& pattern)
 {
     isize pos = Algorithm::FindStringKMP(text.View(), pattern.View());
-    std::cout << "Searching for '" << std::setprecision(pattern.Size())
-              << pattern.Raw() << "' in '" << std::setprecision(text.Size())
-              << text.Raw() << "'...\n";
-    std::cout << "Returned index => " << pos << "\n";
+    Println("Searching for '{}' in '{}'...", pattern, text);
+    Println("Returned index => {}", pos);
 
     return pos;
 }

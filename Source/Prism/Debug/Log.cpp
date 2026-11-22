@@ -2,15 +2,16 @@
  * Created by v1tr10l7 on 21.02.2025.
  * Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
  *
- * SPDX-License-Identifier: GPL-3
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <Prism/Core/Types.hpp>
 #include <Prism/Debug/Log.hpp>
-#include <Prism/Debug/LogSink.hpp>
+import Prism.Debug.Log;
+import Prism.Debug.LogSink;
+import Prism.String.Printf;
+import Prism.String.String;
+import Prism.String.StringUtils;
 
-#include <Prism/String/Printf.hpp>
-#include <Prism/String/String.hpp>
-#include <Prism/String/StringUtils.hpp>
 
 #if PRISM_TARGET_CRYPTIX != 0
 namespace Logger
@@ -60,12 +61,14 @@ namespace Prism::Log
             isize nwritten = 0;
             T     value    = PrismVaArg(args, T);
 
+            String str = StringUtils::ToString(value, spec.Base);
+            // The sign is printed separately, after the padding decision
+            // (negating value would overflow for the minimum).
             if (value < 0 && spec.Base == 10)
             {
                 spec.Sign = Sign::eMinus;
-                value *= -1;
+                str       = str.Substr(1);
             }
-            String str     = StringUtils::ToString(value, spec.Base);
 
             char   padding = spec.ZeroPad ? '0' : ' ';
             if (spec.Sign != Sign::eNone && spec.Length > 0) spec.Length--;
@@ -179,8 +182,8 @@ namespace Prism::Log
         return nwritten;
     }
 
-    isize PrintArgument(StringView::Iterator& it, VaList& args,
-                        PrintfFormatSpec& specs)
+    static isize PrintArgument(StringView::Iterator&, VaList& args,
+                               PrintfFormatSpec& specs)
     {
         isize nwritten = 0;
 

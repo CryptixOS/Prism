@@ -2,14 +2,13 @@
 #* Created by v1tr10l7 on 01.03.2025.
 #* Copyright (c) 2024-2025, Szymon Zemke <v1tr10l7@proton.me>
 #*
-#* SPDX-License-Identifier: GPL-3
+#* SPDX-License-Identifier: GPL-2.0-or-later
 #*/
 cpp_args = [
   '-Wno-unused-parameter',
   '-Wno-self-assign-overloaded',
   '-lgcc_s',
   '-fmodules-ts',
-  '-DPRISM_DISABLE_FMT=0',
   '-DPRISM_USE_NAMESPACE=1',
 ]
 link_args = [
@@ -42,6 +41,7 @@ subdir('Containers')
 subdir('Debug')
 subdir('Math')
 subdir('Memory')
+subdir('Ranges')
 subdir('String')
 subdir('Test')
 subdir('Utility')
